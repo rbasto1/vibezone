@@ -5,14 +5,14 @@ export default {
   async fetch(
     request: Request,
     env: Env,
-    _ctx: ExecutionContext,
+    _ctx: ExecutionContext
   ): Promise<Response> {
     const url = new URL(request.url);
 
     // CORS headers for other endpoints
     const origin = request.headers.get("Origin");
-    const allowed = ["http://localhost:3021", env.WORKER_ALLOWED_ORIGIN].filter(
-      Boolean,
+    const allowed = ["http://localhost:3022", env.WORKER_ALLOWED_ORIGIN].filter(
+      Boolean
     );
 
     const allowOrigin = origin && allowed.includes(origin) ? origin : "null";
@@ -35,7 +35,7 @@ export default {
           status: "ok",
           timestamp: new Date().toISOString(),
         },
-        { headers },
+        { headers }
       );
     }
 
@@ -43,7 +43,7 @@ export default {
     if (request.method !== "POST") {
       return Response.json(
         { error: "Method not allowed" },
-        { status: 405, headers },
+        { status: 405, headers }
       );
     }
 
@@ -59,7 +59,7 @@ export default {
       if (!provider || !["openai", "anthropic", "gemini"].includes(provider)) {
         return Response.json(
           { error: "Invalid provider" },
-          { status: 400, headers },
+          { status: 400, headers }
         );
       }
 
@@ -71,7 +71,7 @@ export default {
           phase: "1",
           timestamp: new Date().toISOString(),
         },
-        { headers },
+        { headers }
       );
     }
 
@@ -88,7 +88,7 @@ export default {
           "/stream/gemini",
         ],
       },
-      { headers },
+      { headers }
     );
   },
 };
