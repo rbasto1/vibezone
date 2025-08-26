@@ -25,5 +25,6 @@
     "allowUnreachableCode": false,
     "noFallthroughCasesInSwitch": false,
     "useUnknownInCatchVariables": false
-  }
+  },
+  "include": []
 }

@@ -4,7 +4,8 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "typecheck": "echo 'No TypeScript files to check in config package'"
   },
   "devDependencies": {
     "eslint": "^9.34.0",
