@@ -219,7 +219,7 @@ const ComposerAction: FC = () => {
             type="submit"
             variant="default"
             // aui-composer-send
-            className="dark:border-muted-foreground/90 border-muted-foreground/60 hover:bg-primary/75 size-8 rounded-full border"
+            className="dark:border-muted-foreground/90 border-muted-foreground/60 hover:bg-primary/75 size-8 rounded-full border cursor-pointer"
             aria-label="Send message"
           >
             {/* aui-composer-send-icon */}
