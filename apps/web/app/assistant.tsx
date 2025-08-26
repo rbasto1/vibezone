@@ -54,12 +54,12 @@ export const Assistant = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Build Your Own ChatGPT UX
+                        AI Chat
                       </BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator className="hidden md:block" />
                     <BreadcrumbItem>
-                      <BreadcrumbPage>Starter Template</BreadcrumbPage>
+                      <BreadcrumbPage>Single AI Model</BreadcrumbPage>
                     </BreadcrumbItem>
                   </BreadcrumbList>
                 </Breadcrumb>
