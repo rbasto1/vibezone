@@ -1,25 +1,29 @@
-This is the [assistant-ui](https://github.com/Yonom/assistant-ui) starter project.
+# LLM Comparison Monorepo
 
-## Getting Started
+A monorepo for comparing responses from multiple LLM providers (OpenAI, Anthropic, Gemini, etc.) with real-time streaming.
 
-First, add your OpenAI API key to `.env.local` file:
+## Architecture
+
+- Turborepo + pnpm workspaces for monorepo management
+- React 19 + Next.js App Router for the web UI
+- Cloudflare Workers for LLM API endpoints
+- TypeScript throughout
+- assistant-ui interface
+- Tailwind CSS for styling
+- Jotai for state management
+- Lucide-react for icons
+- Radix-ui for UI components
+- shadcn/ui for components
+- Tailwind-merge for merging Tailwind classes
+- Tailwind-typography for typography
+
+## Project Structure
 
 ```
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+├── apps/
+│   ├── web/          # Next.js frontend (React 19) based on assistant-ui
+│   └── llm-worker/   # Cloudflare Worker API endpoints
+├── packages/
+│   └── config/       # Shared TypeScript/ESLint/Prettier configs
+└── turbo.json        # Turborepo pipeline configuration
 ```
-
-Then, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
