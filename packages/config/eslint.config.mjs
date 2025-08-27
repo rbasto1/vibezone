@@ -5,7 +5,6 @@ import prettier from "eslint-config-prettier";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
-import simpleImportSort from "eslint-plugin-simple-import-sort";
 import globals from "globals";
 
 export default [
@@ -32,7 +31,6 @@ export default [
       react,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
-      "simple-import-sort": simpleImportSort,
     },
     rules: {
       // ESLint recommended rules are already included via js.configs.recommended
@@ -97,10 +95,6 @@ export default [
 
       // Comma dangle - allow trailing commas to match Prettier
       "comma-dangle": ["warn", "always-multiline"],
-
-      // Import sorting
-      "simple-import-sort/imports": ["warn"],
-      "simple-import-sort/exports": "off",
     },
     settings: {
       react: {
