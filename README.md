@@ -1,6 +1,6 @@
-# LLM Comparison Monorepo
+# Vibezone
 
-A monorepo for comparing responses from multiple LLM providers (OpenAI, Anthropic, Gemini, etc.) with real-time streaming.
+A modern AI chat application with real-time streaming support for multiple LLM providers (OpenAI, Anthropic, Gemini, etc.).
 
 ## Architecture
 

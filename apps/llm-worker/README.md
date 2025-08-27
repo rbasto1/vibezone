@@ -1,6 +1,6 @@
-# LLM Worker
+# Vibezone LLM Worker
 
-Cloudflare Worker for LLM API streaming endpoints.
+Cloudflare Worker for Vibezone's LLM API streaming endpoints.
 
 ## Phase 1 (Completed)
 

@@ -17,8 +17,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MultiChat 1.0",
-  description: "MultiChat - AI Chat Application",
+  title: "Vibezone",
+  description: "Vibezone - AI Chat Application",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.vibezone.ai"
+  ),
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/icon-1024.png",
+    apple: "/icon-1024.png",
+  },
 };
 
 export default function RootLayout({
