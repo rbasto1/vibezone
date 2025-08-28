@@ -6,6 +6,7 @@ import { DefaultChatTransport } from "ai";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { Thread } from "@/components/assistant-ui/thread";
+import { ModelSelector } from "@/components/model-selector";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
   Breadcrumb,
@@ -66,7 +67,14 @@ export const Assistant = () => {
               </div>
             </header>
             <div className="flex-1 overflow-hidden">
-              <Thread />
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+                <div className="lg:col-span-3">
+                  <Thread />
+                </div>
+                <div className="lg:col-span-1 p-4 border-l overflow-y-auto">
+                  <ModelSelector />
+                </div>
+              </div>
             </div>
           </SidebarInset>
         </div>
