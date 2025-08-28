@@ -345,8 +345,20 @@ function GlobalComposer({
   onChange: (v: string) => void;
   onSubmit: () => void;
 }) {
+  const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    // Don't steal focus when clicking on actual buttons
+    if (target.closest("button")) return;
+    textareaRef.current?.focus();
+  };
+
   return (
-    <div className="bg-background relative flex w-full flex-col gap-4 pb-4 md:pb-6">
+    <div
+      className="bg-background relative flex w-full flex-col gap-0 pb-4 md:pb-6 cursor-text"
+      onClick={handleContainerClick}
+    >
       {/* Input box (top section) */}
       <textarea
         placeholder="Send a message to all panels..."
@@ -354,9 +366,10 @@ function GlobalComposer({
         rows={1}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        ref={textareaRef}
       />
       {/* Footer with attach and send, styled like thread composer */}
-      <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2">
+      <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
         <Button
           type="button"
           variant="ghost"
