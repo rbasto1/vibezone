@@ -10,6 +10,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.9",
     "@ai-sdk/openai": "^2.0.21",
     "ai": "^5.0.24",
     "zod": "^4.0.17"

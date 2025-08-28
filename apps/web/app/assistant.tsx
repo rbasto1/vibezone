@@ -191,23 +191,36 @@ export const Assistant = ({
                   gridColsClass
                 )}
               >
-                {panels.map((panel) =>
-                  panel.provider === "openai" ? (
-                    <ResponsePanelOpenAI
-                      key={panel.id}
-                      panel={panel}
-                      canClose={panels.length > MIN_PANELS}
-                      onClose={() => removePanel(panel.id)}
-                    />
-                  ) : (
+                {panels.map((panel) => {
+                  if (panel.provider === "openai") {
+                    return (
+                      <ResponsePanelOpenAI
+                        key={panel.id}
+                        panel={panel}
+                        canClose={panels.length > MIN_PANELS}
+                        onClose={() => removePanel(panel.id)}
+                      />
+                    );
+                  }
+                  if (panel.provider === "anthropic") {
+                    return (
+                      <ResponsePanelAnthropic
+                        key={panel.id}
+                        panel={panel}
+                        canClose={panels.length > MIN_PANELS}
+                        onClose={() => removePanel(panel.id)}
+                      />
+                    );
+                  }
+                  return (
                     <ResponsePanelPlaceholder
                       key={panel.id}
                       panel={panel}
                       canClose={panels.length > MIN_PANELS}
                       onClose={() => removePanel(panel.id)}
                     />
-                  )
-                )}
+                  );
+                })}
               </div>
 
               {/* Centered container for suggestions and composer */}
@@ -427,6 +440,45 @@ function ResponsePanelOpenAI({
           {/* Thread without visible composer; hello message remains within thread */}
           <Thread hideComposer />
           {/* Hidden per-panel composer to receive broadcasted submit */}
+          <HiddenPanelComposer panelId={panel.id} />
+        </AssistantRuntimeProvider>
+      </div>
+    </div>
+  );
+}
+
+function ResponsePanelAnthropic({
+  panel,
+  onClose,
+  canClose,
+}: {
+  panel: PanelConfig;
+  onClose: () => void;
+  canClose: boolean;
+}) {
+  const runtime = useChatRuntime({
+    transport: new DefaultChatTransport({
+      api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/api/chat/anthropic`,
+      body: {
+        config: {
+          model: panel.model,
+          temperature: panel.temperature ?? 0.1,
+        },
+      },
+    }),
+  });
+
+  const headerTitle = useMemo(() => {
+    if (panel.model.startsWith("claude-3-5")) return "Claude 3.5 Sonnet";
+    return `${panel.model}`;
+  }, [panel.model]);
+
+  return (
+    <div className="flex flex-col border rounded-lg overflow-hidden h-full">
+      <PanelHeader title={headerTitle} canClose={canClose} onClose={onClose} />
+      <div className="flex-1 min-h-0">
+        <AssistantRuntimeProvider runtime={runtime}>
+          <Thread hideComposer />
           <HiddenPanelComposer panelId={panel.id} />
         </AssistantRuntimeProvider>
       </div>

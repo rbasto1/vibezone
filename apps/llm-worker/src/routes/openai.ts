@@ -29,7 +29,6 @@ export async function handleOpenAIStream(
     messages,
     temperature: body.config.temperature ?? undefined,
   });
-  console.log("result", result);
 
   // Set headers for streaming
   headers.set("Content-Type", "text/event-stream");

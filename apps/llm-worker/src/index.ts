@@ -1,4 +1,5 @@
 import { handleOpenAIStream } from "./routes/openai";
+import { handleAnthropicStream } from "./routes/anthropic";
 import type { Env } from "./types";
 
 export default {
@@ -50,6 +51,11 @@ export default {
     // Handle OpenAI streaming endpoint
     if (url.pathname === "/api/chat/openai") {
       return handleOpenAIStream(request, env, headers);
+    }
+
+    // Handle Anthropic streaming endpoint
+    if (url.pathname === "/api/chat/anthropic") {
+      return handleAnthropicStream(request, env, headers);
     }
 
     // Mock streaming endpoints for Phase 1
