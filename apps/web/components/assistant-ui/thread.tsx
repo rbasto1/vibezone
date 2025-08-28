@@ -28,7 +28,7 @@ import { cn } from "@/components/ui/utils";
 import { MarkdownText } from "./markdown-text";
 import { ToolFallback } from "./tool-fallback";
 
-export const Thread: FC = () => {
+export const Thread: FC<{ hideComposer?: boolean }> = ({ hideComposer }) => {
   return (
     <ThreadPrimitive.Root
       // aui-thread-root
@@ -56,7 +56,7 @@ export const Thread: FC = () => {
         </ThreadPrimitive.If>
       </ThreadPrimitive.Viewport>
 
-      <Composer />
+      {hideComposer ? null : <Composer />}
     </ThreadPrimitive.Root>
   );
 };
