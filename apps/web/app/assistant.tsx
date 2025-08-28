@@ -1,6 +1,9 @@
 "use client";
 
-import { AssistantRuntimeProvider, ComposerPrimitive } from "@assistant-ui/react";
+import {
+  AssistantRuntimeProvider,
+  ComposerPrimitive,
+} from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DefaultChatTransport } from "ai";
 
@@ -15,25 +18,32 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { XIcon, PlusIcon, ArrowUpIcon } from "lucide-react";
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { cn } from "@/components/ui/utils";
-import { Button } from "@/components/ui/button";
+import { ArrowUpIcon, PlusIcon, XIcon } from "lucide-react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 export type Provider = "openai" | "anthropic" | "gemini";
 
-export type PanelConfig = {
+export interface PanelConfig {
   id: string;
   provider: Provider;
   model: string;
   temperature?: number;
-};
+}
 
 const MAX_PANELS = 3;
 const MIN_PANELS = 1;
@@ -48,7 +58,11 @@ const GlobalComposerContext = createContext<{
   triggerAll: () => void;
 } | null>(null);
 
-export const Assistant = ({ initialPanels }: { initialPanels: PanelConfig[] }) => {
+export const Assistant = ({
+  initialPanels,
+}: {
+  initialPanels: PanelConfig[];
+}) => {
   // Panels are now passed from a Server Component to avoid SSR/client mismatches.
   const [panels, setPanels] = useState<PanelConfig[]>(initialPanels);
 
@@ -171,8 +185,13 @@ export const Assistant = ({ initialPanels }: { initialPanels: PanelConfig[] }) =
             }}
           >
             <div className="flex-1 overflow-hidden p-3 flex flex-col gap-3">
-              <div className={cn("grid gap-3 flex-1 min-h-0 auto-rows-fr w-full", gridColsClass)}>
-                {panels.map((panel) => (
+              <div
+                className={cn(
+                  "grid gap-3 flex-1 min-h-0 auto-rows-fr w-full",
+                  gridColsClass
+                )}
+              >
+                {panels.map((panel) =>
                   panel.provider === "openai" ? (
                     <ResponsePanelOpenAI
                       key={panel.id}
@@ -188,22 +207,25 @@ export const Assistant = ({ initialPanels }: { initialPanels: PanelConfig[] }) =
                       onClose={() => removePanel(panel.id)}
                     />
                   )
-                ))}
+                )}
               </div>
 
-              {/* Global suggestions under panels */}
-              <SuggestionsGrid onSelect={(text) => setGlobalPrompt(text)} />
+              {/* Centered container for suggestions and composer */}
+              <div className="mx-auto w-full max-w-3xl md:max-w-4xl lg:max-w-5xl flex flex-col gap-3 px-2 sm:px-3">
+                {/* Global suggestions under panels */}
+                <SuggestionsGrid onSelect={(text) => setGlobalPrompt(text)} />
 
-              {/* Global composer below panels */}
-              <GlobalComposer
-                value={globalPrompt}
-                onChange={setGlobalPrompt}
-                onSubmit={() => {
-                  if (!globalPrompt.trim()) return;
-                  triggerAll();
-                  setGlobalPrompt("");
-                }}
-              />
+                {/* Global composer below panels */}
+                <GlobalComposer
+                  value={globalPrompt}
+                  onChange={setGlobalPrompt}
+                  onSubmit={() => {
+                    if (!globalPrompt.trim()) return;
+                    triggerAll();
+                    setGlobalPrompt("");
+                  }}
+                />
+              </div>
             </div>
           </GlobalComposerContext.Provider>
         </SidebarInset>
@@ -324,7 +346,7 @@ function GlobalComposer({
   onSubmit: () => void;
 }) {
   return (
-    <div className="bg-background relative mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 pb-4 md:pb-6">
+    <div className="bg-background relative flex w-full flex-col gap-4 pb-4 md:pb-6">
       {/* Input box (top section) */}
       <textarea
         placeholder="Send a message to all panels..."
@@ -409,7 +431,10 @@ function ResponsePanelPlaceholder({
   canClose: boolean;
 }) {
   const headerTitle = useMemo(() => {
-    if (panel.provider === "anthropic" && panel.model.startsWith("claude-3-5")) {
+    if (
+      panel.provider === "anthropic" &&
+      panel.model.startsWith("claude-3-5")
+    ) {
       return "Claude 3.5 Sonnet";
     }
     return `${panel.model}`;
@@ -426,4 +451,3 @@ function ResponsePanelPlaceholder({
     </div>
   );
 }
-
