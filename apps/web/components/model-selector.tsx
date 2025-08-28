@@ -9,7 +9,7 @@ import type { ComponentProps } from "react";
 
 export const ModelSelector = () => {
   const { data: modelsQuery, isLoading: modelsLoading } =
-    trpc.models.getWithProviders.useQuery(undefined, {
+    trpc.models.list.useQuery(undefined, {
       staleTime: 1000 * 60 * 60,
     });
 
