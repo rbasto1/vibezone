@@ -21,14 +21,14 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { XIcon } from "lucide-react";
+import { XIcon, PlusIcon, ArrowUpIcon } from "lucide-react";
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { cn } from "@/components/ui/utils";
 import { Button } from "@/components/ui/button";
 
-type Provider = "openai" | "anthropic" | "gemini";
+export type Provider = "openai" | "anthropic" | "gemini";
 
-type PanelConfig = {
+export type PanelConfig = {
   id: string;
   provider: Provider;
   model: string;
@@ -48,22 +48,9 @@ const GlobalComposerContext = createContext<{
   triggerAll: () => void;
 } | null>(null);
 
-export const Assistant = () => {
-  // Default two panels: GPT-4o and Claude 3.5 Sonnet (Anthropic currently placeholder)
-  const [panels, setPanels] = useState<PanelConfig[]>(() => [
-    {
-      id: crypto.randomUUID(),
-      provider: "openai",
-      model: "gpt-4o",
-      temperature: 0.1,
-    },
-    {
-      id: crypto.randomUUID(),
-      provider: "anthropic",
-      model: "claude-3-5-sonnet",
-      temperature: 0.1,
-    },
-  ]);
+export const Assistant = ({ initialPanels }: { initialPanels: PanelConfig[] }) => {
+  // Panels are now passed from a Server Component to avoid SSR/client mismatches.
+  const [panels, setPanels] = useState<PanelConfig[]>(initialPanels);
 
   const removePanel = (id: string) => {
     setPanels((prev) => {
@@ -127,7 +114,7 @@ export const Assistant = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex h-dvh w-full pr-0.5">
+      <div className="flex h-dvh w-full">
         <AssistantRuntimeProvider runtime={sidebarRuntime}>
           <AppSidebar />
         </AssistantRuntimeProvider>
@@ -184,7 +171,7 @@ export const Assistant = () => {
             }}
           >
             <div className="flex-1 overflow-hidden p-3 flex flex-col gap-3">
-              <div className={cn("grid gap-3", gridColsClass)}>
+              <div className={cn("grid gap-3 flex-1 min-h-0 auto-rows-fr w-full", gridColsClass)}>
                 {panels.map((panel) => (
                   panel.provider === "openai" ? (
                     <ResponsePanelOpenAI
@@ -337,22 +324,34 @@ function GlobalComposer({
   onSubmit: () => void;
 }) {
   return (
-    <div className="bg-background relative mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-2 pb-2">
+    <div className="bg-background relative mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 pb-4 md:pb-6">
+      {/* Input box (top section) */}
       <textarea
         placeholder="Send a message to all panels..."
-        className="bg-muted border-border dark:border-muted-foreground/15 focus:outline-primary placeholder:text-muted-foreground max-h-[calc(50dvh)] min-h-16 w-full resize-none rounded-2xl border px-4 pt-2 pb-3 text-base outline-none"
+        className="bg-muted border-border dark:border-muted-foreground/15 focus:outline-primary placeholder:text-muted-foreground max-h-[calc(50dvh)] min-h-16 w-full resize-none rounded-t-2xl border-x border-t px-4 pt-2 pb-3 text-base outline-none"
         rows={1}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
-      <div className="flex justify-end">
+      {/* Footer with attach and send, styled like thread composer */}
+      <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2">
         <Button
           type="button"
-          className="size-8 rounded-full"
+          variant="ghost"
+          className="hover:bg-foreground/15 dark:hover:bg-background/50 scale-115 p-3.5"
+          onClick={() => console.warn("Attachment clicked - not implemented")}
+          aria-label="Attach file"
+        >
+          <PlusIcon />
+        </Button>
+
+        <Button
+          type="button"
+          className="dark:border-muted-foreground/90 border-muted-foreground/60 hover:bg-primary/75 size-8 rounded-full border cursor-pointer"
           onClick={onSubmit}
           aria-label="Send to all panels"
         >
-          Send
+          <ArrowUpIcon className="size-5" />
         </Button>
       </div>
     </div>
