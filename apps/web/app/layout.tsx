@@ -5,7 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { TRPCProvider } from "@/components/providers/trpc-provider";
-import { cn } from "@/lib/utils";
+import { cn } from "@/components/ui/utils";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

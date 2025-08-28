@@ -3,7 +3,6 @@ import { boolean, pgTable, text, varchar } from "drizzle-orm/pg-core";
 export const providers = pgTable("providers", {
   id: varchar("id", { length: 50 }).primaryKey(), // openai, anthropic, gemini, etc.
   name: text("name").notNull(),
-  iconUrl: text("icon_url"),
 });
 
 export const models = pgTable("models", {

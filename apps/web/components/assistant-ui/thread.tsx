@@ -23,7 +23,7 @@ import type { FC } from "react";
 
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/components/ui/utils";
 
 import { MarkdownText } from "./markdown-text";
 import { ToolFallback } from "./tool-fallback";
