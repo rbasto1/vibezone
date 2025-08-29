@@ -15,7 +15,7 @@ Cloudflare Worker for Vibezone's LLM API streaming endpoints.
 
 **Real LLM Integration**
 
-- ✅ OpenAI streaming endpoint: `/stream/openai`
+- ✅ OpenAI streaming endpoint: `/stream`
 - 🔄 Anthropic and Gemini streaming (coming soon)
 - Server-Sent Events (SSE) for real-time streaming
 - API key management via Wrangler secrets
@@ -43,9 +43,9 @@ pnpm --filter=llm-worker typecheck
 
 Returns worker status and current phase.
 
-### `POST /stream/openai` (Phase 2)
+### `POST /stream`
 
-Real OpenAI streaming endpoint.
+Real OpenAI/Anthropic streaming endpoint.
 
 **Request Body:**
 
@@ -65,43 +65,9 @@ Real OpenAI streaming endpoint.
 **Example:**
 
 ```bash
-curl -N -X POST 'http://127.0.0.1:8787/stream/openai' \
+curl -N -X POST 'http://127.0.0.1:8787/stream' \
   -H 'content-type: application/json' \
   --data '{ "messages": [{ "role": "user", "content": "Say hello" }] }'
-```
-
-### `POST /stream/{provider}` (Phase 1 - Mock)
-
-Mock streaming endpoints for `openai`, `anthropic`, `gemini`.
-
-**Example:**
-
-```bash
-curl http://localhost:8787/stream/openai
-```
-
-## Configuration
-
-### Environment Variables
-
-Create `.env` for local development:
-
-```bash
-ENVIRONMENT=development
-```
-
-### Secrets (Phase 2)
-
-Set your OpenAI API key:
-
-```bash
-echo "OPENAI_API_KEY=sk-..." | wrangler secret put OPENAI_API_KEY
-```
-
-Optional: Set allowed origin for production:
-
-```bash
-echo "WORKER_ALLOWED_ORIGIN=https://yourdomain.com" | wrangler secret put WORKER_ALLOWED_ORIGIN
 ```
 
 ## Phase 2 Implementation Status
@@ -112,7 +78,7 @@ echo "WORKER_ALLOWED_ORIGIN=https://yourdomain.com" | wrangler secret put WORKER
    - CORS configuration
    - Error handling and validation
 
-2. **🔄 Anthropic Integration** (Coming Soon)
+2. **✅ Anthropic Integration**
    - Claude streaming endpoint
    - API key management
 
