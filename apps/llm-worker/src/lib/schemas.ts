@@ -33,10 +33,14 @@ export const ChatMessageSchema = z.object({
   parts: z.array(ChatMessagePartSchema),
 });
 
+export const ProviderSchema = z.enum(["openai", "anthropic"]);
+export type Provider = z.infer<typeof ProviderSchema>;
+
 export const ChatConfigSchema = z.object({
+  provider: ProviderSchema,
+  model: z.string(),
   temperature: z.number().min(0).max(2).nullable().optional(),
   maxTokens: z.number().min(1).max(4000).nullable().optional(),
-  model: z.string(),
 });
 
 export const ChatRequestSchema = z.object({

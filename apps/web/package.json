@@ -16,6 +16,7 @@
     "db:seed": "tsx db/seed.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.9",
     "@ai-sdk/openai": "^2.0.21",
     "@assistant-ui/react": "^0.10.43",
     "@assistant-ui/react-ai-sdk": "^1.0.4",
