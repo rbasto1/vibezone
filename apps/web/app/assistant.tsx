@@ -100,7 +100,7 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
   // TODO: refactor this, we have to list threads from a global list
   const sidebarRuntime = useChatRuntime({
     transport: new DefaultChatTransport({
-      api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/api/chat/openai`,
+      api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream/openai`,
       body: {
         config: {
           model: "gpt-4o-mini",

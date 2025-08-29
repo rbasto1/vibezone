@@ -15,7 +15,7 @@ Cloudflare Worker for Vibezone's LLM API streaming endpoints.
 
 **Real LLM Integration**
 
-- ✅ OpenAI streaming endpoint: `/api/chat/openai`
+- ✅ OpenAI streaming endpoint: `/stream/openai`
 - 🔄 Anthropic and Gemini streaming (coming soon)
 - Server-Sent Events (SSE) for real-time streaming
 - API key management via Wrangler secrets
@@ -43,7 +43,7 @@ pnpm --filter=llm-worker typecheck
 
 Returns worker status and current phase.
 
-### `POST /api/chat/openai` (Phase 2)
+### `POST /stream/openai` (Phase 2)
 
 Real OpenAI streaming endpoint.
 
@@ -65,7 +65,7 @@ Real OpenAI streaming endpoint.
 **Example:**
 
 ```bash
-curl -N -X POST 'http://127.0.0.1:8787/api/chat/openai' \
+curl -N -X POST 'http://127.0.0.1:8787/stream/openai' \
   -H 'content-type: application/json' \
   --data '{ "messages": [{ "role": "user", "content": "Say hello" }] }'
 ```

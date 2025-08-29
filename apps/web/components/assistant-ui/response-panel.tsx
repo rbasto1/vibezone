@@ -22,9 +22,10 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const { id, provider, model, temperature } = panel;
   const runtime = useChatRuntime({
     transport: new DefaultChatTransport({
-      api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/api/chat/${provider}`,
+      api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
       body: {
         config: {
+          provider,
           model,
           temperature: temperature ?? 0.1,
         },
