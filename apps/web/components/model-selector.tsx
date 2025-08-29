@@ -1,6 +1,6 @@
 "use client";
 
-import AnthropicIcon from "@/components/ui/providers/anthorpic";
+import AnthropicIcon from "@/components/ui/providers/anthropic";
 import DeepSeekIcon from "@/components/ui/providers/deepseek";
 import GeminiIcon from "@/components/ui/providers/gemini";
 import OpenAIIcon from "@/components/ui/providers/openai";

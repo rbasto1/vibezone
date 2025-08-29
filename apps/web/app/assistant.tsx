@@ -43,6 +43,24 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
     });
   };
 
+  const changePanelModel = (
+    panelId: string,
+    providerId: Provider,
+    modelId: string
+  ) => {
+    setPanels((prev) =>
+      prev.map((p) =>
+        p.id === panelId
+          ? {
+              ...p,
+              provider: providerId,
+              model: modelId,
+            }
+          : p
+      )
+    );
+  };
+
   // Global composer state and registry
   const [globalPrompt, setGlobalPrompt] = useState("");
   const registryRef = useRef<RuntimeRegistry>(new Map());
@@ -141,8 +159,18 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
                   <ResponsePanel
                     key={panel.id}
                     panel={panel}
-                    canClose={panels.length > 1}
-                    onClose={() => removePanel(panel.id)}
+                    onClose={
+                      panels.length > 1
+                        ? () => removePanel(panel.id)
+                        : undefined
+                    }
+                    onChangeModel={(providerId, modelId) =>
+                      changePanelModel(
+                        panel.id,
+                        providerId as Provider,
+                        modelId
+                      )
+                    }
                   />
                 ))}
               </div>

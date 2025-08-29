@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { modelsRouter } from "../models";
 import { t } from "./initialize";
 
@@ -8,3 +9,8 @@ export const appRouter = t.router({
 });
 
 export type AppRouter = typeof appRouter;
+export type RouterInputs = inferRouterInputs<AppRouter>;
+export type RouterOutputs = inferRouterOutputs<AppRouter>;
+
+// models
+export type ModelsListOutput = RouterOutputs["models"]["list"];

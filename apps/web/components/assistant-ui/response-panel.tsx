@@ -10,14 +10,14 @@ import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
 
 interface ResponsePanelProps {
   panel: PanelConfig;
-  onClose: () => void;
-  canClose: boolean;
+  onClose?: () => void;
+  onChangeModel: (providerId: string, modelId: string) => void;
 }
 
 export const ResponsePanel: FC<ResponsePanelProps> = ({
   panel,
   onClose,
-  canClose,
+  onChangeModel,
 }) => {
   const { id, provider, model, temperature } = panel;
   const runtime = useChatRuntime({
@@ -33,16 +33,17 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
     }),
   });
 
-  // TODO: use store to get model name and icon etc.
-  const headerTitle = model;
-
   // This is how we execute the chat from the global composer
   // It registers the runtime so that messages sent from the composer are sent to this panel's runtime
   useRuntimeRegistration(id, runtime);
 
   return (
     <div className="flex flex-col border rounded-lg overflow-hidden h-full">
-      <PanelHeader title={headerTitle} canClose={canClose} onClose={onClose} />
+      <PanelHeader
+        modelId={model}
+        onClose={onClose}
+        onChangeModel={onChangeModel}
+      />
       <div className="flex-1 min-h-0">
         <AssistantRuntimeProvider runtime={runtime}>
           <Thread />
