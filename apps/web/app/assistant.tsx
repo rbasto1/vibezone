@@ -81,6 +81,9 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
     for (const [panelId, runtime] of registryRef.current.entries()) {
       try {
         runtime.thread.append({
+          runConfig: { custom: { thisIscustom: true } },
+          metadata: { custom: { thisIsMyMetadata: true } },
+          sourceId: "this is the source",
           role: "user",
           content: [{ type: "text", text: msg }],
         });
@@ -118,7 +121,7 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
   // TODO: refactor this, we have to list threads from a global list
   const sidebarRuntime = useChatRuntime({
     transport: new DefaultChatTransport({
-      api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream/openai`,
+      api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
       body: {
         config: {
           model: "gpt-4o-mini",

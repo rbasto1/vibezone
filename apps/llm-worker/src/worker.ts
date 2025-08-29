@@ -1,6 +1,5 @@
 import { cors } from "./cors";
 import { handleProviderStream } from "./stream";
-import type { Env } from "./types";
 
 export default {
   async fetch(

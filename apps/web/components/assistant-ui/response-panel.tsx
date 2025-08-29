@@ -1,10 +1,11 @@
 import type { PanelConfig } from "@/app/assistant";
 import { Thread } from "@/components/assistant-ui/thread";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
+import type { ModelContext } from "@assistant-ui/react";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DefaultChatTransport } from "ai";
-import type { FC } from "react";
+import { useEffect, useMemo, type FC } from "react";
 import { PanelHeader } from "./response-panel-header";
 import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
 
@@ -14,24 +15,46 @@ interface ResponsePanelProps {
   onChangeModel: (providerId: string, modelId: string) => void;
 }
 
+// Since we can't use ModelContextProviders (see comment below), we will
+// have to hack our way out
+const panelGlobalContext: Record<string, PanelConfig> = {};
+
 export const ResponsePanel: FC<ResponsePanelProps> = ({
   panel,
   onClose,
   onChangeModel,
 }) => {
-  const { id, provider, model, temperature } = panel;
-  const runtime = useChatRuntime({
+  const { id, model, temperature } = panel;
+  panelGlobalContext[id] = panel;
+
+  const _runtime = useChatRuntime({
     transport: new DefaultChatTransport({
       api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
-      body: {
-        config: {
-          provider,
-          model,
-          temperature: temperature ?? 0.1,
-        },
-      },
+      fetch: (url, init) =>
+        fetch(url, {
+          ...init,
+          headers: {
+            ...init?.headers,
+            "x-vz-provider": panelGlobalContext[id]?.provider ?? "missing",
+            "x-vz-model": panelGlobalContext[id]?.model ?? "missing",
+          },
+        }),
     }),
   });
+
+  // We will update the runtime using the global variable above
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const runtime = useMemo(() => _runtime, []);
+
+  useEffect(() => {
+    // This is not working as of assitant-ui@0.10.43
+    return runtime.registerModelContextProvider({
+      getModelContext: (): ModelContext => {
+        console.info("Yay! It works! Called getModelContext:", id, model);
+        return {};
+      },
+    });
+  }, [runtime, model, id, temperature]);
 
   // This is how we execute the chat from the global composer
   // It registers the runtime so that messages sent from the composer are sent to this panel's runtime
@@ -45,7 +68,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
         onChangeModel={onChangeModel}
       />
       <div className="flex-1 min-h-0">
-        <AssistantRuntimeProvider runtime={runtime}>
+        <AssistantRuntimeProvider runtime={_runtime}>
           <Thread />
           <ThreadScrollToBottom />
         </AssistantRuntimeProvider>

@@ -9,12 +9,14 @@ export function useRuntimeRegistration(
   runtime: ReturnType<typeof useChatRuntime>
 ) {
   const ctx = useContext(GlobalComposerContext);
+  const register = ctx?.register;
+  const unregister = ctx?.unregister;
 
   useEffect(() => {
-    if (!ctx || !runtime) return;
-    ctx.register(panelId, runtime);
-    return () => ctx.unregister(panelId);
-  }, [ctx, panelId, runtime]);
+    if (!register || !unregister) return;
+    register(panelId, runtime);
+    return () => unregister(panelId);
+  }, [register, unregister, panelId, runtime]);
 
   return null;
 }

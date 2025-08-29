@@ -1,8 +1,9 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { convertToModelMessages, streamText } from "ai";
-import { ChatRequestSchema, Provider } from "./lib/schemas";
-import type { Env } from "./types";
+import { getApiKey } from "./lib/api-keys";
+import { getConfigFromRequest } from "./lib/request";
+import { Provider } from "./lib/schemas";
 
 export async function handleProviderStream(
   request: Request,
@@ -17,17 +18,16 @@ export async function handleProviderStream(
     );
   }
 
-  console.log(`Stream request:`, JSON.stringify(rawBody, null, 2));
-  const bodyParse = ChatRequestSchema.safeParse(rawBody);
-  if (!bodyParse.success) {
+  const getConfigResult = getConfigFromRequest(request, rawBody);
+  if (getConfigResult.type === "error") {
     return Response.json(
-      { error: `Invalid request: ${bodyParse.error.issues[0]?.message}` },
+      { error: getConfigResult.error },
       { status: 400, headers }
     );
   }
 
-  const { config, messages } = bodyParse.data;
-  const { provider, model, temperature } = config;
+  const { provider, model } = getConfigResult.config;
+  const messages = getConfigResult.messages;
 
   const apiKey = getApiKey(env, provider);
   if (!apiKey) {
@@ -36,30 +36,26 @@ export async function handleProviderStream(
       { status: 500, headers }
     );
   }
-  const providerClient = createProvider(provider, apiKey);
+
+  const adapter = createProvider(provider, apiKey);
 
   const result = streamText({
-    model: providerClient(model),
+    model: adapter(model),
     messages: convertToModelMessages(messages),
-    temperature: temperature ?? undefined,
+    onError: (error) => {
+      console.error("Caught an error creating stream text:", error);
+    },
   });
 
   // Set headers for streaming
   headers.set("Content-Type", "text/event-stream");
   headers.set("Cache-Control", "no-store");
   headers.set("Connection", "keep-alive");
+  headers.set("Transfer-Encoding", "chunked");
+  headers.set("Content-Encoding", "identity");
 
   // Return the streaming response
   return result.toUIMessageStreamResponse({ headers });
-}
-
-function getApiKey(env: Env, provider: Provider): string {
-  switch (provider) {
-    case "openai":
-      return env.OPENAI_API_KEY;
-    case "anthropic":
-      return env.ANTHROPIC_API_KEY;
-  }
 }
 
 function createProvider(provider: Provider, apiKey: string) {
