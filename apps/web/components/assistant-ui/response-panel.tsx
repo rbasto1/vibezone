@@ -30,15 +30,20 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const _runtime = useChatRuntime({
     transport: new DefaultChatTransport({
       api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
-      fetch: (url, init) =>
-        fetch(url, {
+      fetch: (url, init) => {
+        if (!panelGlobalContext[id]) {
+          // TODO: use sonner for a better UX
+          throw new Error("Assert: Panel not registered!");
+        }
+        const { provider, model } = panelGlobalContext[id];
+        return fetch(url, {
           ...init,
           headers: {
             ...init?.headers,
-            "x-vz-provider": panelGlobalContext[id]?.provider ?? "missing",
-            "x-vz-model": panelGlobalContext[id]?.model ?? "missing",
+            "x-vz-model-id": `${provider}/${model}`,
           },
-        }),
+        });
+      },
     }),
   });
 

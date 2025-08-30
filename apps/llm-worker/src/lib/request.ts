@@ -1,9 +1,4 @@
-import {
-  ChatMessage,
-  ChatRequestSchema,
-  Provider,
-  ProviderSchema,
-} from "./schemas";
+import { ChatMessage, ChatRequestSchema } from "./schemas";
 
 export type GetConfigResponse =
   | GetConfigResponseSuccess
@@ -12,8 +7,7 @@ export type GetConfigResponse =
 export interface GetConfigResponseSuccess {
   type: "success";
   config: {
-    provider: Provider;
-    model: string;
+    modelId: string;
   };
   messages: ChatMessage[];
   error: null;
@@ -39,26 +33,15 @@ export function getConfigFromRequest(
     };
   }
 
-  const providerHeader = request.headers.get("x-vz-provider");
-  const providerParse = ProviderSchema.safeParse(providerHeader);
-  if (!providerParse.success) {
-    return {
-      type: "error",
-      error: providerParse.error.issues[0]?.message ?? "Parse error",
-    };
-  }
-  const provider = providerParse.data;
-
-  const model = request.headers.get("x-vz-model");
-  if (!model) {
-    return { type: "error", error: "Missing model" };
+  const modelId = request.headers.get("x-vz-model-id");
+  if (!modelId) {
+    return { type: "error", error: "Missing model id" };
   }
 
   return {
     type: "success",
     config: {
-      provider,
-      model,
+      modelId,
     },
     messages: bodyParse.data.messages,
     error: null,

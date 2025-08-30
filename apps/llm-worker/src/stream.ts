@@ -1,9 +1,7 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { convertToModelMessages, streamText } from "ai";
-import { getApiKey } from "./lib/api-keys";
+import { getGatewayConfig } from "./lib/gateway";
 import { getConfigFromRequest } from "./lib/request";
-import { Provider } from "./lib/schemas";
 
 export async function handleProviderStream(
   request: Request,
@@ -26,21 +24,17 @@ export async function handleProviderStream(
     );
   }
 
-  const { provider, model } = getConfigResult.config;
+  const { modelId } = getConfigResult.config;
   const messages = getConfigResult.messages;
 
-  const apiKey = getApiKey(env, provider);
-  if (!apiKey) {
-    return Response.json(
-      { error: `No API key found for provider "${provider}"` },
-      { status: 500, headers }
-    );
-  }
-
-  const adapter = createProvider(provider, apiKey);
+  const gateway = getGatewayConfig(env);
+  const adapter = createOpenRouter({
+    apiKey: gateway.apiKey,
+    headers: gateway.headers,
+  });
 
   const result = streamText({
-    model: adapter(model),
+    model: adapter(modelId),
     messages: convertToModelMessages(messages),
     onError: (error) => {
       console.error("Caught an error creating stream text:", error);
@@ -56,13 +50,4 @@ export async function handleProviderStream(
 
   // Return the streaming response
   return result.toUIMessageStreamResponse({ headers });
-}
-
-function createProvider(provider: Provider, apiKey: string) {
-  switch (provider) {
-    case "openai":
-      return createOpenAI({ apiKey });
-    case "anthropic":
-      return createAnthropic({ apiKey });
-  }
 }
