@@ -1,5 +1,10 @@
 import { db } from "@/db";
-import { models, providers, modelSupportedParameters, supportedParameters } from "@/db/schema";
+import {
+  models,
+  modelSupportedParameters,
+  providers,
+  supportedParameters,
+} from "@/db/schema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 
@@ -15,12 +20,13 @@ function formatDate(value?: Date | null) {
 }
 
 export default async function ModelDetailsPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: Record<string, string | string[] | undefined>;
-}) {
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
+}: PageProps<"/manage/models/[id]">) {
+  const [params, searchParams] = await Promise.all([
+    paramsPromise,
+    searchParamsPromise,
+  ]);
   const id = decodeURIComponent(params.id);
 
   const [model] = await db
@@ -68,21 +74,27 @@ export default async function ModelDetailsPage({
         <div className="rounded-md border p-4 space-y-2">
           <h2 className="font-semibold">General</h2>
           <div className="text-sm">Provider: {model.provider.name}</div>
-          <div className="text-sm">Canonical Slug: {m.canonicalSlug || "—"}</div>
+          <div className="text-sm">
+            Canonical Slug: {m.canonicalSlug || "—"}
+          </div>
           <div className="text-sm">HuggingFace: {m.huggingFaceId || "—"}</div>
           <div className="text-sm">Created: {formatDate(m.createdAt)}</div>
           <div className="text-sm">Deleted: {formatDate(m.deletedAt)}</div>
         </div>
         <div className="rounded-md border p-4 space-y-2">
           <h2 className="font-semibold">Architecture</h2>
-          <div className="text-sm">Modality: {m.architectureModality || "—"}</div>
+          <div className="text-sm">
+            Modality: {m.architectureModality || "—"}
+          </div>
           <div className="text-sm">
             Input: {(m.architectureInputModalities || []).join(", ") || "—"}
           </div>
           <div className="text-sm">
             Output: {(m.architectureOutputModalities || []).join(", ") || "—"}
           </div>
-          <div className="text-sm">Tokenizer: {m.architectureTokenizer || "—"}</div>
+          <div className="text-sm">
+            Tokenizer: {m.architectureTokenizer || "—"}
+          </div>
           <div className="text-sm">
             Instruct type: {m.architectureInstructType || "—"}
           </div>
@@ -149,4 +161,3 @@ function BackLink({
     </Link>
   );
 }
-

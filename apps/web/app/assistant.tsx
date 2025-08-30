@@ -13,6 +13,7 @@ import { GlobalComposerContext } from "@/components/providers/composer-provider"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export interface PanelConfig {
   id: string;
@@ -76,7 +77,7 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
     if (!msg) return;
 
     // Send directly to each runtime
-    for (const [panelId, runtime] of registryRef.current.entries()) {
+    for (const runtime of registryRef.current.values()) {
       try {
         runtime.thread.append({
           runConfig: { custom: { thisIscustom: true } },
@@ -86,7 +87,8 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
           content: [{ type: "text", text: msg }],
         });
       } catch (e) {
-        console.error("Send failed for panel", panelId, e);
+        const message = e instanceof Error ? e.message : String(e);
+        toast.error(`Send failed for a panel: ${message}`);
       }
     }
 

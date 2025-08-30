@@ -4,10 +4,12 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { ModelsProvider } from "@/components/providers/models-provider";
-import { getModelsList } from "@/lib/trpc/models";
+import { Toaster } from "@/components/providers/toast-provider";
+import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { cn } from "@/components/ui/utils";
+import { getModelsList } from "@/lib/trpc/models";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,18 +48,21 @@ export default async function RootLayout({
       <body
         className={cn(geistSans.variable, geistMono.variable, "antialiased")}
       >
-        <TRPCProvider>
-          <ModelsProvider initialValue={modelsList}>
-            <ThemeProvider
-              attribute="class"
-              storageKey="theme"
-              defaultTheme="system"
-              enableSystem
-            >
-              {children}
-            </ThemeProvider>
-          </ModelsProvider>
-        </TRPCProvider>
+        <Suspense fallback={<div>Loading...</div>}>
+          <TRPCProvider>
+            <ModelsProvider initialValue={modelsList}>
+              <ThemeProvider
+                attribute="class"
+                storageKey="theme"
+                defaultTheme="system"
+                enableSystem
+              >
+                {children}
+                <Toaster />
+              </ThemeProvider>
+            </ModelsProvider>
+          </TRPCProvider>
+        </Suspense>
       </body>
     </html>
   );
