@@ -1,5 +1,5 @@
 "use client";
-import { ArrowUpIcon, PlusIcon } from "lucide-react";
+import { ArrowUpIcon, PlusIcon, SquareIcon } from "lucide-react";
 import React from "react";
 import { Button } from "../ui/button";
 
@@ -7,12 +7,14 @@ export type GlobalComposerProps = {
   value: string;
   onChange: (v: string) => void;
   onSubmit: () => void;
+  onStopAll: () => void;
 };
 
 export const GlobalComposer: React.FC<GlobalComposerProps> = ({
   value,
   onChange,
   onSubmit,
+  onStopAll,
 }) => {
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
@@ -47,15 +49,28 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
       />
       {/* Footer with attach and send, styled like thread composer */}
       <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
-        <Button
-          type="button"
-          variant="ghost"
-          className="hover:bg-foreground/15 dark:hover:bg-background/50 scale-115 p-3.5"
-          onClick={() => console.warn("Attachment clicked - not implemented")}
-          aria-label="Attach file"
-        >
-          <PlusIcon />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            className="hover:bg-foreground/15 dark:hover:bg-background/50 scale-115 p-3.5"
+            onClick={() => console.warn("Attachment clicked - not implemented")}
+            aria-label="Attach file"
+          >
+            <PlusIcon />
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            className="hover:bg-foreground/15 dark:hover:bg-background/50 p-2"
+            onClick={onStopAll}
+            aria-label="Stop all"
+            title="Stop all panels"
+          >
+            <SquareIcon className="size-5" />
+          </Button>
+        </div>
 
         <Button
           type="button"

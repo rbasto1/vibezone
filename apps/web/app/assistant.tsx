@@ -186,6 +186,23 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
                   value={globalPrompt}
                   onChange={setGlobalPrompt}
                   onSubmit={() => send(globalPrompt)}
+                  onStopAll={() => {
+                    const failures: string[] = [];
+                    for (const runtime of registryRef.current.values()) {
+                      try {
+                        runtime.thread.cancelRun();
+                      } catch (e) {
+                        const message =
+                          e instanceof Error ? e.message : String(e);
+                        failures.push(message);
+                      }
+                    }
+                    if (failures.length) {
+                      toast.error(
+                        `Some panels failed to stop: ${failures.join("; ")}`
+                      );
+                    }
+                  }}
                 />
               </div>
             </div>

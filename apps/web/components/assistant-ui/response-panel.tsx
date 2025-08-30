@@ -6,6 +6,7 @@ import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DefaultChatTransport } from "ai";
 import { useEffect, useMemo, type FC } from "react";
+import { toast } from "sonner";
 import { PanelHeader } from "./response-panel-header";
 import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
 
@@ -71,6 +72,14 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
         modelId={model}
         onClose={onClose}
         onChangeModel={onChangeModel}
+        onStop={() => {
+          try {
+            runtime.thread.cancelRun();
+          } catch (e) {
+            const message = e instanceof Error ? e.message : String(e);
+            toast.error(`Failed to stop: ${message}`);
+          }
+        }}
       />
       <div className="flex-1 min-h-0">
         <AssistantRuntimeProvider runtime={_runtime}>
