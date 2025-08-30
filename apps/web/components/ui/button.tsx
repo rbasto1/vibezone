@@ -40,10 +40,12 @@ function Button({
   variant,
   size,
   asChild = false,
+  loading = false,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
+    loading?: boolean;
   }) {
   const Comp = asChild ? Slot : "button";
 
@@ -54,8 +56,33 @@ function Button({
         "cursor-pointer",
         buttonVariants({ variant, size, className })
       )}
+      disabled={(props as any).disabled || loading}
       {...props}
-    />
+    >
+      {loading ? (
+        <svg
+          aria-hidden
+          className="animate-spin h-4 w-4 text-current"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+          />
+        </svg>
+      ) : null}
+      {props.children}
+    </Comp>
   );
 }
 

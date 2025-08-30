@@ -35,12 +35,12 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
           // TODO: use sonner for a better UX
           throw new Error("Assert: Panel not registered!");
         }
-        const { provider, model } = panelGlobalContext[id];
+        const { model } = panelGlobalContext[id];
         return fetch(url, {
           ...init,
           headers: {
             ...init?.headers,
-            "x-vz-model-id": `${provider}/${model}`,
+            "x-vz-model-id": model,
           },
         });
       },

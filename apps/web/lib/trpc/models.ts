@@ -1,10 +1,21 @@
 import "server-only";
 
 import { db } from "@/db";
-import type { Provider } from "@/db/schema";
-import { models, providers } from "@/db/schema";
+import type {
+  NewModel,
+  NewProvider,
+  NewSupportedParameter,
+  Provider,
+} from "@/db/schema";
+import {
+  models,
+  modelSupportedParameters,
+  providers,
+  supportedParameters,
+} from "@/db/schema";
+import { OpenRouterModelsResponse } from "@/lib/open-router/schema";
 import { publicProcedure, t } from "@/lib/trpc/server/initialize";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 export const modelsRouter = t.router({
   list: publicProcedure.query(async () => {
@@ -15,6 +26,13 @@ export const modelsRouter = t.router({
       })
       .from(models)
       .innerJoin(providers, eq(models.providerId, providers.id))
+      .where(
+        and(
+          isNull(models.deletedAt),
+          sql`'text' = ANY(${models.architectureInputModalities})`,
+          sql`'text' = ANY(${models.architectureOutputModalities})`
+        )
+      )
       .orderBy(models.name);
     const uniqueProviders = result
       .map((item) => item.provider)
@@ -33,6 +51,137 @@ export const modelsRouter = t.router({
         },
       })),
       providers: uniqueProviders,
+    };
+  }),
+
+  syncFromOpenRouter: publicProcedure.mutation(async () => {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      throw new Error("OPENROUTER_API_KEY is not set");
+    }
+
+    const res = await fetch("https://openrouter.ai/api/v1/models", {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      cache: "no-store",
+    }).catch((e) => {
+      throw new Error(`Failed to fetch models: ${String(e)}`);
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`OpenRouter models error ${res.status}: ${body}`);
+    }
+    const json = await res.json().catch((e) => {
+      throw new Error(`Failed to parse models json: ${String(e)}`);
+    });
+    const parsed = OpenRouterModelsResponse.safeParse(json);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Parse error");
+    }
+
+    const modelsData = parsed.data.data;
+
+    // Ensure providers exist
+    const providerIds = Array.from(
+      new Set(modelsData.map((m) => m.id.split("/")[0]))
+    );
+    // Upsert supported parameters reference rows
+    const allParams = Array.from(
+      new Set(modelsData.flatMap((m) => m.supported_parameters))
+    );
+
+    if (providerIds.length) {
+      await db
+        .insert(providers)
+        .values(
+          providerIds.map((pid): NewProvider => {
+            if (!pid) throw new Error("Assert: Missing provider ID");
+            return { id: pid, name: pid };
+          })
+        )
+        .onConflictDoNothing();
+
+      await db
+        .insert(supportedParameters)
+        .values(
+          allParams.map((p): NewSupportedParameter => ({ id: p, label: p }))
+        )
+        .onConflictDoNothing();
+    }
+
+    const existingModels: Set<string> = new Set(
+      (
+        await db.query.models.findMany({
+          columns: { id: true },
+        })
+      ).map((m) => m.id)
+    );
+    const newModels = modelsData.filter((m) => !existingModels.has(m.id));
+
+    // Upsert new models
+    if (newModels.length) {
+      await db.insert(models).values(
+        newModels.map((m) => {
+          const providerId = m.id.split("/")[0];
+          if (!providerId) throw new Error("Assert: Missing provider ID");
+          return {
+            id: m.id,
+            providerId,
+            name: m.name,
+            canonicalSlug: m.canonical_slug,
+            huggingFaceId: m.hugging_face_id,
+            description: m.description,
+            architectureModality: m.architecture.modality,
+            architectureInputModalities: m.architecture.input_modalities,
+            architectureOutputModalities: m.architecture.output_modalities,
+            architectureTokenizer: m.architecture.tokenizer,
+            architectureInstructType: m.architecture.instruct_type,
+            pricing: m.pricing,
+            topProvider: m.top_provider,
+            perRequestLimits: m.per_request_limits,
+            createdAt: new Date(m.created * 1000),
+          } satisfies NewModel;
+        })
+      );
+
+      // Insert supported parameters
+      await db
+        .insert(supportedParameters)
+        .values(
+          allParams.map((p): NewSupportedParameter => ({ id: p, label: p }))
+        )
+        .onConflictDoNothing();
+
+      // Insert supported parameters relations
+      await db
+        .insert(modelSupportedParameters)
+        .values(
+          modelsData.flatMap((m) =>
+            m.supported_parameters.map((p) => ({
+              modelId: m.id,
+              supportedParameterId: p,
+            }))
+          )
+        )
+        .onConflictDoNothing();
+    }
+
+    // Soft-delete models not present anymore
+    const incomingIds = new Set(modelsData.map((m) => m.id));
+    const toSoftDelete = Array.from(existingModels).filter(
+      (id) => !incomingIds.has(id)
+    );
+    if (toSoftDelete.length) {
+      await db
+        .update(models)
+        .set({ deletedAt: sql`current_timestamp` })
+        .where(inArray(models.id, toSoftDelete));
+    }
+
+    return {
+      providersUpserted: providerIds.length,
+      modelsUpserted: modelsData.length,
+      softDeleted: toSoftDelete.length,
+      parametersSeen: allParams.length,
     };
   }),
 });
