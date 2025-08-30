@@ -1,4 +1,4 @@
-import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 const timestampTz = (name: string) =>
   timestamp(name, { withTimezone: true, mode: "date" });
@@ -35,6 +35,8 @@ export const models = pgTable("models", {
   perRequestLimits: jsonb("per_request_limits"),
   // created from API (epoch seconds) -> timestamptz
   createdAt: timestampTzNow("created_at"),
+  // UI selection priority for default panels
+  priority: integer("priority"),
   // soft delete
   deletedAt: timestampTz("deleted_at"),
 });

@@ -17,42 +17,56 @@ import { OpenRouterModelsResponse } from "@/lib/open-router/schema";
 import { publicProcedure, t } from "@/lib/trpc/server/initialize";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
-export const modelsRouter = t.router({
-  list: publicProcedure.query(async () => {
-    const result = await db
-      .select({
-        model: models,
-        provider: providers,
-      })
-      .from(models)
-      .innerJoin(providers, eq(models.providerId, providers.id))
-      .where(
-        and(
-          isNull(models.deletedAt),
-          sql`'text' = ANY(${models.architectureInputModalities})`,
-          sql`'text' = ANY(${models.architectureOutputModalities})`
-        )
+// Shared server function to list models for SSR and tRPC
+export async function getModelsList() {
+  const result = await db
+    .select({
+      model: models,
+      provider: providers,
+    })
+    .from(models)
+    .innerJoin(providers, eq(models.providerId, providers.id))
+    .where(
+      and(
+        isNull(models.deletedAt),
+        sql`'text' = ANY(${models.architectureInputModalities})`,
+        sql`'text' = ANY(${models.architectureOutputModalities})`
       )
-      .orderBy(models.name);
-    const uniqueProviders = result
-      .map((item) => item.provider)
-      .reduce((acc, provider) => {
-        if (!acc.some((p) => p.id === provider.id)) {
-          acc.push(provider);
-        }
-        return acc;
-      }, [] as Provider[]);
+    )
+    .orderBy(models.name);
 
-    return {
-      models: result.map((item) => ({
-        ...item.model,
-        provider: {
-          name: item.provider.name,
-        },
-      })),
-      providers: uniqueProviders,
-    };
-  }),
+  const uniqueProviders = result
+    .map((item) => item.provider)
+    .reduce((acc, provider) => {
+      if (!acc.some((p) => p.id === provider.id)) {
+        acc.push(provider);
+      }
+      return acc;
+    }, [] as Provider[])
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return {
+    models: result.map((item) => ({
+      ...item.model,
+      createdAt: item.model.createdAt
+        ? new Date(item.model.createdAt).toISOString()
+        : undefined,
+      deletedAt: item.model.deletedAt
+        ? new Date(item.model.deletedAt).toISOString()
+        : null,
+      provider: {
+        name: item.provider.name,
+      },
+    })),
+    providers: uniqueProviders.map((p) => ({
+      ...p,
+      createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : undefined,
+    })),
+  };
+}
+
+export const modelsRouter = t.router({
+  list: publicProcedure.query(getModelsList),
 
   syncFromOpenRouter: publicProcedure.mutation(async () => {
     const apiKey = process.env.OPENROUTER_API_KEY;

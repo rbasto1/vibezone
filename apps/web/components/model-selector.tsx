@@ -4,20 +4,14 @@ import AnthropicIcon from "@/components/ui/providers/anthropic";
 import DeepSeekIcon from "@/components/ui/providers/deepseek";
 import GeminiIcon from "@/components/ui/providers/gemini";
 import OpenAIIcon from "@/components/ui/providers/openai";
-import { trpc } from "@/lib/trpc/client";
+import { modelsAtom } from "@/store/models";
+import { useAtomValue } from "jotai";
 import type { ComponentProps } from "react";
 
 export const ModelSelector = () => {
-  const { data: modelsQuery, isLoading: modelsLoading } =
-    trpc.models.list.useQuery(undefined, {
-      staleTime: 1000 * 60 * 60,
-    });
-
-  if (modelsLoading) {
-    return <div>Loading...</div>;
-  }
-  const models = modelsQuery?.models;
-  const providers = modelsQuery?.providers;
+  const hydrated = useAtomValue(modelsAtom);
+  const models = hydrated.models;
+  const providers = hydrated.providers;
 
   return (
     <div className="space-y-4">
@@ -41,17 +35,6 @@ export const ModelSelector = () => {
               <div className="font-medium">
                 {getProviderIcon(model.providerId)}
                 {model.name}
-              </div>
-              <div className="text-sm text-gray-600">
-                {model.isPremium && (
-                  <span className="ml-2 text-yellow-600">Premium</span>
-                )}
-                {model.isNew && (
-                  <span className="ml-2 text-green-600">New</span>
-                )}
-                {model.isExperimental && (
-                  <span className="ml-2 text-blue-600">Experimental</span>
-                )}
               </div>
             </div>
           ))}

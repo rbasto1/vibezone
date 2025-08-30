@@ -41,6 +41,7 @@ function Button({
   size,
   asChild = false,
   loading = false,
+  disabled = false,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
@@ -56,7 +57,7 @@ function Button({
         "cursor-pointer",
         buttonVariants({ variant, size, className })
       )}
-      disabled={(props as any).disabled || loading}
+      disabled={disabled || loading}
       {...props}
     >
       {loading ? (

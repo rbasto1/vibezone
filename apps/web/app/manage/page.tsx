@@ -15,11 +15,13 @@ import type {
   ModelsListOutput,
   ModelsSyncFromOpenRouterOutput,
 } from "@/lib/trpc/server/server";
+import { modelsAtom } from "@/store/models";
 import type {
   ColumnDef,
   ColumnSort,
   SortingState,
 } from "@tanstack/react-table";
+import { useAtomValue, useSetAtom } from "jotai";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 function formatDate(value?: string | Date | null) {
@@ -42,13 +44,19 @@ function ManagePageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const hydrated = useAtomValue(modelsAtom);
+  const setModels = useSetAtom(modelsAtom);
   const utils = trpc.useUtils();
-  const listQuery = trpc.models.list.useQuery(undefined, {
-    staleTime: 60_000,
-    retry: false,
-  });
   const syncMutation = trpc.models.syncFromOpenRouter.useMutation({
-    onSuccess: () => utils.models.list.invalidate(),
+    onSuccess: async (res) => {
+      try {
+        const refreshed = await utils.models.list.fetch();
+        setModels(refreshed);
+        setLastResult(res);
+      } catch {
+        setLastResult(res);
+      }
+    },
   });
 
   const [showSync, setShowSync] = useState(false);
@@ -132,8 +140,11 @@ function ManagePageClient() {
     []
   );
 
-  const providers = listQuery.data?.providers;
-  const models = listQuery.data?.models;
+  const { providers, models } = hydrated;
+  const sortedProviders = useMemo(
+    () => [...providers].sort((a, b) => a.name.localeCompare(b.name)),
+    [providers]
+  );
   const providerCounts = useMemo(() => {
     if (!models) return {};
     const counts: Record<string, number> = {};
@@ -186,7 +197,7 @@ function ManagePageClient() {
             }}
           >
             <option value="all">All</option>
-            {providers?.map((p) => (
+            {sortedProviders.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} ({providerCounts[p.id] ?? 0})
               </option>
@@ -197,7 +208,6 @@ function ManagePageClient() {
           </Button>
         </div>
       </div>
-      <QueryAlert error={listQuery.error} />
       <QueryAlert error={syncMutation.error} />
       <div className="rounded-md border">
         <DataTable

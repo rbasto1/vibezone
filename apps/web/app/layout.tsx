@@ -5,6 +5,8 @@ import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { TRPCProvider } from "@/components/providers/trpc-provider";
+import { ModelsProvider } from "@/components/providers/models-provider";
+import { getModelsList } from "@/lib/trpc/models";
 import { cn } from "@/components/ui/utils";
 
 const geistSans = Geist({
@@ -30,11 +32,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch models once at the root for Jotai hydration across the app
+  const modelsList = await getModelsList();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
@@ -42,14 +47,16 @@ export default function RootLayout({
         className={cn(geistSans.variable, geistMono.variable, "antialiased")}
       >
         <TRPCProvider>
-          <ThemeProvider
-            attribute="class"
-            storageKey="theme"
-            defaultTheme="system"
-            enableSystem
-          >
-            {children}
-          </ThemeProvider>
+          <ModelsProvider initialValue={modelsList}>
+            <ThemeProvider
+              attribute="class"
+              storageKey="theme"
+              defaultTheme="system"
+              enableSystem
+            >
+              {children}
+            </ThemeProvider>
+          </ModelsProvider>
         </TRPCProvider>
       </body>
     </html>

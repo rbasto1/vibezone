@@ -15,5 +15,3 @@ export type RouterOutputs = inferRouterOutputs<AppRouter>;
 // models
 export type ModelsListOutput = RouterOutputs["models"]["list"];
 export type ModelsSyncFromOpenRouterOutput = RouterOutputs["models"]["syncFromOpenRouter"];
-export type ModelsSyncFromOpenRouterOutput =
-  RouterOutputs["models"]["syncFromOpenRouter"];

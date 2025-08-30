@@ -14,11 +14,9 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
 import { useCallback, useMemo, useRef, useState } from "react";
 
-export type Provider = "openai" | "anthropic" | "gemini";
-
 export interface PanelConfig {
   id: string;
-  provider: Provider;
+  provider: string;
   model: string;
   temperature?: number;
 }
@@ -45,7 +43,7 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
 
   const changePanelModel = (
     panelId: string,
-    providerId: Provider,
+    providerId: string,
     modelId: string
   ) => {
     setPanels((prev) =>
@@ -168,11 +166,7 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
                         : undefined
                     }
                     onChangeModel={(providerId, modelId) =>
-                      changePanelModel(
-                        panel.id,
-                        providerId as Provider,
-                        modelId
-                      )
+                      changePanelModel(panel.id, providerId, modelId)
                     }
                   />
                 ))}
