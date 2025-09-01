@@ -48,20 +48,11 @@ export async function getModelsList() {
   return {
     models: result.map((item) => ({
       ...item.model,
-      createdAt: item.model.createdAt
-        ? new Date(item.model.createdAt).toISOString()
-        : undefined,
-      deletedAt: item.model.deletedAt
-        ? new Date(item.model.deletedAt).toISOString()
-        : null,
       provider: {
         name: item.provider.name,
       },
     })),
-    providers: uniqueProviders.map((p) => ({
-      ...p,
-      createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : undefined,
-    })),
+    providers: uniqueProviders,
   };
 }
 
