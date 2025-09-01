@@ -28,27 +28,39 @@ export async function getModelsList() {
     })
     .from(models)
     .innerJoin(providers, eq(models.providerId, providers.id))
-    .where(and(isNull(models.deletedAt), eq(models.isChat, true)))
+    .where(
+      and(
+        isNull(models.deletedAt),
+        isNull(providers.deletedAt),
+        eq(models.isChat, true)
+      )
+    )
     .orderBy(models.name);
 
   // Get supported parameters for all models
   const modelIds = result.map((item) => item.model.id);
-  const supportedParams = modelIds.length > 0 ? await db
-    .select({
-      modelId: modelSupportedParameters.modelId,
-      supportedParameterId: modelSupportedParameters.supportedParameterId,
-    })
-    .from(modelSupportedParameters)
-    .where(inArray(modelSupportedParameters.modelId, modelIds)) : [];
+  const supportedParams =
+    modelIds.length > 0
+      ? await db
+          .select({
+            modelId: modelSupportedParameters.modelId,
+            supportedParameterId: modelSupportedParameters.supportedParameterId,
+          })
+          .from(modelSupportedParameters)
+          .where(inArray(modelSupportedParameters.modelId, modelIds))
+      : [];
 
   // Group supported parameters by model ID
-  const paramsByModel = supportedParams.reduce((acc, param) => {
-    if (!acc[param.modelId]) {
-      acc[param.modelId] = [];
-    }
-    acc[param.modelId]!.push(param.supportedParameterId);
-    return acc;
-  }, {} as Record<string, string[]>);
+  const paramsByModel = supportedParams.reduce(
+    (acc, param) => {
+      if (!acc[param.modelId]) {
+        acc[param.modelId] = [];
+      }
+      acc[param.modelId]!.push(param.supportedParameterId);
+      return acc;
+    },
+    {} as Record<string, string[]>
+  );
 
   const uniqueProviders = result
     .map((item) => item.provider)
@@ -58,7 +70,13 @@ export async function getModelsList() {
       }
       return acc;
     }, [] as Provider[])
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => {
+      // Sort by order first, then by name as fallback
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.name.localeCompare(b.name);
+    });
 
   return {
     models: result.map((item) => {
@@ -66,8 +84,15 @@ export async function getModelsList() {
       return {
         ...item.model,
         // Calculate capabilities based on supported parameters
-        capabilityReasoning: modelParams.includes('reasoning'),
-        capabilityTools: modelParams.includes('tools'),
+        capabilityReasoning: modelParams.includes("reasoning"),
+        capabilityTools: modelParams.includes("tools"),
+        // Derive capabilities from architecture fields
+        capabilityVision:
+          item.model.architectureInputModalities?.includes("image") ?? false,
+        capabilityPdf:
+          item.model.architectureInputModalities?.includes("file") ?? false,
+        capabilityImageGeneration:
+          item.model.architectureOutputModalities?.includes("image") ?? false,
         provider: {
           name: item.provider.name,
         },
@@ -90,9 +115,6 @@ export const modelsRouter = t.router({
         isArtist: z.boolean().optional(),
         isSuggested: z.boolean().optional(),
         capabilityFast: z.boolean().optional(),
-        capabilityVision: z.boolean().optional(),
-        capabilityPdf: z.boolean().optional(),
-        capabilityImageGeneration: z.boolean().optional(),
         capabilityEffortControl: z.boolean().optional(),
       })
     )
@@ -105,6 +127,19 @@ export const modelsRouter = t.router({
           updatedAt: sql`current_timestamp`,
         })
         .where(eq(models.id, id));
+      return { ok: true } as const;
+    }),
+
+  delete: publicProcedure
+    .input(z.object({ id: z.string().nonempty() }))
+    .mutation(async ({ input }) => {
+      await db
+        .update(models)
+        .set({
+          deletedAt: sql`current_timestamp`,
+          updatedAt: sql`current_timestamp`,
+        })
+        .where(eq(models.id, input.id));
       return { ok: true } as const;
     }),
 
@@ -164,9 +199,11 @@ export const modelsRouter = t.router({
 
     const existingModels: Set<string> = new Set(
       (
-        await db.query.models.findMany({
-          columns: { id: true },
-        })
+        await db
+          .select({ id: models.id })
+          .from(models)
+          .innerJoin(providers, eq(models.providerId, providers.id))
+          .where(and(isNull(models.deletedAt), isNull(providers.deletedAt)))
       ).map((m) => m.id)
     );
     const newModels = modelsData.filter((m) => !existingModels.has(m.id));

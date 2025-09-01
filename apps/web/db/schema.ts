@@ -24,8 +24,10 @@ export const providers = pgTable("providers", {
   id: text("id").primaryKey(), // openai, anthropic, gemini, etc.
   name: text("name").notNull(),
   tier: providerTiers().notNull().default("specialists"),
+  order: integer("order"), // custom ordering for display
   createdAt: timestampTzNow("created_at"),
   updatedAt: timestampTzNow("updated_at"),
+  deletedAt: timestampTz("deleted_at"),
 });
 
 export const models = pgTable(
@@ -73,9 +75,6 @@ export const models = pgTable(
     isNew: boolean("is_new"),
     isIncluded: boolean("is_included"),
     capabilityFast: boolean("capability_fast"),
-    capabilityVision: boolean("capability_vision"),
-    capabilityPdf: boolean("capability_pdf"),
-    capabilityImageGeneration: boolean("capability_image_generation"),
     capabilityEffortControl: boolean("capability_effort_control"),
 
     updatedAt: timestampTzNow("updated_at"),

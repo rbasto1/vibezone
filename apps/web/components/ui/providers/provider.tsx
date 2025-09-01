@@ -14,6 +14,7 @@ import TencentIcon from "@/components/ui/providers/tencent";
 import XAIIcon from "@/components/ui/providers/xai";
 import { cn } from "@/components/ui/utils";
 import type { FC } from "react";
+import ZAIIcon from "./z-ai";
 
 interface ProviderIconProps {
   providerId: string;
@@ -34,6 +35,7 @@ const providerIcons: Record<string, React.FC<React.ComponentProps<"svg">>> = {
   qwen: QwenIcon,
   tencent: TencentIcon,
   "x-ai": XAIIcon,
+  "z-ai": ZAIIcon,
 };
 
 export const ProviderIcon: FC<ProviderIconProps> = ({

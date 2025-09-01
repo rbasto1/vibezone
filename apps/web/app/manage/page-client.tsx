@@ -9,15 +9,13 @@ import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   Code2,
-  Eye,
-  FileText,
   Gauge,
   Hash,
-  Image as ImageIcon,
   Palette,
   Star,
   StarOff,
   ThumbsUp,
+  Trash2,
   Zap,
 } from "lucide-react";
 import type { NextPage } from "next";
@@ -55,6 +53,14 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
   });
   const utils = trpc.useUtils();
   const updateMutation = trpc.models.update.useMutation();
+  const deleteMutation = trpc.models.delete.useMutation({
+    onSuccess: async () => {
+      await utils.models.list.invalidate().catch(() => {
+        toast.warning("Failed to invalidate models list");
+      });
+      toast.success("Model deleted successfully");
+    },
+  });
   const syncMutation = trpc.models.syncFromOpenRouter.useMutation({
     onSuccess: async (res) => {
       await utils.models.list.invalidate().catch(() => {
@@ -143,9 +149,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               | "isArtist"
               | "isSuggested"
               | "capabilityFast"
-              | "capabilityVision"
-              | "capabilityPdf"
-              | "capabilityImageGeneration"
               | "capabilityEffortControl",
             v: boolean
           ) => {
@@ -256,55 +259,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               >
                 <Zap className="h-4 w-4" />
               </button>
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.capabilityVision
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.capabilityVision}
-                title="Capability: Vision"
-                onClick={() =>
-                  onToggle("capabilityVision", !m.capabilityVision)
-                }
-              >
-                <Eye className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.capabilityPdf
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.capabilityPdf}
-                title="Capability: PDF"
-                onClick={() => onToggle("capabilityPdf", !m.capabilityPdf)}
-              >
-                <FileText className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.capabilityImageGeneration
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.capabilityImageGeneration}
-                title="Capability: Image Generation"
-                onClick={() =>
-                  onToggle(
-                    "capabilityImageGeneration",
-                    !m.capabilityImageGeneration
-                  )
-                }
-              >
-                <ImageIcon className="h-4 w-4" />
-              </button>
+
               <button
                 type="button"
                 className={
@@ -324,12 +279,35 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               >
                 <Gauge className="h-4 w-4" />
               </button>
+
+              {/* Separator */}
+              <div className="h-6 w-px bg-border/60" />
+
+              {/* Delete button */}
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded px-2 py-1 border border-red-500/30 text-red-600 hover:bg-red-500/10 transition-colors"
+                title="Delete model"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (confirm(`Are you sure you want to delete "${m.name}"?`)) {
+                    deleteMutation.mutateAsync({ id: m.id }).catch((e) => {
+                      const message =
+                        e instanceof Error ? e.message : String(e);
+                      toast.error(`Failed to delete model: ${message}`);
+                    });
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             </div>
           );
         },
       },
     ],
-    [utils, updateMutation]
+    [utils.models.list, updateMutation, deleteMutation]
   );
 
   const providers = hydrated?.providers;
