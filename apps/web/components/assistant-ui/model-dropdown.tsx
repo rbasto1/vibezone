@@ -147,6 +147,34 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
   const [expandedProviders, setExpandedProviders] = useState<Set<string>>(
     new Set()
   );
+
+  // Compute which providers should be auto-expanded based on current filters
+  const autoExpandedProviders = useMemo(() => {
+    const autoExpanded = new Set<string>();
+
+    for (const p of providersByTier) {
+      const list = modelsByProvider.get(p.id) ?? [];
+      const suggested = list.filter((m) => m.isSuggested);
+      const others = list.filter((m) => !m.isSuggested);
+
+      // Auto-expand if no suggested models are visible but other models exist
+      if (suggested.length === 0 && others.length > 0) {
+        autoExpanded.add(p.id);
+      }
+    }
+
+    return autoExpanded;
+  }, [providersByTier, modelsByProvider]);
+
+  // Combine manual expansion with auto-expansion
+  const effectiveExpandedProviders = useMemo(() => {
+    const combined = new Set(expandedProviders);
+    for (const providerId of autoExpandedProviders) {
+      combined.add(providerId);
+    }
+    return combined;
+  }, [expandedProviders, autoExpandedProviders]);
+
   const toggleProviderExpanded = (providerId: string) => {
     setExpandedProviders((prev) => {
       const next = new Set(prev);
@@ -258,7 +286,7 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
                     const list = modelsByProvider.get(p.id) ?? [];
                     const suggested = list.filter((m) => m.isSuggested);
                     const others = list.filter((m) => !m.isSuggested);
-                    const expanded = expandedProviders.has(p.id);
+                    const expanded = effectiveExpandedProviders.has(p.id);
                     const hasModels = list.length > 0;
 
                     return (
