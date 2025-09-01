@@ -1,7 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
-import { providers } from "@/db/schema";
+import { providers, providerTiers } from "@/db/schema";
 import { publicProcedure, t } from "@/lib/trpc/server/initialize";
 import { asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -10,7 +10,7 @@ export async function getProvidersList() {
   return await db.select().from(providers).orderBy(asc(providers.name));
 }
 
-const TierSchema = z.enum(["leaders", "challengers", "specialists"]);
+const TierSchema = z.enum(providerTiers.enumValues);
 
 export const providersRouter = t.router({
   list: publicProcedure.query(getProvidersList),

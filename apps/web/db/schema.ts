@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -58,10 +59,13 @@ export const models = pgTable("models", {
   isFlagship: boolean("is_flagship"),
   isCoder: boolean("is_coder"),
   isArtist: boolean("is_artist"),
+  isChat: boolean("is_chat"),
   updatedAt: timestampTzNow("updated_at"),
   // soft delete
   deletedAt: timestampTz("deleted_at"),
-});
+}, (table) => ({
+  isChatDeletedAtIdx: index("models_is_chat_deleted_at_idx").on(table.isChat, table.deletedAt),
+}));
 
 export const supportedParameters = pgTable("supported_parameters", {
   // same as OpenRouter parameter id, e.g. "reasoning", "seed"

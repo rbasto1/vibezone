@@ -28,13 +28,7 @@ export async function getModelsList() {
     })
     .from(models)
     .innerJoin(providers, eq(models.providerId, providers.id))
-    .where(
-      and(
-        isNull(models.deletedAt),
-        sql`'text' = ANY(${models.architectureInputModalities})`,
-        sql`'text' = ANY(${models.architectureOutputModalities})`
-      )
-    )
+    .where(and(isNull(models.deletedAt), eq(models.isChat, true)))
     .orderBy(models.name);
 
   const uniqueProviders = result
@@ -151,11 +145,20 @@ export const modelsRouter = t.router({
       await db.insert(models).values(
         newModels.map((m) => {
           const providerId = m.id.split("/")[0];
+          const name = m.name.split(": ")[1];
+          if (!name) {
+            throw new Error(
+              "Assert: Model name does not conform to pattern 'Provider: Name'"
+            );
+          }
           if (!providerId) throw new Error("Assert: Missing provider ID");
+          const isChat =
+            m.architecture.input_modalities?.includes("text") &&
+            m.architecture.output_modalities?.includes("text");
           return {
             id: m.id,
             providerId,
-            name: m.name,
+            name,
             canonicalSlug: m.canonical_slug,
             huggingFaceId: m.hugging_face_id,
             description: m.description,
@@ -168,6 +171,7 @@ export const modelsRouter = t.router({
             topProvider: m.top_provider,
             perRequestLimits: m.per_request_limits,
             createdAt: new Date(m.created * 1000),
+            isChat,
           } satisfies NewModel;
         })
       );

@@ -136,9 +136,9 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               onKeyDown={(e) => e.stopPropagation()}
             >
               <label className="flex items-center gap-1">
-                <span className="text-muted-foreground">Prio</span>
                 <input
                   type="number"
+                  placeholder="Priority"
                   className="w-16 h-8 rounded border bg-background px-2"
                   value={m.priority ?? ""}
                   onChange={(e) => onPriorityChange(e.target.value)}
