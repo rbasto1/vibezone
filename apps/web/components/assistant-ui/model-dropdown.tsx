@@ -214,12 +214,9 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
         >
           <div className="flex h-full flex-col">
             {/* Filters */}
-            <div className="flex flex-col gap-3 pb-3 border-b mb-3 shrink-0">
+            <div className="flex items-center gap-6 pb-3 border-b mb-3 shrink-0">
               {/* Segmented tier control */}
               <div className="flex items-center gap-3">
-                <span className="text-xs font-medium text-muted-foreground">
-                  Tier:
-                </span>
                 <div className="inline-flex rounded-md border bg-muted p-0.5">
                   {tierOptions.map(({ id, label, Icon }) => {
                     const active = selectedTier === id;
@@ -249,9 +246,6 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
               </div>
               {/* Capability filters */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-medium text-muted-foreground">
-                  Capabilities:
-                </span>
                 {capabilityOptions.map(({ id, label, Icon }) => {
                   const active = selectedCapabilities.has(id);
                   return (
