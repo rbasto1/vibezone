@@ -5,25 +5,25 @@ import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DefaultChatTransport } from "ai";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { SiteTopNav } from "@/components/site-topnav";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ResponsePanel } from "@/components/assistant-ui/response-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
 import { GlobalComposerContext } from "@/components/providers/composer-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
-import { useCallback, useMemo, useRef, useState } from "react";
+import type { FC } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export interface PanelConfig {
   id: string;
   provider: string;
   model: string;
-  temperature?: number;
 }
 
 export const MAX_PANELS = 3;
+export const INITIAL_PANEL_COUNT = 2;
 
 // Global composer context to broadcast a prompt to all panels
 type RuntimeRegistry = Map<string, ReturnType<typeof useChatRuntime>>; // panelId -> runtime
@@ -32,9 +32,10 @@ interface AssistantProps {
   initialPanels: PanelConfig[];
 }
 
-export const Assistant = ({ initialPanels }: AssistantProps) => {
-  // Panels are now passed from a Server Component to avoid SSR/client mismatches.
-  const [panels, setPanels] = useState<PanelConfig[]>(initialPanels);
+export const Assistant: FC<AssistantProps> = ({ initialPanels }) => {
+  const [panels, setPanels] = useState(
+    initialPanels.slice(0, INITIAL_PANEL_COUNT)
+  );
 
   const removePanel = (id: string) => {
     setPanels((prev) => {
@@ -99,24 +100,15 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
 
   const handleAddPanel = () => {
     setPanels((prev) => {
-      if (prev.length >= MAX_PANELS) return prev;
-      // Default new panel to OpenAI gpt-4o-mini
-      const next: PanelConfig = {
-        id: crypto.randomUUID(),
-        provider: "openai",
-        model: "gpt-4o-mini",
-        temperature: 0.1,
-      };
+      const next = initialPanels.find(
+        (p) => !prev.some((pp) => pp.id === p.id)
+      );
+      if (!next) return prev;
       return [...prev, next];
     });
   };
 
-  const gridColsClass = useMemo(() => {
-    const count = Math.min(Math.max(panels.length, 1), MAX_PANELS);
-    if (count === 1) return "grid-cols-1";
-    if (count === 2) return "md:grid-cols-2";
-    return "md:grid-cols-3";
-  }, [panels.length]);
+  const panelCount = Math.min(Math.max(panels.length, 1), MAX_PANELS);
 
   // Runtime for the sidebar components (e.g., ThreadList) that require context
   // TODO: refactor this, we have to list threads from a global list
@@ -126,7 +118,6 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
       body: {
         config: {
           model: "gpt-4o-mini",
-          temperature: 0.1,
         },
       },
     }),
@@ -139,29 +130,9 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
           <AppSidebar />
         </AssistantRuntimeProvider>
         <SidebarInset>
-          <SiteTopNav
-            extraLeft={<SidebarTrigger />}
-            extraRight={
-              <button
-                type="button"
-                className={
-                  "h-9 rounded-md border px-3 text-sm transition-colors " +
-                  (panels.length < MAX_PANELS
-                    ? "hover:bg-accent"
-                    : "opacity-60 cursor-not-allowed")
-                }
-                onClick={handleAddPanel}
-                disabled={panels.length >= MAX_PANELS}
-                title={
-                  panels.length < MAX_PANELS
-                    ? "Add panel"
-                    : `Maximum ${MAX_PANELS} panels`
-                }
-                aria-label="Add panel"
-              >
-                Add panel
-              </button>
-            }
+          <AssistantHeader
+            onAddPanel={handleAddPanel}
+            panelCount={panels.length}
           />
           <GlobalComposerContext.Provider
             value={{
@@ -176,7 +147,9 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
               <div
                 className={cn(
                   "grid gap-3 flex-1 min-h-0 auto-rows-fr w-full",
-                  gridColsClass
+                  panelCount === 1 && "grid-cols-1",
+                  panelCount === 2 && "md:grid-cols-2",
+                  panelCount === 3 && "md:grid-cols-3"
                 )}
               >
                 {panels.map((panel) => (

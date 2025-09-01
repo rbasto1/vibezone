@@ -15,52 +15,28 @@ import {
 } from "@/db/schema";
 import { OpenRouterModelsResponse } from "@/lib/open-router/schema";
 import { publicProcedure, t } from "@/lib/trpc/server/initialize";
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 // Shared server function to list models for SSR and tRPC
 export type GetModelsListReturn = Awaited<ReturnType<typeof getModelsList>>;
 export async function getModelsList() {
-  const result = await db
-    .select({
-      model: models,
-      provider: providers,
-    })
-    .from(models)
-    .innerJoin(providers, eq(models.providerId, providers.id))
-    .where(
-      and(
-        isNull(models.deletedAt),
-        isNull(providers.deletedAt),
-        eq(models.isChat, true)
-      )
-    )
-    .orderBy(models.name);
-
-  // Get supported parameters for all models
-  const modelIds = result.map((item) => item.model.id);
-  const supportedParams =
-    modelIds.length > 0
-      ? await db
-          .select({
-            modelId: modelSupportedParameters.modelId,
-            supportedParameterId: modelSupportedParameters.supportedParameterId,
-          })
-          .from(modelSupportedParameters)
-          .where(inArray(modelSupportedParameters.modelId, modelIds))
-      : [];
-
-  // Group supported parameters by model ID
-  const paramsByModel = supportedParams.reduce(
-    (acc, param) => {
-      if (!acc[param.modelId]) {
-        acc[param.modelId] = [];
-      }
-      acc[param.modelId]!.push(param.supportedParameterId);
-      return acc;
+  const result = await db.query.models.findMany({
+    where: and(
+      isNull(models.deletedAt),
+      isNull(providers.deletedAt),
+      eq(models.isChat, true)
+    ),
+    with: {
+      provider: true,
+      supportedParameters: true,
     },
-    {} as Record<string, string[]>
-  );
+    orderBy: [
+      asc(models.providerId),
+      desc(models.createdAt),
+      desc(models.name),
+    ],
+  });
 
   const uniqueProviders = result
     .map((item) => item.provider)
@@ -80,21 +56,24 @@ export async function getModelsList() {
 
   return {
     models: result.map((item) => {
-      const modelParams = paramsByModel[item.model.id] || [];
+      const modelParams = item.supportedParameters.map(
+        (p) => p.supportedParameterId
+      );
+      const { provider, supportedParameters, ...model } = item;
       return {
-        ...item.model,
+        ...model,
         // Calculate capabilities based on supported parameters
         capabilityReasoning: modelParams.includes("reasoning"),
         capabilityTools: modelParams.includes("tools"),
         // Derive capabilities from architecture fields
         capabilityVision:
-          item.model.architectureInputModalities?.includes("image") ?? false,
+          model.architectureInputModalities?.includes("image") ?? false,
         capabilityPdf:
-          item.model.architectureInputModalities?.includes("file") ?? false,
+          model.architectureInputModalities?.includes("file") ?? false,
         capabilityImageGeneration:
-          item.model.architectureOutputModalities?.includes("image") ?? false,
+          model.architectureOutputModalities?.includes("image") ?? false,
         provider: {
-          name: item.provider.name,
+          name: provider.name,
         },
       };
     }),

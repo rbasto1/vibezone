@@ -9,6 +9,7 @@ import { Toaster } from "@/components/providers/toast-provider";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { cn } from "@/components/ui/utils";
 import { getModelsList } from "@/lib/trpc/models";
+import type { PropsWithChildren } from "react";
 import { Suspense } from "react";
 
 const geistSans = Geist({
@@ -34,11 +35,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default async function RootLayout({ children }: PropsWithChildren) {
   // Fetch models once at the root for Jotai hydration across the app
   const modelsList = await getModelsList();
 
