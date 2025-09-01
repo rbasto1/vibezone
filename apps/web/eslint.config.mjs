@@ -23,6 +23,7 @@ export default [
       "@next/next/no-html-link-for-pages": "off",
       // Additional recommended rules
       ...nextPlugin.configs.recommended.rules,
+      ...baseConfig.rules,
       "react-refresh/only-export-components": [
         "warn",
         {

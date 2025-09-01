@@ -45,6 +45,7 @@ export default [
         },
       ],
       "no-unused-vars": "off", // Disable base rule as it can report incorrect errors
+      "no-redeclare": "off",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",

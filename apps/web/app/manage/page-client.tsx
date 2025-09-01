@@ -3,27 +3,31 @@
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { QueryAlert } from "@/components/ui/query-alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
-import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
+import { getStorageItem, setStorageItem, storageKeys } from "./session-storage";
 
-function formatDate(value?: string | Date | null) {
-  if (!value) return "";
-  const d = typeof value === "string" ? new Date(value) : value;
-  return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(d);
-}
+const SortingSchema = z
+  .array(
+    z.object({
+      id: z.string(),
+      desc: z.boolean(),
+    })
+  )
+  .optional();
 
 const ManagePageClient: NextPage = () => {
-  const { data: hydrated, error: listError } = trpc.models.list.useQuery();
+  const {
+    data: hydrated,
+    error: listError,
+    isLoading,
+  } = trpc.models.list.useQuery();
   const utils = trpc.useUtils();
   const syncMutation = trpc.models.syncFromOpenRouter.useMutation({
     onSuccess: async (res) => {
@@ -36,40 +40,23 @@ const ManagePageClient: NextPage = () => {
     },
   });
 
-  const [providerFilter, setProviderFilter] = useState<string>("all");
-  const [textFilter, setTextFilter] = useState<string>("");
-  const [sorting, setSorting] = useState<SortingState>(() => {
-    return [];
-  });
-
-  const onSync = () => {
-    syncMutation.mutateAsync().catch(() => {
-      // Error will be displayed using <QueryAlert />
-    });
-  };
+  const [providerFilter, setProviderFilter] = useState(
+    getStorageItem(storageKeys.manageProvider) ?? "all"
+  );
+  const [textFilter, setTextFilter] = useState(
+    getStorageItem(storageKeys.manageQuery) ?? ""
+  );
+  const [sorting, setSorting] = useState(
+    () => getStorageItem(storageKeys.manageSort, SortingSchema) ?? []
+  );
 
   const columns: ColumnDef<ModelsListOutput["models"][number]>[] = useMemo(
     () => [
       { accessorKey: "id", header: "ID" },
-      { accessorKey: "providerId", header: "Provider" },
       {
         accessorKey: "name",
         header: "Name",
         cell: ({ row }) => row.original.name,
-      },
-      {
-        header: "Modality",
-        cell: ({ row }) => row.original.architectureModality,
-      },
-      {
-        header: "Input",
-        cell: ({ row }) =>
-          (row.original.architectureInputModalities ?? []).join(", "),
-      },
-      {
-        header: "Output",
-        cell: ({ row }) =>
-          (row.original.architectureOutputModalities ?? []).join(", "),
       },
       {
         accessorKey: "createdAt",
@@ -118,6 +105,7 @@ const ManagePageClient: NextPage = () => {
             onChange={(e) => {
               const value = e.target.value;
               setTextFilter(value);
+              setStorageItem(storageKeys.manageQuery, value);
             }}
           />
           <label className="text-sm text-muted-foreground">Provider</label>
@@ -125,7 +113,9 @@ const ManagePageClient: NextPage = () => {
             className="border rounded-md h-9 px-3 bg-background"
             value={providerFilter}
             onChange={(e) => {
-              setProviderFilter(e.target.value);
+              const v = e.target.value;
+              setProviderFilter(v);
+              setStorageItem(storageKeys.manageProvider, v);
             }}
           >
             <option value="all">All</option>
@@ -135,27 +125,45 @@ const ManagePageClient: NextPage = () => {
               </option>
             ))}
           </select>
-          <Button onClick={onSync} loading={syncMutation.isPending}>
+          <Button
+            onClick={() => syncMutation.mutateAsync()}
+            loading={syncMutation.isPending}
+          >
             Sync with OpenRouter
           </Button>
         </div>
       </div>
       <QueryAlert error={listError || syncMutation.error} />
       <div className="rounded-md border">
-        <DataTable
-          columns={columns}
-          data={filtered}
-          sorting={sorting}
-          onSortingChange={(s) => {
-            setSorting(s);
-          }}
-          getRowLink={(row) => {
-            return `/manage/models/${encodeURIComponent(row.id)}`;
-          }}
-        />
+        {isLoading ? (
+          <Skeleton className="h-[300px]" />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={filtered}
+            sorting={sorting}
+            onSortingChange={(s) => {
+              setSorting(s);
+              setStorageItem(storageKeys.manageSort, JSON.stringify(s));
+            }}
+            getRowLink={(row) => {
+              return `/manage/models/${encodeURIComponent(row.id)}`;
+            }}
+          />
+        )}
       </div>
     </div>
   );
 };
 
 export default ManagePageClient;
+
+function formatDate(value?: string | Date | null) {
+  if (!value) return "";
+  const d = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  }).format(d);
+}
