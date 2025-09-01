@@ -1,13 +1,28 @@
-import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 const timestampTz = (name: string) =>
   timestamp(name, { withTimezone: true, mode: "date" });
 const timestampTzNow = (name: string) =>
   timestampTz(name).defaultNow().notNull();
 
+export const providerTiers = pgEnum("provider_tier", [
+  "leaders",
+  "challengers",
+  "specialists",
+]);
+
 export const providers = pgTable("providers", {
   id: text("id").primaryKey(), // openai, anthropic, gemini, etc.
   name: text("name").notNull(),
+  tier: providerTiers().default("specialists"),
   createdAt: timestampTzNow("created_at"),
 });
 
@@ -35,8 +50,14 @@ export const models = pgTable("models", {
   perRequestLimits: jsonb("per_request_limits"),
   // created from API (epoch seconds) -> timestamptz
   createdAt: timestampTzNow("created_at"),
+
+  // VIBEZONE specific fields
   // UI selection priority for default panels
   priority: integer("priority"),
+  isFlagship: boolean("is_flagship"),
+  isCoder: boolean("is_coder"),
+  isArtist: boolean("is_artist"),
+  updatedAt: timestampTzNow("updated_at"),
   // soft delete
   deletedAt: timestampTz("deleted_at"),
 });

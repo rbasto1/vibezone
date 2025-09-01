@@ -16,8 +16,10 @@ import {
 import { OpenRouterModelsResponse } from "@/lib/open-router/schema";
 import { publicProcedure, t } from "@/lib/trpc/server/initialize";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { z } from "zod";
 
 // Shared server function to list models for SSR and tRPC
+export type GetModelsListReturn = Awaited<ReturnType<typeof getModelsList>>;
 export async function getModelsList() {
   const result = await db
     .select({
@@ -58,6 +60,25 @@ export async function getModelsList() {
 
 export const modelsRouter = t.router({
   list: publicProcedure.query(getModelsList),
+
+  update: publicProcedure
+    .input(
+      z.object({
+        id: z.string().nonempty(),
+        priority: z.number().int().nullable().optional(),
+        isFlagship: z.boolean().optional(),
+        isCoder: z.boolean().optional(),
+        isArtist: z.boolean().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...rest } = input;
+      const patch: Record<string, unknown> = { ...rest };
+      // Always bump updatedAt
+      patch.updatedAt = sql`current_timestamp`;
+      await db.update(models).set(patch).where(eq(models.id, id));
+      return { ok: true } as const;
+    }),
 
   syncFromOpenRouter: publicProcedure.mutation(async () => {
     const apiKey = process.env.OPENROUTER_API_KEY;
