@@ -63,6 +63,14 @@ export const modelsRouter = t.router({
         isFlagship: z.boolean().optional(),
         isCoder: z.boolean().optional(),
         isArtist: z.boolean().optional(),
+        isSuggested: z.boolean().optional(),
+        capabilityFast: z.boolean().optional(),
+        capabilityVision: z.boolean().optional(),
+        capabilityPdf: z.boolean().optional(),
+        capabilityReasoning: z.boolean().optional(),
+        capabilityImageGeneration: z.boolean().optional(),
+        capabilityTools: z.boolean().optional(),
+        capabilityEffortControl: z.boolean().optional(),
       })
     )
     .mutation(async ({ input }) => {

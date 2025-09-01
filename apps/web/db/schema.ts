@@ -59,23 +59,26 @@ export const models = pgTable(
 
     // VIBEZONE specific fields
     // UI selection priority for default panels
-    priority: integer("priority"),
-    isFlagship: boolean("is_flagship").notNull().default(false),
-    isCoder: boolean("is_coder").notNull().default(false),
-    isArtist: boolean("is_artist").notNull().default(false),
-    isChat: boolean("is_chat").notNull(),
+    isChat: boolean("is_chat").notNull(), // we only show isChat models
 
-    is_experimental: boolean("is_experimental"),
-    is_premium: boolean("is_premium"),
-    is_new: boolean("is_new"),
-    is_included: boolean("is_included"),
-    capability_fast: boolean("capability_fast"),
-    capability_vision: boolean("capability_vision"),
-    capability_pdf: boolean("capability_pdf"),
-    capability_reasoning: boolean("capability_reasoning"),
-    capability_image_generation: boolean("capability_image_generation"),
-    capability_tools: boolean("capability_tools"),
-    capability_effort_control: boolean("capability_effort_control"),
+    priority: integer("priority"), // the first 3 models that are loaded by default
+    isFlagship: boolean("is_flagship").notNull().default(false), // initial suggestion box group
+    isCoder: boolean("is_coder").notNull().default(false), // initial suggestion box group
+    isArtist: boolean("is_artist").notNull().default(false), // initial suggestion box group
+
+    isSuggested: boolean("is_suggested").notNull().default(false), // if false, appears under "see more..."
+
+    isExperimental: boolean("is_experimental"),
+    isPremium: boolean("is_premium"),
+    isNew: boolean("is_new"),
+    isIncluded: boolean("is_included"),
+    capabilityFast: boolean("capability_fast"),
+    capabilityVision: boolean("capability_vision"),
+    capabilityPdf: boolean("capability_pdf"),
+    capabilityReasoning: boolean("capability_reasoning"),
+    capabilityImageGeneration: boolean("capability_image_generation"),
+    capabilityTools: boolean("capability_tools"),
+    capabilityEffortControl: boolean("capability_effort_control"),
 
     updatedAt: timestampTzNow("updated_at"),
     deletedAt: timestampTz("deleted_at"),

@@ -7,7 +7,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Code2, Hash, Palette, Star, StarOff } from "lucide-react";
+import {
+  Brain,
+  Code2,
+  Eye,
+  FileText,
+  Gauge,
+  Hash,
+  Image as ImageIcon,
+  Palette,
+  Star,
+  StarOff,
+  ThumbsUp,
+  Wrench,
+  Zap,
+} from "lucide-react";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -125,7 +139,18 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
           };
 
           const onToggle = (
-            key: "isFlagship" | "isCoder" | "isArtist",
+            key:
+              | "isFlagship"
+              | "isCoder"
+              | "isArtist"
+              | "isSuggested"
+              | "capabilityFast"
+              | "capabilityVision"
+              | "capabilityPdf"
+              | "capabilityReasoning"
+              | "capabilityImageGeneration"
+              | "capabilityTools"
+              | "capabilityEffortControl",
             v: boolean
           ) => {
             const prev = m[key] as boolean | undefined;
@@ -201,6 +226,138 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               >
                 <Palette className="h-4 w-4" />
               </button>
+
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
+                  (m.isSuggested
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={!!m.isSuggested}
+                title="Suggested"
+                onClick={() => onToggle("isSuggested", !m.isSuggested)}
+              >
+                <ThumbsUp className="h-4 w-4" />
+              </button>
+
+              {/* Separator */}
+              <div className="h-6 w-px bg-border/60" />
+
+              {/* Capability toggles (icon-only) */}
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
+                  (m.capabilityFast
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={!!m.capabilityFast}
+                title="Capability: Fast"
+                onClick={() => onToggle("capabilityFast", !m.capabilityFast)}
+              >
+                <Zap className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
+                  (m.capabilityVision
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={!!m.capabilityVision}
+                title="Capability: Vision"
+                onClick={() =>
+                  onToggle("capabilityVision", !m.capabilityVision)
+                }
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
+                  (m.capabilityPdf
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={!!m.capabilityPdf}
+                title="Capability: PDF"
+                onClick={() => onToggle("capabilityPdf", !m.capabilityPdf)}
+              >
+                <FileText className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
+                  (m.capabilityReasoning
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={!!m.capabilityReasoning}
+                title="Capability: Reasoning"
+                onClick={() =>
+                  onToggle("capabilityReasoning", !m.capabilityReasoning)
+                }
+              >
+                <Brain className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
+                  (m.capabilityImageGeneration
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={!!m.capabilityImageGeneration}
+                title="Capability: Image Generation"
+                onClick={() =>
+                  onToggle(
+                    "capabilityImageGeneration",
+                    !m.capabilityImageGeneration
+                  )
+                }
+              >
+                <ImageIcon className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
+                  (m.capabilityTools
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={!!m.capabilityTools}
+                title="Capability: Tools"
+                onClick={() => onToggle("capabilityTools", !m.capabilityTools)}
+              >
+                <Wrench className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
+                  (m.capabilityEffortControl
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={!!m.capabilityEffortControl}
+                title="Capability: Effort Control"
+                onClick={() =>
+                  onToggle(
+                    "capabilityEffortControl",
+                    !m.capabilityEffortControl
+                  )
+                }
+              >
+                <Gauge className="h-4 w-4" />
+              </button>
             </div>
           );
         },
@@ -264,16 +421,14 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
     <div>
       <div className="mx-auto max-w-[1200px] p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold">Model Management</h1>
-            <Button
-              onClick={() => syncMutation.mutateAsync()}
-              loading={syncMutation.isPending}
-              size="sm"
-            >
-              Sync with OpenRouter
-            </Button>
-          </div>
+          <h1 className="text-xl font-semibold">Model Management</h1>
+          <Button
+            onClick={() => syncMutation.mutateAsync()}
+            loading={syncMutation.isPending}
+            size="sm"
+          >
+            Sync with OpenRouter
+          </Button>
           <div className="flex items-center gap-3">
             <input
               type="text"
