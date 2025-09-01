@@ -18,7 +18,7 @@ import {
   Wrench,
   Zap,
 } from "lucide-react";
-import { Fragment, useEffect, useMemo, useState, type FC } from "react";
+import { useEffect, useMemo, useState, type FC } from "react";
 import { ProviderIcon } from "../ui/providers/provider";
 
 interface ModelDropdownProps {
@@ -72,6 +72,13 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
     capabilityImageGeneration: "text-pink-600 dark:text-pink-400",
     capabilityTools: "text-zinc-600 dark:text-zinc-400",
     capabilityEffortControl: "text-indigo-600 dark:text-indigo-400",
+  };
+
+  // Icon color per tier
+  const tierColor: Record<(typeof tierOptions)[number]["id"], string> = {
+    leaders: "text-yellow-400 dark:text-yellow-300",
+    challengers: "text-foreground/80",
+    specialists: "text-foreground/80",
   };
 
   // Exclusive tier selection (default: leaders, with fallback if unavailable)
@@ -205,7 +212,7 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
                           setSelectedTier(id);
                         }}
                       >
-                        <Icon className="size-4" />
+                        <Icon className={cn("size-4", tierColor[id])} />
                         {label}
                       </button>
                     );
@@ -245,170 +252,186 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
                 <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
                   No providers available for the selected filters.
                 </div>
-              ) : null}
-              <div className="flex gap-4 min-w-full">
-                {providersByTier.map((p) => {
-                  const list = modelsByProvider.get(p.id) ?? [];
-                  if (!list.length) return <Fragment key={p.id} />;
-                  const suggested = list.filter((m) => m.isSuggested);
-                  const others = list.filter((m) => !m.isSuggested);
-                  const expanded = expandedProviders.has(p.id);
-                  return (
-                    <div
-                      key={p.id}
-                      className="min-w-[220px] max-w-[280px] shrink-0 border rounded-md p-2"
-                    >
-                      <div className="px-1 pb-2 mb-2 border-b">
-                        <div className="text-xs tracking-wide text-muted-foreground flex items-center gap-2">
-                          <ProviderIcon providerId={p.id} />
-                          <span className="font-medium">{p.name}</span>
+              ) : (
+                <div className="flex gap-4 min-w-full">
+                  {providersByTier.map((p) => {
+                    const list = modelsByProvider.get(p.id) ?? [];
+                    const suggested = list.filter((m) => m.isSuggested);
+                    const others = list.filter((m) => !m.isSuggested);
+                    const expanded = expandedProviders.has(p.id);
+                    const hasModels = list.length > 0;
+
+                    return (
+                      <div
+                        key={p.id}
+                        className="min-w-[220px] max-w-[280px] shrink-0 border rounded-md p-2"
+                      >
+                        <div className="px-1 pb-2 mb-2 border-b">
+                          <div className="text-xs tracking-wide text-muted-foreground flex items-center gap-2">
+                            <ProviderIcon providerId={p.id} />
+                            <span className="font-medium">{p.name}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col">
+                          {!hasModels ? (
+                            <div className="px-2 py-3 text-center text-sm text-muted-foreground">
+                              No models match the filters
+                            </div>
+                          ) : (
+                            <>
+                              {suggested.map((m) => (
+                                <DropdownMenu.Item
+                                  key={m.id}
+                                  className={cn(
+                                    "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
+                                    "focus:bg-accent focus:text-accent-foreground",
+                                    m.id === modelId
+                                      ? "bg-accent/50 font-semibold"
+                                      : "font-medium"
+                                  )}
+                                  onSelect={() => onChangeModel(p.id, m.id)}
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="flex-1 min-w-0">
+                                      <div className="truncate">{m.name}</div>
+                                      <div className="mt-0.5 flex items-center gap-1">
+                                        {capabilityOptions
+                                          .filter((c) =>
+                                            Boolean(
+                                              (m as Record<string, unknown>)[
+                                                c.id
+                                              ]
+                                            )
+                                          )
+                                          .map(({ id, Icon }) => (
+                                            <Icon
+                                              key={id}
+                                              className={cn(
+                                                "h-3 w-3 opacity-85",
+                                                capabilityColor[id]
+                                              )}
+                                              strokeWidth={2}
+                                            />
+                                          ))}
+                                      </div>
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      {m.isIncluded ? (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300">
+                                          Included
+                                        </span>
+                                      ) : null}
+                                      {m.isPremium ? (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300">
+                                          Premium
+                                        </span>
+                                      ) : null}
+                                      {m.isNew ? (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-800 dark:text-blue-300">
+                                          New
+                                        </span>
+                                      ) : null}
+                                      {m.isExperimental ? (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-fuchsia-500/15 text-fuchsia-800 dark:text-fuchsia-300">
+                                          Experimental
+                                        </span>
+                                      ) : null}
+                                    </span>
+                                  </div>
+                                </DropdownMenu.Item>
+                              ))}
+
+                              {others.length > 0 && !expanded ? (
+                                <button
+                                  className="mt-1 text-xs text-muted-foreground hover:text-foreground text-left px-2 py-1"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleProviderExpanded(p.id);
+                                  }}
+                                >
+                                  Show more
+                                </button>
+                              ) : null}
+
+                              {others.length > 0 && expanded ? (
+                                <div className="mt-2">
+                                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground px-2 mb-1">
+                                    Other models
+                                  </div>
+                                  {others.map((m) => (
+                                    <DropdownMenu.Item
+                                      key={m.id}
+                                      className={cn(
+                                        "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
+                                        "focus:bg-accent focus:text-accent-foreground",
+                                        m.id === modelId
+                                          ? "bg-accent/50 font-semibold"
+                                          : "font-medium"
+                                      )}
+                                      onSelect={() => onChangeModel(p.id, m.id)}
+                                    >
+                                      <div className="flex items-center justify-between gap-2">
+                                        <span className="flex-1 min-w-0">
+                                          <div className="truncate">
+                                            {m.name}
+                                          </div>
+                                          <div className="mt-0.5 flex items-center gap-1">
+                                            {capabilityOptions
+                                              .filter((c) =>
+                                                Boolean(
+                                                  (
+                                                    m as Record<string, unknown>
+                                                  )[c.id]
+                                                )
+                                              )
+                                              .map(({ id, Icon }) => (
+                                                <Icon
+                                                  key={id}
+                                                  className={cn(
+                                                    "h-3 w-3 opacity-85",
+                                                    capabilityColor[id]
+                                                  )}
+                                                  strokeWidth={2}
+                                                />
+                                              ))}
+                                          </div>
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                          {m.isIncluded ? (
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300">
+                                              Included
+                                            </span>
+                                          ) : null}
+                                          {m.isPremium ? (
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300">
+                                              Premium
+                                            </span>
+                                          ) : null}
+                                          {m.isNew ? (
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-800 dark:text-blue-300">
+                                              New
+                                            </span>
+                                          ) : null}
+                                          {m.isExperimental ? (
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-fuchsia-500/15 text-fuchsia-800 dark:text-fuchsia-300">
+                                              Experimental
+                                            </span>
+                                          ) : null}
+                                        </span>
+                                      </div>
+                                    </DropdownMenu.Item>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </>
+                          )}
                         </div>
                       </div>
-                      <div className="flex flex-col">
-                        {suggested.map((m) => (
-                          <DropdownMenu.Item
-                            key={m.id}
-                            className={cn(
-                              "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
-                              "focus:bg-accent focus:text-accent-foreground",
-                              m.id === modelId
-                                ? "bg-accent/50 font-semibold"
-                                : "font-medium"
-                            )}
-                            onSelect={() => onChangeModel(p.id, m.id)}
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="flex-1 min-w-0">
-                                <div className="truncate">{m.name}</div>
-                                <div className="mt-0.5 flex items-center gap-1">
-                                  {capabilityOptions
-                                    .filter((c) =>
-                                      Boolean(
-                                        (m as Record<string, unknown>)[c.id]
-                                      )
-                                    )
-                                    .map(({ id, Icon }) => (
-                                      <Icon
-                                        key={id}
-                                        className={cn(
-                                          "h-3 w-3 opacity-85",
-                                          capabilityColor[id]
-                                        )}
-                                        strokeWidth={2}
-                                      />
-                                    ))}
-                                </div>
-                              </span>
-                              <span className="flex items-center gap-1">
-                                {m.isIncluded ? (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300">
-                                    Included
-                                  </span>
-                                ) : null}
-                                {m.isPremium ? (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300">
-                                    Premium
-                                  </span>
-                                ) : null}
-                                {m.isNew ? (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-800 dark:text-blue-300">
-                                    New
-                                  </span>
-                                ) : null}
-                                {m.isExperimental ? (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-fuchsia-500/15 text-fuchsia-800 dark:text-fuchsia-300">
-                                    Experimental
-                                  </span>
-                                ) : null}
-                              </span>
-                            </div>
-                          </DropdownMenu.Item>
-                        ))}
-
-                        {others.length > 0 && !expanded ? (
-                          <button
-                            className="mt-1 text-xs text-muted-foreground hover:text-foreground text-left px-2 py-1"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              toggleProviderExpanded(p.id);
-                            }}
-                          >
-                            Show more
-                          </button>
-                        ) : null}
-
-                        {others.length > 0 && expanded ? (
-                          <div className="mt-2">
-                            <div className="text-[11px] uppercase tracking-wide text-muted-foreground px-2 mb-1">
-                              Other models
-                            </div>
-                            {others.map((m) => (
-                              <DropdownMenu.Item
-                                key={m.id}
-                                className={cn(
-                                  "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
-                                  "focus:bg-accent focus:text-accent-foreground",
-                                  m.id === modelId
-                                    ? "bg-accent/50 font-semibold"
-                                    : "font-medium"
-                                )}
-                                onSelect={() => onChangeModel(p.id, m.id)}
-                              >
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="flex-1 min-w-0">
-                                    <div className="truncate">{m.name}</div>
-                                    <div className="mt-0.5 flex items-center gap-1">
-                                      {capabilityOptions
-                                        .filter((c) =>
-                                          Boolean(
-                                            (m as Record<string, unknown>)[c.id]
-                                          )
-                                        )
-                                        .map(({ id, Icon }) => (
-                                          <Icon
-                                            key={id}
-                                            className={cn(
-                                              "h-3 w-3 opacity-85",
-                                              capabilityColor[id]
-                                            )}
-                                            strokeWidth={2}
-                                          />
-                                        ))}
-                                    </div>
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    {m.isIncluded ? (
-                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300">
-                                        Included
-                                      </span>
-                                    ) : null}
-                                    {m.isPremium ? (
-                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300">
-                                        Premium
-                                      </span>
-                                    ) : null}
-                                    {m.isNew ? (
-                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-800 dark:text-blue-300">
-                                        New
-                                      </span>
-                                    ) : null}
-                                    {m.isExperimental ? (
-                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-fuchsia-500/15 text-fuchsia-800 dark:text-fuchsia-300">
-                                        Experimental
-                                      </span>
-                                    ) : null}
-                                  </span>
-                                </div>
-                              </DropdownMenu.Item>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </DropdownMenu.Content>
