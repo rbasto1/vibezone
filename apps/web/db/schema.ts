@@ -75,9 +75,7 @@ export const models = pgTable(
     capabilityFast: boolean("capability_fast"),
     capabilityVision: boolean("capability_vision"),
     capabilityPdf: boolean("capability_pdf"),
-    capabilityReasoning: boolean("capability_reasoning"),
     capabilityImageGeneration: boolean("capability_image_generation"),
-    capabilityTools: boolean("capability_tools"),
     capabilityEffortControl: boolean("capability_effort_control"),
 
     updatedAt: timestampTzNow("updated_at"),

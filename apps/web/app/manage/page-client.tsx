@@ -8,7 +8,6 @@ import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
-  Brain,
   Code2,
   Eye,
   FileText,
@@ -19,7 +18,6 @@ import {
   Star,
   StarOff,
   ThumbsUp,
-  Wrench,
   Zap,
 } from "lucide-react";
 import type { NextPage } from "next";
@@ -147,9 +145,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               | "capabilityFast"
               | "capabilityVision"
               | "capabilityPdf"
-              | "capabilityReasoning"
               | "capabilityImageGeneration"
-              | "capabilityTools"
               | "capabilityEffortControl",
             v: boolean
           ) => {
@@ -294,22 +290,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
                 type="button"
                 className={
                   "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.capabilityReasoning
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.capabilityReasoning}
-                title="Capability: Reasoning"
-                onClick={() =>
-                  onToggle("capabilityReasoning", !m.capabilityReasoning)
-                }
-              >
-                <Brain className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
                   (m.capabilityImageGeneration
                     ? "bg-primary/10 border-primary/30 text-primary"
                     : "border-transparent text-muted-foreground hover:bg-accent")
@@ -324,20 +304,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
                 }
               >
                 <ImageIcon className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.capabilityTools
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.capabilityTools}
-                title="Capability: Tools"
-                onClick={() => onToggle("capabilityTools", !m.capabilityTools)}
-              >
-                <Wrench className="h-4 w-4" />
               </button>
               <button
                 type="button"

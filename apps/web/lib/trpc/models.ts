@@ -31,6 +31,25 @@ export async function getModelsList() {
     .where(and(isNull(models.deletedAt), eq(models.isChat, true)))
     .orderBy(models.name);
 
+  // Get supported parameters for all models
+  const modelIds = result.map((item) => item.model.id);
+  const supportedParams = modelIds.length > 0 ? await db
+    .select({
+      modelId: modelSupportedParameters.modelId,
+      supportedParameterId: modelSupportedParameters.supportedParameterId,
+    })
+    .from(modelSupportedParameters)
+    .where(inArray(modelSupportedParameters.modelId, modelIds)) : [];
+
+  // Group supported parameters by model ID
+  const paramsByModel = supportedParams.reduce((acc, param) => {
+    if (!acc[param.modelId]) {
+      acc[param.modelId] = [];
+    }
+    acc[param.modelId]!.push(param.supportedParameterId);
+    return acc;
+  }, {} as Record<string, string[]>);
+
   const uniqueProviders = result
     .map((item) => item.provider)
     .reduce((acc, provider) => {
@@ -42,12 +61,18 @@ export async function getModelsList() {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return {
-    models: result.map((item) => ({
-      ...item.model,
-      provider: {
-        name: item.provider.name,
-      },
-    })),
+    models: result.map((item) => {
+      const modelParams = paramsByModel[item.model.id] || [];
+      return {
+        ...item.model,
+        // Calculate capabilities based on supported parameters
+        capabilityReasoning: modelParams.includes('reasoning'),
+        capabilityTools: modelParams.includes('tools'),
+        provider: {
+          name: item.provider.name,
+        },
+      };
+    }),
     providers: uniqueProviders,
   };
 }
@@ -67,9 +92,7 @@ export const modelsRouter = t.router({
         capabilityFast: z.boolean().optional(),
         capabilityVision: z.boolean().optional(),
         capabilityPdf: z.boolean().optional(),
-        capabilityReasoning: z.boolean().optional(),
         capabilityImageGeneration: z.boolean().optional(),
-        capabilityTools: z.boolean().optional(),
         capabilityEffortControl: z.boolean().optional(),
       })
     )

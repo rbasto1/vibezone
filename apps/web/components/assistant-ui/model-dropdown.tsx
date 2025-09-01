@@ -60,6 +60,20 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
     },
   ];
 
+  // Icon color per capability (stroke inherits currentColor)
+  const capabilityColor: Record<
+    (typeof capabilityOptions)[number]["id"],
+    string
+  > = {
+    capabilityFast: "text-amber-600 dark:text-amber-400",
+    capabilityVision: "text-sky-600 dark:text-sky-400",
+    capabilityPdf: "text-emerald-600 dark:text-emerald-400",
+    capabilityReasoning: "text-violet-600 dark:text-violet-400",
+    capabilityImageGeneration: "text-pink-600 dark:text-pink-400",
+    capabilityTools: "text-zinc-600 dark:text-zinc-400",
+    capabilityEffortControl: "text-indigo-600 dark:text-indigo-400",
+  };
+
   // Exclusive tier selection (default: leaders, with fallback if unavailable)
   const [selectedTier, setSelectedTier] = useState<
     "leaders" | "challengers" | "specialists"
@@ -103,11 +117,11 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
       const list = models.filter((m) => m.providerId === p.id);
       const filtered = hasCapabilityFilters
         ? list.filter((m) => {
-            // OR semantics across selected capabilities
+            // AND semantics: model must match ALL selected capabilities
             for (const cap of selectedCapabilities) {
-              if (m[cap]) return true;
+              if (!m[cap]) return false;
             }
-            return false;
+            return true;
           })
         : list;
       // Sort by priority desc (if present), then name asc
@@ -264,7 +278,27 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
                             onSelect={() => onChangeModel(p.id, m.id)}
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <span className="truncate">{m.name}</span>
+                              <span className="flex-1 min-w-0">
+                                <div className="truncate">{m.name}</div>
+                                <div className="mt-0.5 flex items-center gap-1">
+                                  {capabilityOptions
+                                    .filter((c) =>
+                                      Boolean(
+                                        (m as Record<string, unknown>)[c.id]
+                                      )
+                                    )
+                                    .map(({ id, Icon }) => (
+                                      <Icon
+                                        key={id}
+                                        className={cn(
+                                          "h-3 w-3 opacity-85",
+                                          capabilityColor[id]
+                                        )}
+                                        strokeWidth={2}
+                                      />
+                                    ))}
+                                </div>
+                              </span>
                               <span className="flex items-center gap-1">
                                 {m.isIncluded ? (
                                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300">
@@ -322,7 +356,27 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
                                 onSelect={() => onChangeModel(p.id, m.id)}
                               >
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className="truncate">{m.name}</span>
+                                  <span className="flex-1 min-w-0">
+                                    <div className="truncate">{m.name}</div>
+                                    <div className="mt-0.5 flex items-center gap-1">
+                                      {capabilityOptions
+                                        .filter((c) =>
+                                          Boolean(
+                                            (m as Record<string, unknown>)[c.id]
+                                          )
+                                        )
+                                        .map(({ id, Icon }) => (
+                                          <Icon
+                                            key={id}
+                                            className={cn(
+                                              "h-3 w-3 opacity-85",
+                                              capabilityColor[id]
+                                            )}
+                                            strokeWidth={2}
+                                          />
+                                        ))}
+                                    </div>
+                                  </span>
                                   <span className="flex items-center gap-1">
                                     {m.isIncluded ? (
                                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300">
