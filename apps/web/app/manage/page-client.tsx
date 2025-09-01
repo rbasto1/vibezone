@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Code2, Palette, Star, StarOff } from "lucide-react";
+import { Code2, Hash, Palette, Star, StarOff } from "lucide-react";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -22,6 +22,8 @@ const SortingSchema = z
     })
   )
   .optional();
+
+const providerTiers = ["leaders", "challengers", "specialists"] as const;
 
 interface ManagePageClientProps {
   initialModels: ModelsListOutput;
@@ -69,6 +71,12 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
   );
   const [artistOnly, setArtistOnly] = useState(
     () => getStorageItem(storageKeys.manageArtist, z.boolean()) ?? false
+  );
+  const [priorityOnly, setPriorityOnly] = useState(
+    () => getStorageItem(storageKeys.managePriority, z.boolean()) ?? false
+  );
+  const [tierFilter, setTierFilter] = useState(
+    getStorageItem(storageKeys.manageTier) ?? "all"
   );
 
   const columns: ColumnDef<ModelsListOutput["models"][number]>[] = useMemo(
@@ -203,20 +211,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
 
   const providers = hydrated?.providers;
   const models = hydrated?.models;
-  const leaderProviders = useMemo(
-    () =>
-      providers
-        ?.filter((p) => p.tier === "leaders")
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [providers]
-  );
-  const secondTierProviders = useMemo(
-    () =>
-      providers
-        ?.filter((p) => p.tier !== "leaders")
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [providers]
-  );
   const providerCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const m of models)
@@ -241,15 +235,45 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
       if (flagshipOnly && !m.isFlagship) return false;
       if (coderOnly && !m.isCoder) return false;
       if (artistOnly && !m.isArtist) return false;
+      if (priorityOnly && (m.priority === null || m.priority === undefined))
+        return false;
+      if (tierFilter !== "all") {
+        const provider = providers?.find((p) => p.id === m.providerId);
+        if (provider) {
+          if (tierFilter === "leaders" && provider.tier !== "leaders")
+            return false;
+          if (tierFilter === "others" && provider.tier === "leaders")
+            return false;
+        }
+      }
       return true;
     });
-  }, [models, providerFilter, textFilter, flagshipOnly, coderOnly, artistOnly]);
+  }, [
+    models,
+    providerFilter,
+    textFilter,
+    flagshipOnly,
+    coderOnly,
+    artistOnly,
+    priorityOnly,
+    tierFilter,
+    providers,
+  ]);
 
   return (
     <div>
       <div className="mx-auto max-w-[1200px] p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-xl font-semibold">Model Management</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-semibold">Model Management</h1>
+            <Button
+              onClick={() => syncMutation.mutateAsync()}
+              loading={syncMutation.isPending}
+              size="sm"
+            >
+              Sync with OpenRouter
+            </Button>
+          </div>
           <div className="flex items-center gap-3">
             <input
               type="text"
@@ -273,31 +297,35 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               }}
             >
               <option value="all">All</option>
-              {leaderProviders.length > 0 && (
-                <optgroup label="Leaders">
-                  {leaderProviders.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({providerCounts[p.id] ?? 0})
-                    </option>
-                  ))}
+              {providerTiers.map((tier) => (
+                <optgroup key={tier} label={tier}>
+                  {providers
+                    ?.filter((p) => p.tier === tier)
+                    .map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({providerCounts[p.id] ?? 0})
+                      </option>
+                    ))}
                 </optgroup>
-              )}
-              {secondTierProviders.length > 0 && (
-                <optgroup label="Second Tier">
-                  {secondTierProviders.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({providerCounts[p.id] ?? 0})
-                    </option>
-                  ))}
-                </optgroup>
-              )}
+              ))}
             </select>
-            <Button
-              onClick={() => syncMutation.mutateAsync()}
-              loading={syncMutation.isPending}
+            <label className="text-sm text-muted-foreground">Tier</label>
+            <select
+              className="border rounded-md h-9 px-3 bg-background"
+              value={tierFilter}
+              onChange={(e) => {
+                const v = e.target.value;
+                setTierFilter(v);
+                setStorageItem(storageKeys.manageTier, v);
+              }}
             >
-              Sync with OpenRouter
-            </Button>
+              <option value="all">All Tiers</option>
+              {providerTiers.map((tier) => (
+                <option key={tier} value={tier}>
+                  {tier}
+                </option>
+              ))}
+            </select>
             <div className="ml-2 flex items-center gap-2">
               <button
                 type="button"
@@ -312,10 +340,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
                 onClick={() => {
                   const next = !flagshipOnly;
                   setFlagshipOnly(next);
-                  setStorageItem(
-                    storageKeys.manageFlagship,
-                    JSON.stringify(next)
-                  );
+                  setStorageItem(storageKeys.manageFlagship, next);
                 }}
               >
                 {flagshipOnly ? (
@@ -338,7 +363,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
                 onClick={() => {
                   const next = !coderOnly;
                   setCoderOnly(next);
-                  setStorageItem(storageKeys.manageCoder, JSON.stringify(next));
+                  setStorageItem(storageKeys.manageCoder, next);
                 }}
               >
                 <Code2 className="h-4 w-4" />
@@ -357,14 +382,30 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
                 onClick={() => {
                   const next = !artistOnly;
                   setArtistOnly(next);
-                  setStorageItem(
-                    storageKeys.manageArtist,
-                    JSON.stringify(next)
-                  );
+                  setStorageItem(storageKeys.manageArtist, next);
                 }}
               >
                 <Palette className="h-4 w-4" />
                 <span className="hidden sm:inline">Artist</span>
+              </button>
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
+                  (priorityOnly
+                    ? "bg-green-500/10 border-green-500/30 text-green-600"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={priorityOnly}
+                title="Filter: Priority"
+                onClick={() => {
+                  const next = !priorityOnly;
+                  setPriorityOnly(next);
+                  setStorageItem(storageKeys.managePriority, next);
+                }}
+              >
+                <Hash className="h-4 w-4" />
+                <span className="hidden sm:inline">Priority</span>
               </button>
             </div>
           </div>
@@ -380,7 +421,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               sorting={sorting}
               onSortingChange={(s) => {
                 setSorting(s);
-                setStorageItem(storageKeys.manageSort, JSON.stringify(s));
+                setStorageItem(storageKeys.manageSort, s);
               }}
               getRowLink={(row) => {
                 return `/manage/models/${encodeURIComponent(row.id)}`;

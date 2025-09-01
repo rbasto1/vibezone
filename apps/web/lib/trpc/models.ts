@@ -153,8 +153,8 @@ export const modelsRouter = t.router({
           }
           if (!providerId) throw new Error("Assert: Missing provider ID");
           const isChat =
-            m.architecture.input_modalities?.includes("text") &&
-            m.architecture.output_modalities?.includes("text");
+            !!m.architecture.input_modalities?.includes("text") &&
+            !!m.architecture.output_modalities?.includes("text");
           return {
             id: m.id,
             providerId,
