@@ -1,0 +1,239 @@
+"use client";
+
+import { DataTable } from "@/components/ui/data-table";
+import { Input } from "@/components/ui/input";
+import { QueryAlert } from "@/components/ui/query-alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Provider, ProviderTier } from "@/db";
+import { trpc } from "@/lib/trpc/client";
+import type { ProvidersListOutput } from "@/lib/trpc/server/server";
+import type { ColumnDef, Row, SortingState } from "@tanstack/react-table";
+import { Crown, Rocket, Wrench } from "lucide-react";
+import type { NextPage } from "next";
+import { useMemo, useState } from "react";
+
+interface Props {
+  initialProviders: ProvidersListOutput;
+}
+
+const ProviderManagePageClient: NextPage<Props> = ({ initialProviders }) => {
+  const { data, error, isLoading } = trpc.providers.list.useQuery(undefined, {
+    initialData: initialProviders,
+    staleTime: Infinity,
+    placeholderData: (data) => data,
+  });
+  const utils = trpc.useUtils();
+  const update = trpc.providers.update.useMutation();
+  const [q, setQ] = useState("");
+
+  const columns: ColumnDef<ProvidersListOutput[number]>[] = useMemo(
+    (): ColumnDef<ProvidersListOutput[number]>[] => [
+      { accessorKey: "id", header: "ID" },
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <div
+              className="w-full"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <Input
+                defaultValue={p.name}
+                className="h-8 w-full max-w-[280px]"
+                aria-label={`Provider ${p.id} name`}
+                onBlur={(e) => {
+                  const next = e.currentTarget.value.trim();
+                  if (!next || next === p.name) {
+                    // restore visual value if emptied
+                    if (!next) e.currentTarget.value = p.name;
+                    return;
+                  }
+                  // optimistic update
+                  utils.providers.list.setData(undefined, (prev) =>
+                    prev?.map((x) => (x.id === p.id ? { ...x, name: next } : x))
+                  );
+                  update.mutateAsync({ id: p.id, name: next }).catch(() => {
+                    // revert on error
+                    utils.providers.list.setData(undefined, (prev) =>
+                      prev?.map((x) =>
+                        x.id === p.id ? { ...x, name: p.name } : x
+                      )
+                    );
+                    e.currentTarget.value = p.name;
+                  });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  } else if (e.key === "Escape") {
+                    e.currentTarget.value = p.name;
+                    e.currentTarget.blur();
+                  }
+                }}
+              />
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "tier",
+        header: "Tier",
+        sortingFn: sortTier,
+        cell: ({ row }) => {
+          const p = row.original;
+          const setTier = (
+            value: "leaders" | "challengers" | "specialists"
+          ) => {
+            // optimistic update
+            utils.providers.list.setData(undefined, (prev) =>
+              prev?.map((x) => (x.id === p.id ? { ...x, tier: value } : x))
+            );
+            update.mutateAsync({ id: p.id, tier: value }).catch(() => {
+              // revert on error
+              utils.providers.list.setData(undefined, (prev) =>
+                prev?.map((x) => (x.id === p.id ? { ...x, tier: p.tier } : x))
+              );
+            });
+          };
+          const Button = ({
+            active,
+            children,
+            onClick,
+            title,
+          }: {
+            active: boolean;
+            children: React.ReactNode;
+            onClick: () => void;
+            title: string;
+          }) => (
+            <button
+              type="button"
+              className={
+                "inline-flex items-center gap-1 rounded px-2 py-1 border text-xs transition-colors " +
+                (active
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "border-transparent text-muted-foreground hover:bg-accent")
+              }
+              aria-pressed={active}
+              title={title}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+              }}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              {children}
+            </button>
+          );
+          return (
+            <div
+              className="flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <Button
+                active={p.tier === "leaders"}
+                onClick={() => setTier("leaders")}
+                title="Leaders"
+              >
+                <Crown className="h-4 w-4" />
+                <span className="hidden sm:inline">Leaders</span>
+              </Button>
+              <Button
+                active={p.tier === "challengers"}
+                onClick={() => setTier("challengers")}
+                title="Challengers"
+              >
+                <Rocket className="h-4 w-4" />
+                <span className="hidden sm:inline">Challengers</span>
+              </Button>
+              <Button
+                active={p.tier === "specialists"}
+                onClick={() => setTier("specialists")}
+                title="Specialists"
+              >
+                <Wrench className="h-4 w-4" />
+                <span className="hidden sm:inline">Specialists</span>
+              </Button>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Created",
+        cell: ({ row }) => formatDate(row.original.createdAt),
+      },
+    ],
+    [update, utils]
+  );
+
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "tier", desc: false },
+  ]);
+
+  const filtered = useMemo(() => {
+    const list = data ?? [];
+    const t = q.trim().toLowerCase();
+    if (!t) return list;
+    return list.filter(
+      (p) => p.id.toLowerCase().includes(t) || p.name.toLowerCase().includes(t)
+    );
+  }, [data, q]);
+
+  return (
+    <div>
+      <div className="mx-auto max-w-[1200px] p-6">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <h1 className="text-xl font-semibold">Provider Management</h1>
+          <input
+            type="text"
+            placeholder="Filter providers..."
+            className="h-9 w-64 rounded-md border bg-background px-3"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
+        <QueryAlert error={error} />
+        <div className="rounded-md border">
+          {isLoading ? (
+            <Skeleton className="h-[300px]" />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={filtered}
+              sorting={sorting}
+              onSortingChange={setSorting}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProviderManagePageClient;
+
+function formatDate(value?: string | Date | null) {
+  if (!value) return "";
+  const d = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  }).format(d);
+}
+
+const tierPriority: Record<ProviderTier, number> = {
+  leaders: 1,
+  challengers: 2,
+  specialists: 3,
+};
+
+function sortTier(a: Row<Provider>, b: Row<Provider>) {
+  if (!a.original.tier || !b.original.tier) return 0;
+  return tierPriority[a.original.tier] - tierPriority[b.original.tier];
+}

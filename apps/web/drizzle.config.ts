@@ -10,6 +10,4 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: { url },
-  verbose: true,
-  strict: true,
 });

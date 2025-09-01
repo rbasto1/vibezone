@@ -9,8 +9,6 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "prettier-fix": "prettier --write .",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "dotenvx run -- tsx db/seed.ts"

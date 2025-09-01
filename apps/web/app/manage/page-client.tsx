@@ -246,143 +246,148 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
   }, [models, providerFilter, textFilter, flagshipOnly, coderOnly, artistOnly]);
 
   return (
-    <div className="mx-auto max-w-[1200px] p-6">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold">Model Management</h1>
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Filter models..."
-            className="h-9 w-64 rounded-md border bg-background px-3"
-            value={textFilter}
-            onChange={(e) => {
-              const value = e.target.value;
-              setTextFilter(value);
-              setStorageItem(storageKeys.manageQuery, value);
-            }}
-          />
-          <label className="text-sm text-muted-foreground">Provider</label>
-          <select
-            className="border rounded-md h-9 px-3 bg-background"
-            value={providerFilter}
-            onChange={(e) => {
-              const v = e.target.value;
-              setProviderFilter(v);
-              setStorageItem(storageKeys.manageProvider, v);
-            }}
-          >
-            <option value="all">All</option>
-            {leaderProviders.length > 0 && (
-              <optgroup label="Leaders">
-                {leaderProviders.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({providerCounts[p.id] ?? 0})
-                  </option>
-                ))}
-              </optgroup>
-            )}
-            {secondTierProviders.length > 0 && (
-              <optgroup label="Second Tier">
-                {secondTierProviders.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({providerCounts[p.id] ?? 0})
-                  </option>
-                ))}
-              </optgroup>
-            )}
-          </select>
-          <Button
-            onClick={() => syncMutation.mutateAsync()}
-            loading={syncMutation.isPending}
-          >
-            Sync with OpenRouter
-          </Button>
-          <div className="ml-2 flex items-center gap-2">
-            <button
-              type="button"
-              className={
-                "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
-                (flagshipOnly
-                  ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-600"
-                  : "border-transparent text-muted-foreground hover:bg-accent")
-              }
-              aria-pressed={flagshipOnly}
-              title="Filter: Flagship"
-              onClick={() => {
-                const next = !flagshipOnly;
-                setFlagshipOnly(next);
-                setStorageItem(
-                  storageKeys.manageFlagship,
-                  JSON.stringify(next)
-                );
+    <div>
+      <div className="mx-auto max-w-[1200px] p-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-xl font-semibold">Model Management</h1>
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              placeholder="Filter models..."
+              className="h-9 w-64 rounded-md border bg-background px-3"
+              value={textFilter}
+              onChange={(e) => {
+                const value = e.target.value;
+                setTextFilter(value);
+                setStorageItem(storageKeys.manageQuery, value);
+              }}
+            />
+            <label className="text-sm text-muted-foreground">Provider</label>
+            <select
+              className="border rounded-md h-9 px-3 bg-background"
+              value={providerFilter}
+              onChange={(e) => {
+                const v = e.target.value;
+                setProviderFilter(v);
+                setStorageItem(storageKeys.manageProvider, v);
               }}
             >
-              {flagshipOnly ? (
-                <Star className="h-4 w-4" />
-              ) : (
-                <StarOff className="h-4 w-4" />
+              <option value="all">All</option>
+              {leaderProviders.length > 0 && (
+                <optgroup label="Leaders">
+                  {leaderProviders.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({providerCounts[p.id] ?? 0})
+                    </option>
+                  ))}
+                </optgroup>
               )}
-              <span className="hidden sm:inline">Flagship</span>
-            </button>
-            <button
-              type="button"
-              className={
-                "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
-                (coderOnly
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "border-transparent text-muted-foreground hover:bg-accent")
-              }
-              aria-pressed={coderOnly}
-              title="Filter: Coder"
-              onClick={() => {
-                const next = !coderOnly;
-                setCoderOnly(next);
-                setStorageItem(storageKeys.manageCoder, JSON.stringify(next));
-              }}
+              {secondTierProviders.length > 0 && (
+                <optgroup label="Second Tier">
+                  {secondTierProviders.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({providerCounts[p.id] ?? 0})
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+            <Button
+              onClick={() => syncMutation.mutateAsync()}
+              loading={syncMutation.isPending}
             >
-              <Code2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Coder</span>
-            </button>
-            <button
-              type="button"
-              className={
-                "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
-                (artistOnly
-                  ? "bg-pink-500/10 border-pink-500/30 text-pink-600"
-                  : "border-transparent text-muted-foreground hover:bg-accent")
-              }
-              aria-pressed={artistOnly}
-              title="Filter: Artist"
-              onClick={() => {
-                const next = !artistOnly;
-                setArtistOnly(next);
-                setStorageItem(storageKeys.manageArtist, JSON.stringify(next));
-              }}
-            >
-              <Palette className="h-4 w-4" />
-              <span className="hidden sm:inline">Artist</span>
-            </button>
+              Sync with OpenRouter
+            </Button>
+            <div className="ml-2 flex items-center gap-2">
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
+                  (flagshipOnly
+                    ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-600"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={flagshipOnly}
+                title="Filter: Flagship"
+                onClick={() => {
+                  const next = !flagshipOnly;
+                  setFlagshipOnly(next);
+                  setStorageItem(
+                    storageKeys.manageFlagship,
+                    JSON.stringify(next)
+                  );
+                }}
+              >
+                {flagshipOnly ? (
+                  <Star className="h-4 w-4" />
+                ) : (
+                  <StarOff className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">Flagship</span>
+              </button>
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
+                  (coderOnly
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={coderOnly}
+                title="Filter: Coder"
+                onClick={() => {
+                  const next = !coderOnly;
+                  setCoderOnly(next);
+                  setStorageItem(storageKeys.manageCoder, JSON.stringify(next));
+                }}
+              >
+                <Code2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Coder</span>
+              </button>
+              <button
+                type="button"
+                className={
+                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
+                  (artistOnly
+                    ? "bg-pink-500/10 border-pink-500/30 text-pink-600"
+                    : "border-transparent text-muted-foreground hover:bg-accent")
+                }
+                aria-pressed={artistOnly}
+                title="Filter: Artist"
+                onClick={() => {
+                  const next = !artistOnly;
+                  setArtistOnly(next);
+                  setStorageItem(
+                    storageKeys.manageArtist,
+                    JSON.stringify(next)
+                  );
+                }}
+              >
+                <Palette className="h-4 w-4" />
+                <span className="hidden sm:inline">Artist</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      <QueryAlert error={listError || syncMutation.error} />
-      <div className="rounded-md border">
-        {isLoading ? (
-          <Skeleton className="h-[300px]" />
-        ) : (
-          <DataTable
-            columns={columns}
-            data={filtered}
-            sorting={sorting}
-            onSortingChange={(s) => {
-              setSorting(s);
-              setStorageItem(storageKeys.manageSort, JSON.stringify(s));
-            }}
-            getRowLink={(row) => {
-              return `/manage/models/${encodeURIComponent(row.id)}`;
-            }}
-          />
-        )}
+        <QueryAlert error={listError || syncMutation.error} />
+        <div className="rounded-md border">
+          {isLoading ? (
+            <Skeleton className="h-[300px]" />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={filtered}
+              sorting={sorting}
+              onSortingChange={(s) => {
+                setSorting(s);
+                setStorageItem(storageKeys.manageSort, JSON.stringify(s));
+              }}
+              getRowLink={(row) => {
+                return `/manage/models/${encodeURIComponent(row.id)}`;
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

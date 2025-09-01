@@ -5,7 +5,8 @@ import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DefaultChatTransport } from "ai";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
+import { SiteTopNav } from "@/components/site-topnav";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ResponsePanel } from "@/components/assistant-ui/response-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
@@ -138,9 +139,29 @@ export const Assistant = ({ initialPanels }: AssistantProps) => {
           <AppSidebar />
         </AssistantRuntimeProvider>
         <SidebarInset>
-          <AssistantHeader
-            onAddPanel={handleAddPanel}
-            panelCount={panels.length}
+          <SiteTopNav
+            extraLeft={<SidebarTrigger />}
+            extraRight={
+              <button
+                type="button"
+                className={
+                  "h-9 rounded-md border px-3 text-sm transition-colors " +
+                  (panels.length < MAX_PANELS
+                    ? "hover:bg-accent"
+                    : "opacity-60 cursor-not-allowed")
+                }
+                onClick={handleAddPanel}
+                disabled={panels.length >= MAX_PANELS}
+                title={
+                  panels.length < MAX_PANELS
+                    ? "Add panel"
+                    : `Maximum ${MAX_PANELS} panels`
+                }
+                aria-label="Add panel"
+              >
+                Add panel
+              </button>
+            }
           />
           <GlobalComposerContext.Provider
             value={{

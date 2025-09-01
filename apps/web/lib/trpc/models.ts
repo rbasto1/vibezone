@@ -73,10 +73,13 @@ export const modelsRouter = t.router({
     )
     .mutation(async ({ input }) => {
       const { id, ...rest } = input;
-      const patch: Record<string, unknown> = { ...rest };
-      // Always bump updatedAt
-      patch.updatedAt = sql`current_timestamp`;
-      await db.update(models).set(patch).where(eq(models.id, id));
+      await db
+        .update(models)
+        .set({
+          ...rest,
+          updatedAt: sql`current_timestamp`,
+        })
+        .where(eq(models.id, id));
       return { ok: true } as const;
     }),
 
@@ -199,7 +202,10 @@ export const modelsRouter = t.router({
     if (toSoftDelete.length) {
       await db
         .update(models)
-        .set({ deletedAt: sql`current_timestamp` })
+        .set({
+          deletedAt: sql`current_timestamp`,
+          updatedAt: sql`current_timestamp`,
+        })
         .where(inArray(models.id, toSoftDelete));
     }
 

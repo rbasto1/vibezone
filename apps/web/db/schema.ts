@@ -22,8 +22,9 @@ export const providerTiers = pgEnum("provider_tier", [
 export const providers = pgTable("providers", {
   id: text("id").primaryKey(), // openai, anthropic, gemini, etc.
   name: text("name").notNull(),
-  tier: providerTiers().default("specialists"),
+  tier: providerTiers().notNull().default("specialists"),
   createdAt: timestampTzNow("created_at"),
+  updatedAt: timestampTzNow("updated_at"),
 });
 
 export const models = pgTable("models", {
@@ -79,6 +80,8 @@ export const modelSupportedParameters = pgTable("model_supported_parameters", {
     .notNull()
     .references(() => supportedParameters.id),
 });
+
+export type ProviderTier = (typeof providerTiers.enumValues)[number];
 
 export type Provider = typeof providers.$inferSelect;
 export type NewProvider = typeof providers.$inferInsert;
