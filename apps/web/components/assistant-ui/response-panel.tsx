@@ -25,7 +25,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   onClose,
   onChangeModel,
 }) => {
-  const { id, model, temperature } = panel;
+  const { id, model } = panel;
   panelGlobalContext[id] = panel;
 
   const _runtime = useChatRuntime({
@@ -60,7 +60,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
         return {};
       },
     });
-  }, [runtime, model, id, temperature]);
+  }, [runtime, model, id]);
 
   // This is how we execute the chat from the global composer
   // It registers the runtime so that messages sent from the composer are sent to this panel's runtime

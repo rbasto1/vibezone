@@ -53,7 +53,6 @@ Real OpenAI/Anthropic streaming endpoint.
 {
   "messages": [{ "role": "user", "content": "Hello, how are you?" }],
   "config": {
-    "temperature": 0.7,
     "maxTokens": 1000,
     "model": "gpt-4o-mini"
   }
