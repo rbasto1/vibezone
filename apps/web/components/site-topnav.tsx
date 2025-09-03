@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserMenu } from "@/components/user-menu";
 import { cn } from "@/components/ui/utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -82,6 +83,7 @@ export const SiteTopNav: FC<SiteTopNavProps> = ({ extraLeft, extraRight }) => {
       <div className="ml-auto flex items-center gap-2">
         {extraRight}
         <ThemeToggle />
+        <UserMenu />
       </div>
     </header>
   );
