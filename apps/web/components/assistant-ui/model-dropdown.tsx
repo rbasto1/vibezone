@@ -1,12 +1,12 @@
 "use client";
 
-import { cn } from "@/components/ui/utils";
 import { modelsAtom } from "@/store/models";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useAtomValue } from "jotai";
 import { ChevronDown } from "lucide-react";
-import type { FC } from "react";
+import { useState, type FC } from "react";
 import { ProviderIcon } from "../ui/providers/provider";
+import { ModelDropdownContents } from "./model-dropdown-contents";
 
 interface ModelDropdownProps {
   modelId: string;
@@ -18,59 +18,34 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
   onChangeModel,
 }) => {
   const state = useAtomValue(modelsAtom);
-  const models = state.models;
   const providers = state.providers;
+  const models = state.models;
   const model = models.find((m) => m.id === modelId);
   const provider = providers.find((p) => p.id === model?.providerId);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenu.Trigger asChild>
         <button
           className="inline-flex items-center gap-2 text-lg px-3 py-0.5 rounded border hover:bg-muted/70 text-foreground/80 hover:text-foreground transition-colors font-medium"
           title="Change model"
         >
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-2 truncate max-w-[50vw]">
             {provider && <ProviderIcon providerId={provider.id} />}
-            {model?.name}
+            <span className="truncate">{model?.name ?? modelId}</span>
             <ChevronDown className="h-4 w-4" />
           </span>
         </button>
       </DropdownMenu.Trigger>
-      <DropdownMenu.Content className="z-50 min-w-[240px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
-        {
-          <div className="max-h-80 overflow-auto">
-            {providers!.map((p) => (
-              <div key={p.id} className="py-1">
-                <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <ProviderIcon providerId={p.id} /> {p.name}
-                  </span>
-                </div>
-                {models
-                  .filter((m) => m.providerId === p.id)
-                  .map((m) => (
-                    <DropdownMenu.Item
-                      key={m.id}
-                      className="cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground"
-                      onSelect={() => onChangeModel(p.id, m.id)}
-                    >
-                      <span className="inline-flex items-center gap-2">
-                        <span
-                          className={cn(
-                            m.id === modelId ? "font-bold" : "font-medium"
-                          )}
-                        >
-                          {m.name}
-                        </span>
-                      </span>
-                    </DropdownMenu.Item>
-                  ))}
-              </div>
-            ))}
-          </div>
-        }
-      </DropdownMenu.Content>
+      <DropdownMenu.Portal>
+        {isOpen && (
+          <ModelDropdownContents
+            modelId={modelId}
+            onChangeModel={onChangeModel}
+          />
+        )}
+      </DropdownMenu.Portal>
     </DropdownMenu.Root>
   );
 };

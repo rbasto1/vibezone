@@ -15,21 +15,28 @@ import {
 } from "@/db/schema";
 import { OpenRouterModelsResponse } from "@/lib/open-router/schema";
 import { publicProcedure, t } from "@/lib/trpc/server/initialize";
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 // Shared server function to list models for SSR and tRPC
 export type GetModelsListReturn = Awaited<ReturnType<typeof getModelsList>>;
 export async function getModelsList() {
-  const result = await db
-    .select({
-      model: models,
-      provider: providers,
-    })
-    .from(models)
-    .innerJoin(providers, eq(models.providerId, providers.id))
-    .where(and(isNull(models.deletedAt), eq(models.isChat, true)))
-    .orderBy(models.name);
+  const result = await db.query.models.findMany({
+    where: and(
+      isNull(models.deletedAt),
+      isNull(providers.deletedAt),
+      eq(models.isChat, true)
+    ),
+    with: {
+      provider: true,
+      supportedParameters: true,
+    },
+    orderBy: [
+      asc(models.providerId),
+      desc(models.createdAt),
+      desc(models.name),
+    ],
+  });
 
   const uniqueProviders = result
     .map((item) => item.provider)
@@ -39,15 +46,37 @@ export async function getModelsList() {
       }
       return acc;
     }, [] as Provider[])
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => {
+      // Sort by order first, then by name as fallback
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.name.localeCompare(b.name);
+    });
 
   return {
-    models: result.map((item) => ({
-      ...item.model,
-      provider: {
-        name: item.provider.name,
-      },
-    })),
+    models: result.map((item) => {
+      const modelParams = item.supportedParameters.map(
+        (p) => p.supportedParameterId
+      );
+      const { provider, supportedParameters, ...model } = item;
+      return {
+        ...model,
+        // Calculate capabilities based on supported parameters
+        capabilityReasoning: modelParams.includes("reasoning"),
+        capabilityTools: modelParams.includes("tools"),
+        // Derive capabilities from architecture fields
+        capabilityVision:
+          model.architectureInputModalities?.includes("image") ?? false,
+        capabilityPdf:
+          model.architectureInputModalities?.includes("file") ?? false,
+        capabilityImageGeneration:
+          model.architectureOutputModalities?.includes("image") ?? false,
+        provider: {
+          name: provider.name,
+        },
+      };
+    }),
     providers: uniqueProviders,
   };
 }
@@ -63,6 +92,9 @@ export const modelsRouter = t.router({
         isFlagship: z.boolean().optional(),
         isCoder: z.boolean().optional(),
         isArtist: z.boolean().optional(),
+        isSuggested: z.boolean().optional(),
+        capabilityFast: z.boolean().optional(),
+        capabilityEffortControl: z.boolean().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -74,6 +106,19 @@ export const modelsRouter = t.router({
           updatedAt: sql`current_timestamp`,
         })
         .where(eq(models.id, id));
+      return { ok: true } as const;
+    }),
+
+  delete: publicProcedure
+    .input(z.object({ id: z.string().nonempty() }))
+    .mutation(async ({ input }) => {
+      await db
+        .update(models)
+        .set({
+          deletedAt: sql`current_timestamp`,
+          updatedAt: sql`current_timestamp`,
+        })
+        .where(eq(models.id, input.id));
       return { ok: true } as const;
     }),
 
@@ -133,9 +178,11 @@ export const modelsRouter = t.router({
 
     const existingModels: Set<string> = new Set(
       (
-        await db.query.models.findMany({
-          columns: { id: true },
-        })
+        await db
+          .select({ id: models.id })
+          .from(models)
+          .innerJoin(providers, eq(models.providerId, providers.id))
+          .where(and(isNull(models.deletedAt), isNull(providers.deletedAt)))
       ).map((m) => m.id)
     );
     const newModels = modelsData.filter((m) => !existingModels.has(m.id));
@@ -153,8 +200,8 @@ export const modelsRouter = t.router({
           }
           if (!providerId) throw new Error("Assert: Missing provider ID");
           const isChat =
-            m.architecture.input_modalities?.includes("text") &&
-            m.architecture.output_modalities?.includes("text");
+            !!m.architecture.input_modalities?.includes("text") &&
+            !!m.architecture.output_modalities?.includes("text");
           return {
             id: m.id,
             providerId,

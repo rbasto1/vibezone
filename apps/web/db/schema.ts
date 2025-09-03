@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -24,48 +25,66 @@ export const providers = pgTable("providers", {
   id: text("id").primaryKey(), // openai, anthropic, gemini, etc.
   name: text("name").notNull(),
   tier: providerTiers().notNull().default("specialists"),
+  order: integer("order"), // custom ordering for display
   createdAt: timestampTzNow("created_at"),
   updatedAt: timestampTzNow("updated_at"),
+  deletedAt: timestampTz("deleted_at"),
 });
 
-export const models = pgTable("models", {
-  // OpenRouter id, e.g. "openai/gpt-4o-mini"
-  id: text("id").primaryKey(),
-  // provider prefix, e.g. "openai", "anthropic", "qwen"
-  providerId: text("provider_id")
-    .notNull()
-    .references(() => providers.id),
-  // human name from OpenRouter
-  name: text("name").notNull(),
-  canonicalSlug: text("canonical_slug"),
-  huggingFaceId: text("hugging_face_id"),
-  description: text("description"),
-  // flattened architecture fields
-  architectureModality: text("architecture_modality"),
-  architectureInputModalities: text("architecture_input_modalities").array(),
-  architectureOutputModalities: text("architecture_output_modalities").array(),
-  architectureTokenizer: text("architecture_tokenizer"),
-  architectureInstructType: text("architecture_instruct_type"),
-  // keep pricing and top_provider as JSONB
-  pricing: jsonb("pricing"),
-  topProvider: jsonb("top_provider"),
-  perRequestLimits: jsonb("per_request_limits"),
-  // created from API (epoch seconds) -> timestamptz
-  createdAt: timestampTzNow("created_at"),
+export const models = pgTable(
+  "models",
+  {
+    // OpenRouter id, e.g. "openai/gpt-4o-mini"
+    id: text("id").primaryKey(),
+    // provider prefix, e.g. "openai", "anthropic", "qwen"
+    providerId: text("provider_id")
+      .notNull()
+      .references(() => providers.id),
+    // human name from OpenRouter
+    name: text("name").notNull(),
+    canonicalSlug: text("canonical_slug"),
+    huggingFaceId: text("hugging_face_id"),
+    description: text("description"),
+    // flattened architecture fields
+    architectureModality: text("architecture_modality"),
+    architectureInputModalities: text("architecture_input_modalities").array(),
+    architectureOutputModalities: text(
+      "architecture_output_modalities"
+    ).array(),
+    architectureTokenizer: text("architecture_tokenizer"),
+    architectureInstructType: text("architecture_instruct_type"),
+    // keep pricing and top_provider as JSONB
+    pricing: jsonb("pricing"),
+    topProvider: jsonb("top_provider"),
+    perRequestLimits: jsonb("per_request_limits"),
+    // created from API (epoch seconds) -> timestamptz
+    createdAt: timestampTzNow("created_at"),
 
-  // VIBEZONE specific fields
-  // UI selection priority for default panels
-  priority: integer("priority"),
-  isFlagship: boolean("is_flagship"),
-  isCoder: boolean("is_coder"),
-  isArtist: boolean("is_artist"),
-  isChat: boolean("is_chat"),
-  updatedAt: timestampTzNow("updated_at"),
-  // soft delete
-  deletedAt: timestampTz("deleted_at"),
-}, (table) => ({
-  isChatDeletedAtIdx: index("models_is_chat_deleted_at_idx").on(table.isChat, table.deletedAt),
-}));
+    // VIBEZONE specific fields
+    // UI selection priority for default panels
+    isChat: boolean("is_chat").notNull(), // we only show isChat models
+
+    priority: integer("priority"), // the first 3 models that are loaded by default
+    isFlagship: boolean("is_flagship").notNull().default(false), // initial suggestion box group
+    isCoder: boolean("is_coder").notNull().default(false), // initial suggestion box group
+    isArtist: boolean("is_artist").notNull().default(false), // initial suggestion box group
+
+    isSuggested: boolean("is_suggested").notNull().default(false), // if false, appears under "see more..."
+
+    isExperimental: boolean("is_experimental"),
+    isPremium: boolean("is_premium"),
+    isNew: boolean("is_new"),
+    isIncluded: boolean("is_included"),
+    capabilityFast: boolean("capability_fast"),
+    capabilityEffortControl: boolean("capability_effort_control"),
+
+    updatedAt: timestampTzNow("updated_at"),
+    deletedAt: timestampTz("deleted_at"),
+  },
+  (table) => [
+    index("models_is_chat_deleted_at_idx").on(table.isChat, table.deletedAt),
+  ]
+);
 
 export const supportedParameters = pgTable("supported_parameters", {
   // same as OpenRouter parameter id, e.g. "reasoning", "seed"
@@ -84,6 +103,39 @@ export const modelSupportedParameters = pgTable("model_supported_parameters", {
     .notNull()
     .references(() => supportedParameters.id),
 });
+
+export const modelsRelations = relations(models, ({ one, many }) => ({
+  provider: one(providers, {
+    fields: [models.providerId],
+    references: [providers.id],
+  }),
+  supportedParameters: many(modelSupportedParameters),
+}));
+
+export const providersRelations = relations(providers, ({ many }) => ({
+  models: many(models),
+}));
+
+export const supportedParametersRelations = relations(
+  supportedParameters,
+  ({ many }) => ({
+    modelSupportedParameters: many(modelSupportedParameters),
+  })
+);
+
+export const modelSupportedParametersRelations = relations(
+  modelSupportedParameters,
+  ({ one }) => ({
+    model: one(models, {
+      fields: [modelSupportedParameters.modelId],
+      references: [models.id],
+    }),
+    supportedParameter: one(supportedParameters, {
+      fields: [modelSupportedParameters.supportedParameterId],
+      references: [supportedParameters.id],
+    }),
+  })
+);
 
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
 

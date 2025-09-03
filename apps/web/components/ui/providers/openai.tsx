@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-export default function GeminiIcon(props: ComponentProps<"svg">) {
+export default function OpenAIIcon(props: ComponentProps<"svg">) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

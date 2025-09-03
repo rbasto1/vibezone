@@ -8,9 +8,10 @@ import type { Provider, ProviderTier } from "@/db";
 import { trpc } from "@/lib/trpc/client";
 import type { ProvidersListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef, Row, SortingState } from "@tanstack/react-table";
-import { Crown, Rocket, Wrench } from "lucide-react";
+import { Crown, Rocket, Trash2, Wrench } from "lucide-react";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 interface Props {
   initialProviders: ProvidersListOutput;
@@ -24,6 +25,13 @@ const ProviderManagePageClient: NextPage<Props> = ({ initialProviders }) => {
   });
   const utils = trpc.useUtils();
   const update = trpc.providers.update.useMutation();
+  const deleteMutation = trpc.providers.delete.useMutation({
+    onSuccess: async () => {
+      await utils.providers.list.invalidate().catch(() => {
+        toast.error("Failed to invalidate providers list");
+      });
+    },
+  });
   const [q, setQ] = useState("");
 
   const columns: ColumnDef<ProvidersListOutput[number]>[] = useMemo(
@@ -70,6 +78,62 @@ const ProviderManagePageClient: NextPage<Props> = ({ initialProviders }) => {
                     e.currentTarget.blur();
                   } else if (e.key === "Escape") {
                     e.currentTarget.value = p.name;
+                    e.currentTarget.blur();
+                  }
+                }}
+              />
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "order",
+        header: "Order",
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <div
+              className="w-full"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <Input
+                type="number"
+                defaultValue={String(p.order ?? "")}
+                className="h-8 w-16"
+                aria-label={`Provider ${p.id} order`}
+                placeholder="Order"
+                onBlur={(e) => {
+                  const trimmed = e.currentTarget.value.trim();
+                  const next =
+                    trimmed === "" ? null : Number.parseInt(trimmed, 10);
+                  if (next !== null && Number.isNaN(next)) return; // ignore invalid
+                  if (next === p.order) return; // no change
+
+                  // optimistic update
+                  utils.providers.list.setData(undefined, (prev) =>
+                    prev?.map((x) =>
+                      x.id === p.id ? { ...x, order: next } : x
+                    )
+                  );
+                  update
+                    .mutateAsync({ id: p.id, order: next })
+                    .catch((error) => {
+                      console.error("Order update failed:", error);
+                      // revert on error
+                      utils.providers.list.setData(undefined, (prev) =>
+                        prev?.map((x) =>
+                          x.id === p.id ? { ...x, order: p.order } : x
+                        )
+                      );
+                      e.currentTarget.value = String(p.order ?? "");
+                    });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  } else if (e.key === "Escape") {
+                    e.currentTarget.value = String(p.order ?? "");
                     e.currentTarget.blur();
                   }
                 }}
@@ -167,8 +231,32 @@ const ProviderManagePageClient: NextPage<Props> = ({ initialProviders }) => {
         header: "Created",
         cell: ({ row }) => formatDate(row.original.createdAt),
       },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded px-2 py-1 border border-red-500/30 text-red-600 hover:bg-red-500/10 transition-colors"
+              title="Delete provider"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteMutation.mutateAsync({ id: p.id }).catch((e) => {
+                  const message = e instanceof Error ? e.message : String(e);
+                  toast.error(`Failed to delete provider: ${message}`);
+                });
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          );
+        },
+      },
     ],
-    [update, utils]
+    [update, deleteMutation, utils]
   );
 
   const [sorting, setSorting] = useState<SortingState>([

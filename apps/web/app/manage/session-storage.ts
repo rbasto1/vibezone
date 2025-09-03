@@ -10,12 +10,15 @@ export const storageKeys = {
   manageFlagship: "manage:flagship",
   manageCoder: "manage:coder",
   manageArtist: "manage:artist",
+  managePriority: "manage:priority",
+  manageTier: "manage:tier",
 } as const;
 
-export function setStorageItem(key: string, value: string): void {
+export function setStorageItem(key: string, value: unknown): void {
   if (typeof sessionStorage === "undefined") return;
+  const strValue = typeof value === "string" ? value : JSON.stringify(value);
   try {
-    sessionStorage.setItem(key, value);
+    sessionStorage.setItem(key, strValue);
   } catch {
     /* ignore */
   }
