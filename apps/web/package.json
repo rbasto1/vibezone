@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "dotenvx run -- next dev --turbopack --port 3022",
-    "build": "next build",
+    "build": "pnpm run db:push && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "prettier-fix": "prettier --write .",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "dotenvx run -- tsx db/seed.ts"
+    "db:seed": "dotenvx run -- tsx db/seed.ts",
+    "set-vercel-envs": "dotenvx run -- tsx scripts/set-vercel-envs.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.9",
@@ -32,6 +33,7 @@
     "@trpc/react-query": "^11.5.0",
     "@trpc/server": "^11.5.0",
     "ai": "^5.0.28",
+    "better-auth": "^1.3.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-kit": "^0.31.4",
