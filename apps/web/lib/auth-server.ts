@@ -1,13 +1,18 @@
+import { db } from "@/db";
 import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { magicLink } from "better-auth/plugins";
 
-const APP_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3022";
+const APP_URL = process.env.NEXT_PUBLIC_SITE_URL
+  ? `https://${process.env.NEXT_PUBLIC_SITE_URL}`
+  : "http://localhost:3022";
 
 async function sendEmailWithResend(to: string, subject: string, html: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM;
-  if (!apiKey || !from) throw new Error("Missing RESEND_API_KEY or RESEND_FROM");
+  if (!apiKey || !from)
+    throw new Error("Missing RESEND_API_KEY or RESEND_FROM");
 
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -24,11 +29,12 @@ async function sendEmailWithResend(to: string, subject: string, html: string) {
 }
 
 export const auth = betterAuth({
-  secret: process.env.AUTH_SECRET!,
+  secret: process.env.AUTH_SECRET,
   cookies: nextCookies(),
   // baseUrl may be required depending on BetterAuth version
   // Explicitly set it to avoid callback URL mismatches in prod.
   baseUrl: APP_URL,
+  database: drizzleAdapter(db, { provider: "pg" }),
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
