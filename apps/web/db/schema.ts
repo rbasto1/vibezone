@@ -15,6 +15,9 @@ const timestampTz = (name: string) =>
 const timestampTzNow = (name: string) =>
   timestampTz(name).defaultNow().notNull();
 
+import { account, session, user, verification } from "@/db/auth-schema";
+export { account, session, user, verification };
+
 export const providerTiers = pgEnum("provider_tier", [
   "leaders",
   "challengers",
@@ -139,6 +142,14 @@ export const modelSupportedParametersRelations = relations(
 
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
 
+export type Account = typeof account.$inferSelect;
+export type NewAccount = typeof account.$inferInsert;
+export type Session = typeof session.$inferSelect;
+export type NewSession = typeof session.$inferInsert;
+export type User = typeof user.$inferSelect;
+export type NewUser = typeof user.$inferInsert;
+export type Verification = typeof verification.$inferSelect;
+export type NewVerification = typeof verification.$inferInsert;
 export type Provider = typeof providers.$inferSelect;
 export type NewProvider = typeof providers.$inferInsert;
 export type Model = typeof models.$inferSelect;

@@ -4,7 +4,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { magicLink } from "better-auth/plugins";
 
-const APP_URL = process.env.NEXT_PUBLIC_SITE_URL
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
   ? `https://${process.env.NEXT_PUBLIC_SITE_URL}`
   : "http://localhost:3022";
 
@@ -31,9 +31,7 @@ async function sendEmailWithResend(to: string, subject: string, html: string) {
 export const auth = betterAuth({
   secret: process.env.AUTH_SECRET,
   cookies: nextCookies(),
-  // baseUrl may be required depending on BetterAuth version
-  // Explicitly set it to avoid callback URL mismatches in prod.
-  baseUrl: APP_URL,
+  baseUrl,
   database: drizzleAdapter(db, { provider: "pg" }),
   socialProviders: {
     google: {
