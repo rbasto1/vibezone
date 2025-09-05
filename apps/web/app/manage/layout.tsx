@@ -1,4 +1,4 @@
-import { SiteTopNav } from "@/components/site-topnav";
+import { AdminTopNav } from "./admin-topnav";
 
 export default function ManageLayout({
   children,
@@ -7,7 +7,7 @@ export default function ManageLayout({
 }) {
   return (
     <div className="w-full">
-      <SiteTopNav />
+      <AdminTopNav />
       {children}
     </div>
   );

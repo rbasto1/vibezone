@@ -195,7 +195,7 @@ export const modelsRouter = t.router({
           const name = m.name.split(": ")[1];
           if (!name) {
             throw new Error(
-              "Assert: Model name does not conform to pattern 'Provider: Name'"
+              `Assert: Model name does not conform to pattern 'Provider: Name': ${m.name}`
             );
           }
           if (!providerId) throw new Error("Assert: Missing provider ID");
