@@ -2,7 +2,7 @@ import "server-only";
 
 import { db } from "@/db";
 import { providers, providerTiers } from "@/db/schema";
-import { publicProcedure, t } from "@/lib/trpc/server/initialize";
+import { adminProcedure, t } from "@/lib/trpc/server/initialize";
 import { asc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
@@ -17,8 +17,8 @@ export async function getProvidersList() {
 const TierSchema = z.enum(providerTiers.enumValues);
 
 export const providersRouter = t.router({
-  list: publicProcedure.query(getProvidersList),
-  update: publicProcedure
+  list: adminProcedure.query(getProvidersList),
+  update: adminProcedure
     .input(
       z
         .object({
@@ -49,7 +49,7 @@ export const providersRouter = t.router({
       return { ok: true } as const;
     }),
 
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ input }) => {
       await db

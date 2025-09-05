@@ -8,9 +8,10 @@ const baseURL = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
 
 export interface AuthUser {
   id: string;
-  name?: string;
-  email?: string;
-  image?: string;
+  name: string | null;
+  email: string;
+  image?: string | null | undefined;
+  isAdmin: boolean;
 }
 
 export interface UseUserResult {

@@ -14,7 +14,11 @@ import {
   supportedParameters,
 } from "@/db/schema";
 import { OpenRouterModelsResponse } from "@/lib/open-router/schema";
-import { publicProcedure, t } from "@/lib/trpc/server/initialize";
+import {
+  adminProcedure,
+  publicProcedure,
+  t,
+} from "@/lib/trpc/server/initialize";
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
@@ -84,7 +88,7 @@ export async function getModelsList() {
 export const modelsRouter = t.router({
   list: publicProcedure.query(getModelsList),
 
-  update: publicProcedure
+  update: adminProcedure
     .input(
       z.object({
         id: z.string().nonempty(),
@@ -109,7 +113,7 @@ export const modelsRouter = t.router({
       return { ok: true } as const;
     }),
 
-  delete: publicProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string().nonempty() }))
     .mutation(async ({ input }) => {
       await db
@@ -122,7 +126,7 @@ export const modelsRouter = t.router({
       return { ok: true } as const;
     }),
 
-  syncFromOpenRouter: publicProcedure.mutation(async () => {
+  syncFromOpenRouter: adminProcedure.mutation(async () => {
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       throw new Error("OPENROUTER_API_KEY is not set");

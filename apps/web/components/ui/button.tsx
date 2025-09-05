@@ -1,11 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
+import { InlineSpinner } from "@/components/ui/inline-spinner";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-
-import { cn } from "@/components/ui/utils";
+import { Children, cloneElement, isValidElement } from "react";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive cursor-pointer",
   {
     variants: {
       variant: {
@@ -49,40 +49,47 @@ function Button({
     loading?: boolean;
   }) {
   const Comp = asChild ? Slot : "button";
+  const { children, ...restProps } = props;
+
+  const spinner = loading ? <InlineSpinner /> : null;
+
+  if (asChild) {
+    // Ensure Slot receives exactly one child by cloning the only child
+    const onlyChild = Children.only(children);
+    const childElement = isValidElement(onlyChild)
+      ? loading
+        ? cloneElement(
+            onlyChild,
+            undefined,
+            <>
+              {spinner}
+              {(onlyChild.props as { children?: React.ReactNode }).children}
+            </>
+          )
+        : onlyChild
+      : onlyChild;
+
+    return (
+      <Comp
+        data-slot="button"
+        className={buttonVariants({ variant, size, className })}
+        disabled={disabled || loading}
+        {...restProps}
+      >
+        {childElement}
+      </Comp>
+    );
+  }
 
   return (
     <Comp
       data-slot="button"
-      className={cn(
-        "cursor-pointer",
-        buttonVariants({ variant, size, className })
-      )}
+      className={buttonVariants({ variant, size, className })}
       disabled={disabled || loading}
-      {...props}
+      {...restProps}
     >
-      {loading ? (
-        <svg
-          aria-hidden
-          className="animate-spin h-4 w-4 text-current"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-          />
-        </svg>
-      ) : null}
-      {props.children}
+      {spinner}
+      {children}
     </Comp>
   );
 }

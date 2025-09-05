@@ -52,6 +52,14 @@ export const auth = betterAuth({
       },
     }),
   ],
+  user: {
+    additionalFields: {
+      isAdmin: {
+        type: "boolean",
+        defaultValue: false,
+      },
+    },
+  },
 });
 
 export type Auth = typeof auth;
