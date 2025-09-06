@@ -24,7 +24,6 @@ export function getConfigFromRequest(
   request: Request,
   rawBody: any
 ): GetConfigResponse {
-  console.log(`Stream request:`, JSON.stringify(rawBody, null, 2));
   const bodyParse = ChatRequestSchema.safeParse(rawBody);
   if (!bodyParse.success) {
     return {

@@ -1,4 +1,4 @@
-import { ThreadPrimitive } from "@assistant-ui/react";
+import { ThreadPrimitive, useThread } from "@assistant-ui/react";
 import { motion } from "framer-motion";
 import type { FC, PropsWithChildren } from "react";
 
@@ -8,6 +8,9 @@ import { ThreadWelcome } from "./thread-welcome";
 import { UserMessage } from "./user-message";
 
 export const Thread: FC<PropsWithChildren> = ({ children }) => {
+  const thread = useThread();
+  console.log(`thread.tsx: Panel thread:`, thread);
+
   return (
     <ThreadPrimitive.Root
       // aui-thread-root

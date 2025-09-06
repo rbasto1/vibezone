@@ -1,11 +1,12 @@
 import type { PanelConfig } from "@/app/assistant";
 import { Thread } from "@/components/assistant-ui/thread";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
-import type { ModelContext } from "@assistant-ui/react";
+import { getGlobalAssistantCloud } from "@/lib/assistant-cloud/provider";
+import { authClient } from "@/lib/auth-client";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DefaultChatTransport } from "ai";
-import { useEffect, useMemo, type FC } from "react";
+import { type FC } from "react";
 import { toast } from "sonner";
 import { PanelHeader } from "./response-panel-header";
 import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
@@ -27,8 +28,11 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
 }) => {
   const { id, model } = panel;
   panelGlobalContext[id] = panel;
+  const { data: session } = authClient.useSession();
+  const token = session?.session.token;
+  const userId = session?.user.id;
 
-  const _runtime = useChatRuntime({
+  const runtime = useChatRuntime({
     transport: new DefaultChatTransport({
       api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
       fetch: (url, init) => {
@@ -46,21 +50,23 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
         });
       },
     }),
+    cloud: token && userId ? getGlobalAssistantCloud(token, userId) : undefined,
   });
 
   // We will update the runtime using the global variable above
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const runtime = useMemo(() => _runtime, []);
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // const runtime = useMemo(() => _runtime, []);
 
-  useEffect(() => {
-    // This is not working as of assitant-ui@0.10.43
-    return runtime.registerModelContextProvider({
-      getModelContext: (): ModelContext => {
-        console.info("Yay! It works! Called getModelContext:", id, model);
-        return {};
-      },
-    });
-  }, [runtime, model, id]);
+  // Commented out for us to check later if it gets to work
+  // useEffect(() => {
+  //   // This is not working as of assitant-ui@0.10.43
+  //   return runtime.registerModelContextProvider({
+  //     getModelContext: (): ModelContext => {
+  //       console.info("Yay! It works! Called getModelContext:", id, model);
+  //       return {};
+  //     },
+  //   });
+  // }, [runtime, model, id]);
 
   // This is how we execute the chat from the global composer
   // It registers the runtime so that messages sent from the composer are sent to this panel's runtime
@@ -82,7 +88,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
         }}
       />
       <div className="flex-1 min-h-0">
-        <AssistantRuntimeProvider runtime={_runtime}>
+        <AssistantRuntimeProvider runtime={runtime}>
           <Thread />
           <ThreadScrollToBottom />
         </AssistantRuntimeProvider>

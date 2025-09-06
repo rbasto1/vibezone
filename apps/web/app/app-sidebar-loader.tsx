@@ -1,8 +1,9 @@
-import { AssistantCloud, AssistantRuntimeProvider } from "@assistant-ui/react";
+import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DefaultChatTransport } from "ai";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { getGlobalAssistantCloud } from "@/lib/assistant-cloud/provider";
 import { authClient } from "@/lib/auth-client";
 import type { FC } from "react";
 
@@ -40,12 +41,7 @@ const AppSidebarWithRuntime: FC<AppSidebarWithRuntimeProps> = ({
         },
       },
     }),
-    cloud: new AssistantCloud({
-      baseUrl: "http://localhost:3022",
-      apiKey: token,
-      userId,
-      workspaceId: "",
-    }),
+    cloud: getGlobalAssistantCloud(token, userId),
   });
 
   return (

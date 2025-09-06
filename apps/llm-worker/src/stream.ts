@@ -33,6 +33,10 @@ export async function handleProviderStream(
     headers: gateway.headers,
   });
 
+  console.log(
+    `Starting stream (modelId=${modelId} messages=${messages.length})`
+  );
+
   const result = streamText({
     model: adapter(modelId),
     messages: convertToModelMessages(messages),
