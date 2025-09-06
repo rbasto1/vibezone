@@ -4,6 +4,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { MAX_PANELS } from "@/app/assistant";
 
 import type { FC } from "react";
+import { cn } from "../ui/utils";
 
 interface AssistantHeaderProps {
   onAddPanel: () => void;
@@ -20,12 +21,12 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
       extraRight={
         <button
           type="button"
-          className={
-            "h-9 rounded-md border px-3 text-sm transition-colors " +
-            (panelCount < MAX_PANELS
+          className={cn(
+            "h-9 rounded-md border px-3 text-sm transition-colors",
+            panelCount < MAX_PANELS
               ? "hover:bg-accent"
-              : "opacity-60 cursor-not-allowed")
-          }
+              : "opacity-60 cursor-not-allowed"
+          )}
           onClick={onAddPanel}
           disabled={panelCount >= MAX_PANELS}
           title={

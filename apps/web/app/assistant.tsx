@@ -1,10 +1,7 @@
 "use client";
 
-import { AssistantRuntimeProvider } from "@assistant-ui/react";
-import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
-import { DefaultChatTransport } from "ai";
+import type { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 
-import { AppSidebar } from "@/components/app-sidebar";
 import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ResponsePanel } from "@/components/assistant-ui/response-panel";
@@ -15,6 +12,7 @@ import { cn } from "@/components/ui/utils";
 import type { FC } from "react";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
+import { AppSidebarLoader } from "./app-sidebar-loader";
 
 export interface PanelConfig {
   id: string;
@@ -110,25 +108,10 @@ export const Assistant: FC<AssistantProps> = ({ initialPanels }) => {
 
   const panelCount = Math.min(Math.max(panels.length, 1), MAX_PANELS);
 
-  // Runtime for the sidebar components (e.g., ThreadList) that require context
-  // TODO: refactor this, we have to list threads from a global list
-  const sidebarRuntime = useChatRuntime({
-    transport: new DefaultChatTransport({
-      api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
-      body: {
-        config: {
-          model: "gpt-4o-mini",
-        },
-      },
-    }),
-  });
-
   return (
     <SidebarProvider>
       <div className="flex h-dvh w-full">
-        <AssistantRuntimeProvider runtime={sidebarRuntime}>
-          <AppSidebar />
-        </AssistantRuntimeProvider>
+        <AppSidebarLoader />
         <SidebarInset>
           <AssistantHeader
             onAddPanel={handleAddPanel}

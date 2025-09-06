@@ -14,9 +14,13 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
+import { useThread } from "@assistant-ui/react";
 import { ThreadList } from "./assistant-ui/thread-list";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const thread = useThread();
+  console.log(thread);
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
