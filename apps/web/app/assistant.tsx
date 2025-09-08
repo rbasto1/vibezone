@@ -9,73 +9,24 @@ import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welco
 import { GlobalComposerContext } from "@/components/providers/composer-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
-import { useSession } from "@/hooks/use-session";
-import { INITIAL_PANEL_COUNT, MAX_PANELS } from "@/lib/constants";
-import { trpc } from "@/lib/trpc/client";
+import {
+  usePanelsConfigValue,
+  usePanelsStateValue,
+  usePanelStateSetter,
+} from "@/hooks/use-panels";
+import { MAX_PANELS } from "@/lib/constants";
 import type { FC } from "react";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppSidebarLoader } from "./app-sidebar-loader";
 
-export interface PanelConfig {
-  id: string;
-  provider: string;
-  model: string;
-}
-
 // Global composer context to broadcast a prompt to all panels
 type RuntimeRegistry = Map<string, ReturnType<typeof useChatRuntime>>; // panelId -> runtime
 
-interface AssistantProps {
-  initialPanels: PanelConfig[];
-}
-
-interface PanelState {
-  running: boolean;
-  error?: Error;
-}
-
-export const Assistant: FC<AssistantProps> = ({ initialPanels }) => {
-  const [panels, setPanels] = useState(
-    initialPanels.slice(0, INITIAL_PANEL_COUNT)
-  );
-  const [panelState, setPanelState] = useState<Record<string, PanelState>>(
-    initialPanels.reduce(
-      (acc, p) => {
-        acc[p.id] = { running: false };
-        return acc;
-      },
-      {} as Record<string, PanelState>
-    )
-  );
-
-  const authData = useSession();
-  const setLastModels = trpc.users.setLastModels.useMutation();
-
-  const removePanel = (id: string) => {
-    setPanels((prev) => {
-      if (prev.length <= 1) return prev;
-      return prev.filter((p) => p.id !== id);
-    });
-  };
-
-  const saveLastModels = (newPanels: PanelConfig[]) => {
-    if (!authData?.user) return;
-    const modelIds = newPanels.map((p) => p.model).slice(0, MAX_PANELS);
-    setLastModels.mutate({ modelIds });
-  };
-
-  const changePanelModel = (
-    panelId: string,
-    providerId: string,
-    modelId: string
-  ) => {
-    const newPanels = panels.map((p) =>
-      p.id === panelId ? { ...p, provider: providerId, model: modelId } : p
-    );
-    setPanels(newPanels);
-    saveLastModels(newPanels);
-  };
+export const Assistant: FC = () => {
+  const panelsConfig = usePanelsConfigValue();
+  const panelsState = usePanelsStateValue();
+  const setPanelState = usePanelStateSetter();
 
   // Global composer state and registry
   const [globalPrompt, setGlobalPrompt] = useState("");
@@ -89,52 +40,42 @@ export const Assistant: FC<AssistantProps> = ({ initialPanels }) => {
     (panelId: string) => registryRef.current.delete(panelId),
     []
   );
-  const send = useCallback((text: string) => {
-    const msg = text.trim();
-    if (!msg) return;
+  const send = useCallback(
+    (text: string) => {
+      const msg = text.trim();
+      if (!msg) return;
 
-    // Send directly to each runtime
-    const runningPanels: string[] = [];
-    for (const [panelId, runtime] of registryRef.current.entries()) {
-      try {
-        runtime.thread.append({
-          runConfig: { custom: { thisIscustom: true } },
-          metadata: { custom: { thisIsMyMetadata: true } },
-          sourceId: "this is the source",
-          role: "user",
-          content: [{ type: "text", text: msg }],
-        });
-        runningPanels.push(panelId);
-      } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
-        toast.error(`Send failed for a panel: ${message}`);
+      // Send directly to each runtime
+      const runningPanels: string[] = [];
+      for (const [panelId, runtime] of registryRef.current.entries()) {
+        try {
+          runtime.thread.append({
+            runConfig: { custom: { thisIscustom: true } },
+            metadata: { custom: { thisIsMyMetadata: true } },
+            sourceId: "this is the source",
+            role: "user",
+            content: [{ type: "text", text: msg }],
+          });
+          runningPanels.push(panelId);
+        } catch (e) {
+          const message = e instanceof Error ? e.message : String(e);
+          toast.error(`Send failed for a panel: ${message}`);
+        }
       }
-    }
-    setPanelState((panelState) =>
-      runningPanels.reduce(
-        (acc, panelId) => {
-          const state = panelState[panelId];
-          if (state) {
-            acc[panelId] = { ...state, running: true, error: undefined };
-          }
-          return acc;
-        },
-        {} as Record<string, PanelState>
-      )
-    );
+      // Update panel states to running
+      runningPanels.forEach((panelId) => {
+        setPanelState(panelId, (currentState) => ({
+          ...currentState,
+          running: true,
+          error: undefined,
+        }));
+      });
 
-    // Clear the global prompt
-    setGlobalPrompt("");
-  }, []);
-
-  const handleAddPanel = () => {
-    const next = initialPanels.find(
-      (p) => !panels.some((pp) => pp.id === p.id)
-    );
-    const newPanels = next ? [...panels, next] : panels;
-    setPanels(newPanels);
-    saveLastModels(newPanels);
-  };
+      // Clear the global prompt
+      setGlobalPrompt("");
+    },
+    [setPanelState]
+  );
 
   const handleStopAll = () => {
     const failures: string[] = [];
@@ -151,38 +92,15 @@ export const Assistant: FC<AssistantProps> = ({ initialPanels }) => {
     }
   };
 
-  const handleModelError = (panelId: string, error: Error) => {
-    setPanelState((panelState) => {
-      const newState = { ...panelState };
-      if (newState[panelId]) {
-        newState[panelId] = { ...newState[panelId], error, running: false };
-      }
-      return newState;
-    });
-  };
-
-  const handleModelFinish = (panelId: string) => {
-    setPanelState((panelState) => {
-      const newState = { ...panelState };
-      if (newState[panelId]) {
-        newState[panelId] = { ...newState[panelId], running: false };
-      }
-      return newState;
-    });
-  };
-
-  const panelCount = Math.min(Math.max(panels.length, 1), MAX_PANELS);
-  const anyPanelRunning = Object.values(panelState).some((p) => p.running);
+  const panelCount = Math.min(Math.max(panelsConfig.length, 1), MAX_PANELS);
+  const anyPanelRunning = Object.values(panelsState).some((p) => p.running);
 
   return (
     <SidebarProvider>
       <div className="flex h-dvh w-full">
         <AppSidebarLoader />
         <SidebarInset>
-          <AssistantHeader
-            onAddPanel={handleAddPanel}
-            panelCount={panels.length}
-          />
+          <AssistantHeader panelCount={panelsConfig.length} />
           <GlobalComposerContext.Provider
             value={{
               prompt: globalPrompt,
@@ -201,21 +119,8 @@ export const Assistant: FC<AssistantProps> = ({ initialPanels }) => {
                   panelCount === 3 && "md:grid-cols-3"
                 )}
               >
-                {panels.map((panel) => (
-                  <ResponsePanel
-                    key={panel.id}
-                    panel={panel}
-                    onClose={
-                      panels.length > 1
-                        ? () => removePanel(panel.id)
-                        : undefined
-                    }
-                    onChangeModel={(providerId, modelId) =>
-                      changePanelModel(panel.id, providerId, modelId)
-                    }
-                    onModelError={(error) => handleModelError(panel.id, error)}
-                    onModelFinish={() => handleModelFinish(panel.id)}
-                  />
+                {panelsConfig.map((panel) => (
+                  <ResponsePanel key={panel.id} panel={panel} />
                 ))}
               </div>
 

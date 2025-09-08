@@ -1,8 +1,9 @@
-import type { PanelConfig } from "@/app/assistant";
 import { Thread } from "@/components/assistant-ui/thread";
+import { usePanelStateSetter } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
 import { getGlobalAssistantCloud } from "@/lib/assistant-cloud/provider";
 import { authClient } from "@/lib/auth-client";
+import type { PanelConfig } from "@/store/panels";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DefaultChatTransport } from "ai";
@@ -13,28 +14,34 @@ import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
 
 interface ResponsePanelProps {
   panel: PanelConfig;
-  onClose?: () => void;
-  onChangeModel: (providerId: string, modelId: string) => void;
-  onModelError: (error: Error) => void;
-  onModelFinish: () => void;
 }
 
 // Since we can't use ModelContextProviders (see comment below), we will
 // have to hack our way out
 const panelGlobalContext: Record<string, PanelConfig> = {};
 
-export const ResponsePanel: FC<ResponsePanelProps> = ({
-  panel,
-  onClose,
-  onChangeModel,
-  onModelError,
-  onModelFinish,
-}) => {
+export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
   const { id, model } = panel;
   panelGlobalContext[id] = panel;
   const { data: session } = authClient.useSession();
   const token = session?.session.token;
   const userId = session?.user.id;
+  const updatePanelState = usePanelStateSetter();
+
+  const handleModelError = (error: Error) => {
+    updatePanelState(id, (currentState) => ({
+      ...currentState,
+      error,
+      running: false,
+    }));
+  };
+
+  const handleModelFinish = () => {
+    updatePanelState(id, (currentState) => ({
+      ...currentState,
+      running: false,
+    }));
+  };
 
   const runtime = useChatRuntime({
     transport: new DefaultChatTransport({
@@ -55,8 +62,8 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
       },
     }),
     cloud: token && userId ? getGlobalAssistantCloud(token, userId) : undefined,
-    onError: onModelError,
-    onFinish: onModelFinish,
+    onError: handleModelError,
+    onFinish: handleModelFinish,
   });
 
   // We will update the runtime using the global variable above
@@ -81,9 +88,8 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   return (
     <div className="flex flex-col border rounded-lg overflow-hidden h-full">
       <PanelHeader
+        panelId={id}
         modelId={model}
-        onClose={onClose}
-        onChangeModel={onChangeModel}
         onStop={() => {
           try {
             runtime.thread.cancelRun();

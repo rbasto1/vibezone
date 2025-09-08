@@ -9,14 +9,11 @@ import { ProviderIcon } from "../ui/providers/provider";
 import { ModelDropdownContents } from "./model-dropdown-contents";
 
 interface ModelDropdownProps {
+  panelId: string;
   modelId: string;
-  onChangeModel: (providerId: string, modelId: string) => void;
 }
 
-export const ModelDropdown: FC<ModelDropdownProps> = ({
-  modelId,
-  onChangeModel,
-}) => {
+export const ModelDropdown: FC<ModelDropdownProps> = ({ modelId, panelId }) => {
   const state = useAtomValue(modelsAtom);
   const providers = state.providers;
   const models = state.models;
@@ -40,10 +37,7 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         {isOpen && (
-          <ModelDropdownContents
-            modelId={modelId}
-            onChangeModel={onChangeModel}
-          />
+          <ModelDropdownContents modelId={modelId} panelId={panelId} />
         )}
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
