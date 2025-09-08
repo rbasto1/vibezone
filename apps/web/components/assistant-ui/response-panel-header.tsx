@@ -1,5 +1,6 @@
 "use client";
 
+import { StopButton } from "@/components/ui/stop-button";
 import { cn } from "@/components/ui/utils";
 import { XIcon } from "lucide-react";
 
@@ -43,19 +44,15 @@ export const PanelHeader: FC<PanelHeaderProps> = ({
       </div>
       <div className="flex items-center gap-1">
         {onStop && (
-          <button
-            className="p-1 rounded hover:bg-muted"
+          <StopButton
             onClick={onStop}
             aria-label="Stop streaming"
-            title="Stop streaming"
-          >
-            {/* stop icon as a square */}
-            <span className="inline-block h-4 w-4 bg-foreground/80" />
-          </button>
+            title="Stop streaming this AI response"
+          />
         )}
         <button
           className={cn(
-            "p-1 rounded hover:bg-muted",
+            "p-1 rounded hover:bg-muted cursor-pointer",
             canClose ? "opacity-100" : "opacity-40 cursor-not-allowed"
           )}
           onClick={handleRemovePanel}

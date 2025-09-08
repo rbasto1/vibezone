@@ -1,7 +1,8 @@
 "use client";
-import { ArrowUpIcon, PlusIcon, SquareIcon } from "lucide-react";
+import { ArrowUpIcon, PlusIcon } from "lucide-react";
 import React from "react";
 import { Button } from "../ui/button";
+import { StopButton } from "../ui/stop-button";
 
 export type GlobalComposerProps = {
   value: string;
@@ -24,6 +25,8 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
     if (target.closest("button")) return;
     textareaRef.current?.focus();
   };
+
+  const canAttach = false;
 
   return (
     <div
@@ -49,39 +52,30 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
       />
       {/* Footer with attach and send, styled like thread composer */}
       <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
-        <div className="flex items-center gap-2">
+        {canAttach ? (
           <Button
-            type="button"
+            size="icon"
             variant="ghost"
-            className="hover:bg-foreground/15 dark:hover:bg-background/50 scale-115 p-3.5"
             onClick={() => console.warn("Attachment clicked - not implemented")}
             aria-label="Attach file"
           >
             <PlusIcon />
           </Button>
+        ) : (
+          <div />
+        )}
 
-          {onStopAll && (
-            <Button
-              type="button"
-              variant="ghost"
-              className="hover:bg-foreground/15 dark:hover:bg-background/50 p-2"
-              onClick={onStopAll}
-              aria-label="Stop all"
-              title="Stop all panels"
-            >
-              <SquareIcon className="size-5" />
-            </Button>
-          )}
-        </div>
-
-        <Button
-          type="button"
-          className="dark:border-muted-foreground/90 border-muted-foreground/60 hover:bg-primary/75 size-8 rounded-full border cursor-pointer"
-          onClick={onSubmit}
-          aria-label="Send to all panels"
-        >
-          <ArrowUpIcon className="size-5" />
-        </Button>
+        {onStopAll ? (
+          <StopButton
+            onClick={onStopAll}
+            aria-label="Stop all AI responses"
+            title="Stop all AI responses"
+          />
+        ) : (
+          <Button size="icon" onClick={onSubmit} aria-label="Send to all AIs">
+            <ArrowUpIcon className="size-5" />
+          </Button>
+        )}
       </div>
     </div>
   );
