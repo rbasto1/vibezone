@@ -1,9 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
 import { modelsAtom } from "@/store/models";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useAtomValue } from "jotai";
 import {
   Brain,
@@ -182,7 +185,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   };
 
   return (
-    <DropdownMenu.Content
+    <DropdownMenuContent
       align="start"
       sideOffset={8}
       className={cn(
@@ -283,7 +286,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                       ) : (
                         <>
                           {suggested.map((m) => (
-                            <DropdownMenu.Item
+                            <DropdownMenuItem
                               key={m.id}
                               className={cn(
                                 "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
@@ -338,7 +341,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                   ) : null}
                                 </span>
                               </div>
-                            </DropdownMenu.Item>
+                            </DropdownMenuItem>
                           ))}
 
                           {others.length > 0 && !expanded ? (
@@ -360,7 +363,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                 Other models
                               </div>
                               {others.map((m) => (
-                                <DropdownMenu.Item
+                                <DropdownMenuItem
                                   key={m.id}
                                   className={cn(
                                     "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
@@ -417,7 +420,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                       ) : null}
                                     </span>
                                   </div>
-                                </DropdownMenu.Item>
+                                </DropdownMenuItem>
                               ))}
                             </div>
                           ) : null}
@@ -431,6 +434,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
           )}
         </div>
       </div>
-    </DropdownMenu.Content>
+    </DropdownMenuContent>
   );
 };

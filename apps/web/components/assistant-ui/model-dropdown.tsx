@@ -6,6 +6,7 @@ import { modelsAtom } from "@/store/models";
 import { useAtomValue } from "jotai";
 import { ChevronDown } from "lucide-react";
 import { useState, type FC } from "react";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuPortal,
@@ -41,16 +42,13 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({ modelId, panelId }) => {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <button
-          className="inline-flex items-center gap-2 text-lg px-3 py-0.5 rounded border hover:bg-muted/70 text-foreground/80 hover:text-foreground transition-colors font-medium"
-          title="Change model"
-        >
-          <span className="flex items-center gap-2 truncate max-w-[50vw]">
+        <Button title="Change model" variant="outline">
+          <span className="flex items-center gap-2 truncate max-w-[20vw]">
             {provider && <ProviderIcon providerId={provider.id} />}
             <span className="truncate">{model?.name ?? modelId}</span>
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 ml-4" />
           </span>
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuPortal>
         {isOpen && (
