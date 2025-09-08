@@ -1,9 +1,8 @@
 "use client";
 
+import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
-import { modelsAtom } from "@/store/models";
-import { useAtomValue } from "jotai";
 import { ChevronDown } from "lucide-react";
 import { useState, type FC } from "react";
 import { Button } from "../ui/button";
@@ -21,7 +20,7 @@ interface ModelDropdownProps {
 }
 
 export const ModelDropdown: FC<ModelDropdownProps> = ({ modelId, panelId }) => {
-  const { providers, models } = useAtomValue(modelsAtom);
+  const { providers, models } = useModelsValue();
   const model = models.find((m) => m.id === modelId);
   const provider = providers.find((p) => p.id === model?.providerId);
   const [isOpen, setIsOpen] = useState(false);

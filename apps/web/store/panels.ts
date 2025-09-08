@@ -16,3 +16,10 @@ export interface PanelState {
 }
 
 export const panelStateAtom = atom<Record<string, PanelState>>({});
+
+// Global UI state atom
+export const uiStateAtom = atom<{
+  suggestionsUsed: boolean;
+}>({
+  suggestionsUsed: false,
+});

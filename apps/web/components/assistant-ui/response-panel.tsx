@@ -94,18 +94,18 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
     }
   };
 
-  const canStop = panelState(id).running;
+  const { running, error } = panelState(id);
 
   return (
     <div className="flex flex-col border rounded-lg overflow-hidden h-full">
       <PanelHeader
         panelId={id}
         modelId={model}
-        onStop={canStop ? handleStop : undefined}
+        onStop={running ? handleStop : undefined}
       />
       <div className="flex-1 min-h-0">
         <AssistantRuntimeProvider runtime={runtime}>
-          <Thread />
+          <Thread error={error} />
           <ThreadScrollToBottom />
         </AssistantRuntimeProvider>
       </div>

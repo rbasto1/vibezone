@@ -6,8 +6,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
-import { modelsAtom } from "@/store/models";
-import { useAtomValue } from "jotai";
+import { useModelsValue } from "@/hooks/use-models";
 import {
   Brain,
   Crown,
@@ -31,9 +30,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   onSelect,
   currentModelId,
 }) => {
-  const state = useAtomValue(modelsAtom);
-  const models = state.models;
-  const providers = state.providers;
+  const { models, providers } = useModelsValue();
 
   // Filters: provider tiers and model flags
   const tierOptions = [

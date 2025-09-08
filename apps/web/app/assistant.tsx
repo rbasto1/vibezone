@@ -10,11 +10,16 @@ import { GlobalComposerContext } from "@/components/providers/composer-provider"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
 import {
+  usePanelsConfigSetter,
   usePanelsConfigValue,
   usePanelsStateValue,
   usePanelStateSetter,
+  useUIStateSetter,
+  useUIStateValue,
 } from "@/hooks/use-panels";
 import { MAX_PANELS } from "@/lib/constants";
+import { generatePanelId } from "@/lib/id";
+import type { PanelConfig } from "@/store/panels";
 import type { FC } from "react";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -27,6 +32,9 @@ export const Assistant: FC = () => {
   const panelsConfig = usePanelsConfigValue();
   const panelsState = usePanelsStateValue();
   const setPanelState = usePanelStateSetter();
+  const setPanelsConfig = usePanelsConfigSetter();
+  const uiState = useUIStateValue();
+  const setUIState = useUIStateSetter();
 
   // Global composer state and registry
   const [globalPrompt, setGlobalPrompt] = useState("");
@@ -40,6 +48,7 @@ export const Assistant: FC = () => {
     (panelId: string) => registryRef.current.delete(panelId),
     []
   );
+
   const send = useCallback(
     (text: string) => {
       const msg = text.trim();
@@ -92,6 +101,22 @@ export const Assistant: FC = () => {
     }
   };
 
+  const handleSelectModels = (modelIds: string[]) => {
+    setPanelsConfig(
+      modelIds.map((modelId): PanelConfig => {
+        const provider = modelId.split(":")[0];
+        if (!provider) throw new Error("Assert: this can't happen");
+        return {
+          id: generatePanelId(),
+          provider,
+          model: modelId,
+        };
+      })
+    );
+    // Mark suggestions as used to hide them
+    setUIState({ suggestionsUsed: true });
+  };
+
   const panelCount = Math.min(Math.max(panelsConfig.length, 1), MAX_PANELS);
   const anyPanelRunning = Object.values(panelsState).some((p) => p.running);
 
@@ -126,10 +151,10 @@ export const Assistant: FC = () => {
 
               {/* Centered container for suggestions and composer */}
               <div className="mx-auto w-full max-w-3xl md:max-w-4xl lg:max-w-5xl flex flex-col gap-3 px-2 sm:px-3">
-                {/* Global suggestions under panels */}
-                <ThreadWelcomeSuggestions
-                  onSelect={(text) => setGlobalPrompt(text)}
-                />
+                {/* Global suggestions under panels - only show if not used */}
+                {!uiState.suggestionsUsed && (
+                  <ThreadWelcomeSuggestions onSelect={handleSelectModels} />
+                )}
 
                 {/* Global composer below panels */}
                 <GlobalComposer

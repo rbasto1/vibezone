@@ -5,10 +5,15 @@ import type { FC, PropsWithChildren } from "react";
 import { cn } from "@/components/ui/utils";
 import { AssistantMessage } from "./assistant-message";
 import { EditComposer } from "./edit-composer";
+import { ThreadError } from "./thread-error";
 import { ThreadWelcome } from "./thread-welcome";
 import { UserMessage } from "./user-message";
 
-export const Thread: FC<PropsWithChildren> = ({ children }) => {
+interface ThreadProps extends PropsWithChildren {
+  error: Error | undefined | null;
+}
+
+export const Thread: FC<ThreadProps> = ({ children, error }) => {
   const thread = useThread();
   const isActive = thread.isRunning;
 
@@ -38,12 +43,14 @@ export const Thread: FC<PropsWithChildren> = ({ children }) => {
           }}
         />
 
+        {/* Show error message if there's an error */}
+        {error && <ThreadError error={error} />}
+
         <ThreadPrimitive.If empty={false}>
           {/* aui-thread-viewport-spacer */}
           <motion.div className="min-h-6 min-w-6 shrink-0" />
         </ThreadPrimitive.If>
       </ThreadPrimitive.Viewport>
-
       {children}
     </ThreadPrimitive.Root>
   );

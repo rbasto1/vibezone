@@ -1,6 +1,7 @@
 import {
   panelConfigAtom,
   panelStateAtom,
+  uiStateAtom,
   type PanelConfig,
   type PanelState,
 } from "@/store/panels";
@@ -41,9 +42,18 @@ export const usePanelConfigSetter = () => {
   const setPanelConfigs = useSetAtom(panelConfigAtom);
 
   return useCallback(
-    (panelId: string, updater: (currentPanel: PanelConfig) => PanelConfig) => {
+    (
+      panelId: string,
+      updater: PanelConfig | ((currentPanel: PanelConfig) => PanelConfig)
+    ) => {
       setPanelConfigs((panels) =>
-        panels.map((panel) => (panel.id === panelId ? updater(panel) : panel))
+        panels.map((panel) =>
+          panel.id === panelId
+            ? typeof updater === "function"
+              ? updater(panel)
+              : updater
+            : panel
+        )
       );
     },
     [setPanelConfigs]
@@ -54,10 +64,16 @@ export const usePanelStateSetter = () => {
   const setPanelState = useSetAtom(panelStateAtom);
 
   return useCallback(
-    (panelId: string, updater: (currentState: PanelState) => PanelState) => {
+    (
+      panelId: string,
+      updater: PanelState | ((currentState: PanelState) => PanelState)
+    ) => {
       setPanelState((panelState) => ({
         ...panelState,
-        [panelId]: updater(panelState[panelId] || { running: false }),
+        [panelId]:
+          typeof updater === "function"
+            ? updater(panelState[panelId] || { running: false })
+            : updater,
       }));
     },
     [setPanelState]
@@ -67,7 +83,9 @@ export const usePanelStateSetter = () => {
 export const usePanelsConfigSetter = () => {
   const setPanelsConfig = useSetAtom(panelConfigAtom);
   return useCallback(
-    (updater: (currentPanels: PanelConfig[]) => PanelConfig[]) => {
+    (
+      updater: PanelConfig[] | ((currentPanels: PanelConfig[]) => PanelConfig[])
+    ) => {
       setPanelsConfig(updater);
     },
     [setPanelsConfig]
@@ -78,9 +96,11 @@ export const usePanelsStateSetter = () => {
   const setPanelsState = useSetAtom(panelStateAtom);
   return useCallback(
     (
-      updater: (
-        currentState: Record<string, PanelState>
-      ) => Record<string, PanelState>
+      updater:
+        | Record<string, PanelState>
+        | ((
+            currentState: Record<string, PanelState>
+          ) => Record<string, PanelState>)
     ) => {
       setPanelsState(updater);
     },
@@ -101,4 +121,25 @@ export const usePanelState = () => {
   const getter = usePanelStateValue();
   const setter = usePanelStateSetter();
   return [getter, setter] as const;
+};
+
+// UI state hooks
+export const useUIStateValue = () => {
+  return useAtomValue(uiStateAtom);
+};
+
+export const useUIStateSetter = () => {
+  const setUIState = useSetAtom(uiStateAtom);
+  return useCallback(
+    (
+      updater:
+        | { suggestionsUsed: boolean }
+        | ((currentState: { suggestionsUsed: boolean }) => {
+            suggestionsUsed: boolean;
+          })
+    ) => {
+      setUIState(updater);
+    },
+    [setUIState]
+  );
 };
