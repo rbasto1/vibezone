@@ -15,9 +15,9 @@ import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { cn } from "@/components/ui/utils";
 import { auth } from "@/lib/auth";
 import { MAX_PANELS } from "@/lib/constants";
+import { generatePanelId } from "@/lib/id";
 import { getModelsList } from "@/lib/trpc/models";
 import type { PanelConfig } from "@/store/panels";
-import { randomUUID } from "crypto";
 import { headers } from "next/headers";
 import type { PropsWithChildren } from "react";
 import { Suspense } from "react";
@@ -58,7 +58,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
 
   const initialPanels = modelList.map(
     (r): PanelConfig => ({
-      id: randomUUID(),
+      id: generatePanelId(),
       provider: r.providerId,
       model: r.id,
     })

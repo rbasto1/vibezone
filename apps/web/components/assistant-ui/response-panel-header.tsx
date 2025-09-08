@@ -9,7 +9,8 @@ export interface PanelHeaderProps {
   onStop?: () => void;
 }
 
-import { usePanelsConfig } from "@/hooks/use-panels";
+import { usePanelsConfig, usePanelsStateSetter } from "@/hooks/use-panels";
+import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import type { FC } from "react";
 import { ModelDropdown } from "./model-dropdown";
 
@@ -19,12 +20,18 @@ export const PanelHeader: FC<PanelHeaderProps> = ({
   onStop,
 }) => {
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
+  const setPanelsState = usePanelsStateSetter();
+  const saveLastModels = useSaveLastModels();
 
   const handleRemovePanel = () => {
-    setPanelsConfig((prev) => {
-      if (prev.length <= 1) return prev;
-      return prev.filter((p) => p.id !== panelId);
+    const newPanels = panelsConfig.filter((p) => p.id !== panelId);
+    setPanelsConfig(newPanels);
+    setPanelsState((currentState) => {
+      const newState = { ...currentState };
+      delete newState[panelId];
+      return newState;
     });
+    saveLastModels(newPanels);
   };
 
   const canClose = panelsConfig.length > 1;

@@ -9,7 +9,7 @@ import {
   panelStateAtom,
   type PanelConfig,
 } from "@/store/panels";
-import { Provider as JotaiProvider, createStore } from "jotai";
+import { Provider as JotaiProvider, getDefaultStore } from "jotai";
 import { useMemo, type PropsWithChildren } from "react";
 
 type ModelsProviderProps = PropsWithChildren<{
@@ -23,7 +23,7 @@ export function StoreProvider({
   children,
 }: ModelsProviderProps) {
   const store = useMemo(() => {
-    const s = createStore();
+    const s = getDefaultStore();
     s.set(modelsAtom, modelsInitialValue);
     s.set(panelConfigAtom, panelsInitialValue);
     s.set(

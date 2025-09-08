@@ -2,12 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/utils";
-import { usePanelsConfig } from "@/hooks/use-panels";
-import { useSession } from "@/hooks/use-session";
-import { MAX_PANELS } from "@/lib/constants";
-import { trpc } from "@/lib/trpc/client";
 import { modelsAtom } from "@/store/models";
-import type { PanelConfig } from "@/store/panels";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useAtomValue } from "jotai";
 import {
@@ -25,35 +20,17 @@ import { useEffect, useMemo, useState } from "react";
 import { ProviderIcon } from "../ui/providers/provider";
 
 interface ModelDropdownContentsProps {
-  panelId: string;
-  modelId: string;
+  onSelect: (providerId: string, modelId: string) => void;
+  currentModelId?: string;
 }
 
 export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
-  panelId,
-  modelId,
+  onSelect,
+  currentModelId,
 }) => {
   const state = useAtomValue(modelsAtom);
   const models = state.models;
   const providers = state.providers;
-  const [panelsConfig, setPanelsConfig] = usePanelsConfig();
-
-  const authData = useSession();
-  const setLastModels = trpc.users.setLastModels.useMutation();
-
-  const saveLastModels = (newPanels: PanelConfig[]) => {
-    if (!authData?.user) return;
-    const modelIds = newPanels.map((p) => p.model).slice(0, MAX_PANELS);
-    setLastModels.mutate({ modelIds });
-  };
-
-  const handleChangePanelModel = (providerId: string, modelId: string) => {
-    const newPanels = panelsConfig.map((p) =>
-      p.id === panelId ? { ...p, provider: providerId, model: modelId } : p
-    );
-    setPanelsConfig(newPanels);
-    saveLastModels(newPanels);
-  };
 
   // Filters: provider tiers and model flags
   const tierOptions = [
@@ -311,13 +288,11 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                               className={cn(
                                 "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
                                 "focus:bg-accent focus:text-accent-foreground",
-                                m.id === modelId
+                                m.id === currentModelId
                                   ? "bg-accent/50 font-semibold"
                                   : "font-medium"
                               )}
-                              onSelect={() =>
-                                handleChangePanelModel(p.id, m.id)
-                              }
+                              onSelect={() => onSelect(p.id, m.id)}
                             >
                               <div className="flex items-center justify-between gap-2">
                                 <span className="flex-1 min-w-0">
@@ -390,13 +365,11 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                   className={cn(
                                     "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
                                     "focus:bg-accent focus:text-accent-foreground",
-                                    m.id === modelId
+                                    m.id === currentModelId
                                       ? "bg-accent/50 font-semibold"
                                       : "font-medium"
                                   )}
-                                  onSelect={() =>
-                                    handleChangePanelModel(p.id, m.id)
-                                  }
+                                  onSelect={() => onSelect(p.id, m.id)}
                                 >
                                   <div className="flex items-center justify-between gap-2">
                                     <span className="flex-1 min-w-0">

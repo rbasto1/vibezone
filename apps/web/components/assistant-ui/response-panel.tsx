@@ -1,5 +1,5 @@
 import { Thread } from "@/components/assistant-ui/thread";
-import { usePanelStateSetter } from "@/hooks/use-panels";
+import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
 import { getGlobalAssistantCloud } from "@/lib/assistant-cloud/provider";
 import { authClient } from "@/lib/auth-client";
@@ -26,10 +26,10 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
   const { data: session } = authClient.useSession();
   const token = session?.session.token;
   const userId = session?.user.id;
-  const updatePanelState = usePanelStateSetter();
+  const [panelState, setPanelState] = usePanelState();
 
   const handleModelError = (error: Error) => {
-    updatePanelState(id, (currentState) => ({
+    setPanelState(id, (currentState) => ({
       ...currentState,
       error,
       running: false,
@@ -37,7 +37,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
   };
 
   const handleModelFinish = () => {
-    updatePanelState(id, (currentState) => ({
+    setPanelState(id, (currentState) => ({
       ...currentState,
       running: false,
     }));
@@ -85,19 +85,23 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
   // It registers the runtime so that messages sent from the composer are sent to this panel's runtime
   useRuntimeRegistration(id, runtime);
 
+  const handleStop = () => {
+    try {
+      runtime.thread.cancelRun();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      toast.error(`Failed to stop: ${message}`);
+    }
+  };
+
+  const canStop = panelState(id).running;
+
   return (
     <div className="flex flex-col border rounded-lg overflow-hidden h-full">
       <PanelHeader
         panelId={id}
         modelId={model}
-        onStop={() => {
-          try {
-            runtime.thread.cancelRun();
-          } catch (e) {
-            const message = e instanceof Error ? e.message : String(e);
-            toast.error(`Failed to stop: ${message}`);
-          }
-        }}
+        onStop={canStop ? handleStop : undefined}
       />
       <div className="flex-1 min-h-0">
         <AssistantRuntimeProvider runtime={runtime}>
