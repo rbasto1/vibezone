@@ -2,6 +2,7 @@ import { ThreadPrimitive, useThread } from "@assistant-ui/react";
 import { motion } from "framer-motion";
 import type { FC, PropsWithChildren } from "react";
 
+import { cn } from "@/components/ui/utils";
 import { AssistantMessage } from "./assistant-message";
 import { EditComposer } from "./edit-composer";
 import { ThreadWelcome } from "./thread-welcome";
@@ -9,12 +10,15 @@ import { UserMessage } from "./user-message";
 
 export const Thread: FC<PropsWithChildren> = ({ children }) => {
   const thread = useThread();
-  console.log(`thread.tsx: Panel thread:`, thread);
+  const isActive = thread.isRunning;
 
   return (
     <ThreadPrimitive.Root
       // aui-thread-root
-      className="bg-background flex h-full flex-col"
+      className={cn(
+        "bg-background flex h-full flex-col",
+        isActive && "matrix-streaming"
+      )}
       style={{
         ["--thread-max-width" as string]: "48rem",
         ["--thread-padding-x" as string]: "1rem",

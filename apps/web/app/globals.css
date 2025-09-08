@@ -110,6 +110,11 @@ html.dark {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+
+  /* Matrix theme colors */
+  --matrix-green: #00ff41;
+  --matrix-green-glow: #00ff41;
+  --matrix-green-dim: #00ff41;
 }
 
 @layer base {
@@ -146,5 +151,69 @@ html.dark {
     .dark * {
       scrollbar-color: oklch(0.705 0.015 286.067 / 25%) transparent;
     }
+  }
+
+  /* Matrix streaming animations */
+  @keyframes matrix-glow {
+    0%,
+    100% {
+      box-shadow:
+        0 0 5px var(--matrix-green),
+        0 0 10px var(--matrix-green),
+        0 0 15px var(--matrix-green),
+        inset 0 0 20px rgba(0, 255, 65, 0.1);
+    }
+    50% {
+      box-shadow:
+        0 0 10px var(--matrix-green),
+        0 0 20px var(--matrix-green),
+        0 0 30px var(--matrix-green),
+        inset 0 0 30px rgba(0, 255, 65, 0.2);
+    }
+  }
+
+  @keyframes matrix-glass-sweep {
+    0% {
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(0, 255, 65, 0.1) 50%,
+        transparent 100%
+      );
+      transform: translateX(-100%);
+    }
+    100% {
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(0, 255, 65, 0.1) 50%,
+        transparent 100%
+      );
+      transform: translateX(100%);
+    }
+  }
+
+  .matrix-streaming {
+    position: relative;
+    animation: matrix-glow 2s ease-in-out infinite;
+    border: 1px solid var(--matrix-green);
+  }
+
+  .matrix-streaming::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 255, 65, 0.1) 50%,
+      transparent 100%
+    );
+    animation: matrix-glass-sweep 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
   }
 }
