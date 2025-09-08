@@ -20,14 +20,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
-import { sendMagicLink, signOut, useUser } from "@/lib/auth-client";
+import { useSession } from "@/hooks/use-session";
+import { sendMagicLink, signOut } from "@/lib/auth-client";
 
 interface UserMenuProps {
   className?: string;
 }
 
 export const UserMenu = ({ className }: UserMenuProps) => {
-  const { user, status } = useUser();
+  const authData = useSession();
   const [email, setEmail] = useState("");
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -36,9 +37,9 @@ export const UserMenu = ({ className }: UserMenuProps) => {
     typeof navigator !== "undefined" &&
     /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  const isAuthed = status === "authenticated" && user;
+  const user = authData?.user;
 
-  if (!isAuthed) {
+  if (!user) {
     return (
       <>
         <Button

@@ -3,21 +3,19 @@ import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DefaultChatTransport } from "ai";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { useSession } from "@/hooks/use-session";
 import { getGlobalAssistantCloud } from "@/lib/assistant-cloud/provider";
-import { authClient } from "@/lib/auth-client";
 import type { FC } from "react";
 
 export function AppSidebarLoader() {
-  const { data: session } = authClient.useSession();
+  const auth = useSession();
 
-  if (!session?.user) {
+  if (!auth?.user) {
     return <AppSidebarWithAnon />;
   }
+
   return (
-    <AppSidebarWithRuntime
-      token={session.session.token}
-      userId={session.user.id}
-    />
+    <AppSidebarWithRuntime token={auth.session.token} userId={auth.user.id} />
   );
 }
 
