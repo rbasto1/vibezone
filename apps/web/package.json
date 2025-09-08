@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "prettier-fix": "prettier --write .",
-    "db:push": "drizzle-kit push",
+    "db:push": "drizzle-kit push --verbose",
     "db:studio": "drizzle-kit studio",
     "db:seed": "dotenvx run -- tsx db/seed.ts",
     "set-vercel-envs": "dotenvx run -- tsx scripts/set-vercel-envs.ts"

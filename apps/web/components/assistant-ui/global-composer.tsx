@@ -7,7 +7,7 @@ export type GlobalComposerProps = {
   value: string;
   onChange: (v: string) => void;
   onSubmit: () => void;
-  onStopAll: () => void;
+  onStopAll: (() => void) | null;
 };
 
 export const GlobalComposer: React.FC<GlobalComposerProps> = ({
@@ -60,16 +60,18 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
             <PlusIcon />
           </Button>
 
-          <Button
-            type="button"
-            variant="ghost"
-            className="hover:bg-foreground/15 dark:hover:bg-background/50 p-2"
-            onClick={onStopAll}
-            aria-label="Stop all"
-            title="Stop all panels"
-          >
-            <SquareIcon className="size-5" />
-          </Button>
+          {onStopAll && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="hover:bg-foreground/15 dark:hover:bg-background/50 p-2"
+              onClick={onStopAll}
+              aria-label="Stop all"
+              title="Stop all panels"
+            >
+              <SquareIcon className="size-5" />
+            </Button>
+          )}
         </div>
 
         <Button

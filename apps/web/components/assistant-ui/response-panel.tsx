@@ -15,6 +15,8 @@ interface ResponsePanelProps {
   panel: PanelConfig;
   onClose?: () => void;
   onChangeModel: (providerId: string, modelId: string) => void;
+  onModelError: (error: Error) => void;
+  onModelFinish: () => void;
 }
 
 // Since we can't use ModelContextProviders (see comment below), we will
@@ -25,6 +27,8 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   panel,
   onClose,
   onChangeModel,
+  onModelError,
+  onModelFinish,
 }) => {
   const { id, model } = panel;
   panelGlobalContext[id] = panel;
@@ -51,6 +55,8 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
       },
     }),
     cloud: token && userId ? getGlobalAssistantCloud(token, userId) : undefined,
+    onError: onModelError,
+    onFinish: onModelFinish,
   });
 
   // We will update the runtime using the global variable above
