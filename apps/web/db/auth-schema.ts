@@ -7,6 +7,11 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
   isAdmin: boolean("is_admin").default(false).notNull(),
+
+  // User preferences
+  lastModels: text("last_models").array(),
+  favoriteModels: text("favorite_models").array(),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

@@ -1,7 +1,7 @@
 import { SiteTopNav } from "@/components/site-topnav";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-import { MAX_PANELS } from "@/app/assistant";
+import { MAX_PANELS } from "@/lib/constants";
 
 import type { FC } from "react";
 import { cn } from "../ui/utils";

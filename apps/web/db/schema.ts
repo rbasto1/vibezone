@@ -14,6 +14,11 @@ const timestampTz = (name: string) =>
   timestamp(name, { withTimezone: true, mode: "date" });
 const timestampTzNow = (name: string) =>
   timestampTz(name).defaultNow().notNull();
+const timestampTzNowUpdated = (name: string) =>
+  timestampTz(name)
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => /* @__PURE__ */ new Date());
 
 import { account, session, user, verification } from "@/db/auth-schema";
 export { account, session, user, verification };
@@ -30,7 +35,7 @@ export const providers = pgTable("providers", {
   tier: providerTiers().notNull().default("specialists"),
   order: integer("order"), // custom ordering for display
   createdAt: timestampTzNow("created_at"),
-  updatedAt: timestampTzNow("updated_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
   deletedAt: timestampTz("deleted_at"),
 });
 
@@ -81,7 +86,7 @@ export const models = pgTable(
     capabilityFast: boolean("capability_fast"),
     capabilityEffortControl: boolean("capability_effort_control"),
 
-    updatedAt: timestampTzNow("updated_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
     deletedAt: timestampTz("deleted_at"),
   },
   (table) => [

@@ -9,6 +9,9 @@ import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welco
 import { GlobalComposerContext } from "@/components/providers/composer-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
+import { useSession } from "@/hooks/use-session";
+import { INITIAL_PANEL_COUNT, MAX_PANELS } from "@/lib/constants";
+import { trpc } from "@/lib/trpc/client";
 import type { FC } from "react";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -19,9 +22,6 @@ export interface PanelConfig {
   provider: string;
   model: string;
 }
-
-export const MAX_PANELS = 3;
-export const INITIAL_PANEL_COUNT = 2;
 
 // Global composer context to broadcast a prompt to all panels
 type RuntimeRegistry = Map<string, ReturnType<typeof useChatRuntime>>; // panelId -> runtime
@@ -35,6 +35,9 @@ export const Assistant: FC<AssistantProps> = ({ initialPanels }) => {
     initialPanels.slice(0, INITIAL_PANEL_COUNT)
   );
 
+  const authData = useSession();
+  const setLastModels = trpc.users.setLastModels.useMutation();
+
   const removePanel = (id: string) => {
     setPanels((prev) => {
       if (prev.length <= 1) return prev;
@@ -42,22 +45,22 @@ export const Assistant: FC<AssistantProps> = ({ initialPanels }) => {
     });
   };
 
+  const saveLastModels = (newPanels: PanelConfig[]) => {
+    if (!authData?.user) return;
+    const modelIds = newPanels.map((p) => p.model).slice(0, MAX_PANELS);
+    setLastModels.mutate({ modelIds });
+  };
+
   const changePanelModel = (
     panelId: string,
     providerId: string,
     modelId: string
   ) => {
-    setPanels((prev) =>
-      prev.map((p) =>
-        p.id === panelId
-          ? {
-              ...p,
-              provider: providerId,
-              model: modelId,
-            }
-          : p
-      )
+    const newPanels = panels.map((p) =>
+      p.id === panelId ? { ...p, provider: providerId, model: modelId } : p
     );
+    setPanels(newPanels);
+    saveLastModels(newPanels);
   };
 
   // Global composer state and registry
@@ -97,13 +100,12 @@ export const Assistant: FC<AssistantProps> = ({ initialPanels }) => {
   }, []);
 
   const handleAddPanel = () => {
-    setPanels((prev) => {
-      const next = initialPanels.find(
-        (p) => !prev.some((pp) => pp.id === p.id)
-      );
-      if (!next) return prev;
-      return [...prev, next];
-    });
+    const next = initialPanels.find(
+      (p) => !panels.some((pp) => pp.id === p.id)
+    );
+    const newPanels = next ? [...panels, next] : panels;
+    setPanels(newPanels);
+    saveLastModels(newPanels);
   };
 
   const panelCount = Math.min(Math.max(panels.length, 1), MAX_PANELS);
