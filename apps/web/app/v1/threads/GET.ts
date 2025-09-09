@@ -1,3 +1,4 @@
+import { db } from "@/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -11,22 +12,38 @@ export async function GET() {
     return NextResponse.json({ threads: [] }, { status: 401 });
   }
 
-  // TODO: Get threads from db
+  try {
+    // Get threads from database for the authenticated user (non-archived only)
+    const userThreads = await db.query.threads.findMany({
+      where: (threads, { eq, and, isNull }) =>
+        and(
+          eq(threads.userId, session.user.id),
+          isNull(threads.deletedAt),
+          eq(threads.isArchived, false)
+        ),
+      orderBy: (threads, { desc }) => [desc(threads.lastMessageAt)],
+    });
 
-  const threads: CloudThread[] = [
-    {
-      title: "Test Thread",
-      last_message_at: new Date(),
+    // Map database threads to CloudThread format
+    const threads: CloudThread[] = userThreads.map((thread) => ({
+      title: thread.title,
+      last_message_at: thread.lastMessageAt,
       metadata: {},
       external_id: null,
-      id: "1",
-      project_id: "1",
-      created_at: new Date(),
-      updated_at: new Date(),
-      workspace_id: "1",
-      is_archived: false,
-    },
-  ];
+      id: thread.id,
+      project_id: session.user.id, // Using user ID as project ID for now
+      created_at: thread.createdAt!,
+      updated_at: thread.updatedAt!,
+      workspace_id: session.user.id, // Using user ID as workspace ID for now
+      is_archived: thread.isArchived,
+    }));
 
-  return NextResponse.json({ threads });
+    return NextResponse.json({ threads });
+  } catch (error) {
+    console.error("Failed to fetch threads:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch threads" },
+      { status: 500 }
+    );
+  }
 }

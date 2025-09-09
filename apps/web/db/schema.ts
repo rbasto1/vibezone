@@ -150,6 +150,8 @@ export const threads = pgTable("threads", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id),
+  title: text("title").notNull().default("New Chat"),
+  isArchived: boolean("is_archived").notNull().default(false),
   lastMessageAt: timestampTz("last_message_at").notNull(),
   createdAt: timestampTzNow("created_at"),
   updatedAt: timestampTzNowUpdated("updated_at"),
