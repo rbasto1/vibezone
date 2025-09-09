@@ -156,10 +156,33 @@ export const threads = pgTable("threads", {
   deletedAt: timestampTz("deleted_at"),
 });
 
-export const threadsRelations = relations(threads, ({ one }) => ({
+export const threadsRelations = relations(threads, ({ one, many }) => ({
   user: one(user, {
     fields: [threads.userId],
     references: [user.id],
+  }),
+  messages: many(messages),
+}));
+
+export const messages = pgTable("messages", {
+  id: text("id").primaryKey(),
+  threadId: text("thread_id")
+    .notNull()
+    .references(() => threads.id),
+  role: text("role").notNull(), // "user" | "assistant"
+  content: jsonb("content").notNull(), // Store the full content array
+  attachments: jsonb("attachments"), // Store attachments array
+  metadata: jsonb("metadata"), // Store metadata object
+  status: jsonb("status"), // Store status object (for assistant messages)
+  createdAt: timestampTz("created_at").notNull(),
+  updatedAt: timestampTzNowUpdated("updated_at"),
+  deletedAt: timestampTz("deleted_at"),
+});
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  thread: one(threads, {
+    fields: [messages.threadId],
+    references: [threads.id],
   }),
 }));
 
@@ -181,3 +204,5 @@ export type SupportedParameter = typeof supportedParameters.$inferSelect;
 export type NewSupportedParameter = typeof supportedParameters.$inferInsert;
 export type Thread = typeof threads.$inferSelect;
 export type NewThread = typeof threads.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type NewMessage = typeof messages.$inferInsert;
