@@ -20,3 +20,8 @@ export function useRuntimeRegistration(
 
   return null;
 }
+
+export function useRuntimes() {
+  const ctx = useContext(GlobalComposerContext);
+  return ctx?.getRuntimes;
+}

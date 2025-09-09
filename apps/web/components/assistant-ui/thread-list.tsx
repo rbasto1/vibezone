@@ -7,6 +7,8 @@ import type { FC } from "react";
 
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
+import { usePanelsStateSetter, useUIStateSetter } from "@/hooks/use-panels";
+import { useRuntimes } from "@/hooks/use-response-registration";
 
 export const ThreadList: FC = () => {
   return (
@@ -18,11 +20,27 @@ export const ThreadList: FC = () => {
 };
 
 const ThreadListNew: FC = () => {
+  const getRuntimes = useRuntimes();
+  const setPanelsState = usePanelsStateSetter();
+  const setUIState = useUIStateSetter();
+
+  const handleNewThread = () => {
+    if (!getRuntimes) return;
+    const runtimes = getRuntimes();
+    for (const runtime of runtimes.values()) {
+      runtime.thread.reset();
+    }
+
+    setPanelsState({});
+    setUIState({ suggestionsUsed: false });
+  };
+
   return (
     <ThreadListPrimitive.New asChild>
       <Button
-        className="data-active:bg-muted hover:bg-muted flex items-center justify-start gap-1 rounded-lg px-2.5 py-2 text-start cursor-pointer"
+        className="data-active:bg-muted hover:bg-muted justify-start"
         variant="ghost"
+        onClick={handleNewThread}
       >
         <PlusIcon />
         New Thread

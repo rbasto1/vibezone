@@ -6,6 +6,7 @@ import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ResponsePanel } from "@/components/assistant-ui/response-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
+import type { RuntimeRegistry } from "@/components/providers/composer-provider";
 import { GlobalComposerContext } from "@/components/providers/composer-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
@@ -24,9 +25,6 @@ import type { FC } from "react";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppSidebarLoader } from "./app-sidebar-loader";
-
-// Global composer context to broadcast a prompt to all panels
-type RuntimeRegistry = Map<string, ReturnType<typeof useChatRuntime>>; // panelId -> runtime
 
 export const Assistant: FC = () => {
   const panelsConfig = usePanelsConfigValue();
@@ -48,6 +46,7 @@ export const Assistant: FC = () => {
     (panelId: string) => registryRef.current.delete(panelId),
     []
   );
+  const getRuntimes = useCallback(() => registryRef.current, []);
 
   const send = useCallback(
     (text: string) => {
@@ -121,20 +120,21 @@ export const Assistant: FC = () => {
   const anyPanelRunning = Object.values(panelsState).some((p) => p.running);
 
   return (
-    <SidebarProvider>
-      <div className="flex h-dvh w-full">
-        <AppSidebarLoader />
-        <SidebarInset>
-          <AssistantHeader panelCount={panelsConfig.length} />
-          <GlobalComposerContext.Provider
-            value={{
-              prompt: globalPrompt,
-              setPrompt: setGlobalPrompt,
-              register,
-              unregister,
-              send,
-            }}
-          >
+    <GlobalComposerContext.Provider
+      value={{
+        prompt: globalPrompt,
+        setPrompt: setGlobalPrompt,
+        register,
+        unregister,
+        send,
+        getRuntimes,
+      }}
+    >
+      <SidebarProvider>
+        <div className="flex h-dvh w-full">
+          <AppSidebarLoader />
+          <SidebarInset>
+            <AssistantHeader panelCount={panelsConfig.length} />
             <div className="flex-1 overflow-hidden p-3 flex flex-col gap-3">
               <div
                 className={cn(
@@ -165,9 +165,9 @@ export const Assistant: FC = () => {
                 />
               </div>
             </div>
-          </GlobalComposerContext.Provider>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    </GlobalComposerContext.Provider>
   );
 };
