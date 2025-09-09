@@ -39,5 +39,6 @@
   },
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "kiroAgent.configureMCP": "Disabled"
 }

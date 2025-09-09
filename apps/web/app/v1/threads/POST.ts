@@ -1,3 +1,6 @@
+import { getRequestBody } from "@/app/api/request";
+import { db, threads } from "@/db";
+import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -6,37 +9,36 @@ const ThreadPostSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  // Get authenticated user
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
+
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await getRequestBody(request, ThreadPostSchema);
   if (body instanceof Response) {
     return body;
   }
 
-  // TODO: Create thread in db
+  // Create thread in database
+  const threadId = crypto.randomUUID();
 
-  return NextResponse.json({ thread_id: crypto.randomUUID() });
-}
-
-export async function getRequestBody<T>(
-  request: Request,
-  schema: z.ZodType<T>
-) {
   try {
-    const body = await request.json();
-    const parsed = schema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.message },
-        { status: 400 }
-      );
-    }
-    return parsed.data;
+    await db.insert(threads).values({
+      id: threadId,
+      userId: session.user.id,
+      lastMessageAt: new Date(body.last_message_at),
+    });
+
+    return NextResponse.json({ thread_id: threadId });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ error: "Unknown error" }, { status: 500 });
+    console.error("Failed to create thread:", error);
+    return NextResponse.json(
+      { error: "Failed to create thread" },
+      { status: 500 }
+    );
   }
 }

@@ -145,6 +145,24 @@ export const modelSupportedParametersRelations = relations(
   })
 );
 
+export const threads = pgTable("threads", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  lastMessageAt: timestampTz("last_message_at").notNull(),
+  createdAt: timestampTzNow("created_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
+  deletedAt: timestampTz("deleted_at"),
+});
+
+export const threadsRelations = relations(threads, ({ one }) => ({
+  user: one(user, {
+    fields: [threads.userId],
+    references: [user.id],
+  }),
+}));
+
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
 
 export type Account = typeof account.$inferSelect;
@@ -161,3 +179,5 @@ export type Model = typeof models.$inferSelect;
 export type NewModel = typeof models.$inferInsert;
 export type SupportedParameter = typeof supportedParameters.$inferSelect;
 export type NewSupportedParameter = typeof supportedParameters.$inferInsert;
+export type Thread = typeof threads.$inferSelect;
+export type NewThread = typeof threads.$inferInsert;
