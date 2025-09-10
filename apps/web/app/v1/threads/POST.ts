@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     await db.insert(threads).values({
       id: threadId,
       userId: session.user.id,
-      title: "New Chat",
+      title: "Chat " + new Date().toISOString().substring(12),
       lastMessageAt: new Date(body.last_message_at),
     });
 

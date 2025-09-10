@@ -1,6 +1,5 @@
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { convertToModelMessages, streamText } from "ai";
-import { getGatewayConfig } from "./lib/gateway";
+import { getOpenRouter } from "./lib/gateway";
 import { getConfigFromRequest } from "./lib/request";
 
 export async function handleProviderStream(
@@ -9,6 +8,7 @@ export async function handleProviderStream(
   headers: Headers
 ): Promise<Response> {
   const rawBody = await request.json().catch((error) => new Error(error));
+  console.log("rawbody:", rawBody);
   if (rawBody instanceof Error) {
     return Response.json(
       { error: `Body is invalid json: ${rawBody.message}` },
@@ -27,11 +27,7 @@ export async function handleProviderStream(
   const { modelId } = getConfigResult.config;
   const messages = getConfigResult.messages;
 
-  const gateway = getGatewayConfig(env);
-  const adapter = createOpenRouter({
-    apiKey: gateway.apiKey,
-    headers: gateway.headers,
-  });
+  const adapter = getOpenRouter(env);
 
   console.log(
     `Starting stream (modelId=${modelId} messages=${messages.length})`
@@ -53,5 +49,10 @@ export async function handleProviderStream(
   headers.set("Content-Encoding", "identity");
 
   // Return the streaming response
-  return result.toUIMessageStreamResponse({ headers });
+  return result.toUIMessageStreamResponse({
+    headers,
+    onFinish: (e) => {
+      console.log("Stream event finished:", e.responseMessage);
+    },
+  });
 }

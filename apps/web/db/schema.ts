@@ -145,12 +145,12 @@ export const modelSupportedParametersRelations = relations(
   })
 );
 
-export const threads = pgTable("threads", {
+export const chat = pgTable("chat", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => user.id),
-  title: text("title").notNull().default("New Chat"),
+  title: text("title").notNull(),
   isArchived: boolean("is_archived").notNull().default(false),
   lastMessageAt: timestampTz("last_message_at").notNull(),
   createdAt: timestampTzNow("created_at"),
@@ -158,11 +158,24 @@ export const threads = pgTable("threads", {
   deletedAt: timestampTz("deleted_at"),
 });
 
+// TODO: add chat relations
+
+export const threads = pgTable("threads", {
+  id: text("id").primaryKey(),
+  chatId: text("chat_id")
+    .notNull()
+    .references(() => chat.id),
+  lastModelId: text("last_model_id")
+    .notNull()
+    .references(() => models.id),
+  lastMessageAt: timestampTz("last_message_at").notNull(),
+  createdAt: timestampTzNow("created_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
+  closedAt: timestampTz("closed_at"),
+});
+
 export const threadsRelations = relations(threads, ({ one, many }) => ({
-  user: one(user, {
-    fields: [threads.userId],
-    references: [user.id],
-  }),
+  // TODO: add new relations
   messages: many(messages),
 }));
 
@@ -171,6 +184,9 @@ export const messages = pgTable("messages", {
   threadId: text("thread_id")
     .notNull()
     .references(() => threads.id),
+  modelId: text("last_model_id")
+    .notNull()
+    .references(() => models.id),
   role: text("role").notNull(), // "user" | "assistant"
   content: jsonb("content").notNull(), // Store the full content array
   attachments: jsonb("attachments"), // Store attachments array

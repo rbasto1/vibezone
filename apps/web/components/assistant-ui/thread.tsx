@@ -1,6 +1,6 @@
 import { ThreadPrimitive, useThread } from "@assistant-ui/react";
 import { motion } from "framer-motion";
-import type { FC, PropsWithChildren } from "react";
+import { useEffect, type FC, type PropsWithChildren } from "react";
 
 import { cn } from "@/components/ui/utils";
 import { AssistantMessage } from "./assistant-message";
@@ -10,12 +10,18 @@ import { ThreadWelcome } from "./thread-welcome";
 import { UserMessage } from "./user-message";
 
 interface ThreadProps extends PropsWithChildren {
+  panelId: string;
   error: Error | undefined | null;
 }
 
-export const Thread: FC<ThreadProps> = ({ children, error }) => {
+export const Thread: FC<ThreadProps> = ({ children, panelId, error }) => {
   const thread = useThread();
   const isActive = thread.isRunning;
+
+  useEffect(() => {
+    if (isActive) return;
+    console.log(panelId, "save messages:", thread.messages);
+  }, [isActive, thread.messages, panelId]);
 
   return (
     <ThreadPrimitive.Root
