@@ -1,6 +1,7 @@
+import type { Message } from "@/db";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig, PanelState } from "@/store/panels";
-import type { ThreadMessageLike } from "@assistant-ui/react";
+import type { UIMessage } from "ai";
 import { useCallback } from "react";
 import { usePanelsConfigSetter, usePanelsStateSetter } from "./use-panels";
 import { useRuntimes } from "./use-response-registration";
@@ -28,39 +29,20 @@ export const useChatActions = () => {
       }
 
       try {
-        // Fetch chat data imperatively
         const chatData = await utils.client.messages.getChatWithThreads.query({
           chatId,
         });
         const threads = chatData.threads;
 
-        // Step 1: Create panel configuration using thread IDs as panel IDs
         const newPanelsConfig = threads.map((thread): PanelConfig => {
-          // Convert database messages to ThreadMessageLike format
-          const threadMessages = thread.messages.map(
-            (msg): ThreadMessageLike => ({
-              id: msg.id,
-              role: msg.role as "user" | "assistant" | "system",
-              content: Array.isArray(msg.content)
-                ? msg.content
-                : [{ type: "text", text: "Invalid content" }],
-              attachments: [],
-              metadata: msg.metadata || {},
-              status:
-                msg.status &&
-                typeof msg.status === "object" &&
-                "type" in msg.status
-                  ? msg.status
-                  : undefined,
-              createdAt: msg.createdAt,
-            })
-          );
+          // Convert database messages to UIMessage format
+          const initialMessages = thread.messages.map(convertToUIMessage);
 
           return {
             id: thread.id,
             provider: thread.lastModelId.split("/")[0] ?? thread.lastModelId,
             model: thread.lastModelId,
-            initialMessages: threadMessages,
+            initialMessages,
           };
         });
         const newPanelsState: Record<string, PanelState> =
@@ -72,7 +54,6 @@ export const useChatActions = () => {
             {} as Record<string, PanelState>
           );
 
-        // Update panel configuration and state
         setPanelsConfig(newPanelsConfig);
         setPanelsState(newPanelsState);
 
@@ -93,4 +74,38 @@ export const useChatActions = () => {
   return {
     loadChatById,
   };
+};
+
+// Helper function to convert database messages to UIMessage format
+const convertToUIMessage = (msg: Message): UIMessage => {
+  console.info(`Converting message ${msg.id} to UIMessage:`, {
+    role: msg.role,
+    content: msg.content,
+    status: msg.status,
+  });
+
+  // Convert content parts to UIMessage parts
+  const parts = Array.isArray(msg.content)
+    ? msg.content.map((part) => {
+        if (part.type === "text") {
+          return {
+            type: "text" as const,
+            text: part.text || "",
+          };
+        }
+        // Add other content types as needed
+        return {
+          type: "text" as const,
+          text: JSON.stringify(part),
+        };
+      })
+    : [{ type: "text" as const, text: String(msg.content) }];
+
+  const uiMessage: UIMessage = {
+    id: msg.id,
+    role: msg.role as "user" | "assistant" | "system",
+    parts,
+  };
+
+  return uiMessage;
 };

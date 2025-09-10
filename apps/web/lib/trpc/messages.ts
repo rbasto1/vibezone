@@ -3,7 +3,7 @@ import "server-only";
 import { db } from "@/db";
 import { chats, messages, threads } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { authenticatedProcedure, t } from "./server/initialize";
 
@@ -114,6 +114,13 @@ export const messagesRouter = t.router({
             isNull(chats.deletedAt),
             eq(chats.isArchived, false)
           ),
+          with: {
+            threads: {
+              with: {
+                messages: true,
+              },
+            },
+          },
         });
 
         if (!chatRecord) {
@@ -123,43 +130,7 @@ export const messagesRouter = t.router({
           });
         }
 
-        // Get all threads for this chat
-        const chatThreads = await db.query.threads.findMany({
-          where: and(
-            eq(threads.chatId, chatId),
-            isNull(threads.closedAt) // Only active threads
-          ),
-          orderBy: (threads, { asc }) => [asc(threads.createdAt)],
-        });
-
-        // Get all messages for all threads
-        const threadIds = chatThreads.map((t) => t.id);
-        const allMessages =
-          threadIds.length > 0
-            ? await db.query.messages.findMany({
-                where: and(
-                  inArray(messages.threadId, threadIds),
-                  isNull(messages.deletedAt)
-                ),
-                orderBy: (messages, { asc }) => [asc(messages.createdAt)],
-              })
-            : [];
-
-        // Group messages by thread
-        const messagesByThread = new Map<string, typeof allMessages>();
-        for (const message of allMessages) {
-          const threadMessages = messagesByThread.get(message.threadId) || [];
-          threadMessages.push(message);
-          messagesByThread.set(message.threadId, threadMessages);
-        }
-
-        return {
-          chat: chatRecord,
-          threads: chatThreads.map((thread) => ({
-            ...thread,
-            messages: messagesByThread.get(thread.id) || [],
-          })),
-        };
+        return chatRecord;
       } catch (error) {
         console.error("Failed to fetch chat with threads:", error);
         throw new TRPCError({

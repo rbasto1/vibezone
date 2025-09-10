@@ -1,4 +1,4 @@
-import type { ThreadMessageLike } from "@assistant-ui/react";
+import type { UIMessage } from "ai";
 import { atom } from "jotai";
 
 // Panel configuration atom
@@ -6,7 +6,7 @@ export interface PanelConfig {
   id: string;
   provider: string;
   model: string;
-  initialMessages?: readonly ThreadMessageLike[];
+  initialMessages?: UIMessage[];
 }
 
 export const panelConfigAtom = atom<PanelConfig[]>([]);
