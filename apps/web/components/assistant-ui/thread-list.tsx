@@ -1,23 +1,22 @@
-import {
-  ThreadListItemPrimitive,
-  ThreadListPrimitive,
-} from "@assistant-ui/react";
-import { ArchiveIcon, PlusIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import type { FC } from "react";
+import { useState } from "react";
 
-import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
+import { useChatActions } from "@/hooks/use-chat-actions";
 import { usePanelsStateSetter, useUIStateSetter } from "@/hooks/use-panels";
 import { useRuntimes } from "@/hooks/use-response-registration";
-import { newChatAtom } from "@/store/chat";
-import { useAtom } from "jotai";
+import { trpc } from "@/lib/trpc/client";
+import { currentChatAtom, newChatAtom } from "@/store/chat";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { CustomThreadListItem } from "./custom-thread-list-item";
 
 export const ThreadList: FC = () => {
   return (
-    <ThreadListPrimitive.Root className="flex flex-col items-stretch gap-1.5">
+    <div className="flex flex-col items-stretch gap-1.5">
       <ThreadListNew />
       <ThreadListItems />
-    </ThreadListPrimitive.Root>
+    </div>
   );
 };
 
@@ -42,52 +41,88 @@ const ThreadListNew: FC = () => {
   };
 
   return (
-    <ThreadListPrimitive.New asChild>
-      <Button
-        className="data-active:bg-muted hover:bg-muted justify-start"
-        variant="ghost"
-        onClick={handleNewThread}
-      >
-        <PlusIcon />
-        New Chat
-      </Button>
-    </ThreadListPrimitive.New>
+    <Button
+      className="data-active:bg-muted hover:bg-muted justify-start"
+      variant="ghost"
+      onClick={handleNewThread}
+    >
+      <PlusIcon />
+      New Chat
+    </Button>
   );
 };
 
 const ThreadListItems: FC = () => {
-  return <ThreadListPrimitive.Items components={{ ThreadListItem }} />;
-};
+  const currentChat = useAtomValue(currentChatAtom);
+  const setCurrentChat = useSetAtom(currentChatAtom);
+  const { loadChatById } = useChatActions();
+  const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
 
-const ThreadListItem: FC = () => {
-  return (
-    <ThreadListItemPrimitive.Root className="data-active:bg-muted hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring flex items-center gap-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2">
-      <ThreadListItemPrimitive.Trigger className="flex-grow px-3 py-2 text-start">
-        <ThreadListItemTitle />
-      </ThreadListItemPrimitive.Trigger>
-      <ThreadListItemArchive />
-    </ThreadListItemPrimitive.Root>
-  );
-};
+  const { data: chats, isLoading } = trpc.messages.listChats.useQuery();
+  const utils = trpc.useUtils();
+  const archiveChatMutation = trpc.messages.archiveChat.useMutation({
+    onSuccess: () => {
+      // Refetch the chat list after archiving
+      utils.messages.listChats.invalidate();
+    },
+  });
 
-const ThreadListItemTitle: FC = () => {
-  return (
-    <p className="text-sm">
-      <ThreadListItemPrimitive.Title fallback="New Chat" />
-    </p>
-  );
-};
+  const handleSelectChat = async (chatId: string) => {
+    if (loadingChatId) return; // Prevent multiple simultaneous loads
 
-const ThreadListItemArchive: FC = () => {
+    setLoadingChatId(chatId);
+
+    try {
+      // Update the current chat atom first
+      setCurrentChat({
+        id: chatId,
+        createdAt: new Date(), // This will be updated when we load the actual chat
+      });
+
+      // Load the chat data imperatively
+      const result = await loadChatById(chatId);
+      if (result.success) {
+        console.info(
+          `Successfully loaded chat ${chatId} with ${result.threadsLoaded} threads`
+        );
+      } else {
+        console.error(`Failed to load chat ${chatId}:`, result.error);
+      }
+    } finally {
+      setLoadingChatId(null);
+    }
+  };
+
+  const handleArchiveChat = (chatId: string) => {
+    archiveChatMutation.mutate({ chatId });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="text-sm text-muted-foreground p-2">Loading chats...</div>
+    );
+  }
+
+  if (!chats || chats.length === 0) {
+    return (
+      <div className="text-sm text-muted-foreground p-2">No chats yet</div>
+    );
+  }
+
   return (
-    <ThreadListItemPrimitive.Archive asChild>
-      <TooltipIconButton
-        className="hover:text-foreground/60 p-4 text-foreground ml-auto mr-1 size-4"
-        variant="ghost"
-        tooltip="Archive thread"
-      >
-        <ArchiveIcon />
-      </TooltipIconButton>
-    </ThreadListItemPrimitive.Archive>
+    <div className="flex flex-col gap-1">
+      {chats.map((chat) => (
+        <CustomThreadListItem
+          key={chat.id}
+          chatId={chat.id}
+          title={chat.title}
+          lastMessageAt={chat.lastMessageAt}
+          isActive={currentChat.id === chat.id}
+          isLoading={loadingChatId === chat.id}
+          onSelect={handleSelectChat}
+          onArchive={handleArchiveChat}
+        />
+      ))}
+    </div>
   );
 };

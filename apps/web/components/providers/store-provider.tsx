@@ -11,6 +11,7 @@ import {
   panelStateAtom,
   type PanelConfig,
 } from "@/store/panels";
+
 import { Provider as JotaiProvider, getDefaultStore } from "jotai";
 import { useMemo, type PropsWithChildren } from "react";
 

@@ -42,11 +42,11 @@ export const useMessageSaver = ({
         // Mark messages as saved to prevent duplicates
         messagesToSave.forEach((msg) => savedMessageIds.current.add(msg.id));
 
-        // Save the new messages
+        // Save the new messages (panelId === threadId)
         saveMessagesMutation.mutate(
           {
             chatId: currentChat.id,
-            threadId: panelId,
+            threadId: panelId, // panelId is the same as threadId
             modelId,
             messages: messagesToSave.map((msg) => ({
               id: msg.id,

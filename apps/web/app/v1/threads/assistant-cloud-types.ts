@@ -74,3 +74,29 @@ export type AuiV0MessageMessagePart =
     };
 
 export type AISDKStorageFormat = Omit<UIMessage, "id">;
+
+export type CloudChat = {
+  id: string;
+  title: string;
+  isArchived: boolean;
+  lastMessageAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type CloudThreadWithMessages = {
+  id: string;
+  chatId: string;
+  lastModelId: string;
+  lastMessageAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  closedAt: Date | null;
+  messages: CloudMessage[];
+};
+
+export type ChatWithThreadsResponse = {
+  chat: CloudChat;
+  threads: CloudThreadWithMessages[];
+  messages: CloudMessage[]; // For backward compatibility
+};
