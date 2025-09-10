@@ -158,7 +158,13 @@ export const chat = pgTable("chat", {
   deletedAt: timestampTz("deleted_at"),
 });
 
-// TODO: add chat relations
+export const chatRelations = relations(chat, ({ one, many }) => ({
+  user: one(user, {
+    fields: [chat.userId],
+    references: [user.id],
+  }),
+  threads: many(threads),
+}));
 
 export const threads = pgTable("threads", {
   id: text("id").primaryKey(),
@@ -175,7 +181,14 @@ export const threads = pgTable("threads", {
 });
 
 export const threadsRelations = relations(threads, ({ one, many }) => ({
-  // TODO: add new relations
+  chat: one(chat, {
+    fields: [threads.chatId],
+    references: [chat.id],
+  }),
+  lastModel: one(models, {
+    fields: [threads.lastModelId],
+    references: [models.id],
+  }),
   messages: many(messages),
 }));
 
@@ -202,6 +215,10 @@ export const messagesRelations = relations(messages, ({ one }) => ({
     fields: [messages.threadId],
     references: [threads.id],
   }),
+  model: one(models, {
+    fields: [messages.modelId],
+    references: [models.id],
+  }),
 }));
 
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
@@ -224,3 +241,5 @@ export type Thread = typeof threads.$inferSelect;
 export type NewThread = typeof threads.$inferInsert;
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
+export type Chat = typeof chat.$inferSelect;
+export type NewChat = typeof chat.$inferInsert;

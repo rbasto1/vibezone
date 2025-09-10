@@ -29,7 +29,7 @@ const AppSidebarWithRuntime: FC<AppSidebarWithRuntimeProps> = ({
   userId,
 }) => {
   // Runtime for the sidebar components (e.g., ThreadList) that require context
-  // TODO: refactor this, we have to list threads from a global list
+  // TODO: we have to list chats, not threads
   const sidebarRuntime = useChatRuntime({
     transport: new DefaultChatTransport({
       api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,

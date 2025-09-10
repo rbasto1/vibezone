@@ -1,5 +1,0 @@
-{
-  "extends": "./x-buildutils.tsconfig.json",
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["dist", "**/*.test.ts", "**/*.test.tsx"]
-}

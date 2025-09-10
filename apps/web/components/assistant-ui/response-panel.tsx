@@ -1,8 +1,6 @@
 import { Thread } from "@/components/assistant-ui/thread";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
-import { getGlobalAssistantCloud } from "@/lib/assistant-cloud/provider";
-import { authClient } from "@/lib/auth-client";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
@@ -23,9 +21,6 @@ const panelGlobalContext: Record<string, PanelConfig> = {};
 export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
   const { id, model } = panel;
   panelGlobalContext[id] = panel;
-  const { data: session } = authClient.useSession();
-  const token = session?.session.token;
-  const userId = session?.user.id;
   const [panelState, setPanelState] = usePanelState();
 
   const handleModelError = (error: Error) => {
@@ -61,7 +56,6 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
         });
       },
     }),
-    cloud: token && userId ? getGlobalAssistantCloud(token, userId) : undefined,
     onError: handleModelError,
     onFinish: handleModelFinish,
   });

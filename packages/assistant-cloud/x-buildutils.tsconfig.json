@@ -1,5 +1,0 @@
-{
-  "extends": "./x-buildutils-ts-base.tsconfig.json",
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist", "**/*.test.{ts,tsx}"]
-}
