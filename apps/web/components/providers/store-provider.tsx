@@ -1,7 +1,9 @@
 "use client";
 
 import { INITIAL_PANEL_COUNT } from "@/lib/constants";
+import { generatePanelId } from "@/lib/id";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
+import { currentChatAtom } from "@/store/chat";
 import { modelsAtom } from "@/store/models";
 import type { PanelState } from "@/store/panels";
 import {
@@ -36,6 +38,12 @@ export function StoreProvider({
         {} as Record<string, PanelState>
       )
     );
+
+    // Initialize chat atom with a new chat ID
+    s.set(currentChatAtom, {
+      id: generatePanelId(),
+      createdAt: new Date(),
+    });
 
     return s;
   }, [modelsInitialValue, panelsInitialValue]);

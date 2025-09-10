@@ -99,7 +99,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
       />
       <div className="flex-1 min-h-0">
         <AssistantRuntimeProvider runtime={runtime}>
-          <Thread panelId={id} error={error} />
+          <Thread panelId={id} modelId={model} error={error} />
           <ThreadScrollToBottom />
         </AssistantRuntimeProvider>
       </div>

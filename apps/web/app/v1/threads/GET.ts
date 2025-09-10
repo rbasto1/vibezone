@@ -13,36 +13,36 @@ export async function GET() {
   }
 
   try {
-    // Get threads from database for the authenticated user (non-archived only)
-    const userThreads = await db.query.threads.findMany({
-      where: (threads, { eq, and, isNull }) =>
+    // Get chats from database for the authenticated user (non-archived only)
+    const userChats = await db.query.chat.findMany({
+      where: (chat, { eq, and, isNull }) =>
         and(
-          eq(threads.userId, session.user.id),
-          isNull(threads.deletedAt),
-          eq(threads.isArchived, false)
+          eq(chat.userId, session.user.id),
+          isNull(chat.deletedAt),
+          eq(chat.isArchived, false)
         ),
-      orderBy: (threads, { desc }) => [desc(threads.lastMessageAt)],
+      orderBy: (chat, { desc }) => [desc(chat.lastMessageAt)],
     });
 
-    // Map database threads to CloudThread format
-    const threads: CloudThread[] = userThreads.map((thread) => ({
-      title: thread.title,
-      last_message_at: thread.lastMessageAt,
+    // Map database chats to CloudThread format (keeping the same interface for compatibility)
+    const threads: CloudThread[] = userChats.map((chat) => ({
+      title: chat.title,
+      last_message_at: chat.lastMessageAt,
       metadata: {},
       external_id: null,
-      id: thread.id,
+      id: chat.id,
       project_id: session.user.id, // Using user ID as project ID for now
-      created_at: thread.createdAt!,
-      updated_at: thread.updatedAt!,
+      created_at: chat.createdAt,
+      updated_at: chat.updatedAt,
       workspace_id: session.user.id, // Using user ID as workspace ID for now
-      is_archived: thread.isArchived,
+      is_archived: chat.isArchived,
     }));
 
     return NextResponse.json({ threads });
   } catch (error) {
-    console.error("Failed to fetch threads:", error);
+    console.error("Failed to fetch chats:", error);
     return NextResponse.json(
-      { error: "Failed to fetch threads" },
+      { error: "Failed to fetch chats" },
       { status: 500 }
     );
   }

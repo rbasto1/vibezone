@@ -9,6 +9,8 @@ import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button
 import { Button } from "@/components/ui/button";
 import { usePanelsStateSetter, useUIStateSetter } from "@/hooks/use-panels";
 import { useRuntimes } from "@/hooks/use-response-registration";
+import { newChatAtom } from "@/store/chat";
+import { useAtom } from "jotai";
 
 export const ThreadList: FC = () => {
   return (
@@ -23,8 +25,12 @@ const ThreadListNew: FC = () => {
   const getRuntimes = useRuntimes();
   const setPanelsState = usePanelsStateSetter();
   const setUIState = useUIStateSetter();
+  const [, createNewChat] = useAtom(newChatAtom);
 
   const handleNewThread = () => {
+    // Generate new chat ID
+    createNewChat();
+
     if (!getRuntimes) return;
     const runtimes = getRuntimes();
     for (const runtime of runtimes.values()) {
@@ -43,7 +49,7 @@ const ThreadListNew: FC = () => {
         onClick={handleNewThread}
       >
         <PlusIcon />
-        New Thread
+        New Chat
       </Button>
     </ThreadListPrimitive.New>
   );
