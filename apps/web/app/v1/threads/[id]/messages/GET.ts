@@ -23,7 +23,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
   try {
     // First verify the chat exists and belongs to the user
-    const chatRecord = await db.query.chat.findFirst({
+    const chatRecord = await db.query.chats.findFirst({
       where: (chat, { eq, and, isNull }) =>
         and(
           eq(chat.id, chatId),

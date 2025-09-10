@@ -58,6 +58,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
     }),
     onError: handleModelError,
     onFinish: handleModelFinish,
+    messages: panel.initialMessages,
   });
 
   // We will update the runtime using the global variable above

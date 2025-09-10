@@ -1,7 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
-import { chat, messages, threads } from "@/db/schema";
+import { chats, messages, threads } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
@@ -42,13 +42,13 @@ export const messagesRouter = t.router({
 
       try {
         // Ensure chat exists
-        const existingChat = await db.query.chat.findFirst({
-          where: and(eq(chat.id, chatId), eq(chat.userId, ctx.user.id)),
+        const existingChat = await db.query.chats.findFirst({
+          where: and(eq(chats.id, chatId), eq(chats.userId, ctx.user.id)),
         });
 
         if (!existingChat) {
           // Create chat if it doesn't exist
-          await db.insert(chat).values({
+          await db.insert(chats).values({
             id: chatId,
             userId: ctx.user.id,
             title: "New Chat",
@@ -107,12 +107,12 @@ export const messagesRouter = t.router({
 
       try {
         // Get the chat
-        const chatRecord = await db.query.chat.findFirst({
+        const chatRecord = await db.query.chats.findFirst({
           where: and(
-            eq(chat.id, chatId),
-            eq(chat.userId, ctx.user.id),
-            isNull(chat.deletedAt),
-            eq(chat.isArchived, false)
+            eq(chats.id, chatId),
+            eq(chats.userId, ctx.user.id),
+            isNull(chats.deletedAt),
+            eq(chats.isArchived, false)
           ),
         });
 
@@ -171,11 +171,11 @@ export const messagesRouter = t.router({
 
   listChats: authenticatedProcedure.query(async ({ ctx }) => {
     try {
-      const userChats = await db.query.chat.findMany({
+      const userChats = await db.query.chats.findMany({
         where: and(
-          eq(chat.userId, ctx.user.id),
-          isNull(chat.deletedAt),
-          eq(chat.isArchived, false)
+          eq(chats.userId, ctx.user.id),
+          isNull(chats.deletedAt),
+          eq(chats.isArchived, false)
         ),
         orderBy: (chat, { desc }) => [desc(chat.lastMessageAt)],
       });
@@ -202,12 +202,12 @@ export const messagesRouter = t.router({
       try {
         // Verify chat belongs to user and archive it
         const result = await db
-          .update(chat)
+          .update(chats)
           .set({
             isArchived: true,
             updatedAt: new Date(),
           })
-          .where(and(eq(chat.id, chatId), eq(chat.userId, ctx.user.id)));
+          .where(and(eq(chats.id, chatId), eq(chats.userId, ctx.user.id)));
         if (!result) {
           return { success: false, message: "Access denied" };
         }

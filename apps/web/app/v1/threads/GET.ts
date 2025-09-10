@@ -14,7 +14,7 @@ export async function GET() {
 
   try {
     // Get chats from database for the authenticated user (non-archived only)
-    const userChats = await db.query.chat.findMany({
+    const userChats = await db.query.chats.findMany({
       where: (chat, { eq, and, isNull }) =>
         and(
           eq(chat.userId, session.user.id),

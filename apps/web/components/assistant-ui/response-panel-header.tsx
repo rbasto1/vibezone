@@ -58,6 +58,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({
           onClick={handleRemovePanel}
           aria-label="Close panel"
           title={canClose ? "Close panel" : "At least one panel must remain"}
+          disabled={!canClose}
         >
           <XIcon className="h-4 w-4" />
         </button>

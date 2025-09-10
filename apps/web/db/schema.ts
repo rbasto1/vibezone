@@ -145,7 +145,7 @@ export const modelSupportedParametersRelations = relations(
   })
 );
 
-export const chat = pgTable("chat", {
+export const chats = pgTable("chats", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
@@ -158,9 +158,9 @@ export const chat = pgTable("chat", {
   deletedAt: timestampTz("deleted_at"),
 });
 
-export const chatRelations = relations(chat, ({ one, many }) => ({
+export const chatRelations = relations(chats, ({ one, many }) => ({
   user: one(user, {
-    fields: [chat.userId],
+    fields: [chats.userId],
     references: [user.id],
   }),
   threads: many(threads),
@@ -170,7 +170,7 @@ export const threads = pgTable("threads", {
   id: text("id").primaryKey(),
   chatId: text("chat_id")
     .notNull()
-    .references(() => chat.id),
+    .references(() => chats.id),
   lastModelId: text("last_model_id")
     .notNull()
     .references(() => models.id),
@@ -181,9 +181,9 @@ export const threads = pgTable("threads", {
 });
 
 export const threadsRelations = relations(threads, ({ one, many }) => ({
-  chat: one(chat, {
+  chat: one(chats, {
     fields: [threads.chatId],
-    references: [chat.id],
+    references: [chats.id],
   }),
   lastModel: one(models, {
     fields: [threads.lastModelId],
@@ -241,5 +241,5 @@ export type Thread = typeof threads.$inferSelect;
 export type NewThread = typeof threads.$inferInsert;
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
-export type Chat = typeof chat.$inferSelect;
-export type NewChat = typeof chat.$inferInsert;
+export type Chat = typeof chats.$inferSelect;
+export type NewChat = typeof chats.$inferInsert;
