@@ -132,5 +132,5 @@
     "RESEND_API_KEY",
     "RESEND_FROM"
   ],
-  "concurrency": 1
+  "concurrency": "1"
 }
