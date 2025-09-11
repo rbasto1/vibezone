@@ -38,11 +38,24 @@
         "NEXT_PUBLIC_*"
       ]
     },
+    "build:assistant-ui-4": {
+      "dependsOn": ["build:assistant-ui-3"],
+      "inputs": ["**/*.*", "!.next", "!.turbo"],
+      "outputs": ["dist", "generated/**"],
+      "env": [
+        "OPENAI_*",
+        "ASSISTANT_*",
+        "JWT_*",
+        "ENTELLIGENCE_*",
+        "NEXT_PUBLIC_*"
+      ]
+    },
     "build": {
       "dependsOn": [
         "build:assistant-ui-1",
         "build:assistant-ui-2",
-        "build:assistant-ui-3"
+        "build:assistant-ui-3",
+        "build:assistant-ui-4"
       ],
       "inputs": ["**/*.*", "!.next", "!.turbo"],
       "outputs": [".next/**", "!.next/cache/**"],

@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "turbo run dev --parallel",
-    "build": "turbo run build",
+    "build": "cd apps/web && turbo run build",
     "deploy:llm-worker": "pnpm -F llm-worker deploy",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
