@@ -2,9 +2,34 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
   "tasks": {
-    "build:assistant-ui": {
+    "build:assistant-ui-1": {
+      "dependsOn": ["^build:assistant-ui-1"],
       "inputs": ["**/*.*", "!.next", "!.turbo"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**", "generated/**"],
+      "outputs": ["dist", "generated/**"],
+      "env": [
+        "OPENAI_*",
+        "ASSISTANT_*",
+        "JWT_*",
+        "ENTELLIGENCE_*",
+        "NEXT_PUBLIC_*"
+      ]
+    },
+    "build:assistant-ui-2": {
+      "dependsOn": ["build:assistant-ui-1"],
+      "inputs": ["**/*.*", "!.next", "!.turbo"],
+      "outputs": ["dist", "generated/**"],
+      "env": [
+        "OPENAI_*",
+        "ASSISTANT_*",
+        "JWT_*",
+        "ENTELLIGENCE_*",
+        "NEXT_PUBLIC_*"
+      ]
+    },
+    "build:assistant-ui-3": {
+      "dependsOn": ["build:assistant-ui-2"],
+      "inputs": ["**/*.*", "!.next", "!.turbo"],
+      "outputs": ["dist", "generated/**"],
       "env": [
         "OPENAI_*",
         "ASSISTANT_*",
@@ -14,8 +39,25 @@
       ]
     },
     "build": {
-      "dependsOn": ["^build", "build:assistant-ui"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "dependsOn": [
+        "build:assistant-ui-1",
+        "build:assistant-ui-2",
+        "build:assistant-ui-3"
+      ],
+      "inputs": ["**/*.*", "!.next", "!.turbo"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "NEXT_PUBLIC_LLM_WORKER_URL",
+        "NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL",
+        "DATABASE_URL",
+        "DATABASE_URL_UNPOOLED",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "AUTH_SECRET",
+        "RESEND_API_KEY",
+        "RESEND_FROM",
+        "NEXT_PUBLIC_*"
+      ]
     },
     "dev": {
       "cache": false,
@@ -30,16 +72,5 @@
     "format": {
       "cache": false
     }
-  },
-  "globalEnv": [
-    "NEXT_PUBLIC_LLM_WORKER_URL",
-    "NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL",
-    "DATABASE_URL",
-    "DATABASE_URL_UNPOOLED",
-    "GOOGLE_CLIENT_ID",
-    "GOOGLE_CLIENT_SECRET",
-    "AUTH_SECRET",
-    "RESEND_API_KEY",
-    "RESEND_FROM"
-  ]
+  }
 }
