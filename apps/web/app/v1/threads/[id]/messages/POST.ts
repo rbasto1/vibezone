@@ -46,11 +46,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     // First verify the thread exists and belongs to the user
     const thread = await db.query.threads.findFirst({
       where: (threads, { eq, and, isNull }) =>
-        and(
-          eq(threads.id, threadId),
-          eq(threads.userId, session.user.id),
-          isNull(threads.deletedAt)
-        ),
+        and(eq(threads.id, threadId), isNull(threads.closedAt)),
     });
 
     if (!thread) {
@@ -70,6 +66,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     await db.insert(messages).values({
       id: messageId,
       threadId,
+      modelId: "",
       role: body.content.role,
       content: contentParts,
       attachments: [],

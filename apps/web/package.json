@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "cd ../../packages/assistant-ui && npx turbo build --filter='./packages/*'",
+    "predev": "cd ../../packages/assistant-ui && turbo build --filter='./packages/*' --filter='!@assistant-ui/react' && turbo build --filter='@assistant-ui/react'",
     "dev": "dotenvx run -- next dev --turbopack --port 3022",
+    "build:assistant-ui": "pnpm run predev",
     "build": "pnpm run db:push && next build",
     "start": "next start",
     "lint": "eslint .",

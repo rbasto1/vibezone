@@ -1,4 +1,5 @@
 import { getRequestBody } from "@/app/api/request";
+import type { NewThread } from "@/db";
 import { db, threads } from "@/db";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
@@ -29,10 +30,10 @@ export async function POST(request: Request) {
   try {
     await db.insert(threads).values({
       id: threadId,
-      userId: session.user.id,
-      title: "Chat " + new Date().toISOString().substring(12),
+      chatId: "",
       lastMessageAt: new Date(body.last_message_at),
-    });
+      lastModelId: "",
+    } satisfies NewThread);
 
     return NextResponse.json({ thread_id: threadId });
   } catch (error) {

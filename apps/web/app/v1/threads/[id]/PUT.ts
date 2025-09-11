@@ -34,11 +34,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     // First verify the thread exists and belongs to the user
     const existingThread = await db.query.threads.findFirst({
       where: (threads, { eq, and, isNull }) =>
-        and(
-          eq(threads.id, threadId),
-          eq(threads.userId, session.user.id),
-          isNull(threads.deletedAt)
-        ),
+        and(eq(threads.id, threadId), isNull(threads.closedAt)),
     });
 
     if (!existingThread) {
@@ -49,15 +45,9 @@ export async function PUT(request: Request, { params }: RouteParams) {
     await db
       .update(threads)
       .set({
-        isArchived: body.is_archived,
+        closedAt: body.is_archived ? new Date() : null,
       })
-      .where(
-        and(
-          eq(threads.id, threadId),
-          eq(threads.userId, session.user.id),
-          isNull(threads.deletedAt)
-        )
-      );
+      .where(and(eq(threads.id, threadId), isNull(threads.closedAt)));
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,8 @@
 import { getRequestBody } from "@/app/api/request";
+import type { NewMessage } from "@/db";
 import { db, messages, threads } from "@/db";
 import { auth } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -53,28 +54,33 @@ export async function POST(request: Request) {
   try {
     // Verify thread belongs to user
     const thread = await db.query.threads.findFirst({
-      where: (threads, { eq, and }) =>
-        and(
-          eq(threads.id, body.thread_id),
-          eq(threads.userId, session.user.id)
-        ),
+      where: and(eq(threads.id, body.thread_id)),
+      with: {
+        chat: true,
+      },
     });
 
     if (!thread) {
       return NextResponse.json({ error: "Thread not found" }, { status: 404 });
     }
+    if (thread.chat.userId !== session.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     // Insert messages
-    const messagesToInsert = body.messages.map((message) => ({
-      id: message.id,
-      threadId: body.thread_id,
-      role: message.role,
-      content: message.content,
-      attachments: message.attachments || [],
-      metadata: message.metadata || {},
-      status: message.status || null,
-      createdAt: new Date(message.createdAt),
-    }));
+    const messagesToInsert = body.messages.map(
+      (message): NewMessage => ({
+        id: message.id,
+        threadId: body.thread_id,
+        role: message.role,
+        content: message.content,
+        attachments: message.attachments || [],
+        metadata: message.metadata || {},
+        status: message.status || null,
+        createdAt: new Date(message.createdAt),
+        modelId: "",
+      })
+    );
 
     await db.insert(messages).values(messagesToInsert);
 

@@ -2,9 +2,20 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
   "tasks": {
+    "build:assistant-ui": {
+      "inputs": ["**/*.*", "!.next", "!.turbo"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "generated/**"],
+      "env": [
+        "OPENAI_*",
+        "ASSISTANT_*",
+        "JWT_*",
+        "ENTELLIGENCE_*",
+        "NEXT_PUBLIC_*"
+      ]
+    },
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "dependsOn": ["^build", "build:assistant-ui"],
+      "outputs": [".next/**", "!.next/cache/**"]
     },
     "dev": {
       "cache": false,
