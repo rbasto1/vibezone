@@ -106,19 +106,7 @@
         "@assistant-ui/react#build"
       ],
       "inputs": ["**/*.*", "!.next", "!.turbo"],
-      "outputs": [".next/**", "!.next/cache/**"],
-      "env": [
-        "NEXT_PUBLIC_LLM_WORKER_URL",
-        "NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL",
-        "DATABASE_URL",
-        "DATABASE_URL_UNPOOLED",
-        "GOOGLE_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET",
-        "AUTH_SECRET",
-        "RESEND_API_KEY",
-        "RESEND_FROM",
-        "NEXT_PUBLIC_*"
-      ]
+      "outputs": [".next/**", "!.next/cache/**"]
     },
     "dev": {
       "cache": false,
@@ -133,5 +121,16 @@
     "format": {
       "cache": false
     }
-  }
+  },
+  "globalEnv": [
+    "AUTH_SECRET",
+    "DATABASE_URL",
+    "DATABASE_URL_UNPOOLED",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "NEXT_PUBLIC_*",
+    "RESEND_API_KEY",
+    "RESEND_FROM"
+  ],
+  "concurrency": 1
 }
