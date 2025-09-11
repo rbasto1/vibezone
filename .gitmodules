@@ -1,4 +1,4 @@
 [submodule "packages/assistant-ui"]
 	path = packages/assistant-ui
-	url = git@github.com:rbasto1/assistant-ui.git
+	url = https://github.com/rbasto1/assistant-ui.git
 	branch = main
