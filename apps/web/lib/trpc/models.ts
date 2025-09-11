@@ -33,6 +33,7 @@ export async function getModelsList() {
     ),
     with: {
       provider: true,
+      suggestionGroup: true,
       supportedParameters: true,
     },
     orderBy: [
@@ -63,7 +64,7 @@ export async function getModelsList() {
       const modelParams = item.supportedParameters.map(
         (p) => p.supportedParameterId
       );
-      const { provider, supportedParameters, ...model } = item;
+      const { provider, suggestionGroup, supportedParameters, ...model } = item;
       return {
         ...model,
         // Calculate capabilities based on supported parameters
@@ -79,6 +80,13 @@ export async function getModelsList() {
         provider: {
           name: provider.name,
         },
+        suggestionGroup: suggestionGroup
+          ? {
+              id: suggestionGroup.id,
+              title: suggestionGroup.title,
+              icon: suggestionGroup.icon,
+            }
+          : null,
       };
     }),
     providers: uniqueProviders,
@@ -93,9 +101,7 @@ export const modelsRouter = t.router({
       z.object({
         id: z.string().nonempty(),
         priority: z.number().int().nullable().optional(),
-        isFlagship: z.boolean().optional(),
-        isCoder: z.boolean().optional(),
-        isArtist: z.boolean().optional(),
+        suggestionGroupId: z.string().nullable().optional(),
         isSuggested: z.boolean().optional(),
         capabilityFast: z.boolean().optional(),
         capabilityEffortControl: z.boolean().optional(),

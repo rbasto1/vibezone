@@ -7,17 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  Code2,
-  Gauge,
-  Hash,
-  Palette,
-  Star,
-  StarOff,
-  ThumbsUp,
-  Trash2,
-  Zap,
-} from "lucide-react";
+import { Gauge, Hash, ThumbsUp, Trash2, Zap } from "lucide-react";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -51,6 +41,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
     staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
+  const { data: suggestionGroups } = trpc.suggestionGroups.list.useQuery();
   const utils = trpc.useUtils();
   const updateMutation = trpc.models.update.useMutation();
   const deleteMutation = trpc.models.delete.useMutation({
@@ -81,14 +72,8 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
   const [sorting, setSorting] = useState(
     () => getStorageItem(storageKeys.manageSort, SortingSchema) ?? []
   );
-  const [flagshipOnly, setFlagshipOnly] = useState(
-    () => getStorageItem(storageKeys.manageFlagship, z.boolean()) ?? false
-  );
-  const [coderOnly, setCoderOnly] = useState(
-    () => getStorageItem(storageKeys.manageCoder, z.boolean()) ?? false
-  );
-  const [artistOnly, setArtistOnly] = useState(
-    () => getStorageItem(storageKeys.manageArtist, z.boolean()) ?? false
+  const [suggestionGroupFilter, setSuggestionGroupFilter] = useState(
+    getStorageItem(storageKeys.manageSuggestionGroup) ?? "all"
   );
   const [priorityOnly, setPriorityOnly] = useState(
     () => getStorageItem(storageKeys.managePriority, z.boolean()) ?? false
@@ -143,13 +128,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
           };
 
           const onToggle = (
-            key:
-              | "isFlagship"
-              | "isCoder"
-              | "isArtist"
-              | "isSuggested"
-              | "capabilityFast"
-              | "capabilityEffortControl",
+            key: "isSuggested" | "capabilityFast" | "capabilityEffortControl",
             v: boolean
           ) => {
             const prev = m[key] as boolean | undefined;
@@ -159,6 +138,18 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               const message = e instanceof Error ? e.message : String(e);
               toast.error(`Failed to update ${key}: ${message}`);
             });
+          };
+
+          const onSuggestionGroupChange = (groupId: string | null) => {
+            const prev = m.suggestionGroupId;
+            setCacheFields({ suggestionGroupId: groupId });
+            updateMutation
+              .mutateAsync({ id: m.id, suggestionGroupId: groupId })
+              .catch((e) => {
+                setCacheFields({ suggestionGroupId: prev });
+                const message = e instanceof Error ? e.message : String(e);
+                toast.error(`Failed to update suggestion group: ${message}`);
+              });
           };
 
           return (
@@ -177,54 +168,21 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
                 />
               </label>
 
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.isFlagship
-                    ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-600"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
+              <select
+                className="h-8 rounded border bg-background px-2 text-sm"
+                value={m.suggestionGroupId ?? ""}
+                onChange={(e) =>
+                  onSuggestionGroupChange(e.target.value || null)
                 }
-                aria-pressed={!!m.isFlagship}
-                title="Flagship"
-                onClick={() => onToggle("isFlagship", !m.isFlagship)}
+                title="Suggestion Group"
               >
-                {m.isFlagship ? (
-                  <Star className="h-4 w-4" />
-                ) : (
-                  <StarOff className="h-4 w-4" />
-                )}
-              </button>
-
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.isCoder
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.isCoder}
-                title="Coder"
-                onClick={() => onToggle("isCoder", !m.isCoder)}
-              >
-                <Code2 className="h-4 w-4" />
-              </button>
-
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.isArtist
-                    ? "bg-pink-500/10 border-pink-500/30 text-pink-600"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.isArtist}
-                title="Artist"
-                onClick={() => onToggle("isArtist", !m.isArtist)}
-              >
-                <Palette className="h-4 w-4" />
-              </button>
+                <option value="">No Group</option>
+                {suggestionGroups?.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.title}
+                  </option>
+                ))}
+              </select>
 
               <button
                 type="button"
@@ -307,7 +265,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
         },
       },
     ],
-    [utils.models.list, updateMutation, deleteMutation]
+    [utils.models.list, updateMutation, deleteMutation, suggestionGroups]
   );
 
   const providers = hydrated?.providers;
@@ -333,9 +291,11 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
           return false;
         });
     return byQuery.filter((m) => {
-      if (flagshipOnly && !m.isFlagship) return false;
-      if (coderOnly && !m.isCoder) return false;
-      if (artistOnly && !m.isArtist) return false;
+      if (
+        suggestionGroupFilter !== "all" &&
+        m.suggestionGroupId !== suggestionGroupFilter
+      )
+        return false;
       if (priorityOnly && (m.priority === null || m.priority === undefined))
         return false;
       if (tierFilter !== "all") {
@@ -353,9 +313,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
     models,
     providerFilter,
     textFilter,
-    flagshipOnly,
-    coderOnly,
-    artistOnly,
+    suggestionGroupFilter,
     priorityOnly,
     tierFilter,
     providers,
@@ -425,68 +383,26 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
                 </option>
               ))}
             </select>
+            <label className="text-sm text-muted-foreground">
+              Suggestion Group
+            </label>
+            <select
+              className="border rounded-md h-9 px-3 bg-background"
+              value={suggestionGroupFilter}
+              onChange={(e) => {
+                const v = e.target.value;
+                setSuggestionGroupFilter(v);
+                setStorageItem(storageKeys.manageSuggestionGroup, v);
+              }}
+            >
+              <option value="all">All Groups</option>
+              {suggestionGroups?.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.title}
+                </option>
+              ))}
+            </select>
             <div className="ml-2 flex items-center gap-2">
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
-                  (flagshipOnly
-                    ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-600"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={flagshipOnly}
-                title="Filter: Flagship"
-                onClick={() => {
-                  const next = !flagshipOnly;
-                  setFlagshipOnly(next);
-                  setStorageItem(storageKeys.manageFlagship, next);
-                }}
-              >
-                {flagshipOnly ? (
-                  <Star className="h-4 w-4" />
-                ) : (
-                  <StarOff className="h-4 w-4" />
-                )}
-                <span className="hidden sm:inline">Flagship</span>
-              </button>
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
-                  (coderOnly
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={coderOnly}
-                title="Filter: Coder"
-                onClick={() => {
-                  const next = !coderOnly;
-                  setCoderOnly(next);
-                  setStorageItem(storageKeys.manageCoder, next);
-                }}
-              >
-                <Code2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Coder</span>
-              </button>
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
-                  (artistOnly
-                    ? "bg-pink-500/10 border-pink-500/30 text-pink-600"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={artistOnly}
-                title="Filter: Artist"
-                onClick={() => {
-                  const next = !artistOnly;
-                  setArtistOnly(next);
-                  setStorageItem(storageKeys.manageArtist, next);
-                }}
-              >
-                <Palette className="h-4 w-4" />
-                <span className="hidden sm:inline">Artist</span>
-              </button>
               <button
                 type="button"
                 className={
