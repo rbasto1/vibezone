@@ -1,9 +1,14 @@
+import {
+  createOpenRouter,
+  OpenRouterProvider,
+} from "@openrouter/ai-sdk-provider";
+
 export interface GatewayConfig {
   apiKey: string;
   headers?: Record<string, string>;
 }
 
-export function getGatewayConfig(env: Env): GatewayConfig {
+function getGatewayConfig(env: Env): GatewayConfig {
   if (!env.OPENROUTER_API_KEY) {
     throw new Error("No OpenRouter API key configured");
   }
@@ -15,4 +20,16 @@ export function getGatewayConfig(env: Env): GatewayConfig {
         env.ENVIRONMENT === "development" ? "Vibezone (Dev)" : "Vibezone",
     },
   };
+}
+
+let adapter: OpenRouterProvider | null = null;
+export function getOpenRouter(env: Env): OpenRouterProvider {
+  if (!adapter) {
+    const gateway = getGatewayConfig(env);
+    adapter = createOpenRouter({
+      apiKey: gateway.apiKey,
+      headers: gateway.headers,
+    });
+  }
+  return adapter;
 }

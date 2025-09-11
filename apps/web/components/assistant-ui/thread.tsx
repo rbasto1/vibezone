@@ -1,17 +1,40 @@
-import { ThreadPrimitive } from "@assistant-ui/react";
+import { ThreadPrimitive, useThread } from "@assistant-ui/react";
 import { motion } from "framer-motion";
-import type { FC, PropsWithChildren } from "react";
+import { type FC, type PropsWithChildren } from "react";
 
+import { cn } from "@/components/ui/utils";
+import { useMessageSaver } from "@/hooks/use-message-saver";
 import { AssistantMessage } from "./assistant-message";
 import { EditComposer } from "./edit-composer";
+import { ThreadError } from "./thread-error";
 import { ThreadWelcome } from "./thread-welcome";
 import { UserMessage } from "./user-message";
 
-export const Thread: FC<PropsWithChildren> = ({ children }) => {
+interface ThreadProps extends PropsWithChildren {
+  panelId: string;
+  modelId: string;
+  error: Error | undefined | null;
+}
+
+export const Thread: FC<ThreadProps> = ({
+  children,
+  panelId,
+  modelId,
+  error,
+}) => {
+  const thread = useThread();
+  const isActive = thread.isRunning;
+
+  // Use the message saver hook to automatically save messages
+  useMessageSaver({ panelId, modelId });
+
   return (
     <ThreadPrimitive.Root
       // aui-thread-root
-      className="bg-background flex h-full flex-col"
+      className={cn(
+        "bg-background flex h-full flex-col",
+        isActive && "matrix-streaming"
+      )}
       style={{
         ["--thread-max-width" as string]: "48rem",
         ["--thread-padding-x" as string]: "1rem",
@@ -31,12 +54,14 @@ export const Thread: FC<PropsWithChildren> = ({ children }) => {
           }}
         />
 
+        {/* Show error message if there's an error */}
+        {error && <ThreadError error={error} />}
+
         <ThreadPrimitive.If empty={false}>
           {/* aui-thread-viewport-spacer */}
           <motion.div className="min-h-6 min-w-6 shrink-0" />
         </ThreadPrimitive.If>
       </ThreadPrimitive.Viewport>
-
       {children}
     </ThreadPrimitive.Root>
   );

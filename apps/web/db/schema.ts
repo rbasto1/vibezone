@@ -14,6 +14,11 @@ const timestampTz = (name: string) =>
   timestamp(name, { withTimezone: true, mode: "date" });
 const timestampTzNow = (name: string) =>
   timestampTz(name).defaultNow().notNull();
+const timestampTzNowUpdated = (name: string) =>
+  timestampTz(name)
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => /* @__PURE__ */ new Date());
 
 import { account, session, user, verification } from "@/db/auth-schema";
 export { account, session, user, verification };
@@ -30,7 +35,7 @@ export const providers = pgTable("providers", {
   tier: providerTiers().notNull().default("specialists"),
   order: integer("order"), // custom ordering for display
   createdAt: timestampTzNow("created_at"),
-  updatedAt: timestampTzNow("updated_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
   deletedAt: timestampTz("deleted_at"),
 });
 
@@ -81,7 +86,7 @@ export const models = pgTable(
     capabilityFast: boolean("capability_fast"),
     capabilityEffortControl: boolean("capability_effort_control"),
 
-    updatedAt: timestampTzNow("updated_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
     deletedAt: timestampTz("deleted_at"),
   },
   (table) => [
@@ -140,6 +145,82 @@ export const modelSupportedParametersRelations = relations(
   })
 );
 
+export const chats = pgTable("chats", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  title: text("title").notNull(),
+  isArchived: boolean("is_archived").notNull().default(false),
+  lastMessageAt: timestampTz("last_message_at").notNull(),
+  createdAt: timestampTzNow("created_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
+  deletedAt: timestampTz("deleted_at"),
+});
+
+export const chatRelations = relations(chats, ({ one, many }) => ({
+  user: one(user, {
+    fields: [chats.userId],
+    references: [user.id],
+  }),
+  threads: many(threads),
+}));
+
+export const threads = pgTable("threads", {
+  id: text("id").primaryKey(),
+  chatId: text("chat_id")
+    .notNull()
+    .references(() => chats.id),
+  lastModelId: text("last_model_id")
+    .notNull()
+    .references(() => models.id),
+  lastMessageAt: timestampTz("last_message_at").notNull(),
+  createdAt: timestampTzNow("created_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
+  closedAt: timestampTz("closed_at"),
+});
+
+export const threadsRelations = relations(threads, ({ one, many }) => ({
+  chat: one(chats, {
+    fields: [threads.chatId],
+    references: [chats.id],
+  }),
+  lastModel: one(models, {
+    fields: [threads.lastModelId],
+    references: [models.id],
+  }),
+  messages: many(messages),
+}));
+
+export const messages = pgTable("messages", {
+  id: text("id").primaryKey(),
+  threadId: text("thread_id")
+    .notNull()
+    .references(() => threads.id),
+  modelId: text("last_model_id")
+    .notNull()
+    .references(() => models.id),
+  role: text("role").notNull(), // "user" | "assistant"
+  content: jsonb("content").notNull(), // Store the full content array
+  attachments: jsonb("attachments"), // Store attachments array
+  metadata: jsonb("metadata"), // Store metadata object
+  status: jsonb("status"), // Store status object (for assistant messages)
+  createdAt: timestampTz("created_at").notNull(),
+  updatedAt: timestampTzNowUpdated("updated_at"),
+  deletedAt: timestampTz("deleted_at"),
+});
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  thread: one(threads, {
+    fields: [messages.threadId],
+    references: [threads.id],
+  }),
+  model: one(models, {
+    fields: [messages.modelId],
+    references: [models.id],
+  }),
+}));
+
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
 
 export type Account = typeof account.$inferSelect;
@@ -156,3 +237,9 @@ export type Model = typeof models.$inferSelect;
 export type NewModel = typeof models.$inferInsert;
 export type SupportedParameter = typeof supportedParameters.$inferSelect;
 export type NewSupportedParameter = typeof supportedParameters.$inferInsert;
+export type Thread = typeof threads.$inferSelect;
+export type NewThread = typeof threads.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type NewMessage = typeof messages.$inferInsert;
+export type Chat = typeof chats.$inferSelect;
+export type NewChat = typeof chats.$inferInsert;

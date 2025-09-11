@@ -21,7 +21,7 @@ export interface UseUserResult {
 
 import { createAuthClient } from "better-auth/react";
 
-const authClient = createAuthClient({ baseURL });
+export const authClient = createAuthClient({ baseURL });
 
 export const useUser = (): UseUserResult => {
   const { data, isPending } = authClient.useSession();

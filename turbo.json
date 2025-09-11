@@ -2,9 +2,111 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
   "tasks": {
-    "build": {
+    "build": {},
+    "@assistant-ui/x-buildutils#build": {
+      "inputs": ["**/*.*", "!.turbo"]
+    },
+    "assistant-stream#build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "assistant-ui#build": {
+      "dependsOn": ["^build"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "assistant-cloud#build": {
+      "dependsOn": ["^build"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "create-assistant-ui#build": {
+      "dependsOn": ["^build"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "@assistant-ui/mcp-docs-server#build": {
+      "dependsOn": ["^build"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "@assistant-ui/styles#build": {
+      "dependsOn": ["^build"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "@assistant-ui/tap#build": {
+      "dependsOn": ["^build"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "transit:assistant-ui-1": {
+      "dependsOn": [
+        "assistant-stream#build",
+        "assistant-ui#build",
+        "assistant-cloud#build",
+        "create-assistant-ui#build",
+        "@assistant-ui/mcp-docs-server#build",
+        "@assistant-ui/styles#build",
+        "@assistant-ui/tap#build"
+      ]
+    },
+    "@assistant-ui/react#build": {
+      "dependsOn": ["transit:assistant-ui-1"],
+      "inputs": ["src/**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "@assistant-ui/react-hook-form#build": {
+      "dependsOn": ["@assistant-ui/react#build"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "@assistant-ui/react-markdown#build": {
+      "dependsOn": ["@assistant-ui/react#build"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "@assistant-ui/react-langgraph#build": {
+      "dependsOn": ["@assistant-ui/react#build"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "@assistant-ui/react-ai-sdk#build": {
+      "dependsOn": ["@assistant-ui/react#build"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "transit:assistant-ui-3": {
+      "dependsOn": [
+        "@assistant-ui/react-hook-form#build",
+        "@assistant-ui/react-markdown#build",
+        "@assistant-ui/react-langgraph#build",
+        "@assistant-ui/react-ai-sdk#build"
+      ]
+    },
+    "@assistant-ui/react-syntax-highlighter#build": {
+      "dependsOn": ["transit:assistant-ui-3"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "@assistant-ui/react-data-stream#build": {
+      "dependsOn": ["transit:assistant-ui-3"],
+      "inputs": ["**/*.*", "!.turbo"],
+      "outputs": ["dist"]
+    },
+    "@vibezone/web#build": {
+      "dependsOn": [
+        "@assistant-ui/react-data-stream#build",
+        "@assistant-ui/react-syntax-highlighter#build",
+        "@assistant-ui/react-ai-sdk#build",
+        "@assistant-ui/react-markdown#build",
+        "@assistant-ui/react-langgraph#build",
+        "@assistant-ui/react-hook-form#build",
+        "@assistant-ui/react#build"
+      ],
+      "inputs": ["**/*.*", "!.next", "!.turbo"],
+      "outputs": [".next/**", "!.next/cache/**"]
     },
     "dev": {
       "cache": false,
@@ -21,14 +123,14 @@
     }
   },
   "globalEnv": [
-    "NEXT_PUBLIC_LLM_WORKER_URL",
-    "NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL",
+    "AUTH_SECRET",
     "DATABASE_URL",
     "DATABASE_URL_UNPOOLED",
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
-    "AUTH_SECRET",
+    "NEXT_PUBLIC_*",
     "RESEND_API_KEY",
     "RESEND_FROM"
-  ]
+  ],
+  "concurrency": "1"
 }

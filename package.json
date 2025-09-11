@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "turbo run dev --parallel",
-    "build": "turbo run build",
+    "build": "cd apps/web && turbo run build",
     "deploy:llm-worker": "pnpm -F llm-worker deploy",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
@@ -18,12 +18,15 @@
     "db:seed": "turbo run db:seed",
     "db:studio": "turbo run db:studio"
   },
-  "packageManager": "pnpm@9.12.3",
+  "packageManager": "pnpm@10.13.1",
   "pnpm": {
     "overrides": {
-      "react": "19.0.0",
-      "react-dom": "19.0.0",
-      "@types/react": "19.0.10"
+      "react": "19.1.1",
+      "react-dom": "19.1.1",
+      "@types/react": "19.1.12",
+      "ai": "5.0.24",
+      "@ai-sdk/provider-utils": "3.0.6",
+      "assistant-cloud": "workspace:*"
     }
   },
   "devDependencies": {

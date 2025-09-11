@@ -16,6 +16,13 @@ export const t = initTRPC
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
+export const authenticatedProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!ctx.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "You must be logged in" });
+  }
+  return next({ ctx: { ...ctx, user: ctx.user } });
+});
+
 
 export const createContext = async () => {
   try {
