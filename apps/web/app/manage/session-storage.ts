@@ -7,7 +7,6 @@ export const storageKeys = {
   manageProvider: "manage:provider",
   manageQuery: "manage:q",
   manageSort: "manage:sort",
-  manageSuggestionGroup: "manage:suggestionGroup",
   managePriority: "manage:priority",
   manageTier: "manage:tier",
 } as const;

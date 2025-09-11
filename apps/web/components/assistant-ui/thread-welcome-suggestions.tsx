@@ -1,19 +1,11 @@
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { trpc } from "@/lib/trpc/client";
 import { motion } from "framer-motion";
-import { CodeIcon, DramaIcon, StarIcon, Zap } from "lucide-react";
 import type { FC } from "react";
 
 export interface ThreadWelcomeSuggestionsProps {
   onSelect: (modelIds: string[]) => void;
 }
-
-// Icon mapping for suggestion groups
-const iconMap = {
-  Star: StarIcon,
-  Code2: CodeIcon,
-  Drama: DramaIcon,
-  Zap,
-} as const;
 
 export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
   onSelect,
@@ -29,12 +21,9 @@ export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
   const promotedGroups = suggestionGroups.filter((group) => group.promoted);
 
   const items = promotedGroups.map((group) => {
-    const IconComponent =
-      iconMap[group.icon as keyof typeof iconMap] || StarIcon;
-
     return {
       key: group.id,
-      icon: <IconComponent size={32} />,
+      icon: <DynamicIcon iconName={group.icon} size={32} />,
       title: group.title,
       label: group.label,
       models: group.models,
@@ -54,7 +43,7 @@ export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
         >
           <button
             key={s.key}
-            className="dark:hover:bg-accent/60 h-full w-full flex-1 flex items-start gap-3 rounded-xl border px-4 py-3.5 text-left text-sm"
+            className="dark:hover:bg-accent/60 h-full w-full flex-1 flex items-start gap-3 rounded-xl border px-4 py-3.5 text-left text-sm cursor-pointer"
             onClick={() => onSelect(s.models)}
           >
             <div className="flex-shrink-0 mt-0.5">{s.icon}</div>

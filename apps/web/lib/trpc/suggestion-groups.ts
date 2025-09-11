@@ -64,4 +64,85 @@ export const suggestionGroupsRouter = t.router({
         .where(eq(suggestionGroups.id, input.id));
       return { ok: true } as const;
     }),
+
+  addModel: adminProcedure
+    .input(
+      z.object({
+        groupId: z.string().nonempty(),
+        modelId: z.string().nonempty(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const group = await db.query.suggestionGroups.findFirst({
+        where: eq(suggestionGroups.id, input.groupId),
+      });
+
+      if (!group) {
+        throw new Error("Suggestion group not found");
+      }
+
+      if (group.models.includes(input.modelId)) {
+        return { ok: true } as const; // Already exists
+      }
+
+      const updatedModels = [...group.models, input.modelId];
+
+      await db
+        .update(suggestionGroups)
+        .set({
+          models: updatedModels,
+          updatedAt: sql`current_timestamp`,
+        })
+        .where(eq(suggestionGroups.id, input.groupId));
+
+      return { ok: true } as const;
+    }),
+
+  removeModel: adminProcedure
+    .input(
+      z.object({
+        groupId: z.string().nonempty(),
+        modelId: z.string().nonempty(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const group = await db.query.suggestionGroups.findFirst({
+        where: eq(suggestionGroups.id, input.groupId),
+      });
+
+      if (!group) {
+        throw new Error("Suggestion group not found");
+      }
+
+      const updatedModels = group.models.filter((id) => id !== input.modelId);
+
+      await db
+        .update(suggestionGroups)
+        .set({
+          models: updatedModels,
+          updatedAt: sql`current_timestamp`,
+        })
+        .where(eq(suggestionGroups.id, input.groupId));
+
+      return { ok: true } as const;
+    }),
+
+  reorderModels: adminProcedure
+    .input(
+      z.object({
+        groupId: z.string().nonempty(),
+        modelIds: z.array(z.string()),
+      })
+    )
+    .mutation(async ({ input }) => {
+      await db
+        .update(suggestionGroups)
+        .set({
+          models: input.modelIds,
+          updatedAt: sql`current_timestamp`,
+        })
+        .where(eq(suggestionGroups.id, input.groupId));
+
+      return { ok: true } as const;
+    }),
 });

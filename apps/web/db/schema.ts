@@ -73,9 +73,6 @@ export const models = pgTable(
     isChat: boolean("is_chat").notNull(), // we only show isChat models
 
     priority: integer("priority"), // the first 3 models that are loaded by default
-    suggestionGroupId: text("suggestion_group_id").references(
-      () => suggestionGroups.id
-    ), // which suggestion group this model belongs to
 
     isSuggested: boolean("is_suggested").notNull().default(false), // if false, appears under "see more..."
 
@@ -128,23 +125,12 @@ export const modelsRelations = relations(models, ({ one, many }) => ({
     fields: [models.providerId],
     references: [providers.id],
   }),
-  suggestionGroup: one(suggestionGroups, {
-    fields: [models.suggestionGroupId],
-    references: [suggestionGroups.id],
-  }),
   supportedParameters: many(modelSupportedParameters),
 }));
 
 export const providersRelations = relations(providers, ({ many }) => ({
   models: many(models),
 }));
-
-export const suggestionGroupsRelations = relations(
-  suggestionGroups,
-  ({ many }) => ({
-    models: many(models),
-  })
-);
 
 export const supportedParametersRelations = relations(
   supportedParameters,

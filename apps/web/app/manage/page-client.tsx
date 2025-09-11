@@ -41,7 +41,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
     staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
-  const { data: suggestionGroups } = trpc.suggestionGroups.list.useQuery();
   const utils = trpc.useUtils();
   const updateMutation = trpc.models.update.useMutation();
   const deleteMutation = trpc.models.delete.useMutation({
@@ -71,9 +70,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
   );
   const [sorting, setSorting] = useState(
     () => getStorageItem(storageKeys.manageSort, SortingSchema) ?? []
-  );
-  const [suggestionGroupFilter, setSuggestionGroupFilter] = useState(
-    getStorageItem(storageKeys.manageSuggestionGroup) ?? "all"
   );
   const [priorityOnly, setPriorityOnly] = useState(
     () => getStorageItem(storageKeys.managePriority, z.boolean()) ?? false
@@ -140,18 +136,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
             });
           };
 
-          const onSuggestionGroupChange = (groupId: string | null) => {
-            const prev = m.suggestionGroupId;
-            setCacheFields({ suggestionGroupId: groupId });
-            updateMutation
-              .mutateAsync({ id: m.id, suggestionGroupId: groupId })
-              .catch((e) => {
-                setCacheFields({ suggestionGroupId: prev });
-                const message = e instanceof Error ? e.message : String(e);
-                toast.error(`Failed to update suggestion group: ${message}`);
-              });
-          };
-
           return (
             <div
               className="flex items-center gap-3 text-sm"
@@ -167,22 +151,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
                   onChange={(e) => onPriorityChange(e.target.value)}
                 />
               </label>
-
-              <select
-                className="h-8 rounded border bg-background px-2 text-sm"
-                value={m.suggestionGroupId ?? ""}
-                onChange={(e) =>
-                  onSuggestionGroupChange(e.target.value || null)
-                }
-                title="Suggestion Group"
-              >
-                <option value="">No Group</option>
-                {suggestionGroups?.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.title}
-                  </option>
-                ))}
-              </select>
 
               <button
                 type="button"
@@ -265,7 +233,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
         },
       },
     ],
-    [utils.models.list, updateMutation, deleteMutation, suggestionGroups]
+    [utils.models.list, updateMutation, deleteMutation]
   );
 
   const providers = hydrated?.providers;
@@ -291,11 +259,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
           return false;
         });
     return byQuery.filter((m) => {
-      if (
-        suggestionGroupFilter !== "all" &&
-        m.suggestionGroupId !== suggestionGroupFilter
-      )
-        return false;
       if (priorityOnly && (m.priority === null || m.priority === undefined))
         return false;
       if (tierFilter !== "all") {
@@ -309,15 +272,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
       }
       return true;
     });
-  }, [
-    models,
-    providerFilter,
-    textFilter,
-    suggestionGroupFilter,
-    priorityOnly,
-    tierFilter,
-    providers,
-  ]);
+  }, [models, providerFilter, textFilter, priorityOnly, tierFilter, providers]);
 
   return (
     <div>
@@ -380,25 +335,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               {providerTiers.map((tier) => (
                 <option key={tier} value={tier}>
                   {tier}
-                </option>
-              ))}
-            </select>
-            <label className="text-sm text-muted-foreground">
-              Suggestion Group
-            </label>
-            <select
-              className="border rounded-md h-9 px-3 bg-background"
-              value={suggestionGroupFilter}
-              onChange={(e) => {
-                const v = e.target.value;
-                setSuggestionGroupFilter(v);
-                setStorageItem(storageKeys.manageSuggestionGroup, v);
-              }}
-            >
-              <option value="all">All Groups</option>
-              {suggestionGroups?.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.title}
                 </option>
               ))}
             </select>
