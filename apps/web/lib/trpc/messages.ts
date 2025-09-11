@@ -41,6 +41,14 @@ export const messagesRouter = t.router({
       const { chatId, threadId, modelId, messages: inputMessages } = input;
 
       try {
+        console.info("Saving messages:", {
+          chatId,
+          threadId,
+          modelId,
+          messageCount: inputMessages.length,
+          messageIds: inputMessages.map((m) => m.id),
+        });
+
         // Ensure chat exists
         const existingChat = await db.query.chats.findFirst({
           where: and(eq(chats.id, chatId), eq(chats.userId, ctx.user.id)),
@@ -71,7 +79,7 @@ export const messagesRouter = t.router({
           });
         }
 
-        // Insert messages into database
+        // Insert messages into database (use upsert to handle duplicates)
         const messagesToInsert = inputMessages.map((msg) => ({
           id: msg.id,
           threadId,
@@ -84,7 +92,22 @@ export const messagesRouter = t.router({
           createdAt: msg.createdAt || new Date(),
         }));
 
-        await db.insert(messages).values(messagesToInsert);
+        // Use upsert to handle potential duplicates
+        for (const message of messagesToInsert) {
+          await db
+            .insert(messages)
+            .values(message)
+            .onConflictDoUpdate({
+              target: messages.id,
+              set: {
+                content: message.content,
+                attachments: message.attachments,
+                metadata: message.metadata,
+                status: message.status,
+                updatedAt: new Date(),
+              },
+            });
+        }
 
         return { success: true, count: messagesToInsert.length };
       } catch (error) {
