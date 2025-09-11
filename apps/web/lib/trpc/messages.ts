@@ -41,14 +41,6 @@ export const messagesRouter = t.router({
       const { chatId, threadId, modelId, messages: inputMessages } = input;
 
       try {
-        console.info("Saving messages:", {
-          chatId,
-          threadId,
-          modelId,
-          messageCount: inputMessages.length,
-          messageIds: inputMessages.map((m) => m.id),
-        });
-
         // Ensure chat exists
         const existingChat = await db.query.chats.findFirst({
           where: and(eq(chats.id, chatId), eq(chats.userId, ctx.user.id)),

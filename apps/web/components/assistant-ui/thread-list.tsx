@@ -81,11 +81,7 @@ const ThreadListItems: FC = () => {
 
       // Load the chat data imperatively
       const result = await loadChatById(chatId);
-      if (result.success) {
-        console.info(
-          `Successfully loaded chat ${chatId} with ${result.threadsLoaded} threads`
-        );
-      } else {
+      if (!result.success) {
         console.error(`Failed to load chat ${chatId}:`, result.error);
       }
     } finally {

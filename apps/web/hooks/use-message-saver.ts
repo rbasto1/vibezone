@@ -4,6 +4,7 @@ import type { ThreadMessage } from "@assistant-ui/react";
 import { useThread } from "@assistant-ui/react";
 import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
+import { usePanelsConfigValue } from "./use-panels";
 
 interface UseMessageSaverOptions {
   panelId: string;
@@ -16,6 +17,7 @@ export const useMessageSaver = ({
 }: UseMessageSaverOptions) => {
   const currentChat = useAtomValue(currentChatAtom);
   const resetSignal = useAtomValue(resetMessageSaversAtom);
+  const panelConfigs = usePanelsConfigValue();
   const thread = useThread();
   const saveMessagesMutation = trpc.messages.saveMessages.useMutation();
   const savedMessageIds = useRef(new Set<string>());
@@ -25,7 +27,16 @@ export const useMessageSaver = ({
   useEffect(() => {
     savedMessageIds.current.clear();
     lastMessageCount.current = 0;
-  }, [currentChat.id, resetSignal]);
+
+    // If this panel was loaded from database, mark initial messages as already saved
+    const panelConfig = panelConfigs.find((p) => p.id === panelId);
+    if (panelConfig?.initialMessages) {
+      panelConfig.initialMessages.forEach((msg) => {
+        savedMessageIds.current.add(msg.id);
+      });
+      lastMessageCount.current = panelConfig.initialMessages.length;
+    }
+  }, [currentChat.id, resetSignal, panelId, panelConfigs]);
 
   // Watch for new messages and status changes
   useEffect(() => {
@@ -50,9 +61,6 @@ export const useMessageSaver = ({
       ) {
         // If message is now complete and wasn't saved before, save it
         if (msg.status.type !== "running") {
-          console.info(
-            `Assistant message ${msg.id} is now complete, saving it`
-          );
           messagesToSave.push(msg);
         }
       }
@@ -66,11 +74,8 @@ export const useMessageSaver = ({
       }
 
       // Don't save assistant messages that are still running/in_progress
-      if (msg.role === "assistant" && msg.status) {
-        if (msg.status.type === "running") {
-          console.info(`Skipping running assistant message ${msg.id}`);
-          return false;
-        }
+      if (msg.role === "assistant" && msg.status.type === "running") {
+        return false;
       }
 
       return true;

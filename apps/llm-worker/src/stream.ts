@@ -8,7 +8,6 @@ export async function handleProviderStream(
   headers: Headers
 ): Promise<Response> {
   const rawBody = await request.json().catch((error) => new Error(error));
-  console.log("rawbody:", rawBody);
   if (rawBody instanceof Error) {
     return Response.json(
       { error: `Body is invalid json: ${rawBody.message}` },

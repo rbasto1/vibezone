@@ -78,12 +78,6 @@ export const useChatActions = () => {
 
 // Helper function to convert database messages to UIMessage format
 const convertToUIMessage = (msg: Message): UIMessage => {
-  console.info(`Converting message ${msg.id} to UIMessage:`, {
-    role: msg.role,
-    content: msg.content,
-    status: msg.status,
-  });
-
   // Convert content parts to UIMessage parts
   const parts = Array.isArray(msg.content)
     ? msg.content.map((part) => {
