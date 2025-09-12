@@ -3,6 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { QueryAlert } from "@/components/ui/query-alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
@@ -285,45 +292,57 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               }}
             />
             <label className="text-sm text-muted-foreground">Provider</label>
-            <select
-              className="border rounded-md h-9 px-3 bg-background"
+            <Select
               value={providerFilter}
-              onChange={(e) => {
-                const v = e.target.value;
+              onValueChange={(v) => {
                 setProviderFilter(v);
                 setStorageItem(storageKeys.manageProvider, v);
               }}
             >
-              <option value="all">All</option>
-              {providerTiers.map((tier) => (
-                <optgroup key={tier} label={tier}>
-                  {providers
-                    ?.filter((p) => p.tier === tier)
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({providerCounts[p.id] ?? 0})
-                      </option>
-                    ))}
-                </optgroup>
-              ))}
-            </select>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select provider" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                {providerTiers.map((tier) => (
+                  <div key={tier}>
+                    <div className="px-2 py-1.5 text-xs font-medium text-green-500">
+                      {tier}
+                    </div>
+                    {providers
+                      ?.filter((p) => p.tier === tier)
+                      .map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name}
+                          <span className="text-xs text-muted-foreground">
+                            {providerCounts[p.id]}
+                          </span>
+                        </SelectItem>
+                      ))}
+                  </div>
+                ))}
+              </SelectContent>
+            </Select>
             <label className="text-sm text-muted-foreground">Tier</label>
-            <select
-              className="border rounded-md h-9 px-3 bg-background"
+            <Select
               value={tierFilter}
-              onChange={(e) => {
-                const v = e.target.value;
+              onValueChange={(v) => {
                 setTierFilter(v);
                 setStorageItem(storageKeys.manageTier, v);
               }}
             >
-              <option value="all">All Tiers</option>
-              {providerTiers.map((tier) => (
-                <option key={tier} value={tier}>
-                  {tier}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Select tier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tiers</SelectItem>
+                {providerTiers.map((tier) => (
+                  <SelectItem key={tier} value={tier}>
+                    {tier}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="ml-2 flex items-center gap-2">
               <button
                 type="button"

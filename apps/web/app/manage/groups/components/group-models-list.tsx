@@ -2,6 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { trpc } from "@/lib/trpc/client";
 import type {
   ModelsListOutput,
@@ -149,19 +156,22 @@ export function GroupModelsList({
       <div className="space-y-3 mt-4 pt-4 border-t">
         {/* Dropdown for selecting from available models */}
         <div className="flex gap-2">
-          <select
-            className="flex-1 rounded border bg-background px-3 py-2"
+          <Select
             value={newModelId}
-            onChange={(e) => setNewModelId(e.target.value)}
+            onValueChange={(value) => setNewModelId(value)}
             disabled={isEditing}
           >
-            <option value="">Select a model to add...</option>
-            {availableModels.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.id}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="Select a model to add..." />
+            </SelectTrigger>
+            <SelectContent>
+              {availableModels.map((model) => (
+                <SelectItem key={model.id} value={model.id}>
+                  {model.id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             onClick={() => handleAddModel()}
             disabled={!newModelId || addModelMutation.isPending}
