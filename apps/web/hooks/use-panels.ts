@@ -143,3 +143,7 @@ export const useUIStateSetter = () => {
     [setUIState]
   );
 };
+
+export const useUIState = () => {
+  return useAtom(uiStateAtom);
+};
