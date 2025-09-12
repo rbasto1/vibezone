@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Gauge, Hash, ThumbsUp, Trash2, Zap } from "lucide-react";
+import { Gauge, Hash, ThumbsUp, Trash2 } from "lucide-react";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -124,7 +124,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
           };
 
           const onToggle = (
-            key: "isSuggested" | "capabilityFast" | "capabilityEffortControl",
+            key: "isSuggested" | "capabilityEffortControl",
             v: boolean
           ) => {
             const prev = m[key] as boolean | undefined;
@@ -171,20 +171,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               <div className="h-6 w-px bg-border/60" />
 
               {/* Capability toggles (icon-only) */}
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.capabilityFast
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.capabilityFast}
-                title="Capability: Fast"
-                onClick={() => onToggle("capabilityFast", !m.capabilityFast)}
-              >
-                <Zap className="h-4 w-4" />
-              </button>
 
               <button
                 type="button"

@@ -11,11 +11,7 @@ import { asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 export const suggestionGroupsRouter = t.router({
-  list: publicProcedure.query(async () => {
-    return await db.query.suggestionGroups.findMany({
-      orderBy: [asc(suggestionGroups.id)],
-    });
-  }),
+  list: publicProcedure.query(listSuggestionGroups),
 
   update: adminProcedure
     .input(
@@ -146,3 +142,9 @@ export const suggestionGroupsRouter = t.router({
       return { ok: true } as const;
     }),
 });
+
+export async function listSuggestionGroups() {
+  return await db.query.suggestionGroups.findMany({
+    orderBy: [asc(suggestionGroups.id)],
+  });
+}

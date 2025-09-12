@@ -26,3 +26,6 @@ export type ModelsSyncFromOpenRouterOutput =
   RouterOutputs["models"]["syncFromOpenRouter"];
 // providers
 export type ProvidersListOutput = RouterOutputs["providers"]["list"];
+// suggestion groups
+export type SuggestionGroupsListOutput =
+  RouterOutputs["suggestionGroups"]["list"];

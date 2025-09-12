@@ -80,7 +80,6 @@ export const models = pgTable(
     isPremium: boolean("is_premium"),
     isNew: boolean("is_new"),
     isIncluded: boolean("is_included"),
-    capabilityFast: boolean("capability_fast"),
     capabilityEffortControl: boolean("capability_effort_control"),
 
     updatedAt: timestampTzNowUpdated("updated_at"),

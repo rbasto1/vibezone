@@ -18,7 +18,6 @@ import {
   Mountain,
   Wand2,
   Wrench,
-  Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ProviderIcon } from "../ui/providers/provider";
@@ -42,7 +41,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     { id: "specialists" as const, label: "Specialists", Icon: Wand2 },
   ];
   const capabilityOptions = [
-    { id: "capabilityFast" as const, label: "Fast", Icon: Zap },
     { id: "capabilityVision" as const, label: "Can see images", Icon: Eye },
     { id: "capabilityPdf" as const, label: "Can read PDFs", Icon: FileText },
     { id: "capabilityReasoning" as const, label: "Reasoning", Icon: Brain },
@@ -65,7 +63,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     (typeof capabilityOptions)[number]["id"],
     string
   > = {
-    capabilityFast: "text-amber-600 dark:text-amber-400",
     capabilityVision: "text-sky-600 dark:text-sky-400",
     capabilityPdf: "text-emerald-600 dark:text-emerald-400",
     capabilityReasoning: "text-violet-600 dark:text-violet-400",

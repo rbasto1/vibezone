@@ -23,70 +23,10 @@ import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 // Shared server function to list models for SSR and tRPC
-export type GetModelsListReturn = Awaited<ReturnType<typeof getModelsList>>;
-export async function getModelsList() {
-  const result = await db.query.models.findMany({
-    where: and(
-      isNull(models.deletedAt),
-      isNull(providers.deletedAt),
-      eq(models.isChat, true)
-    ),
-    with: {
-      provider: true,
-      supportedParameters: true,
-    },
-    orderBy: [
-      asc(models.providerId),
-      desc(models.createdAt),
-      desc(models.name),
-    ],
-  });
-
-  const uniqueProviders = result
-    .map((item) => item.provider)
-    .reduce((acc, provider) => {
-      if (!acc.some((p) => p.id === provider.id)) {
-        acc.push(provider);
-      }
-      return acc;
-    }, [] as Provider[])
-    .sort((a, b) => {
-      // Sort by order first, then by name as fallback
-      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
-      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
-      if (orderA !== orderB) return orderA - orderB;
-      return a.name.localeCompare(b.name);
-    });
-
-  return {
-    models: result.map((item) => {
-      const modelParams = item.supportedParameters.map(
-        (p) => p.supportedParameterId
-      );
-      const { provider, supportedParameters, ...model } = item;
-      return {
-        ...model,
-        // Calculate capabilities based on supported parameters
-        capabilityReasoning: modelParams.includes("reasoning"),
-        capabilityTools: modelParams.includes("tools"),
-        // Derive capabilities from architecture fields
-        capabilityVision:
-          model.architectureInputModalities?.includes("image") ?? false,
-        capabilityPdf:
-          model.architectureInputModalities?.includes("file") ?? false,
-        capabilityImageGeneration:
-          model.architectureOutputModalities?.includes("image") ?? false,
-        provider: {
-          name: provider.name,
-        },
-      };
-    }),
-    providers: uniqueProviders,
-  };
-}
+export type GetModelsListReturn = Awaited<ReturnType<typeof listModels>>;
 
 export const modelsRouter = t.router({
-  list: publicProcedure.query(getModelsList),
+  list: publicProcedure.query(listModels),
 
   update: adminProcedure
     .input(
@@ -269,3 +209,64 @@ export const modelsRouter = t.router({
     };
   }),
 });
+
+export async function listModels() {
+  const result = await db.query.models.findMany({
+    where: and(
+      isNull(models.deletedAt),
+      isNull(providers.deletedAt),
+      eq(models.isChat, true)
+    ),
+    with: {
+      provider: true,
+      supportedParameters: true,
+    },
+    orderBy: [
+      asc(models.providerId),
+      desc(models.createdAt),
+      desc(models.name),
+    ],
+  });
+
+  const uniqueProviders = result
+    .map((item) => item.provider)
+    .reduce((acc, provider) => {
+      if (!acc.some((p) => p.id === provider.id)) {
+        acc.push(provider);
+      }
+      return acc;
+    }, [] as Provider[])
+    .sort((a, b) => {
+      // Sort by order first, then by name as fallback
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.name.localeCompare(b.name);
+    });
+
+  return {
+    models: result.map((item) => {
+      const modelParams = item.supportedParameters.map(
+        (p) => p.supportedParameterId
+      );
+      const { provider, supportedParameters, ...model } = item;
+      return {
+        ...model,
+        // Calculate capabilities based on supported parameters
+        capabilityReasoning: modelParams.includes("reasoning"),
+        capabilityTools: modelParams.includes("tools"),
+        // Derive capabilities from architecture fields
+        capabilityVision:
+          model.architectureInputModalities?.includes("image") ?? false,
+        capabilityPdf:
+          model.architectureInputModalities?.includes("file") ?? false,
+        capabilityImageGeneration:
+          model.architectureOutputModalities?.includes("image") ?? false,
+        provider: {
+          name: provider.name,
+        },
+      };
+    }),
+    providers: uniqueProviders,
+  };
+}

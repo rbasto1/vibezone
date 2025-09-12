@@ -16,7 +16,7 @@ import { cn } from "@/components/ui/utils";
 import { auth } from "@/lib/auth";
 import { MAX_PANELS } from "@/lib/constants";
 import { generatePanelId } from "@/lib/id";
-import { getModelsList } from "@/lib/trpc/models";
+import { listModels } from "@/lib/trpc/models";
 import type { PanelConfig } from "@/store/panels";
 import { headers } from "next/headers";
 import type { PropsWithChildren } from "react";
@@ -50,7 +50,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const userId = session?.user?.id;
 
   // Fetch models once at the root for Jotai hydration across the app
-  const modelsList = await getModelsList();
+  const modelsList = await listModels();
 
   // Attempt to load user preferences for last opened models
   const modelList =

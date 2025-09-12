@@ -5,23 +5,43 @@ import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { QueryAlert } from "@/components/ui/query-alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
+import type {
+  ModelsListOutput,
+  SuggestionGroupsListOutput,
+} from "@/lib/trpc/server/server";
 import { ArrowDown, ArrowUp, Edit, Plus, Save, Trash2, X } from "lucide-react";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-const GroupsPageClient: NextPage = () => {
+interface GroupsPageClientProps {
+  initialGroups: SuggestionGroupsListOutput;
+  initialModels: ModelsListOutput;
+}
+
+const GroupsPageClient: NextPage<GroupsPageClientProps> = ({
+  initialGroups,
+  initialModels,
+}) => {
   const {
     data: suggestionGroups,
     error: groupsError,
     isLoading: groupsLoading,
-  } = trpc.suggestionGroups.list.useQuery();
+  } = trpc.suggestionGroups.list.useQuery(undefined, {
+    initialData: initialGroups,
+    staleTime: Infinity,
+    placeholderData: (previousData) => previousData,
+  });
 
   const {
     data: modelsData,
     error: modelsError,
     isLoading: modelsLoading,
-  } = trpc.models.list.useQuery();
+  } = trpc.models.list.useQuery(undefined, {
+    initialData: initialModels,
+    staleTime: Infinity,
+    placeholderData: (previousData) => previousData,
+  });
 
   const utils = trpc.useUtils();
   const addModelMutation = trpc.suggestionGroups.addModel.useMutation();
