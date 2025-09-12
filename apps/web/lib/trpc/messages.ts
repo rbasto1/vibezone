@@ -3,7 +3,7 @@ import "server-only";
 import { db } from "@/db";
 import { chats, messages, threads } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { authenticatedProcedure, t } from "./server/initialize";
 
@@ -42,19 +42,24 @@ export const messagesRouter = t.router({
 
       try {
         // Ensure chat exists
-        const existingChat = await db.query.chats.findFirst({
-          where: and(eq(chats.id, chatId), eq(chats.userId, ctx.user.id)),
-        });
-
-        if (!existingChat) {
-          // Create chat if it doesn't exist
-          await db.insert(chats).values({
-            id: chatId,
-            userId: ctx.user.id,
-            title: "New Chat",
-            lastMessageAt: new Date(),
-          });
-        }
+        const chatPromise = db.query.chats
+          .findFirst({
+            where: and(eq(chats.id, chatId), eq(chats.userId, ctx.user.id)),
+          })
+          .then(
+            (c) =>
+              c ??
+              db
+                .insert(chats)
+                .values({
+                  id: chatId,
+                  userId: ctx.user.id,
+                  title: "New Chat",
+                  lastMessageAt: new Date(),
+                })
+                .returning()
+                .then((c) => c[0])
+          );
 
         // Ensure thread exists
         const existingThread = await db.query.threads.findFirst({
@@ -101,109 +106,20 @@ export const messagesRouter = t.router({
             });
         }
 
-        return { success: true, count: messagesToInsert.length };
+        const chat = await chatPromise;
+        if (!chat) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create chat",
+          });
+        }
+
+        return { success: true, count: messagesToInsert.length, chat } as const;
       } catch (error) {
         console.error("Failed to save messages:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to save messages",
-        });
-      }
-    }),
-
-  getChatWithThreads: authenticatedProcedure
-    .input(
-      z.object({
-        chatId: z.string(),
-      })
-    )
-    .query(async ({ input, ctx }) => {
-      const { chatId } = input;
-
-      try {
-        // Get the chat
-        const chatRecord = await db.query.chats.findFirst({
-          where: and(
-            eq(chats.id, chatId),
-            eq(chats.userId, ctx.user.id),
-            isNull(chats.deletedAt),
-            eq(chats.isArchived, false)
-          ),
-          with: {
-            threads: {
-              with: {
-                messages: true,
-              },
-            },
-          },
-        });
-
-        if (!chatRecord) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Chat not found",
-          });
-        }
-
-        return chatRecord;
-      } catch (error) {
-        console.error("Failed to fetch chat with threads:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch chat data",
-        });
-      }
-    }),
-
-  listChats: authenticatedProcedure.query(async ({ ctx }) => {
-    try {
-      const userChats = await db.query.chats.findMany({
-        where: and(
-          eq(chats.userId, ctx.user.id),
-          isNull(chats.deletedAt),
-          eq(chats.isArchived, false)
-        ),
-        orderBy: (chat, { desc }) => [desc(chat.lastMessageAt)],
-      });
-
-      return userChats;
-    } catch (error) {
-      console.error("Failed to fetch chats:", error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch chats",
-      });
-    }
-  }),
-
-  archiveChat: authenticatedProcedure
-    .input(
-      z.object({
-        chatId: z.string(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      const { chatId } = input;
-
-      try {
-        // Verify chat belongs to user and archive it
-        const result = await db
-          .update(chats)
-          .set({
-            isArchived: true,
-            updatedAt: new Date(),
-          })
-          .where(and(eq(chats.id, chatId), eq(chats.userId, ctx.user.id)));
-        if (!result) {
-          return { success: false, message: "Access denied" };
-        }
-
-        return { success: true };
-      } catch (error) {
-        console.error("Failed to archive chat:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to archive chat",
         });
       }
     }),

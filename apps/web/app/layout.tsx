@@ -49,14 +49,15 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
 
-  // Fetch models once at the root for Jotai hydration across the app
-  const modelsList = await listModels();
+  // Load all the state we will pass to the client side store
+  const [modelsList, userModelList] = await Promise.all([
+    listModels(),
+    getUserPreferredModels(userId).then(
+      (preferredModels) => preferredModels ?? getDefaultModels()
+    ),
+  ]);
 
-  // Attempt to load user preferences for last opened models
-  const modelList =
-    (await getUserPreferredModels(userId)) ?? (await getDefaultModels());
-
-  const initialPanels = modelList.map(
+  const initialPanels = userModelList.map(
     (r): PanelConfig => ({
       id: generatePanelId(),
       provider: r.providerId,

@@ -29,7 +29,7 @@ export const useChatActions = () => {
       }
 
       try {
-        const chatData = await utils.client.messages.getChatWithThreads.query({
+        const chatData = await utils.client.chats.getChatWithThreads.query({
           chatId,
         });
         const threads = chatData.threads;
@@ -64,7 +64,7 @@ export const useChatActions = () => {
       }
     },
     [
-      utils.client.messages.getChatWithThreads,
+      utils.client.chats.getChatWithThreads,
       getRuntimes,
       setPanelsConfig,
       setPanelsState,

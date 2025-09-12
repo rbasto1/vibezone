@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
+import { chatsRouter } from "../chats";
 import { messagesRouter } from "../messages";
 import { modelsRouter } from "../models";
 import { providersRouter } from "../providers";
@@ -9,6 +10,7 @@ import { usersRouter } from "../users";
 import { t } from "./initialize";
 
 export const appRouter = t.router({
+  chats: chatsRouter,
   messages: messagesRouter,
   models: modelsRouter,
   providers: providersRouter,

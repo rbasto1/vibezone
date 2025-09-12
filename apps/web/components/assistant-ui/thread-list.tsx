@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import { usePanelsStateSetter, useUIStateSetter } from "@/hooks/use-panels";
 import { useRuntimes } from "@/hooks/use-response-registration";
+import { useSession } from "@/hooks/use-session";
 import { trpc } from "@/lib/trpc/client";
 import { currentChatAtom, newChatAtom } from "@/store/chat";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -58,12 +59,16 @@ const ThreadListItems: FC = () => {
   const { loadChatById } = useChatActions();
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
 
-  const { data: chats, isLoading } = trpc.messages.listChats.useQuery();
+  const session = useSession();
+  const { data: chats, isLoading } = trpc.chats.listChats.useQuery(undefined, {
+    staleTime: Infinity,
+    enabled: !!session?.user,
+  });
   const utils = trpc.useUtils();
-  const archiveChatMutation = trpc.messages.archiveChat.useMutation({
+  const archiveChatMutation = trpc.chats.archiveChat.useMutation({
     onSuccess: () => {
       // Refetch the chat list after archiving
-      utils.messages.listChats.invalidate();
+      utils.chats.listChats.invalidate();
     },
   });
 
