@@ -8,7 +8,6 @@ import {
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { cn } from "@/components/ui/utils";
 import { useModelsValue } from "@/hooks/use-models";
-import { trpc } from "@/lib/trpc/client";
 import {
   Brain,
   Crown,
@@ -32,7 +31,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   currentModelId,
 }) => {
   const { models, providers } = useModelsValue();
-  const { data: suggestionGroups } = trpc.suggestionGroups.list.useQuery();
+  const { groups: suggestionGroups } = useModelsValue();
 
   // Filters: provider tiers and model flags
   const tierOptions = [
@@ -129,24 +128,14 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   const providersByTier = useMemo(() => {
     if (selectedSuggestionGroup) {
       // When a suggestion group is selected, get providers for models in that group
-      const group = suggestionGroups?.find(
-        (g) => g.id === selectedSuggestionGroup
+      const groupModels = models.filter((m) =>
+        m.groups?.has(selectedSuggestionGroup)
       );
-      if (!group) return [];
-
-      const groupModelIds = new Set(group.models);
-      const groupModels = models.filter((m) => groupModelIds.has(m.id));
       const providerIds = new Set(groupModels.map((m) => m.providerId));
       return providers.filter((p) => providerIds.has(p.id));
     }
     return selectedTier ? providers.filter((p) => p.tier === selectedTier) : [];
-  }, [
-    providers,
-    selectedTier,
-    selectedSuggestionGroup,
-    suggestionGroups,
-    models,
-  ]);
+  }, [providers, selectedTier, selectedSuggestionGroup, models]);
 
   const modelsByProvider = useMemo(() => {
     // Precompute per provider
@@ -158,13 +147,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
 
       // If a suggestion group is selected, filter to only models in that group
       if (selectedSuggestionGroup) {
-        const group = suggestionGroups?.find(
-          (g) => g.id === selectedSuggestionGroup
-        );
-        if (group) {
-          const groupModelIds = new Set(group.models);
-          list = list.filter((m) => groupModelIds.has(m.id));
-        }
+        list = list.filter((m) => m.groups?.has(selectedSuggestionGroup));
       }
 
       const filtered = hasCapabilityFilters
@@ -186,13 +169,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       byProvider.set(p.id, filtered);
     }
     return byProvider;
-  }, [
-    models,
-    providersByTier,
-    selectedCapabilities,
-    selectedSuggestionGroup,
-    suggestionGroups,
-  ]);
+  }, [models, providersByTier, selectedCapabilities, selectedSuggestionGroup]);
 
   // Track which providers have expanded "Other models"
   const [expandedProviders, setExpandedProviders] = useState<Set<string>>(

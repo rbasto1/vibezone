@@ -5,4 +5,5 @@ import { atom } from "jotai";
 export const modelsAtom = atom<GetModelsListReturn>({
   providers: [],
   models: [],
+  groups: [],
 });

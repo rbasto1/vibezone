@@ -1,5 +1,5 @@
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
-import { trpc } from "@/lib/trpc/client";
+import { useModelsValue } from "@/hooks/use-models";
 import { motion } from "framer-motion";
 import type { FC } from "react";
 
@@ -10,25 +10,17 @@ export interface ThreadWelcomeSuggestionsProps {
 export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
   onSelect,
 }) => {
-  const { data: suggestionGroups, isLoading } =
-    trpc.suggestionGroups.list.useQuery();
+  const { groups } = useModelsValue();
 
-  if (isLoading || !suggestionGroups) {
-    return <div>Loading suggestions...</div>;
-  }
-
-  // Filter to only show promoted groups
-  const promotedGroups = suggestionGroups.filter((group) => group.promoted);
-
-  const items = promotedGroups.map((group) => {
-    return {
+  const items = groups
+    .filter((group) => group.promoted)
+    .map((group) => ({
       key: group.id,
       icon: <DynamicIcon iconName={group.icon} size={32} />,
       title: group.title,
       label: group.label,
       models: group.models,
-    };
-  });
+    }));
   return (
     <div className="flex w-full gap-2">
       {items.map((s, i) => (
@@ -38,7 +30,6 @@ export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
           exit={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.05 * i }}
           key={`suggested-action-${s.title}-${i}`}
-          // aui-thread-welcome-suggestion-display
           className="flex-1"
         >
           <button
