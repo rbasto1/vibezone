@@ -68,6 +68,13 @@ const ThreadListItems: FC = () => {
   const utils = trpc.useUtils();
   const archiveChatMutation = trpc.chats.archiveChat.useMutation({
     onSuccess: () => {
+      // Optimistically update the chat list
+      utils.chats.listChats.setData(undefined, (prev) => {
+        return (
+          prev?.filter((c) => c.id !== archiveChatMutation.variables?.chatId) ??
+          []
+        );
+      });
       // Refetch the chat list after archiving
       utils.chats.listChats.invalidate();
     },
@@ -131,7 +138,10 @@ const ThreadListItems: FC = () => {
           isLoading={loadingChatId === chat.id}
           onSelect={handleSelectChat}
           onArchive={handleArchiveChat}
-          isArchiving={archiveChatMutation.isPending && archiveChatMutation.variables?.chatId === chat.id}
+          isArchiving={
+            archiveChatMutation.isPending &&
+            archiveChatMutation.variables?.chatId === chat.id
+          }
         />
       ))}
     </div>
