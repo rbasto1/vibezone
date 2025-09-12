@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
+import { cn } from "@/components/ui/utils";
 import type { SuggestionGroupsListOutput } from "@/lib/trpc/server/server";
 import { Plus } from "lucide-react";
 
@@ -40,13 +41,14 @@ export function GroupSelectionList({
           {suggestionGroups?.map((group) => (
             <div
               key={group.id}
-              className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
-                selectedGroupId === group.id
-                  ? "border-primary bg-primary/5"
-                  : isEditing
-                    ? "cursor-not-allowed opacity-50"
-                    : "cursor-pointer hover:bg-accent/50"
-              }`}
+              className={cn(
+                "flex items-start gap-3 p-3 rounded-lg border transition-colors",
+                selectedGroupId === group.id && "border-primary bg-primary/5",
+                isEditing && "cursor-not-allowed opacity-50",
+                !isEditing &&
+                  selectedGroupId !== group.id &&
+                  "cursor-pointer hover:bg-accent/50"
+              )}
               onClick={() => {
                 if (!isEditing) {
                   onSelectGroup(group.id);

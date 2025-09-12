@@ -1,7 +1,8 @@
 "use client";
 
+import { cn } from "@/components/ui/utils";
 import type { Model, Provider } from "@/db";
-import { ArrowDown, ArrowUp, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronsDown, ChevronsUp, X } from "lucide-react";
 
 interface GroupModelsListItemProps {
   model: Pick<Model, "id" | "name"> & {
@@ -9,7 +10,7 @@ interface GroupModelsListItemProps {
   };
   index: number;
   totalModels: number;
-  onMoveModel?: (modelId: string, direction: "up" | "down") => void;
+  onMoveModel?: (modelId: string, targetIndex: number) => void;
   onRemoveModel?: (modelId: string) => void;
 }
 
@@ -23,27 +24,49 @@ export function GroupModelsListItem({
   const isEditing = !onRemoveModel;
   return (
     <div
-      className={`flex items-center gap-3 p-3 rounded-lg border bg-background ${
-        isEditing ? "opacity-50" : ""
-      }`}
+      className={cn(
+        "flex items-center gap-3 p-3 rounded-lg border bg-background",
+        isEditing && "opacity-50",
+        index < 3 && "border-green-700"
+      )}
     >
-      <div className="flex flex-col gap-1">
-        <button
-          onClick={() => onMoveModel?.(model.id, "up")}
-          disabled={index === 0 || isEditing}
-          className="p-1 rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Move up"
-        >
-          <ArrowUp className="h-3 w-3" />
-        </button>
-        <button
-          onClick={() => onMoveModel?.(model.id, "down")}
-          disabled={index === totalModels - 1 || isEditing}
-          className="p-1 rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Move down"
-        >
-          <ArrowDown className="h-3 w-3" />
-        </button>
+      <div className="flex gap-1">
+        <div className="flex flex-col gap-1">
+          <button
+            onClick={() => onMoveModel?.(model.id, index - 1)}
+            disabled={index === 0 || isEditing}
+            className="p-1 rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Move up"
+          >
+            <ArrowUp className="h-3 w-3" />
+          </button>
+          <button
+            onClick={() => onMoveModel?.(model.id, index + 1)}
+            disabled={index === totalModels - 1 || isEditing}
+            className="p-1 rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Move down"
+          >
+            <ArrowDown className="h-3 w-3" />
+          </button>
+        </div>
+        <div className="flex flex-col gap-1">
+          <button
+            onClick={() => onMoveModel?.(model.id, 0)}
+            disabled={index === 0 || isEditing}
+            className="p-1 rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Move to top"
+          >
+            <ChevronsUp className="h-3 w-3" />
+          </button>
+          <button
+            onClick={() => onMoveModel?.(model.id, totalModels - 1)}
+            disabled={index === totalModels - 1 || isEditing}
+            className="p-1 rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Move to bottom"
+          >
+            <ChevronsDown className="h-3 w-3" />
+          </button>
+        </div>
       </div>
       <div className="flex-1">
         <div className="font-medium">{model.id}</div>

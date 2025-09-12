@@ -17,6 +17,7 @@ export const suggestionGroupsRouter = t.router({
     .input(
       z.object({
         id: z.string().nonempty(),
+        newId: z.string().optional(),
         title: z.string().optional(),
         label: z.string().optional(),
         icon: z.string().optional(),
@@ -25,14 +26,38 @@ export const suggestionGroupsRouter = t.router({
       })
     )
     .mutation(async ({ input }) => {
-      const { id, ...rest } = input;
-      await db
-        .update(suggestionGroups)
-        .set({
-          ...rest,
-          updatedAt: sql`current_timestamp`,
-        })
-        .where(eq(suggestionGroups.id, id));
+      const { id, newId, ...rest } = input;
+
+      if (newId && newId !== id) {
+        // Check if the new ID already exists
+        const existingGroup = await db.query.suggestionGroups.findFirst({
+          where: eq(suggestionGroups.id, newId),
+        });
+
+        if (existingGroup) {
+          throw new Error("A group with this ID already exists");
+        }
+
+        // Update with new ID
+        await db
+          .update(suggestionGroups)
+          .set({
+            id: newId,
+            ...rest,
+            updatedAt: sql`current_timestamp`,
+          })
+          .where(eq(suggestionGroups.id, id));
+      } else {
+        // Regular update without ID change
+        await db
+          .update(suggestionGroups)
+          .set({
+            ...rest,
+            updatedAt: sql`current_timestamp`,
+          })
+          .where(eq(suggestionGroups.id, id));
+      }
+
       return { ok: true } as const;
     }),
 

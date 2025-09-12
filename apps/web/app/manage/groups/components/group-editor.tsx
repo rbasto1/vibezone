@@ -7,23 +7,24 @@ import { Edit, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-interface ModelEditorProps {
+interface GroupEditorProps {
   selectedGroup: SuggestionGroupsListOutput[number];
   onIsEditingChange: (isEditing: boolean) => void;
   onGroupDeleted: (groupId: string) => void;
 }
 
-export function ModelEditor({
+export function GroupEditor({
   selectedGroup,
   onIsEditingChange,
   onGroupDeleted,
-}: ModelEditorProps) {
+}: GroupEditorProps) {
   const utils = trpc.useUtils();
   const updateGroupMutation = trpc.suggestionGroups.update.useMutation();
   const deleteGroupMutation = trpc.suggestionGroups.delete.useMutation();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
+    id: "",
     title: "",
     label: "",
     icon: "",
@@ -31,6 +32,7 @@ export function ModelEditor({
 
   const handleStartEdit = () => {
     setEditForm({
+      id: selectedGroup.id,
       title: selectedGroup.title,
       label: selectedGroup.label,
       icon: selectedGroup.icon,
@@ -41,7 +43,7 @@ export function ModelEditor({
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setEditForm({ title: "", label: "", icon: "" });
+    setEditForm({ id: "", title: "", label: "", icon: "" });
     onIsEditingChange(false);
   };
 
@@ -49,13 +51,14 @@ export function ModelEditor({
     try {
       await updateGroupMutation.mutateAsync({
         id: selectedGroup.id,
+        newId: editForm.id !== selectedGroup.id ? editForm.id : undefined,
         title: editForm.title,
         label: editForm.label,
         icon: editForm.icon,
       });
       await utils.suggestionGroups.list.invalidate();
       setIsEditing(false);
-      setEditForm({ title: "", label: "", icon: "" });
+      setEditForm({ id: "", title: "", label: "", icon: "" });
       onIsEditingChange(false);
       toast.success("Group updated");
     } catch (error) {
@@ -156,6 +159,13 @@ export function ModelEditor({
       </div>
       {isEditing ? (
         <div className="space-y-3 mb-4">
+          <input
+            type="text"
+            value={editForm.id}
+            onChange={(e) => setEditForm({ ...editForm, id: e.target.value })}
+            className="w-full bg-background border rounded px-3 py-2"
+            placeholder="Group ID"
+          />
           <input
             type="text"
             value={editForm.label}

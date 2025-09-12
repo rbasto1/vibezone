@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc/client";
 import type {
   ModelsListOutput,
@@ -29,6 +30,7 @@ export function GroupModelsList({
     trpc.suggestionGroups.reorderModels.useMutation();
 
   const [newModelId, setNewModelId] = useState("");
+  const [pastedModelId, setPastedModelId] = useState("");
 
   const groupModels = selectedGroup.models.map(
     (modelId) =>
@@ -45,20 +47,34 @@ export function GroupModelsList({
     .filter((model) => !selectedGroup.models.includes(model.id))
     .toSorted((a, b) => a.id.localeCompare(b.id));
 
-  const handleAddModel = async () => {
-    if (!newModelId) return;
+  const handleAddModel = async (modelId?: string) => {
+    const targetModelId = modelId || newModelId;
+    if (!targetModelId) return;
 
     try {
       await addModelMutation.mutateAsync({
         groupId: selectedGroup.id,
-        modelId: newModelId,
+        modelId: targetModelId,
       });
       await utils.suggestionGroups.list.invalidate();
       setNewModelId("");
+      setPastedModelId("");
       toast.success("Model added to group");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       toast.error(`Failed to add model: ${message}`);
+    }
+  };
+
+  const handlePasteModelId = async () => {
+    if (!pastedModelId.trim()) return;
+    await handleAddModel(pastedModelId.trim());
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handlePasteModelId();
     }
   };
 
@@ -76,19 +92,22 @@ export function GroupModelsList({
     }
   };
 
-  const handleMoveModel = async (modelId: string, direction: "up" | "down") => {
+  const handleMoveModel = async (modelId: string, targetIndex: number) => {
     const currentIndex = selectedGroup.models.indexOf(modelId);
     if (currentIndex === -1) return;
 
-    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= selectedGroup.models.length) return;
+    // Clamp target index to valid range
+    const clampedTargetIndex = Math.max(
+      0,
+      Math.min(targetIndex, selectedGroup.models.length - 1)
+    );
+
+    // If already at target position, no need to move
+    if (currentIndex === clampedTargetIndex) return;
 
     const newModels = [...selectedGroup.models];
-    if (!newModels[currentIndex] || !newModels[newIndex]) return;
-    [newModels[currentIndex], newModels[newIndex]] = [
-      newModels[newIndex]!,
-      newModels[currentIndex]!,
-    ];
+    const [movedModel] = newModels.splice(currentIndex, 1);
+    newModels.splice(clampedTargetIndex, 0, movedModel!);
 
     try {
       await reorderModelsMutation.mutateAsync({
@@ -127,27 +146,49 @@ export function GroupModelsList({
       )}
 
       {/* Add Model */}
-      <div className="flex gap-2 mt-4 pt-4 border-t">
-        <select
-          className="flex-1 rounded border bg-background px-3 py-2"
-          value={newModelId}
-          onChange={(e) => setNewModelId(e.target.value)}
-          disabled={isEditing}
-        >
-          <option value="">Select a model to add...</option>
-          {availableModels.map((model) => (
-            <option key={model.id} value={model.id}>
-              {model.id}
-            </option>
-          ))}
-        </select>
-        <Button
-          onClick={handleAddModel}
-          disabled={!newModelId || addModelMutation.isPending}
-          size="sm"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+      <div className="space-y-3 mt-4 pt-4 border-t">
+        {/* Dropdown for selecting from available models */}
+        <div className="flex gap-2">
+          <select
+            className="flex-1 rounded border bg-background px-3 py-2"
+            value={newModelId}
+            onChange={(e) => setNewModelId(e.target.value)}
+            disabled={isEditing}
+          >
+            <option value="">Select a model to add...</option>
+            {availableModels.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.id}
+              </option>
+            ))}
+          </select>
+          <Button
+            onClick={() => handleAddModel()}
+            disabled={!newModelId || addModelMutation.isPending}
+            size="sm"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Input field for pasting model IDs */}
+        <div className="flex gap-2">
+          <Input
+            placeholder="Or paste a model ID here..."
+            value={pastedModelId}
+            onChange={(e) => setPastedModelId(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isEditing || addModelMutation.isPending}
+            className="flex-1"
+          />
+          <Button
+            onClick={handlePasteModelId}
+            disabled={!pastedModelId.trim() || addModelMutation.isPending}
+            size="sm"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

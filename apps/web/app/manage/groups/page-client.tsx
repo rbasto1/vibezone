@@ -10,7 +10,7 @@ import type {
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { GroupModelsList, GroupSelectionList, ModelEditor } from "./components";
+import { GroupEditor, GroupModelsList, GroupSelectionList } from "./components";
 
 interface GroupsPageClientProps {
   initialGroups: SuggestionGroupsListOutput;
@@ -109,7 +109,7 @@ const GroupsPageClient: NextPage<GroupsPageClientProps> = ({
         <div className="lg:col-span-2">
           {selectedGroup ? (
             <div className="space-y-6">
-              <ModelEditor
+              <GroupEditor
                 selectedGroup={selectedGroup}
                 onIsEditingChange={setIsEditing}
                 onGroupDeleted={handleGroupDeleted}
