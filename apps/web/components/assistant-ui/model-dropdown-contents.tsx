@@ -40,18 +40,18 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     { id: "specialists" as const, label: "Specialists", Icon: Wand2 },
   ];
   const capabilityOptions = [
-    { id: "capabilityVision" as const, label: "Can see images", Icon: Eye },
-    { id: "capabilityPdf" as const, label: "Can read PDFs", Icon: FileText },
-    { id: "capabilityReasoning" as const, label: "Reasoning", Icon: Brain },
+    { id: "capVision" as const, label: "Can see images", Icon: Eye },
+    { id: "capPdf" as const, label: "Can read PDFs", Icon: FileText },
+    { id: "capReason" as const, label: "Reasoning", Icon: Brain },
     {
-      id: "capabilityImageGeneration" as const,
+      id: "capImageGen" as const,
       label: "Can generate images",
       Icon: ImageIcon,
     },
-    { id: "capabilityTools" as const, label: "Tools Use", Icon: Wrench },
+    { id: "capTools" as const, label: "Tools Use", Icon: Wrench },
     // TODO: implement effort control
     // {
-    //   id: "capabilityEffortControl" as const,
+    //   id: "capEffortControl" as const,
     //   label: "Effort Control",
     //   Icon: Gauge,
     // },
@@ -62,12 +62,12 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     (typeof capabilityOptions)[number]["id"],
     string
   > = {
-    capabilityVision: "text-sky-600 dark:text-sky-400",
-    capabilityPdf: "text-emerald-600 dark:text-emerald-400",
-    capabilityReasoning: "text-violet-600 dark:text-violet-400",
-    capabilityImageGeneration: "text-pink-600 dark:text-pink-400",
-    capabilityTools: "text-zinc-600 dark:text-zinc-400",
-    // capabilityEffortControl: "text-indigo-600 dark:text-indigo-400",
+    capVision: "text-sky-600 dark:text-sky-400",
+    capPdf: "text-emerald-600 dark:text-emerald-400",
+    capReason: "text-violet-600 dark:text-violet-400",
+    capImageGen: "text-pink-600 dark:text-pink-400",
+    capTools: "text-zinc-600 dark:text-zinc-400",
+    // capEffortControl: "text-indigo-600 dark:text-indigo-400",
   };
 
   // Icon color per tier

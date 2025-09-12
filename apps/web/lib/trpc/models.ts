@@ -246,25 +246,32 @@ export async function listModels() {
     });
 
   return {
-    models: result.map((item) => {
-      const modelParams = item.supportedParameters.map(
+    models: result.map((model) => {
+      const modelParams = model.supportedParameters.map(
         (p) => p.supportedParameterId
       );
-      const { provider, supportedParameters, ...model } = item;
       return {
-        ...model,
+        id: model.id,
+        name: model.name,
+        providerId: model.providerId,
+        priority: model.priority,
+        isSuggested: model.isSuggested,
+        isExperimental: model.isExperimental,
+        isPremium: model.isPremium,
+        isNew: model.isNew,
+        isIncluded: model.isIncluded,
+
         // Calculate capabilities based on supported parameters
-        capabilityReasoning: modelParams.includes("reasoning"),
-        capabilityTools: modelParams.includes("tools"),
+        capReason: modelParams.includes("reasoning"),
+        capTools: modelParams.includes("tools"),
         // Derive capabilities from architecture fields
-        capabilityVision:
+        capVision:
           model.architectureInputModalities?.includes("image") ?? false,
-        capabilityPdf:
-          model.architectureInputModalities?.includes("file") ?? false,
-        capabilityImageGeneration:
+        capPdf: model.architectureInputModalities?.includes("file") ?? false,
+        capImageGen:
           model.architectureOutputModalities?.includes("image") ?? false,
         provider: {
-          name: provider.name,
+          name: model.provider.name,
         },
         groups: new Set(
           groups.filter((g) => g.models.includes(model.id)).map((g) => g.id)
