@@ -17,10 +17,13 @@ import { auth } from "@/lib/auth";
 import { MAX_PANELS } from "@/lib/constants";
 import { generatePanelId } from "@/lib/id";
 import { listModels } from "@/lib/trpc/models";
+import { appRouter } from "@/lib/trpc/server/server";
 import type { PanelConfig } from "@/store/panels";
+import { createServerSideHelpers } from "@trpc/react-query/server";
 import { headers } from "next/headers";
 import type { PropsWithChildren } from "react";
 import { Suspense } from "react";
+import superjson from "superjson";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,7 +50,8 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: PropsWithChildren) {
   const session = await auth.api.getSession({ headers: await headers() });
-  const userId = session?.user?.id;
+  const user = session?.user;
+  const userId = user?.id;
 
   // Load all the state we will pass to the client side store
   const [modelsList, userModelList] = await Promise.all([
@@ -56,6 +60,16 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       (preferredModels) => preferredModels ?? getDefaultModels()
     ),
   ]);
+
+  // Prepare TRPC SSR helpers and prefetch chats for hydration
+  const helpers = createServerSideHelpers({
+    router: appRouter,
+    ctx: { user },
+    transformer: superjson,
+  });
+  if (userId) {
+    await helpers.chats.listChats.prefetch();
+  }
 
   const initialPanels = userModelList.map(
     (r): PanelConfig => ({
@@ -78,7 +92,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       >
         <Suspense fallback={<div>Loading...</div>}>
           <SessionProvider serverAuthData={authData?.user ? authData : null}>
-            <TRPCProvider>
+            <TRPCProvider dehydratedState={helpers.dehydrate()}>
               <StoreProvider
                 modelsInitialValue={modelsList}
                 panelsInitialValue={initialPanels}
