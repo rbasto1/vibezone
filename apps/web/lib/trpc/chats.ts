@@ -1,4 +1,3 @@
-import type { Chat } from "@/db";
 import { chats, db } from "@/db";
 import { TRPCError } from "@trpc/server";
 import { and, eq, isNull } from "drizzle-orm";
@@ -76,7 +75,7 @@ interface ListChatsInput {
   userId: string;
 }
 
-export async function listChats({ userId }: ListChatsInput): Promise<Chat[]> {
+export async function listChats({ userId }: ListChatsInput) {
   const result = await db.query.chats.findMany({
     where: and(
       eq(chats.userId, userId),
@@ -85,5 +84,10 @@ export async function listChats({ userId }: ListChatsInput): Promise<Chat[]> {
     ),
     orderBy: (chat, { desc }) => [desc(chat.lastMessageAt)],
   });
-  return result;
+  return result.map((chat) => ({
+    id: chat.id,
+    title: chat.title,
+    lastMessageAt: chat.lastMessageAt,
+    createdAt: chat.createdAt,
+  }));
 }

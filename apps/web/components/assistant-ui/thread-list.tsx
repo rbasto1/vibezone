@@ -60,9 +60,10 @@ const ThreadListItems: FC = () => {
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
 
   const session = useSession();
-  const { data: chats, isLoading } = trpc.chats.listChats.useQuery(undefined, {
+  const { data: chats } = trpc.chats.listChats.useQuery(undefined, {
     staleTime: Infinity,
     enabled: !!session?.user,
+    placeholderData: (prev) => prev,
   });
   const utils = trpc.useUtils();
   const archiveChatMutation = trpc.chats.archiveChat.useMutation({
@@ -98,13 +99,21 @@ const ThreadListItems: FC = () => {
     archiveChatMutation.mutate({ chatId });
   };
 
-  if (isLoading) {
+  if (!session?.user) {
+    return (
+      <div className="text-sm text-muted-foreground p-2">
+        Please sign up or log in to save and load your chats
+      </div>
+    );
+  }
+
+  if (!chats) {
     return (
       <div className="text-sm text-muted-foreground p-2">Loading chats...</div>
     );
   }
 
-  if (!chats || chats.length === 0) {
+  if (!chats.length) {
     return (
       <div className="text-sm text-muted-foreground p-2">No chats yet</div>
     );
