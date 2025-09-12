@@ -7,17 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  Code2,
-  Gauge,
-  Hash,
-  Palette,
-  Star,
-  StarOff,
-  ThumbsUp,
-  Trash2,
-  Zap,
-} from "lucide-react";
+import { Gauge, Hash, ThumbsUp, Trash2 } from "lucide-react";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -81,15 +71,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
   const [sorting, setSorting] = useState(
     () => getStorageItem(storageKeys.manageSort, SortingSchema) ?? []
   );
-  const [flagshipOnly, setFlagshipOnly] = useState(
-    () => getStorageItem(storageKeys.manageFlagship, z.boolean()) ?? false
-  );
-  const [coderOnly, setCoderOnly] = useState(
-    () => getStorageItem(storageKeys.manageCoder, z.boolean()) ?? false
-  );
-  const [artistOnly, setArtistOnly] = useState(
-    () => getStorageItem(storageKeys.manageArtist, z.boolean()) ?? false
-  );
   const [priorityOnly, setPriorityOnly] = useState(
     () => getStorageItem(storageKeys.managePriority, z.boolean()) ?? false
   );
@@ -143,13 +124,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
           };
 
           const onToggle = (
-            key:
-              | "isFlagship"
-              | "isCoder"
-              | "isArtist"
-              | "isSuggested"
-              | "capabilityFast"
-              | "capabilityEffortControl",
+            key: "isSuggested" | "capabilityEffortControl",
             v: boolean
           ) => {
             const prev = m[key] as boolean | undefined;
@@ -181,55 +156,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
                 type="button"
                 className={
                   "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.isFlagship
-                    ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-600"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.isFlagship}
-                title="Flagship"
-                onClick={() => onToggle("isFlagship", !m.isFlagship)}
-              >
-                {m.isFlagship ? (
-                  <Star className="h-4 w-4" />
-                ) : (
-                  <StarOff className="h-4 w-4" />
-                )}
-              </button>
-
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.isCoder
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.isCoder}
-                title="Coder"
-                onClick={() => onToggle("isCoder", !m.isCoder)}
-              >
-                <Code2 className="h-4 w-4" />
-              </button>
-
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.isArtist
-                    ? "bg-pink-500/10 border-pink-500/30 text-pink-600"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.isArtist}
-                title="Artist"
-                onClick={() => onToggle("isArtist", !m.isArtist)}
-              >
-                <Palette className="h-4 w-4" />
-              </button>
-
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
                   (m.isSuggested
                     ? "bg-primary/10 border-primary/30 text-primary"
                     : "border-transparent text-muted-foreground hover:bg-accent")
@@ -245,20 +171,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               <div className="h-6 w-px bg-border/60" />
 
               {/* Capability toggles (icon-only) */}
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.capabilityFast
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.capabilityFast}
-                title="Capability: Fast"
-                onClick={() => onToggle("capabilityFast", !m.capabilityFast)}
-              >
-                <Zap className="h-4 w-4" />
-              </button>
 
               <button
                 type="button"
@@ -333,9 +245,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
           return false;
         });
     return byQuery.filter((m) => {
-      if (flagshipOnly && !m.isFlagship) return false;
-      if (coderOnly && !m.isCoder) return false;
-      if (artistOnly && !m.isArtist) return false;
       if (priorityOnly && (m.priority === null || m.priority === undefined))
         return false;
       if (tierFilter !== "all") {
@@ -349,17 +258,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
       }
       return true;
     });
-  }, [
-    models,
-    providerFilter,
-    textFilter,
-    flagshipOnly,
-    coderOnly,
-    artistOnly,
-    priorityOnly,
-    tierFilter,
-    providers,
-  ]);
+  }, [models, providerFilter, textFilter, priorityOnly, tierFilter, providers]);
 
   return (
     <div>
@@ -426,67 +325,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               ))}
             </select>
             <div className="ml-2 flex items-center gap-2">
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
-                  (flagshipOnly
-                    ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-600"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={flagshipOnly}
-                title="Filter: Flagship"
-                onClick={() => {
-                  const next = !flagshipOnly;
-                  setFlagshipOnly(next);
-                  setStorageItem(storageKeys.manageFlagship, next);
-                }}
-              >
-                {flagshipOnly ? (
-                  <Star className="h-4 w-4" />
-                ) : (
-                  <StarOff className="h-4 w-4" />
-                )}
-                <span className="hidden sm:inline">Flagship</span>
-              </button>
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
-                  (coderOnly
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={coderOnly}
-                title="Filter: Coder"
-                onClick={() => {
-                  const next = !coderOnly;
-                  setCoderOnly(next);
-                  setStorageItem(storageKeys.manageCoder, next);
-                }}
-              >
-                <Code2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Coder</span>
-              </button>
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
-                  (artistOnly
-                    ? "bg-pink-500/10 border-pink-500/30 text-pink-600"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={artistOnly}
-                title="Filter: Artist"
-                onClick={() => {
-                  const next = !artistOnly;
-                  setArtistOnly(next);
-                  setStorageItem(storageKeys.manageArtist, next);
-                }}
-              >
-                <Palette className="h-4 w-4" />
-                <span className="hidden sm:inline">Artist</span>
-              </button>
               <button
                 type="button"
                 className={

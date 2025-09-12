@@ -73,9 +73,6 @@ export const models = pgTable(
     isChat: boolean("is_chat").notNull(), // we only show isChat models
 
     priority: integer("priority"), // the first 3 models that are loaded by default
-    isFlagship: boolean("is_flagship").notNull().default(false), // initial suggestion box group
-    isCoder: boolean("is_coder").notNull().default(false), // initial suggestion box group
-    isArtist: boolean("is_artist").notNull().default(false), // initial suggestion box group
 
     isSuggested: boolean("is_suggested").notNull().default(false), // if false, appears under "see more..."
 
@@ -83,7 +80,6 @@ export const models = pgTable(
     isPremium: boolean("is_premium"),
     isNew: boolean("is_new"),
     isIncluded: boolean("is_included"),
-    capabilityFast: boolean("capability_fast"),
     capabilityEffortControl: boolean("capability_effort_control"),
 
     updatedAt: timestampTzNowUpdated("updated_at"),
@@ -101,6 +97,17 @@ export const supportedParameters = pgTable("supported_parameters", {
   iconUrl: text("icon_url"),
   color: text("color"),
   createdAt: timestampTzNow("created_at"),
+});
+
+export const suggestionGroups = pgTable("suggestion_groups", {
+  id: text("id").primaryKey(), // flagship, coder, roleplay, fast
+  icon: text("icon").notNull(), // lucide icon name
+  title: text("title").notNull(), // "Flagship Models", "Best Coders", etc.
+  label: text("label").notNull(), // description text
+  promoted: boolean("promoted").notNull().default(false), // whether to show prominently
+  models: text("models").array().notNull().default([]), // array of model IDs
+  createdAt: timestampTzNow("created_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
 });
 
 export const modelSupportedParameters = pgTable("model_supported_parameters", {
@@ -235,6 +242,8 @@ export type Provider = typeof providers.$inferSelect;
 export type NewProvider = typeof providers.$inferInsert;
 export type Model = typeof models.$inferSelect;
 export type NewModel = typeof models.$inferInsert;
+export type SuggestionGroup = typeof suggestionGroups.$inferSelect;
+export type NewSuggestionGroup = typeof suggestionGroups.$inferInsert;
 export type SupportedParameter = typeof supportedParameters.$inferSelect;
 export type NewSupportedParameter = typeof supportedParameters.$inferInsert;
 export type Thread = typeof threads.$inferSelect;

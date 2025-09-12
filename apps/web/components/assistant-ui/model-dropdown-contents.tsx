@@ -5,8 +5,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { cn } from "@/components/ui/utils";
 import { useModelsValue } from "@/hooks/use-models";
+import { trpc } from "@/lib/trpc/client";
 import {
   Brain,
   Crown,
@@ -16,7 +18,6 @@ import {
   Mountain,
   Wand2,
   Wrench,
-  Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ProviderIcon } from "../ui/providers/provider";
@@ -31,6 +32,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   currentModelId,
 }) => {
   const { models, providers } = useModelsValue();
+  const { data: suggestionGroups } = trpc.suggestionGroups.list.useQuery();
 
   // Filters: provider tiers and model flags
   const tierOptions = [
@@ -39,7 +41,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     { id: "specialists" as const, label: "Specialists", Icon: Wand2 },
   ];
   const capabilityOptions = [
-    { id: "capabilityFast" as const, label: "Fast", Icon: Zap },
     { id: "capabilityVision" as const, label: "Can see images", Icon: Eye },
     { id: "capabilityPdf" as const, label: "Can read PDFs", Icon: FileText },
     { id: "capabilityReasoning" as const, label: "Reasoning", Icon: Brain },
@@ -62,7 +63,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     (typeof capabilityOptions)[number]["id"],
     string
   > = {
-    capabilityFast: "text-amber-600 dark:text-amber-400",
     capabilityVision: "text-sky-600 dark:text-sky-400",
     capabilityPdf: "text-emerald-600 dark:text-emerald-400",
     capabilityReasoning: "text-violet-600 dark:text-violet-400",
@@ -78,18 +78,22 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     specialists: "text-foreground/80",
   };
 
-  // Exclusive tier selection (default: leaders, with fallback if unavailable)
+  // Exclusive selection between tiers and suggestion groups
   const [selectedTier, setSelectedTier] = useState<
-    "leaders" | "challengers" | "specialists"
+    "leaders" | "challengers" | "specialists" | null
   >("leaders");
+  const [selectedSuggestionGroup, setSelectedSuggestionGroup] = useState<
+    string | null
+  >(null);
   const [selectedCapabilities, setSelectedCapabilities] = useState<
     Set<(typeof capabilityOptions)[number]["id"]>
   >(new Set());
 
   // Ensure we always show something even if no providers in the default tier
   useEffect(() => {
-    if (!providers.length) return;
-    const hasInSelected = providers.some((p) => p.tier === selectedTier);
+    if (!providers.length || selectedSuggestionGroup) return;
+    const hasInSelected =
+      selectedTier && providers.some((p) => p.tier === selectedTier);
     if (!hasInSelected) {
       const order: (typeof tierOptions)[number]["id"][] = [
         "leaders",
@@ -99,7 +103,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       const next = order.find((t) => providers.some((p) => p.tier === t));
       if (next && next !== selectedTier) setSelectedTier(next);
     }
-  }, [providers, selectedTier]);
+  }, [providers, selectedTier, selectedSuggestionGroup]);
 
   const toggleCapability = (cap: (typeof capabilityOptions)[number]["id"]) => {
     setSelectedCapabilities((prev) => {
@@ -110,15 +114,59 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     });
   };
 
+  const handleTierSelect = (
+    tier: "leaders" | "challengers" | "specialists"
+  ) => {
+    setSelectedTier(tier);
+    setSelectedSuggestionGroup(null);
+  };
+
+  const handleSuggestionGroupSelect = (groupId: string) => {
+    setSelectedSuggestionGroup(groupId);
+    setSelectedTier(null);
+  };
+
   const providersByTier = useMemo(() => {
-    return providers.filter((p) => p.tier === selectedTier);
-  }, [providers, selectedTier]);
+    if (selectedSuggestionGroup) {
+      // When a suggestion group is selected, get providers for models in that group
+      const group = suggestionGroups?.find(
+        (g) => g.id === selectedSuggestionGroup
+      );
+      if (!group) return [];
+
+      const groupModelIds = new Set(group.models);
+      const groupModels = models.filter((m) => groupModelIds.has(m.id));
+      const providerIds = new Set(groupModels.map((m) => m.providerId));
+      return providers.filter((p) => providerIds.has(p.id));
+    }
+    return selectedTier ? providers.filter((p) => p.tier === selectedTier) : [];
+  }, [
+    providers,
+    selectedTier,
+    selectedSuggestionGroup,
+    suggestionGroups,
+    models,
+  ]);
+
   const modelsByProvider = useMemo(() => {
     // Precompute per provider
     const byProvider = new Map<string, typeof models>();
     const hasCapabilityFilters = selectedCapabilities.size > 0;
+
     for (const p of providersByTier) {
-      const list = models.filter((m) => m.providerId === p.id);
+      let list = models.filter((m) => m.providerId === p.id);
+
+      // If a suggestion group is selected, filter to only models in that group
+      if (selectedSuggestionGroup) {
+        const group = suggestionGroups?.find(
+          (g) => g.id === selectedSuggestionGroup
+        );
+        if (group) {
+          const groupModelIds = new Set(group.models);
+          list = list.filter((m) => groupModelIds.has(m.id));
+        }
+      }
+
       const filtered = hasCapabilityFilters
         ? list.filter((m) => {
             // AND semantics: model must match ALL selected capabilities
@@ -138,7 +186,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       byProvider.set(p.id, filtered);
     }
     return byProvider;
-  }, [models, providersByTier, selectedCapabilities]);
+  }, [
+    models,
+    providersByTier,
+    selectedCapabilities,
+    selectedSuggestionGroup,
+    suggestionGroups,
+  ]);
 
   // Track which providers have expanded "Other models"
   const [expandedProviders, setExpandedProviders] = useState<Set<string>>(
@@ -198,9 +252,10 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       <div className="flex h-full flex-col">
         {/* Filters */}
         <div className="flex items-center gap-6 pb-3 border-b mb-3 shrink-0">
-          {/* Segmented tier control */}
+          {/* Segmented tier control with suggestion groups */}
           <div className="flex items-center gap-3">
             <div className="inline-flex rounded-md border bg-muted p-0.5">
+              {/* Main tier options */}
               {tierOptions.map(({ id, label, Icon }) => {
                 const active = selectedTier === id;
                 return (
@@ -215,7 +270,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      setSelectedTier(id);
+                      handleTierSelect(id);
                     }}
                   >
                     <Icon className={cn("size-4", tierColor[id])} />
@@ -223,6 +278,54 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                   </button>
                 );
               })}
+
+              {/* Vertical separator */}
+              {suggestionGroups && suggestionGroups.length > 0 && (
+                <div className="w-px h-8 bg-border mx-1" />
+              )}
+
+              {/* Suggestion Groups */}
+              {suggestionGroups && suggestionGroups.length > 0 && (
+                <>
+                  {suggestionGroups.map((group) => {
+                    const active = selectedSuggestionGroup === group.id;
+                    return (
+                      <button
+                        key={group.id}
+                        className={cn(
+                          "h-8 text-xs inline-flex items-center gap-1.5 rounded-[6px] cursor-pointer",
+                          "transition-all duration-200 ease-in-out overflow-hidden",
+                          active
+                            ? "bg-primary text-primary-foreground px-2"
+                            : "text-foreground/80 hover:bg-background/50 px-2"
+                        )}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSuggestionGroupSelect(group.id);
+                        }}
+                        title={
+                          active
+                            ? group.label
+                            : `${group.title} - ${group.label}`
+                        }
+                      >
+                        <DynamicIcon iconName={group.icon} size={14} />
+                        <span
+                          className={cn(
+                            "truncate transition-all duration-200 ease-in-out",
+                            active
+                              ? "max-w-[80px] opacity-100"
+                              : "max-w-0 opacity-0"
+                          )}
+                        >
+                          {group.title}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </>
+              )}
             </div>
           </div>
           {/* Capability filters */}

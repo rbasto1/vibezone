@@ -4,6 +4,7 @@ import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { messagesRouter } from "../messages";
 import { modelsRouter } from "../models";
 import { providersRouter } from "../providers";
+import { suggestionGroupsRouter } from "../suggestion-groups";
 import { usersRouter } from "../users";
 import { t } from "./initialize";
 
@@ -11,6 +12,7 @@ export const appRouter = t.router({
   messages: messagesRouter,
   models: modelsRouter,
   providers: providersRouter,
+  suggestionGroups: suggestionGroupsRouter,
   users: usersRouter,
 });
 
@@ -24,3 +26,6 @@ export type ModelsSyncFromOpenRouterOutput =
   RouterOutputs["models"]["syncFromOpenRouter"];
 // providers
 export type ProvidersListOutput = RouterOutputs["providers"]["list"];
+// suggestion groups
+export type SuggestionGroupsListOutput =
+  RouterOutputs["suggestionGroups"]["list"];

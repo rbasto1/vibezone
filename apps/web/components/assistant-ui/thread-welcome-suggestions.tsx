@@ -1,6 +1,6 @@
-import { useModelsValue } from "@/hooks/use-models";
+import { DynamicIcon } from "@/components/ui/dynamic-icon";
+import { trpc } from "@/lib/trpc/client";
 import { motion } from "framer-motion";
-import { CodeIcon, DramaIcon, StarIcon } from "lucide-react";
 import type { FC } from "react";
 
 export interface ThreadWelcomeSuggestionsProps {
@@ -10,30 +10,25 @@ export interface ThreadWelcomeSuggestionsProps {
 export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
   onSelect,
 }) => {
-  const { models } = useModelsValue();
-  const items = [
-    {
-      key: "flagship",
-      icon: <StarIcon size={32} />,
-      title: "Flagship Models",
-      label: "Try the best models of the leading AI companies",
-      models: models.filter((m) => m.isFlagship),
-    },
-    {
-      key: "coder",
-      icon: <CodeIcon size={32} />,
-      title: "Best Coders",
-      label: "Compare the abilities of the best models for vibe coding",
-      models: models.filter((m) => m.isCoder),
-    },
-    {
-      key: "artist",
-      icon: <DramaIcon size={32} />,
-      title: "Roleplay Masters",
-      label: "Chat with the best models for roleplay",
-      models: models.filter((m) => m.isArtist),
-    },
-  ];
+  const { data: suggestionGroups, isLoading } =
+    trpc.suggestionGroups.list.useQuery();
+
+  if (isLoading || !suggestionGroups) {
+    return <div>Loading suggestions...</div>;
+  }
+
+  // Filter to only show promoted groups
+  const promotedGroups = suggestionGroups.filter((group) => group.promoted);
+
+  const items = promotedGroups.map((group) => {
+    return {
+      key: group.id,
+      icon: <DynamicIcon iconName={group.icon} size={32} />,
+      title: group.title,
+      label: group.label,
+      models: group.models,
+    };
+  });
   return (
     <div className="flex w-full gap-2">
       {items.map((s, i) => (
@@ -48,8 +43,8 @@ export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
         >
           <button
             key={s.key}
-            className="dark:hover:bg-accent/60 h-full w-full flex-1 flex items-start gap-3 rounded-xl border px-4 py-3.5 text-left text-sm"
-            onClick={() => onSelect(s.models.map((m) => m.id))}
+            className="dark:hover:bg-accent/60 h-full w-full flex-1 flex items-start gap-3 rounded-xl border px-4 py-3.5 text-left text-sm cursor-pointer"
+            onClick={() => onSelect(s.models)}
           >
             <div className="flex-shrink-0 mt-0.5">{s.icon}</div>
             <div className="flex-1 min-w-0">

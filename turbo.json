@@ -129,8 +129,9 @@
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
     "NEXT_PUBLIC_*",
+    "OPENROUTER_API_KEY",
     "RESEND_API_KEY",
     "RESEND_FROM"
   ],
-  "concurrency": "1"
+  "concurrency": "2"
 }
