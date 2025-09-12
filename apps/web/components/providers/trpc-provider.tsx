@@ -1,20 +1,21 @@
 "use client";
 
+import type { DehydratedState } from "@tanstack/react-query";
 import {
   HydrationBoundary,
   QueryClient,
   QueryClientProvider,
-  type DehydratedState,
 } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import type { SuperJSONResult } from "superjson";
 import superjson from "superjson";
 
 import { trpc } from "@/lib/trpc/client";
 
 interface TRPCProviderProps {
   children: React.ReactNode;
-  dehydratedState?: DehydratedState;
+  dehydratedState?: SuperJSONResult;
 }
 
 export const TRPCProvider = ({
@@ -33,21 +34,14 @@ export const TRPCProvider = ({
     })
   );
 
+  const transformedState = dehydratedState
+    ? superjson.deserialize<DehydratedState>(dehydratedState)
+    : undefined;
+
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <HydrationBoundary
-          state={useMemo(() => {
-            if (!dehydratedState) return undefined;
-            // helpers.dehydrate() returns SuperJSON-serialized data
-            // Ensure we deserialize before hydrating React Query cache
-            try {
-              return superjson.deserialize(dehydratedState as unknown as any);
-            } catch {
-              return dehydratedState;
-            }
-          }, [dehydratedState])}
-        >
+        <HydrationBoundary state={transformedState}>
           {children}
         </HydrationBoundary>
       </QueryClientProvider>

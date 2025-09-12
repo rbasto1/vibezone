@@ -32,19 +32,12 @@ const SortingSchema = z
 
 const providerTiers = ["leaders", "challengers", "specialists"] as const;
 
-interface ManagePageClientProps {
-  initialModels: ModelsListOutput;
-}
-
-const ManagePageClient: NextPage<ManagePageClientProps> = ({
-  initialModels,
-}) => {
+const ManagePageClient: NextPage = () => {
   const {
     data: hydrated,
     error: listError,
     isLoading,
   } = trpc.models.list.useQuery(undefined, {
-    initialData: initialModels,
     staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
@@ -201,8 +194,8 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
     [utils.models.list, updateMutation, deleteMutation]
   );
 
-  const providers = hydrated?.providers;
-  const models = hydrated?.models;
+  const providers = hydrated?.providers ?? [];
+  const models = hydrated?.models ?? [];
   const providerCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const m of models)

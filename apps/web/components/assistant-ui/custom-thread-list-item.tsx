@@ -1,7 +1,7 @@
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/utils";
-import { ArchiveIcon } from "lucide-react";
+import { ArchiveIcon, Loader2Icon } from "lucide-react";
 import type { FC } from "react";
 
 interface CustomThreadListItemProps {
@@ -12,6 +12,7 @@ interface CustomThreadListItemProps {
   isLoading?: boolean;
   onSelect: (chatId: string) => Promise<void>;
   onArchive: (chatId: string) => void;
+  isArchiving?: boolean;
 }
 
 export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
@@ -22,6 +23,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   isLoading = false,
   onSelect,
   onArchive,
+  isArchiving,
 }) => {
   const handleSelect = async () => {
     if (isLoading) return;
@@ -64,7 +66,11 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
         tooltip="Archive chat"
         onClick={handleArchive}
       >
-        <ArchiveIcon />
+        {isArchiving ? (
+          <Loader2Icon className="animate-spin" />
+        ) : (
+          <ArchiveIcon />
+        )}
       </TooltipIconButton>
     </div>
   );

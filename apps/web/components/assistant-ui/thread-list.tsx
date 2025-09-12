@@ -131,6 +131,7 @@ const ThreadListItems: FC = () => {
           isLoading={loadingChatId === chat.id}
           onSelect={handleSelectChat}
           onArchive={handleArchiveChat}
+          isArchiving={archiveChatMutation.isPending && archiveChatMutation.variables?.chatId === chat.id}
         />
       ))}
     </div>
