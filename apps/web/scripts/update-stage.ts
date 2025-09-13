@@ -3,7 +3,12 @@ import * as schema from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 
-const providerFields: (keyof Provider)[] = ["name", "tier", "order"];
+const providerFields: (keyof Provider)[] = [
+  "name",
+  "tier",
+  "order",
+  "deletedAt",
+];
 const modelFields: (keyof Model)[] = [
   "name",
   "isChat",
@@ -13,6 +18,7 @@ const modelFields: (keyof Model)[] = [
   "isPremium",
   "isNew",
   "isIncluded",
+  "deletedAt",
 ];
 
 type Client = typeof db;
@@ -57,7 +63,19 @@ async function copySuggestionGroups(sourceDb: Client, targetDb: Client) {
 }
 
 async function updateProviders(sourceDb: Client, targetDb: Client) {
-  const tableEmpty = await targetDb.select().from(schema.providers).limit(1);
+  const fieldsObj = providerFields.reduce(
+    (acc, f) => ({ ...acc, [f]: schema.providers[f] }),
+    {}
+  );
+
+  const tableEmpty = await targetDb
+    .select({
+      id: schema.providers.id,
+      deletedAt: schema.providers.deletedAt,
+      ...fieldsObj,
+    })
+    .from(schema.providers)
+    .limit(1);
   if (!tableEmpty.length) {
     console.info("No rows found in target table");
     process.exit(3);
@@ -66,10 +84,8 @@ async function updateProviders(sourceDb: Client, targetDb: Client) {
   const rows = await sourceDb
     .select({
       id: schema.providers.id,
-      ...providerFields.reduce(
-        (acc, f) => ({ ...acc, [f]: schema.providers[f] }),
-        {}
-      ),
+      deletedAt: schema.providers.deletedAt,
+      ...fieldsObj,
     })
     .from(schema.providers);
   if (!rows.length) {
@@ -78,13 +94,23 @@ async function updateProviders(sourceDb: Client, targetDb: Client) {
   }
 
   for (const row of rows) {
+    const anyDifference = Object.entries(fieldsObj).some(
+      ([f, field]) => row[f as keyof typeof row] !== field
+    );
+    if (!anyDifference) {
+      continue;
+    }
+
     const result = await targetDb
       .update(schema.providers)
       .set(row)
       .where(eq(schema.providers.id, row.id));
     if (!result.rowCount) {
-      console.error(`Provider ${row.id} not found in target table`);
-      process.exit(4);
+      console.error(
+        `Provider ${row.id} not found in target table (deleted=${!!row.deletedAt})`
+      );
+    } else {
+      console.info(`☑️ Provider ${row.id} updated`);
     }
   }
   const count = rows.length;
@@ -92,7 +118,18 @@ async function updateProviders(sourceDb: Client, targetDb: Client) {
 }
 
 async function updateModels(sourceDb: Client, targetDb: Client) {
-  const tableEmpty = await targetDb.select().from(schema.models).limit(1);
+  const fieldsObj = modelFields.reduce(
+    (acc, f) => ({ ...acc, [f]: schema.models[f] }),
+    {}
+  );
+
+  const tableEmpty = await targetDb
+    .select({
+      id: schema.models.id,
+      deletedAt: schema.models.deletedAt,
+      ...fieldsObj,
+    })
+    .from(schema.models);
   if (!tableEmpty.length) {
     console.info("No rows found in target table");
     process.exit(6);
@@ -101,10 +138,8 @@ async function updateModels(sourceDb: Client, targetDb: Client) {
   const rows = await sourceDb
     .select({
       id: schema.models.id,
-      ...modelFields.reduce(
-        (acc, f) => ({ ...acc, [f]: schema.models[f] }),
-        {}
-      ),
+      deletedAt: schema.models.deletedAt,
+      ...fieldsObj,
     })
     .from(schema.models);
   if (!rows.length) {
@@ -113,13 +148,23 @@ async function updateModels(sourceDb: Client, targetDb: Client) {
   }
 
   for (const row of rows) {
+    const anyDifference = Object.entries(fieldsObj).some(
+      ([f, field]) => row[f as keyof typeof row] !== field
+    );
+    if (!anyDifference) {
+      continue;
+    }
+
     const result = await targetDb
       .update(schema.models)
       .set(row)
       .where(eq(schema.models.id, row.id));
     if (!result.rowCount) {
-      console.error(`Model ${row.id} not found in target table`);
-      process.exit(7);
+      console.error(
+        `Model ${row.id} not found in target table (deleted=${!!row.deletedAt})`
+      );
+    } else {
+      console.info(`☑️ Model ${row.id} updated`);
     }
   }
   const count = rows.length;

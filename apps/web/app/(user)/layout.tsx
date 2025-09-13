@@ -14,6 +14,7 @@ import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { headers } from "next/headers";
 import { Suspense, type PropsWithChildren } from "react";
+import { PageLoader } from "./page-loader";
 
 export default async function RootLayout({ children }: PropsWithChildren) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -38,9 +39,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       model: r.id,
     })
   );
-
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<PageLoader />}>
       <HydrationBoundary state={state}>
         <StoreProvider
           modelsInitialValue={modelsList}

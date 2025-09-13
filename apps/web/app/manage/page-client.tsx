@@ -16,7 +16,7 @@ import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Hash, ThumbsUp, Trash2 } from "lucide-react";
 import type { NextPage } from "next";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { getStorageItem, setStorageItem, storageKeys } from "./session-storage";
@@ -77,6 +77,65 @@ const ManagePageClient: NextPage = () => {
   const [tierFilter, setTierFilter] = useState(
     getStorageItem(storageKeys.manageTier) ?? "all"
   );
+
+  const providers = useMemo(
+    () => hydrated?.providers ?? [],
+    [hydrated?.providers]
+  );
+  const models = useMemo(() => hydrated?.models ?? [], [hydrated?.models]);
+
+  // Create ordered list of providers for keyboard navigation
+  const orderedProviders = useMemo(() => {
+    const allProviders = ["all", ...providers.map((p) => p.id)];
+    return allProviders;
+  }, [providers]);
+
+  // Keyboard navigation for provider filter
+  const navigateProvider = useCallback(
+    (direction: "up" | "down") => {
+      const currentIndex = orderedProviders.indexOf(providerFilter);
+      if (currentIndex === -1) return;
+
+      const nextIndex = MathMinMax(
+        direction === "down" ? currentIndex + 1 : currentIndex - 1,
+        0,
+        orderedProviders.length - 1
+      );
+
+      const nextProvider = orderedProviders[nextIndex];
+      if (nextProvider) {
+        setProviderFilter(nextProvider);
+        setStorageItem(storageKeys.manageProvider, nextProvider);
+      }
+    },
+    [providerFilter, orderedProviders]
+  );
+
+  // Keyboard event handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle arrow keys when no input/select is focused
+      const activeElement = document.activeElement;
+      const isInputFocused =
+        activeElement?.tagName === "INPUT" ||
+        activeElement?.tagName === "SELECT" ||
+        activeElement?.tagName === "TEXTAREA" ||
+        (activeElement as HTMLElement)?.contentEditable === "true";
+
+      if (isInputFocused) return;
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        navigateProvider("down");
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        navigateProvider("up");
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [navigateProvider]);
 
   const columns: ColumnDef<ModelsListOutput["models"][number]>[] = useMemo(
     () => [
@@ -194,8 +253,6 @@ const ManagePageClient: NextPage = () => {
     [utils.models.list, updateMutation, deleteMutation]
   );
 
-  const providers = hydrated?.providers ?? [];
-  const models = hydrated?.models ?? [];
   const providerCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const m of models)
@@ -365,4 +422,8 @@ function formatDate(value?: string | Date | null) {
     month: "short",
     day: "2-digit",
   }).format(d);
+}
+
+function MathMinMax(num: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, num));
 }
