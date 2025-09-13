@@ -23,7 +23,7 @@ export async function handleProviderStream(
     );
   }
 
-  const { modelId } = getConfigResult.config;
+  const { modelId, maxTokens } = getConfigResult.config;
   const messages = getConfigResult.messages;
 
   const adapter = getOpenRouter(env);
@@ -35,6 +35,7 @@ export async function handleProviderStream(
   const result = streamText({
     model: adapter(modelId),
     messages: convertToModelMessages(messages),
+    maxOutputTokens: maxTokens,
     onError: (error) => {
       console.error("Caught an error creating stream text:", error);
     },

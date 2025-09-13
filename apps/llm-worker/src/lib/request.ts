@@ -8,6 +8,7 @@ export interface GetConfigResponseSuccess {
   type: "success";
   config: {
     modelId: string;
+    maxTokens: number | undefined;
   };
   messages: ChatMessage[];
   error: null;
@@ -41,6 +42,7 @@ export function getConfigFromRequest(
     type: "success",
     config: {
       modelId,
+      maxTokens: bodyParse.data.maxTokens,
     },
     messages: bodyParse.data.messages,
     error: null,

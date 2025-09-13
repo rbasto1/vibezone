@@ -41,4 +41,5 @@ export const ChatRequestSchema = z.object({
   id: z.string(),
   messages: z.array(ChatMessageSchema),
   trigger: z.enum(["submit-message"]),
+  maxTokens: z.number().int().positive().optional(),
 });
