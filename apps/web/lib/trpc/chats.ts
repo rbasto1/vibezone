@@ -1,4 +1,4 @@
-import { chats, db } from "@/db";
+import { chats, db, messages } from "@/db";
 import { TRPCError } from "@trpc/server";
 import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
@@ -8,6 +8,38 @@ export const chatsRouter = t.router({
   listChats: authenticatedProcedure.query(async ({ ctx }) => {
     return listChats({ userId: ctx.user.id });
   }),
+
+  renameChat: authenticatedProcedure
+    .input(
+      z.object({
+        chatId: z.string(),
+        title: z.string().nullable(),
+        firstUserMessage: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { chatId, title: inputTitle, firstUserMessage } = input;
+      const userId = ctx.user.id;
+
+      const chat = await db.query.chats.findFirst({
+        columns: { id: true },
+        where: and(eq(chats.id, chatId), eq(chats.userId, userId)),
+      });
+      if (!chat) {
+        return { success: false, message: "Access denied" };
+      }
+
+      const title = inputTitle ?? (await getChatName(chatId, firstUserMessage));
+
+      await db
+        .update(chats)
+        .set({
+          title,
+        })
+        .where(and(eq(chats.id, chatId), eq(chats.userId, userId)));
+
+      return { success: true, title };
+    }),
 
   getChatWithThreads: authenticatedProcedure
     .input(
@@ -90,4 +122,122 @@ export async function listChats({ userId }: ListChatsInput) {
     lastMessageAt: chat.lastMessageAt,
     createdAt: chat.createdAt,
   }));
+}
+
+const WorkerCompleteResponseSchema = z.object({
+  text: z.string().nonempty(),
+  finishReason: z.enum([
+    "stop",
+    "length",
+    "content-filter",
+    "tool-calls",
+    "error",
+    "other",
+    "unknown",
+  ]),
+});
+
+const UserMessageContentSchema = z.array(
+  z.object({ type: z.literal("text"), text: z.string().nonempty() })
+);
+
+async function getChatName(chatId: string, firstUserMessage?: string) {
+  const userQuery = firstUserMessage ?? (await getChatFirstUserMessage(chatId));
+  if (typeof userQuery !== "string") {
+    return userQuery.error;
+  }
+  console.log("userQuery", userQuery);
+
+  const chatNameResponse = await fetch(
+    `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/complete`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        id: "1",
+        maxTokens: 100,
+        messages: [
+          {
+            id: "1",
+            role: "user",
+            parts: [
+              {
+                type: "text",
+                text: [
+                  "Looking at the following text, which is the first thing spoken in a conversation, generate a short title for the conversation (max 5 words, no more than 30 characters).",
+                  "",
+                  "```",
+                  userQuery,
+                  "```",
+                ].join("\n"),
+              },
+            ],
+          },
+        ],
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "x-vz-model-id": "openrouter/sonoma-dusk-alpha",
+      },
+    }
+  );
+
+  const chatName = await chatNameResponse.json();
+  console.log("chatName", chatName);
+
+  const chatNameParsed = WorkerCompleteResponseSchema.safeParse(chatName);
+  if (!chatNameParsed.success) {
+    return "Error 1004";
+  }
+  if (chatNameParsed.data.finishReason !== "stop") {
+    console.warn(
+      "Chat name generation finished with reason:",
+      chatNameParsed.data.finishReason
+    );
+    switch (chatNameParsed.data.finishReason) {
+      case "length":
+        return "Error 1005";
+      case "content-filter":
+        return "Error 1006";
+      case "tool-calls":
+        return "Error 1007";
+      case "error":
+        return "Error 1008";
+      case "other":
+        return "Error 1009";
+      case "unknown":
+        return "Error 1010";
+      default:
+        return "Error 1011";
+    }
+  }
+
+  return chatNameParsed.data.text;
+}
+
+async function getChatFirstUserMessage(chatId: string) {
+  const userMessage = await db.query.messages.findMany({
+    where: and(eq(messages.threadId, chatId), eq(messages.role, "user")),
+    orderBy: (message, { asc }) => [asc(message.createdAt)],
+    columns: { id: true, content: true },
+    limit: 1,
+  });
+
+  if (!userMessage.length) {
+    console.warn("No records found in database", chatId);
+    return { error: "Error 1001" };
+  }
+
+  const userQueryRaw = UserMessageContentSchema.safeParse(
+    userMessage?.[0]?.content
+  );
+  if (!userQueryRaw.success) {
+    console.warn("No user query in database", userMessage);
+    return { error: "Error 1002" };
+  }
+  const userQuery = userQueryRaw.data[0]?.text;
+  if (!userQuery) {
+    console.warn("User query is empty", userMessage);
+    return { error: "Error 1003" };
+  }
+  return userQuery;
 }

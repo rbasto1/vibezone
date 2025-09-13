@@ -1,9 +1,12 @@
 import { Thread } from "@/components/assistant-ui/thread";
+import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
+import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
+import type { ChatOnFinishCallback, UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
 import { type FC } from "react";
 import { toast } from "sonner";
@@ -22,6 +25,8 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
   const { id, model } = panel;
   panelGlobalContext[id] = panel;
   const [panelState, setPanelState] = usePanelState();
+  const setCurrentChat = useCurrentChatSetter();
+  const renameChatMutation = trpc.chats.renameChat.useMutation();
 
   const handleModelError = (error: Error) => {
     setPanelState(id, (currentState) => ({
@@ -31,11 +36,44 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
     }));
   };
 
-  const handleModelFinish = () => {
+  const handleModelFinish: ChatOnFinishCallback<UIMessage> = async () => {
     setPanelState(id, (currentState) => ({
       ...currentState,
       running: false,
     }));
+
+    // marks the chat as fetched, to prevent multiple calls to the backend
+    setCurrentChat((currentChat) => ({ ...currentChat, fetchedTitle: true }));
+    // use the setter to have access to the current chat
+    setCurrentChat((currentChat) => {
+      const firstUserMessage = currentChat.firstUserMessage;
+      if (!firstUserMessage) {
+        console.warn("No first user message found");
+        return currentChat;
+      }
+
+      // our backend will generate the title based on the conversation history
+      renameChatMutation
+        .mutateAsync({
+          chatId: currentChat.id,
+          title: null,
+          firstUserMessage,
+        })
+        .then((chat) => {
+          if (!chat.success) {
+            console.warn("Failed to rename chat", chat.message);
+            return;
+          }
+          // this happens after the mutation is successful, asynchronously
+          setCurrentChat((currentChat) => ({
+            ...currentChat,
+            title: chat.title,
+          }));
+        });
+
+      // this is just to satisfy the hook
+      return currentChat;
+    });
   };
 
   const runtime = useChatRuntime({

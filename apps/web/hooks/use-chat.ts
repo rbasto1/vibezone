@@ -11,10 +11,11 @@ export function useNewChat() {
   const setCurrentChat = useCurrentChatSetter();
   const setResetMessageSavers = useResetMessageSaversSetter();
   return () => {
-    // Helper atom to create new chat
+    // Helper hook to create new chat
     const newChat: ChatConfig = {
       id: generateChatId(),
       createdAt: new Date(),
+      fetchedTitle: false,
     };
     setCurrentChat(newChat);
     setResetMessageSavers((prev) => prev + 1); // Signal reset

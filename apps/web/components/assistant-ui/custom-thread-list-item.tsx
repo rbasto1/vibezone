@@ -2,7 +2,7 @@ import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/utils";
 import { ArchiveIcon, Loader2Icon } from "lucide-react";
-import type { FC } from "react";
+import { useState, type FC } from "react";
 
 interface CustomThreadListItemProps {
   chatId: string;
@@ -11,8 +11,7 @@ interface CustomThreadListItemProps {
   isActive?: boolean;
   isLoading?: boolean;
   onSelect: (chatId: string) => Promise<void>;
-  onArchive: (chatId: string) => void;
-  isArchiving?: boolean;
+  onArchive: (chatId: string) => Promise<unknown>;
 }
 
 export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
@@ -23,16 +22,20 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   isLoading = false,
   onSelect,
   onArchive,
-  isArchiving,
 }) => {
+  const [isArchiving, setIsArchiving] = useState(false);
+
   const handleSelect = async () => {
     if (isLoading) return;
     await onSelect(chatId);
   };
 
-  const handleArchive = (e: React.MouseEvent) => {
+  const handleArchive = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    onArchive(chatId);
+    setIsArchiving(true);
+    await onArchive(chatId).finally(() => {
+      setIsArchiving(false);
+    });
   };
 
   return (
@@ -46,12 +49,12 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
     >
       <Button
         variant="ghost"
-        className="flex-grow justify-start h-auto"
+        className="flex-1 min-w-0 justify-start h-auto text-left"
         onClick={handleSelect}
         disabled={isLoading}
       >
-        <div className="flex flex-col items-start">
-          <p className="text-sm font-medium">
+        <div className="flex flex-col items-start min-w-0 w-full">
+          <p className="text-sm font-medium truncate w-full">
             {isLoading ? "Loading..." : title || "New Chat"}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -61,7 +64,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
       </Button>
 
       <TooltipIconButton
-        className="hover:text-foreground/60 p-4 text-foreground ml-auto mr-1 size-4"
+        className="hover:text-foreground/60 p-4 text-foreground flex-shrink-0 mr-1 size-4"
         variant="ghost"
         tooltip="Archive chat"
         onClick={handleArchive}

@@ -3,7 +3,7 @@ import "server-only";
 import { db } from "@/db";
 import { chats, messages, threads } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { authenticatedProcedure, t } from "./server/initialize";
 
@@ -42,24 +42,7 @@ export const messagesRouter = t.router({
 
       try {
         // Ensure chat exists
-        const chatPromise = db.query.chats
-          .findFirst({
-            where: and(eq(chats.id, chatId), eq(chats.userId, ctx.user.id)),
-          })
-          .then(
-            (c) =>
-              c ??
-              db
-                .insert(chats)
-                .values({
-                  id: chatId,
-                  userId: ctx.user.id,
-                  title: "New Chat",
-                  lastMessageAt: new Date(),
-                })
-                .returning()
-                .then((c) => c[0])
-          );
+        const chatPromise = getOrInsertChat(chatId, ctx.user.id);
 
         // Ensure thread exists
         const existingThread = await db.query.threads.findFirst({
@@ -124,3 +107,22 @@ export const messagesRouter = t.router({
       }
     }),
 });
+
+async function getOrInsertChat(chatId: string, userId: string) {
+  console.info(`Creating new chat ${chatId} for user ${userId}`);
+  const newChat = await db
+    .insert(chats)
+    .values({
+      id: chatId,
+      userId,
+      title: "New Chat",
+      lastMessageAt: new Date(),
+    })
+    .onConflictDoNothing()
+    .returning()
+    .then(
+      (c) => c[0] ?? db.query.chats.findFirst({ where: eq(chats.id, chatId) })
+    );
+
+  return newChat;
+}

@@ -14,7 +14,6 @@ const GroupsPageClient: NextPage = () => {
     error: groupsError,
     isLoading: groupsLoading,
   } = trpc.suggestionGroups.list.useQuery(undefined, {
-    staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
 
@@ -23,7 +22,6 @@ const GroupsPageClient: NextPage = () => {
     error: modelsError,
     isLoading: modelsLoading,
   } = trpc.models.list.useQuery(undefined, {
-    staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
   const modelsDataSafe = modelsData ?? {

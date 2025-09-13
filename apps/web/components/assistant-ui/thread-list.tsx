@@ -59,8 +59,7 @@ const ThreadListItems: FC = () => {
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
 
   const session = useSession();
-  const { data: chats } = trpc.chats.listChats.useQuery(undefined, {
-    staleTime: Infinity,
+  const { data: chats, error } = trpc.chats.listChats.useQuery(undefined, {
     enabled: !!session?.user,
     placeholderData: (prev) => prev,
   });
@@ -89,6 +88,7 @@ const ThreadListItems: FC = () => {
       setCurrentChat({
         id: chatId,
         createdAt: new Date(), // This will be updated when we load the actual chat
+        fetchedTitle: true,
       });
 
       // Load the chat data imperatively
@@ -101,9 +101,8 @@ const ThreadListItems: FC = () => {
     }
   };
 
-  const handleArchiveChat = (chatId: string) => {
-    archiveChatMutation.mutate({ chatId });
-  };
+  const handleArchiveChat = async (chatId: string) =>
+    archiveChatMutation.mutateAsync({ chatId });
 
   if (!session?.user) {
     return (
@@ -111,6 +110,10 @@ const ThreadListItems: FC = () => {
         Please sign up or log in to save and load your chats
       </div>
     );
+  }
+
+  if (error) {
+    return <div className="text-sm p-2 text-destructive">{error.message}</div>;
   }
 
   if (!chats) {
@@ -137,10 +140,6 @@ const ThreadListItems: FC = () => {
           isLoading={loadingChatId === chat.id}
           onSelect={handleSelectChat}
           onArchive={handleArchiveChat}
-          isArchiving={
-            archiveChatMutation.isPending &&
-            archiveChatMutation.variables?.chatId === chat.id
-          }
         />
       ))}
     </div>
