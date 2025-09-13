@@ -1,6 +1,7 @@
 import { convertToModelMessages, streamText } from "ai";
 import { getOpenRouter } from "./lib/gateway";
 import { getConfigFromRequest } from "./lib/request";
+import type { Env } from "./worker";
 
 export async function handleProviderStream(
   request: Request,
@@ -28,7 +29,7 @@ export async function handleProviderStream(
 
   const adapter = getOpenRouter(env);
 
-  console.log(
+  console.info(
     `Starting stream (modelId=${modelId} messages=${messages.length})`
   );
 
@@ -52,7 +53,7 @@ export async function handleProviderStream(
   return result.toUIMessageStreamResponse({
     headers,
     onFinish: (e) => {
-      console.log("Stream event finished:", e.responseMessage);
+      console.debug("Stream event finished:", e.responseMessage.id);
     },
   });
 }

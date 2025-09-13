@@ -1,3 +1,5 @@
+import type { Env } from "./worker";
+
 export function cors(env: Env, request: Request) {
   // CORS headers for other endpoints
   const origin = request.headers.get("Origin");

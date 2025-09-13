@@ -1,4 +1,5 @@
-import { ChatMessage, ChatRequestSchema } from "./schemas";
+import type { ChatMessage } from "./schemas";
+import { ChatRequestSchema } from "./schemas";
 
 export type GetConfigResponse =
   | GetConfigResponseSuccess
@@ -23,7 +24,7 @@ interface GetConfigResponseError {
 
 export function getConfigFromRequest(
   request: Request,
-  rawBody: any
+  rawBody: unknown
 ): GetConfigResponse {
   const bodyParse = ChatRequestSchema.safeParse(rawBody);
   if (!bodyParse.success) {

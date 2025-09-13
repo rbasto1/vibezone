@@ -40,6 +40,6 @@ export type Provider = z.infer<typeof ProviderSchema>;
 export const ChatRequestSchema = z.object({
   id: z.string(),
   messages: z.array(ChatMessageSchema),
-  trigger: z.enum(["submit-message"]),
+  trigger: z.enum(["submit-message"]).optional(),
   maxTokens: z.number().int().positive().optional(),
 });

@@ -1,6 +1,9 @@
+import type { env } from "cloudflare:workers";
 import { handleProviderComplete } from "./complete";
 import { cors } from "./cors";
 import { handleProviderStream } from "./stream";
+
+export type Env = typeof env;
 
 export default {
   async fetch(

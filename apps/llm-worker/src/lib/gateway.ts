@@ -1,7 +1,6 @@
-import {
-  createOpenRouter,
-  OpenRouterProvider,
-} from "@openrouter/ai-sdk-provider";
+import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import type { Env } from "../worker";
 
 export interface GatewayConfig {
   apiKey: string;

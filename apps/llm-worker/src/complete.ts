@@ -1,6 +1,7 @@
 import { convertToModelMessages, generateText } from "ai";
 import { getOpenRouter } from "./lib/gateway";
 import { getConfigFromRequest } from "./lib/request";
+import type { Env } from "./worker";
 
 export async function handleProviderComplete(
   request: Request,
@@ -28,7 +29,7 @@ export async function handleProviderComplete(
 
   const adapter = getOpenRouter(env);
 
-  console.log(
+  console.info(
     `Starting complete (modelId=${modelId} messages=${messages.length})`
   );
 
@@ -46,10 +47,9 @@ export async function handleProviderComplete(
       },
       { status: 200, headers }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Caught an error generating text:", error);
-    const message =
-      typeof error?.message === "string" ? error.message : "Unknown error";
+    const message = error instanceof Error ? error.message : "Unknown error";
     return Response.json({ error: message }, { status: 500, headers });
   }
 }
