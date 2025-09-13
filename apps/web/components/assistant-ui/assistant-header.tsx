@@ -11,7 +11,7 @@ import {
 } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useSession } from "@/hooks/use-session";
-import { generatePanelId } from "@/lib/id";
+import { generateChatId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
 import type { FC } from "react";
 import { useState } from "react";
@@ -37,7 +37,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({ panelCount }) => {
   const [chooseModelOpen, setChooseModelOpen] = useState(false);
 
   const handleAddPanel = (providerId: string, modelId: string) => {
-    const id = generatePanelId();
+    const id = generateChatId();
     const newPanel = {
       id,
       provider: providerId,

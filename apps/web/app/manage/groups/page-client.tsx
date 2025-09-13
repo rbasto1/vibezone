@@ -3,30 +3,17 @@
 import { QueryAlert } from "@/components/ui/query-alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
-import type {
-  ModelsListOutput,
-  SuggestionGroupsListOutput,
-} from "@/lib/trpc/server/server";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { GroupEditor, GroupModelsList, GroupSelectionList } from "./components";
 
-interface GroupsPageClientProps {
-  initialGroups: SuggestionGroupsListOutput;
-  initialModels: ModelsListOutput;
-}
-
-const GroupsPageClient: NextPage<GroupsPageClientProps> = ({
-  initialGroups,
-  initialModels,
-}) => {
+const GroupsPageClient: NextPage = () => {
   const {
     data: suggestionGroups,
     error: groupsError,
     isLoading: groupsLoading,
   } = trpc.suggestionGroups.list.useQuery(undefined, {
-    initialData: initialGroups,
     staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
@@ -36,10 +23,14 @@ const GroupsPageClient: NextPage<GroupsPageClientProps> = ({
     error: modelsError,
     isLoading: modelsLoading,
   } = trpc.models.list.useQuery(undefined, {
-    initialData: initialModels,
     staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
+  const modelsDataSafe = modelsData ?? {
+    models: [],
+    providers: [],
+    groups: [],
+  };
 
   const utils = trpc.useUtils();
   const createGroupMutation = trpc.suggestionGroups.create.useMutation();
@@ -97,14 +88,16 @@ const GroupsPageClient: NextPage<GroupsPageClientProps> = ({
       <QueryAlert error={groupsError || modelsError} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <GroupSelectionList
-          suggestionGroups={suggestionGroups}
-          selectedGroupId={selectedGroupId}
-          isEditing={isEditing}
-          onCreateGroup={handleCreateGroup}
-          onSelectGroup={setSelectedGroupId}
-          isCreateGroupLoading={createGroupMutation.isPending}
-        />
+        {!!suggestionGroups && (
+          <GroupSelectionList
+            suggestionGroups={suggestionGroups}
+            selectedGroupId={selectedGroupId}
+            isEditing={isEditing}
+            onCreateGroup={handleCreateGroup}
+            onSelectGroup={setSelectedGroupId}
+            isCreateGroupLoading={createGroupMutation.isPending}
+          />
+        )}
 
         <div className="lg:col-span-2">
           {selectedGroup ? (
@@ -117,7 +110,7 @@ const GroupsPageClient: NextPage<GroupsPageClientProps> = ({
 
               <GroupModelsList
                 selectedGroup={selectedGroup}
-                modelsData={modelsData}
+                modelsData={modelsDataSafe}
                 isEditing={isEditing}
               />
             </div>

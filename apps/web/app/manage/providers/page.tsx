@@ -1,12 +1,19 @@
 import "server-only";
 
-import { getProvidersList } from "@/lib/trpc/providers";
+import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
+import { HydrationBoundary } from "@tanstack/react-query";
 import type { NextPage } from "next";
 import ProviderManagePageClient from "./page-client";
 
 const ProvidersPage: NextPage<PageProps<"/manage/providers">> = async () => {
-  const initialProviders = await getProvidersList();
-  return <ProviderManagePageClient initialProviders={initialProviders} />;
+  const caller = await getServerCaller();
+  const state = await prefetch(caller, [caller.providers.list.prefetch()]);
+
+  return (
+    <HydrationBoundary state={state}>
+      <ProviderManagePageClient />
+    </HydrationBoundary>
+  );
 };
 
 export default ProvidersPage;

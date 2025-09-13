@@ -1,9 +1,9 @@
+import { useSession } from "@/hooks/use-session";
 import { trpc } from "@/lib/trpc/client";
-import { currentChatAtom, resetMessageSaversAtom } from "@/store/chat";
 import type { ThreadMessage } from "@assistant-ui/react";
 import { useThread } from "@assistant-ui/react";
-import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
+import { useCurrentChatValue, useResetMessageSaversValue } from "./use-chat";
 import { usePanelsConfigValue } from "./use-panels";
 
 interface UseMessageSaverOptions {
@@ -15,13 +15,32 @@ export const useMessageSaver = ({
   panelId,
   modelId,
 }: UseMessageSaverOptions) => {
-  const currentChat = useAtomValue(currentChatAtom);
-  const resetSignal = useAtomValue(resetMessageSaversAtom);
+  const currentChat = useCurrentChatValue();
+  const resetSignal = useResetMessageSaversValue();
   const panelConfigs = usePanelsConfigValue();
   const thread = useThread();
-  const saveMessagesMutation = trpc.messages.saveMessages.useMutation();
+  const utils = trpc.useUtils();
+  const session = useSession();
+  const chatOptimisticallyAdded = useRef(false);
+  const saveMessagesMutation = trpc.messages.saveMessages.useMutation({
+    onSuccess: (res) => {
+      // If backend returned the chat, update cache with richer data
+      if (res?.chat) {
+        utils.chats.listChats.setData(undefined, (prev) => {
+          const existing = prev ?? [];
+          const has = existing.some((c) => c.id === res.chat!.id);
+          return has
+            ? existing.map((c) => (c.id === res.chat!.id ? res.chat! : c))
+            : [res.chat!, ...existing];
+        });
+      }
+      // Invalidate to refetch authoritative data
+      utils.chats.listChats.invalidate();
+    },
+  });
   const savedMessageIds = useRef(new Set<string>());
   const lastMessageCount = useRef(0);
+  const userId = session?.user?.id;
 
   // Reset when chat changes or reset signal is triggered
   useEffect(() => {
@@ -87,6 +106,29 @@ export const useMessageSaver = ({
         savedMessageIds.current.add(msg.id)
       );
 
+      // Optimistically add chat to list if missing
+      if (!chatOptimisticallyAdded.current && userId) {
+        chatOptimisticallyAdded.current = true;
+        utils.chats.listChats.setData(undefined, (prev) => {
+          const existing = prev ?? [];
+          if (existing.some((c) => c.id === currentChat.id)) return existing;
+          const now = new Date();
+          return [
+            {
+              id: currentChat.id,
+              userId,
+              title: "New Chat",
+              isArchived: false,
+              lastMessageAt: now,
+              createdAt: now,
+              updatedAt: now,
+              deletedAt: null,
+            },
+            ...existing,
+          ];
+        });
+      }
+
       // Save the messages (panelId === threadId)
       saveMessagesMutation.mutate(
         {
@@ -104,11 +146,6 @@ export const useMessageSaver = ({
           })),
         },
         {
-          onSuccess: () => {
-            console.info(
-              `Successfully saved ${filteredMessagesToSave.length} messages`
-            );
-          },
           onError: (error) => {
             console.error("Failed to save messages:", error);
             // Don't remove from saved set on error to prevent infinite retry loop
@@ -119,7 +156,15 @@ export const useMessageSaver = ({
     }
 
     lastMessageCount.current = currentMessageCount;
-  }, [thread.messages, currentChat.id, panelId, modelId, saveMessagesMutation]);
+  }, [
+    thread.messages,
+    currentChat.id,
+    panelId,
+    modelId,
+    saveMessagesMutation,
+    userId,
+    utils.chats.listChats,
+  ]);
 
   return {
     isSaving: saveMessagesMutation.isPending,

@@ -1,7 +1,6 @@
 import {
   panelConfigAtom,
   panelStateAtom,
-  uiStateAtom,
   type PanelConfig,
   type PanelState,
 } from "@/store/panels";
@@ -121,29 +120,4 @@ export const usePanelState = () => {
   const getter = usePanelStateValue();
   const setter = usePanelStateSetter();
   return [getter, setter] as const;
-};
-
-// UI state hooks
-export const useUIStateValue = () => {
-  return useAtomValue(uiStateAtom);
-};
-
-export const useUIStateSetter = () => {
-  const setUIState = useSetAtom(uiStateAtom);
-  return useCallback(
-    (
-      updater:
-        | { suggestionsUsed: boolean }
-        | ((currentState: { suggestionsUsed: boolean }) => {
-            suggestionsUsed: boolean;
-          })
-    ) => {
-      setUIState(updater);
-    },
-    [setUIState]
-  );
-};
-
-export const useUIState = () => {
-  return useAtom(uiStateAtom);
 };

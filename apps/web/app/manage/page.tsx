@@ -1,12 +1,19 @@
 import "server-only";
 
-import { listModels } from "@/lib/trpc/models";
+import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
+import { HydrationBoundary } from "@tanstack/react-query";
 import type { NextPage } from "next";
 import ManagePageClient from "./page-client";
 
 const ManagePage: NextPage<PageProps<"/manage">> = async () => {
-  const initialModels = await listModels();
-  return <ManagePageClient initialModels={initialModels} />;
+  const caller = await getServerCaller();
+  const state = await prefetch(caller, [caller.models.list.prefetch()]);
+
+  return (
+    <HydrationBoundary state={state}>
+      <ManagePageClient />
+    </HydrationBoundary>
+  );
 };
 
 export default ManagePage;

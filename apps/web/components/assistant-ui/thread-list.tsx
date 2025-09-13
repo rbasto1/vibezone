@@ -3,12 +3,13 @@ import type { FC } from "react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useCurrentChat, useNewChat } from "@/hooks/use-chat";
 import { useChatActions } from "@/hooks/use-chat-actions";
-import { usePanelsStateSetter, useUIStateSetter } from "@/hooks/use-panels";
+import { usePanelsStateSetter } from "@/hooks/use-panels";
 import { useRuntimes } from "@/hooks/use-response-registration";
+import { useSession } from "@/hooks/use-session";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { trpc } from "@/lib/trpc/client";
-import { currentChatAtom, newChatAtom } from "@/store/chat";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { CustomThreadListItem } from "./custom-thread-list-item";
 
 export const ThreadList: FC = () => {
@@ -24,7 +25,7 @@ const ThreadListNew: FC = () => {
   const getRuntimes = useRuntimes();
   const setPanelsState = usePanelsStateSetter();
   const setUIState = useUIStateSetter();
-  const [, createNewChat] = useAtom(newChatAtom);
+  const createNewChat = useNewChat();
 
   const handleNewThread = () => {
     // Generate new chat ID
@@ -53,17 +54,28 @@ const ThreadListNew: FC = () => {
 };
 
 const ThreadListItems: FC = () => {
-  const currentChat = useAtomValue(currentChatAtom);
-  const setCurrentChat = useSetAtom(currentChatAtom);
+  const [currentChat, setCurrentChat] = useCurrentChat();
   const { loadChatById } = useChatActions();
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
 
-  const { data: chats, isLoading } = trpc.messages.listChats.useQuery();
+  const session = useSession();
+  const { data: chats } = trpc.chats.listChats.useQuery(undefined, {
+    staleTime: Infinity,
+    enabled: !!session?.user,
+    placeholderData: (prev) => prev,
+  });
   const utils = trpc.useUtils();
-  const archiveChatMutation = trpc.messages.archiveChat.useMutation({
+  const archiveChatMutation = trpc.chats.archiveChat.useMutation({
     onSuccess: () => {
+      // Optimistically update the chat list
+      utils.chats.listChats.setData(undefined, (prev) => {
+        return (
+          prev?.filter((c) => c.id !== archiveChatMutation.variables?.chatId) ??
+          []
+        );
+      });
       // Refetch the chat list after archiving
-      utils.messages.listChats.invalidate();
+      utils.chats.listChats.invalidate();
     },
   });
 
@@ -93,13 +105,21 @@ const ThreadListItems: FC = () => {
     archiveChatMutation.mutate({ chatId });
   };
 
-  if (isLoading) {
+  if (!session?.user) {
+    return (
+      <div className="text-sm text-muted-foreground p-2">
+        Please sign up or log in to save and load your chats
+      </div>
+    );
+  }
+
+  if (!chats) {
     return (
       <div className="text-sm text-muted-foreground p-2">Loading chats...</div>
     );
   }
 
-  if (!chats || chats.length === 0) {
+  if (!chats.length) {
     return (
       <div className="text-sm text-muted-foreground p-2">No chats yet</div>
     );
@@ -117,6 +137,10 @@ const ThreadListItems: FC = () => {
           isLoading={loadingChatId === chat.id}
           onSelect={handleSelectChat}
           onArchive={handleArchiveChat}
+          isArchiving={
+            archiveChatMutation.isPending &&
+            archiveChatMutation.variables?.chatId === chat.id
+          }
         />
       ))}
     </div>

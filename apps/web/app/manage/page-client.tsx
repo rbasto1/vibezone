@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Gauge, Hash, ThumbsUp, Trash2 } from "lucide-react";
+import { Hash, ThumbsUp, Trash2 } from "lucide-react";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -32,19 +32,12 @@ const SortingSchema = z
 
 const providerTiers = ["leaders", "challengers", "specialists"] as const;
 
-interface ManagePageClientProps {
-  initialModels: ModelsListOutput;
-}
-
-const ManagePageClient: NextPage<ManagePageClientProps> = ({
-  initialModels,
-}) => {
+const ManagePageClient: NextPage = () => {
   const {
     data: hydrated,
     error: listError,
     isLoading,
   } = trpc.models.list.useQuery(undefined, {
-    initialData: initialModels,
     staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
@@ -130,10 +123,7 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               });
           };
 
-          const onToggle = (
-            key: "isSuggested" | "capabilityEffortControl",
-            v: boolean
-          ) => {
+          const onToggle = (key: "isSuggested", v: boolean) => {
             const prev = m[key] as boolean | undefined;
             setCacheFields({ [key]: v } as Partial<typeof m>);
             updateMutation.mutateAsync({ id: m.id, [key]: v }).catch((e) => {
@@ -177,31 +167,6 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
               {/* Separator */}
               <div className="h-6 w-px bg-border/60" />
 
-              {/* Capability toggles (icon-only) */}
-
-              <button
-                type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.capabilityEffortControl
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
-                aria-pressed={!!m.capabilityEffortControl}
-                title="Capability: Effort Control"
-                onClick={() =>
-                  onToggle(
-                    "capabilityEffortControl",
-                    !m.capabilityEffortControl
-                  )
-                }
-              >
-                <Gauge className="h-4 w-4" />
-              </button>
-
-              {/* Separator */}
-              <div className="h-6 w-px bg-border/60" />
-
               {/* Delete button */}
               <button
                 type="button"
@@ -229,8 +194,8 @@ const ManagePageClient: NextPage<ManagePageClientProps> = ({
     [utils.models.list, updateMutation, deleteMutation]
   );
 
-  const providers = hydrated?.providers;
-  const models = hydrated?.models;
+  const providers = hydrated?.providers ?? [];
+  const models = hydrated?.models ?? [];
   const providerCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const m of models)

@@ -13,13 +13,8 @@ import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-interface Props {
-  initialProviders: ProvidersListOutput;
-}
-
-const ProviderManagePageClient: NextPage<Props> = ({ initialProviders }) => {
+const ProviderManagePageClient: NextPage = () => {
   const { data, error, isLoading } = trpc.providers.list.useQuery(undefined, {
-    initialData: initialProviders,
     staleTime: Infinity,
     placeholderData: (data) => data,
   });

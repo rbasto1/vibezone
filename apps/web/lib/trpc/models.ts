@@ -260,16 +260,16 @@ export async function listModels() {
         isPremium: model.isPremium,
         isNew: model.isNew,
         isIncluded: model.isIncluded,
-
-        // Calculate capabilities based on supported parameters
+        createdAt: model.createdAt,
+        // Capabilities (short names used in UI)
         capReason: modelParams.includes("reasoning"),
         capTools: modelParams.includes("tools"),
-        // Derive capabilities from architecture fields
         capVision:
           model.architectureInputModalities?.includes("image") ?? false,
         capPdf: model.architectureInputModalities?.includes("file") ?? false,
         capImageGen:
           model.architectureOutputModalities?.includes("image") ?? false,
+        // capabilityEffortControl: model.capabilityEffortControl,
         provider: {
           name: model.provider.name,
         },
