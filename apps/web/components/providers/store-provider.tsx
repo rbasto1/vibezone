@@ -44,6 +44,7 @@ export function StoreProvider({
     s.set(currentChatAtom, {
       id: generateChatId(),
       createdAt: new Date(),
+      fetchedTitle: false,
     });
 
     return s;
