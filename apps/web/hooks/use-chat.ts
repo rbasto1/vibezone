@@ -1,6 +1,6 @@
 import { generateChatId } from "@/lib/id";
 import type { ChatConfig } from "@/store/chat";
-import { currentChatAtom, resetMessageSaversAtom } from "@/store/chat";
+import { currentChatAtom } from "@/store/chat";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 /**
@@ -9,16 +9,15 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
  */
 export function useNewChat() {
   const setCurrentChat = useCurrentChatSetter();
-  const setResetMessageSavers = useResetMessageSaversSetter();
   return () => {
     // Helper hook to create new chat
     const newChat: ChatConfig = {
       id: generateChatId(),
       createdAt: new Date(),
-      fetchedTitle: false,
+      addedToList: false,
+      fetchedTitlePanelId: null,
     };
     setCurrentChat(newChat);
-    setResetMessageSavers((prev) => prev + 1); // Signal reset
     return newChat;
   };
 }
@@ -33,12 +32,4 @@ export function useCurrentChatSetter() {
 
 export function useCurrentChatValue() {
   return useAtomValue(currentChatAtom);
-}
-
-export function useResetMessageSaversSetter() {
-  return useSetAtom(resetMessageSaversAtom);
-}
-
-export function useResetMessageSaversValue() {
-  return useAtomValue(resetMessageSaversAtom);
 }

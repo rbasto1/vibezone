@@ -12,7 +12,7 @@ import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelsConfig, usePanelsStateValue } from "@/hooks/use-panels";
 import { useUIState } from "@/hooks/use-ui-state";
 import { MAX_PANELS } from "@/lib/constants";
-import { generateChatId } from "@/lib/id";
+import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
 import type { FC } from "react";
 import { useContext, useMemo } from "react";
@@ -55,11 +55,11 @@ const AssistantContent: FC = () => {
 
   const handleSelectModelsGroup = (modelIds: string[]) => {
     setPanelsConfig(
-      modelIds.map((modelId): PanelConfig => {
+      modelIds.map((modelId, order): PanelConfig => {
         const provider = modelId.split(":")[0];
         if (!provider) throw new Error("Assert: this can't happen");
         return {
-          id: generateChatId(),
+          id: generateThreadId(order),
           provider,
           model: modelId,
         };

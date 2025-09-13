@@ -1,27 +1,34 @@
 import { useSession } from "@/hooks/use-session";
 import { trpc } from "@/lib/trpc/client";
+import type { PanelConfig } from "@/store/panels";
 import type { ThreadMessage } from "@assistant-ui/react";
 import { useThread } from "@assistant-ui/react";
 import { useEffect, useRef } from "react";
-import { useCurrentChatValue, useResetMessageSaversValue } from "./use-chat";
-import { usePanelsConfigValue } from "./use-panels";
+import { useCurrentChat } from "./use-chat";
+import { usePanelStateValue } from "./use-panels";
 
-interface UseMessageSaverOptions {
-  panelId: string;
-  modelId: string;
+interface DebouncedSaveTimeout {
+  timeout: ReturnType<typeof setTimeout> | null;
+  lastSavedAt: number;
 }
 
-export const useMessageSaver = ({
-  panelId,
-  modelId,
-}: UseMessageSaverOptions) => {
-  const currentChat = useCurrentChatValue();
-  const resetSignal = useResetMessageSaversValue();
-  const panelConfigs = usePanelsConfigValue();
+const DEBOUNCED_SAVE_TIMEOUT = 1000;
+
+export const useMessageSaver = (panel: PanelConfig) => {
+  const { id, model, initialMessages } = panel;
+
+  // Remote states
+  const [currentChat, setCurrentChat] = useCurrentChat();
   const thread = useThread();
   const utils = trpc.useUtils();
   const session = useSession();
-  const chatOptimisticallyAdded = useRef(false);
+  const panelState = usePanelStateValue(id);
+
+  // Local states
+  const debouncedSaveTimeout = useRef<DebouncedSaveTimeout>({
+    timeout: null,
+    lastSavedAt: Date.now(),
+  });
   const saveMessagesMutation = trpc.messages.saveMessages.useMutation({
     onSuccess: (res) => {
       // If backend returned the chat, update cache with richer data
@@ -38,104 +45,94 @@ export const useMessageSaver = ({
       utils.chats.listChats.invalidate();
     },
   });
-  const savedMessageIds = useRef(new Set<string>());
-  const lastMessageCount = useRef(0);
+  const savedMessageIds = useRef(
+    new Set<string>(initialMessages?.map((msg) => msg.id))
+  );
   const userId = session?.user?.id;
+  const messages = thread.messages;
+  const isDirty = panelState.dirty;
+  const chatId = currentChat.id;
 
-  // Reset when chat changes or reset signal is triggered
+  // Watch for messages and save ones that are ready and not yet saved
   useEffect(() => {
-    savedMessageIds.current.clear();
-    lastMessageCount.current = 0;
+    if (!isDirty) return;
+    if (debouncedSaveTimeout.current.timeout) return; // there is a save queued
+    save();
 
-    // If this panel was loaded from database, mark initial messages as already saved
-    const panelConfig = panelConfigs.find((p) => p.id === panelId);
-    if (panelConfig?.initialMessages) {
-      panelConfig.initialMessages.forEach((msg) => {
-        savedMessageIds.current.add(msg.id);
-      });
-      lastMessageCount.current = panelConfig.initialMessages.length;
-    }
-  }, [currentChat.id, resetSignal, panelId, panelConfigs]);
-
-  // Watch for new messages and status changes
-  useEffect(() => {
-    const messages = thread.messages;
-    const currentMessageCount = messages.length;
-
-    // Check for new messages or status changes
-    const messagesToSave: ThreadMessage[] = [];
-
-    // Check new messages
-    if (currentMessageCount > lastMessageCount.current) {
-      const newMessages = messages.slice(lastMessageCount.current);
-      messagesToSave.push(...newMessages);
-    }
-
-    // Check for status changes in existing messages (e.g., running -> complete)
-    messages.forEach((msg) => {
+    function save() {
       if (
-        msg.role === "assistant" &&
-        msg.status &&
-        !savedMessageIds.current.has(msg.id)
+        debouncedSaveTimeout.current.lastSavedAt >
+        Date.now() - DEBOUNCED_SAVE_TIMEOUT
       ) {
-        // If message is now complete and wasn't saved before, save it
-        if (msg.status.type !== "running") {
-          messagesToSave.push(msg);
+        debouncedSaveTimeout.current.timeout = setTimeout(
+          save,
+          DEBOUNCED_SAVE_TIMEOUT
+        );
+        return;
+      }
+      debouncedSaveTimeout.current.lastSavedAt = Date.now();
+      debouncedSaveTimeout.current.timeout = null;
+
+      // Determine which messages are ready to be saved
+      const shouldSave = (msg: ThreadMessage) => {
+        // Already saved
+        if (savedMessageIds.current.has(msg.id)) return false;
+        // Assistant messages only when not running
+        if (msg.role === "assistant") {
+          return msg.status?.type !== "running";
+        }
+        // User and other roles: save immediately
+        return true;
+      };
+
+      // Collect and dedupe by id
+      const toSaveMap = new Map<string, ThreadMessage>();
+      for (const msg of messages) {
+        if (shouldSave(msg)) {
+          toSaveMap.set(msg.id, msg);
         }
       }
-    });
+      const toSave = Array.from(toSaveMap.values());
 
-    // Filter messages to save
-    const filteredMessagesToSave = messagesToSave.filter((msg) => {
-      // Don't save if already saved
-      if (savedMessageIds.current.has(msg.id)) {
-        return false;
-      }
+      if (!toSave.length) return;
 
-      // Don't save assistant messages that are still running/in_progress
-      if (msg.role === "assistant" && msg.status.type === "running") {
-        return false;
-      }
+      // Mark as saved immediately to avoid duplicate saves on rapid renders
+      toSave.forEach((m) => savedMessageIds.current.add(m.id));
 
-      return true;
-    });
+      // Optimistically ensure chat exists in cache
+      if (userId) {
+        setCurrentChat((currentChat) => {
+          if (currentChat.addedToList) return currentChat;
 
-    if (filteredMessagesToSave.length > 0) {
-      // Mark messages as saved to prevent duplicates (even before successful save)
-      filteredMessagesToSave.forEach((msg) =>
-        savedMessageIds.current.add(msg.id)
-      );
+          void utils.chats.listChats.setData(undefined, (prev) => {
+            const existing = prev ?? [];
+            if (existing.some((c) => c.id === chatId)) return existing;
+            const now = new Date();
+            return [
+              {
+                id: chatId,
+                userId,
+                title: "New Chat",
+                lastMessageAt: now,
+                createdAt: now,
+                updatedAt: now,
+              } as (typeof existing)[number],
+            ].concat(existing);
+          });
 
-      // Optimistically add chat to list if missing
-      if (!chatOptimisticallyAdded.current && userId) {
-        chatOptimisticallyAdded.current = true;
-        utils.chats.listChats.setData(undefined, (prev) => {
-          const existing = prev ?? [];
-          if (existing.some((c) => c.id === currentChat.id)) return existing;
-          const now = new Date();
-          return [
-            {
-              id: currentChat.id,
-              userId,
-              title: "New Chat",
-              isArchived: false,
-              lastMessageAt: now,
-              createdAt: now,
-              updatedAt: now,
-              deletedAt: null,
-            },
-            ...existing,
-          ];
+          return {
+            ...currentChat,
+            addedToList: true,
+          };
         });
       }
 
-      // Save the messages (panelId === threadId)
       saveMessagesMutation.mutate(
         {
-          chatId: currentChat.id,
-          threadId: panelId, // panelId is the same as threadId
-          modelId,
-          messages: filteredMessagesToSave.map((msg) => ({
+          chatId,
+          threadId: id, // panelId is the same as threadId
+          modelId: model,
+          messages: toSave.map((msg) => ({
             id: msg.id,
             role: msg.role,
             content: msg.content,
@@ -148,21 +145,27 @@ export const useMessageSaver = ({
         {
           onError: (error) => {
             console.error("Failed to save messages:", error);
-            // Don't remove from saved set on error to prevent infinite retry loop
-            // The message will be retried on next chat/thread change
+            // Keep ids marked as saved to avoid infinite retry loop
           },
         }
       );
-    }
 
-    lastMessageCount.current = currentMessageCount;
+      setCurrentChat((currentChat) => {
+        return {
+          ...currentChat,
+          dirty: false,
+        };
+      });
+    }
   }, [
-    thread.messages,
-    currentChat.id,
-    panelId,
-    modelId,
-    saveMessagesMutation,
+    chatId,
+    id,
+    isDirty,
+    messages,
+    model,
     userId,
+    setCurrentChat,
+    saveMessagesMutation,
     utils.chats.listChats,
   ]);
 

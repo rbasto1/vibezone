@@ -33,7 +33,7 @@ export function StoreProvider({
       panelStateAtom,
       panelsInitialValue.slice(0, INITIAL_PANEL_COUNT).reduce(
         (acc, p) => {
-          acc[p.id] = { running: false };
+          acc[p.id] = { running: false, dirty: false };
           return acc;
         },
         {} as Record<string, PanelState>
@@ -44,7 +44,8 @@ export function StoreProvider({
     s.set(currentChatAtom, {
       id: generateChatId(),
       createdAt: new Date(),
-      fetchedTitle: false,
+      addedToList: false,
+      fetchedTitlePanelId: null,
     });
 
     return s;

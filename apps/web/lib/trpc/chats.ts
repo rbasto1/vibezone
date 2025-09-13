@@ -1,6 +1,6 @@
-import { chats, db, messages } from "@/db";
+import { chats, db, messages, threads } from "@/db";
 import { TRPCError } from "@trpc/server";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { authenticatedProcedure, t } from "./server/initialize";
 
@@ -22,23 +22,38 @@ export const chatsRouter = t.router({
       const userId = ctx.user.id;
 
       const chat = await db.query.chats.findFirst({
-        columns: { id: true },
-        where: and(eq(chats.id, chatId), eq(chats.userId, userId)),
+        columns: { id: true, userId: true },
+        where: eq(chats.id, chatId),
       });
-      if (!chat) {
-        return { success: false, message: "Access denied" };
+      if (chat && chat.userId !== userId) {
+        return { success: false, message: "Access denied" } as const;
       }
 
       const title = inputTitle ?? (await getChatName(chatId, firstUserMessage));
 
-      await db
-        .update(chats)
-        .set({
-          title,
-        })
-        .where(and(eq(chats.id, chatId), eq(chats.userId, userId)));
+      if (chat) {
+        await db
+          .update(chats)
+          .set({
+            title,
+          })
+          .where(and(eq(chats.id, chatId), eq(chats.userId, userId)));
+      } else {
+        await db
+          .insert(chats)
+          .values({
+            id: chatId,
+            userId,
+            title,
+            lastMessageAt: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: chats.id,
+            set: { title },
+          });
+      }
 
-      return { success: true, title };
+      return { success: true, title } as const;
     }),
 
   getChatWithThreads: authenticatedProcedure
@@ -61,8 +76,11 @@ export const chatsRouter = t.router({
         with: {
           threads: {
             with: {
-              messages: true,
+              messages: {
+                orderBy: [asc(messages.createdAt)],
+              },
             },
+            orderBy: [asc(threads.id)],
           },
         },
       });
@@ -146,7 +164,6 @@ async function getChatName(chatId: string, firstUserMessage?: string) {
   if (typeof userQuery !== "string") {
     return userQuery.error;
   }
-  console.log("userQuery", userQuery);
 
   const chatNameResponse = await fetch(
     `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/complete`,
@@ -182,7 +199,6 @@ async function getChatName(chatId: string, firstUserMessage?: string) {
   );
 
   const chatName = await chatNameResponse.json();
-  console.log("chatName", chatName);
 
   const chatNameParsed = WorkerCompleteResponseSchema.safeParse(chatName);
   if (!chatNameParsed.success) {

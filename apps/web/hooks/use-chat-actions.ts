@@ -48,14 +48,14 @@ export const useChatActions = () => {
         const newPanelsState: Record<string, PanelState> =
           newPanelsConfig.reduce(
             (acc, panel) => {
-              acc[panel.id] = { running: false };
+              acc[panel.id] = { running: false, dirty: false };
               return acc;
             },
             {} as Record<string, PanelState>
           );
 
-        setPanelsConfig(newPanelsConfig);
         setPanelsState(newPanelsState);
+        setPanelsConfig(newPanelsConfig);
 
         return { success: true, threadsLoaded: threads.length };
       } catch (error) {

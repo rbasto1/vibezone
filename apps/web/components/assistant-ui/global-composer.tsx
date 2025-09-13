@@ -36,6 +36,7 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
       {/* Input box (top section) */}
       <textarea
         placeholder="Ask all of the AIs..."
+        name="global-composer"
         autoFocus
         className="bg-muted border-border dark:border-muted-foreground/15 focus:outline-primary placeholder:text-muted-foreground max-h-[calc(50dvh)] min-h-16 w-full resize-none rounded-t-2xl border-x border-t px-4 pt-2 pb-3 text-base outline-none"
         rows={1}

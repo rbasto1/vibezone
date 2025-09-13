@@ -3,7 +3,7 @@ import { db } from "@/db";
 import type { Model } from "@/db/schema";
 import { models, user } from "@/db/schema";
 import { MAX_PANELS } from "@/lib/constants";
-import { generateChatId } from "@/lib/id";
+import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
 import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
@@ -33,8 +33,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   ]);
 
   const initialPanels = userModelList.map(
-    (r): PanelConfig => ({
-      id: generateChatId(),
+    (r, order): PanelConfig => ({
+      id: generateThreadId(order),
       provider: r.providerId,
       model: r.id,
     })

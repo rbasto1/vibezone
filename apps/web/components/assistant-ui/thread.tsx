@@ -4,6 +4,7 @@ import { type FC, type PropsWithChildren } from "react";
 
 import { cn } from "@/components/ui/utils";
 import { useMessageSaver } from "@/hooks/use-message-saver";
+import type { PanelConfig } from "@/store/panels";
 import { AssistantMessage } from "./assistant-message";
 import { EditComposer } from "./edit-composer";
 import { ThreadError } from "./thread-error";
@@ -11,22 +12,16 @@ import { ThreadWelcome } from "./thread-welcome";
 import { UserMessage } from "./user-message";
 
 interface ThreadProps extends PropsWithChildren {
-  panelId: string;
-  modelId: string;
+  panel: PanelConfig;
   error: Error | undefined | null;
 }
 
-export const Thread: FC<ThreadProps> = ({
-  children,
-  panelId,
-  modelId,
-  error,
-}) => {
+export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
   const thread = useThread();
   const isActive = thread.isRunning;
 
   // Use the message saver hook to automatically save messages
-  useMessageSaver({ panelId, modelId });
+  useMessageSaver(panel);
 
   return (
     <ThreadPrimitive.Root

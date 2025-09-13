@@ -1,7 +1,18 @@
-import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { RenameChatModal } from "@/components/assistant-ui/rename-chat-modal";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
-import { ArchiveIcon, Loader2Icon } from "lucide-react";
+import {
+  ArchiveIcon,
+  Loader2Icon,
+  MoreVerticalIcon,
+  PencilIcon,
+} from "lucide-react";
 import { useState, type FC } from "react";
 
 interface CustomThreadListItemProps {
@@ -12,6 +23,7 @@ interface CustomThreadListItemProps {
   isLoading?: boolean;
   onSelect: (chatId: string) => Promise<void>;
   onArchive: (chatId: string) => Promise<unknown>;
+  onRename: (chatId: string, newTitle: string) => Promise<unknown>;
 }
 
 export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
@@ -22,8 +34,10 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   isLoading = false,
   onSelect,
   onArchive,
+  onRename,
 }) => {
   const [isArchiving, setIsArchiving] = useState(false);
+  const [showRenameModal, setShowRenameModal] = useState(false);
 
   const handleSelect = async () => {
     if (isLoading) return;
@@ -36,6 +50,11 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
     await onArchive(chatId).finally(() => {
       setIsArchiving(false);
     });
+  };
+
+  const handleRename = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowRenameModal(true);
   };
 
   return (
@@ -63,18 +82,34 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
         </div>
       </Button>
 
-      <TooltipIconButton
-        className="hover:text-foreground/60 p-4 text-foreground flex-shrink-0 mr-1 size-4"
-        variant="ghost"
-        tooltip="Archive chat"
-        onClick={handleArchive}
-      >
-        {isArchiving ? (
-          <Loader2Icon className="animate-spin" />
-        ) : (
-          <ArchiveIcon />
-        )}
-      </TooltipIconButton>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <MoreVerticalIcon size={16} className="mr-2 cursor-pointer" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleRename}>
+            <PencilIcon className="mr-2 h-4 w-4" />
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleArchive} disabled={isArchiving}>
+            {isArchiving ? (
+              <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <ArchiveIcon className="mr-2 h-4 w-4" />
+            )}
+            Archive
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {showRenameModal && (
+        <RenameChatModal
+          chatId={chatId}
+          currentTitle={title}
+          onRename={onRename}
+          onClose={() => setShowRenameModal(false)}
+        />
+      )}
     </div>
   );
 };

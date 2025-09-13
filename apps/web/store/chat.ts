@@ -5,8 +5,9 @@ import { atom } from "jotai";
 export interface ChatConfig {
   id: string;
   createdAt: Date;
+  addedToList: boolean;
   title?: string;
-  fetchedTitle: boolean;
+  fetchedTitlePanelId: string | null;
   firstUserMessage?: string;
 }
 
@@ -14,8 +15,6 @@ export interface ChatConfig {
 export const currentChatAtom = atom<ChatConfig>({
   id: generateChatId(),
   createdAt: new Date(),
-  fetchedTitle: false,
+  addedToList: false,
+  fetchedTitlePanelId: null,
 });
-
-// Reset signal atom for message savers
-export const resetMessageSaversAtom = atom(0);
