@@ -91,7 +91,10 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({ panelCount }) => {
           </DropdownMenuTrigger>
           <DropdownMenuPortal>
             {chooseModelOpen && (
-              <ModelDropdownContents onSelect={handleAddPanel} />
+              <ModelDropdownContents
+                onSelect={handleAddPanel}
+                onClose={() => setChooseModelOpen(false)}
+              />
             )}
           </DropdownMenuPortal>
         </DropdownMenu>
