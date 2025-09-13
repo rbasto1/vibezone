@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ProviderIcon } from "../ui/providers/provider";
+import { ModelDropdownSearch } from "./model-dropdown-search";
 
 interface ModelDropdownContentsProps {
   onSelect: (providerId: string, modelId: string) => void;
@@ -88,9 +89,14 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     Set<(typeof capabilityOptions)[number]["id"]>
   >(new Set());
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
   // Ensure we always show something even if no providers in the default tier
   useEffect(() => {
-    if (!providers.length || selectedSuggestionGroup) return;
+    if (!providers.length || selectedSuggestionGroup || searchQuery.trim())
+      return;
     const hasInSelected =
       selectedTier && providers.some((p) => p.tier === selectedTier);
     if (!hasInSelected) {
@@ -102,7 +108,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       const next = order.find((t) => providers.some((p) => p.tier === t));
       if (next && next !== selectedTier) setSelectedTier(next);
     }
-  }, [providers, selectedTier, selectedSuggestionGroup]);
+  }, [providers, selectedTier, selectedSuggestionGroup, searchQuery]);
 
   const toggleCapability = (cap: (typeof capabilityOptions)[number]["id"]) => {
     setSelectedCapabilities((prev) => {
@@ -118,14 +124,23 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   ) => {
     setSelectedTier(tier);
     setSelectedSuggestionGroup(null);
-  };
-
-  const handleSuggestionGroupSelect = (groupId: string) => {
-    setSelectedSuggestionGroup(groupId);
-    setSelectedTier(null);
+    setSearchQuery("");
   };
 
   const providersByTier = useMemo(() => {
+    // If search is active, filter providers by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      return providers.filter((p) => {
+        // Check if provider name matches
+        if (p.name.toLowerCase().includes(query)) return true;
+
+        // Check if any of the provider's models match
+        const providerModels = models.filter((m) => m.providerId === p.id);
+        return providerModels.some((m) => m.name.toLowerCase().includes(query));
+      });
+    }
+
     if (selectedSuggestionGroup) {
       // When a suggestion group is selected, get providers for models in that group
       const groupModels = models.filter((m) =>
@@ -135,12 +150,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       return providers.filter((p) => providerIds.has(p.id));
     }
     return selectedTier ? providers.filter((p) => p.tier === selectedTier) : [];
-  }, [providers, selectedTier, selectedSuggestionGroup, models]);
+  }, [providers, selectedTier, selectedSuggestionGroup, models, searchQuery]);
 
   const modelsByProvider = useMemo(() => {
     // Precompute per provider
     const byProvider = new Map<string, typeof models>();
     const hasCapabilityFilters = selectedCapabilities.size > 0;
+    const hasSearchQuery = searchQuery.trim();
 
     for (const p of providersByTier) {
       let list = models.filter((m) => m.providerId === p.id);
@@ -148,6 +164,16 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       // If a suggestion group is selected, filter to only models in that group
       if (selectedSuggestionGroup) {
         list = list.filter((m) => m.groups?.has(selectedSuggestionGroup));
+      }
+
+      // If search is active, filter models by search query
+      if (hasSearchQuery) {
+        const query = searchQuery.toLowerCase().trim();
+        list = list.filter(
+          (m) =>
+            m.provider.name.toLowerCase().includes(query) ||
+            m.name.toLowerCase().includes(query)
+        );
       }
 
       const filtered = hasCapabilityFilters
@@ -169,7 +195,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       byProvider.set(p.id, filtered);
     }
     return byProvider;
-  }, [models, providersByTier, selectedCapabilities, selectedSuggestionGroup]);
+  }, [
+    models,
+    providersByTier,
+    selectedCapabilities,
+    selectedSuggestionGroup,
+    searchQuery,
+  ]);
 
   // Track which providers have expanded "Other models"
   const [expandedProviders, setExpandedProviders] = useState<Set<string>>(
@@ -212,6 +244,12 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     });
   };
 
+  const effectiveSelectedTier =
+    selectedSuggestionGroup || searchQuery.trim() ? null : selectedTier;
+  const effectiveSelectedSuggestionGroup = searchQuery.trim()
+    ? null
+    : selectedSuggestionGroup;
+
   return (
     <DropdownMenuContent
       align="start"
@@ -234,7 +272,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
             <div className="inline-flex rounded-md border bg-muted p-0.5">
               {/* Main tier options */}
               {tierOptions.map(({ id, label, Icon }) => {
-                const active = selectedTier === id;
+                const active = effectiveSelectedTier === id;
                 return (
                   <button
                     key={id}
@@ -265,7 +303,8 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
               {suggestionGroups && suggestionGroups.length > 0 && (
                 <>
                   {suggestionGroups.map((group) => {
-                    const active = selectedSuggestionGroup === group.id;
+                    const active =
+                      effectiveSelectedSuggestionGroup === group.id;
                     return (
                       <button
                         key={group.id}
@@ -279,7 +318,8 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          handleSuggestionGroupSelect(group.id);
+                          setSelectedSuggestionGroup(group.id);
+                          setSearchQuery("");
                         }}
                         title={
                           active
@@ -327,6 +367,14 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
               );
             })}
           </div>
+
+          {/* Search input */}
+          <ModelDropdownSearch
+            onSearchChange={setSearchQuery}
+            onSearchFocusChange={setIsSearchFocused}
+            searchQuery={searchQuery}
+            isSearchFocused={isSearchFocused}
+          />
         </div>
 
         {/* Providers as columns with horizontal scroll */}
