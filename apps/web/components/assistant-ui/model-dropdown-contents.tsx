@@ -2,22 +2,19 @@
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
-import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { cn } from "@/components/ui/utils";
 import { useModelsValue } from "@/hooks/use-models";
-import {
-  Brain,
-  Crown,
-  Eye,
-  FileText,
-  Image as ImageIcon,
-  Mountain,
-  Wand2,
-  Wrench,
-} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ProviderIcon } from "../ui/providers/provider";
+import {
+  capabilityOptions,
+  tierColor,
+  tierOptions,
+  tierOptionsOrder,
+} from "./model-dropdown-constants";
+import { ModelDropdownItem } from "./model-dropdown-item";
 import { ModelDropdownSearch } from "./model-dropdown-search";
+import { ModelDropdownSuggestionGroup } from "./model-dropdown-suggestion-group";
 
 interface ModelDropdownContentsProps {
   onSelect: (providerId: string, modelId: string) => void;
@@ -32,50 +29,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
 }) => {
   const { models, providers } = useModelsValue();
   const { groups: suggestionGroups } = useModelsValue();
-
-  // Filters: provider tiers and model flags
-  const tierOptions = [
-    { id: "leaders" as const, label: "Leaders", Icon: Crown },
-    { id: "challengers" as const, label: "Challengers", Icon: Mountain },
-    { id: "specialists" as const, label: "Specialists", Icon: Wand2 },
-  ];
-  const capabilityOptions = [
-    { id: "capVision" as const, label: "Can see images", Icon: Eye },
-    { id: "capPdf" as const, label: "Can read PDFs", Icon: FileText },
-    { id: "capReason" as const, label: "Reasoning", Icon: Brain },
-    {
-      id: "capImageGen" as const,
-      label: "Can generate images",
-      Icon: ImageIcon,
-    },
-    { id: "capTools" as const, label: "Tools Use", Icon: Wrench },
-    // TODO: implement effort control
-    // {
-    //   id: "capEffortControl" as const,
-    //   label: "Effort Control",
-    //   Icon: Gauge,
-    // },
-  ];
-
-  // Icon color per capability (stroke inherits currentColor)
-  const capabilityColor: Record<
-    (typeof capabilityOptions)[number]["id"],
-    string
-  > = {
-    capVision: "text-sky-600 dark:text-sky-400",
-    capPdf: "text-emerald-600 dark:text-emerald-400",
-    capReason: "text-violet-600 dark:text-violet-400",
-    capImageGen: "text-pink-600 dark:text-pink-400",
-    capTools: "text-zinc-600 dark:text-zinc-400",
-    // capEffortControl: "text-indigo-600 dark:text-indigo-400",
-  };
-
-  // Icon color per tier
-  const tierColor: Record<(typeof tierOptions)[number]["id"], string> = {
-    leaders: "text-yellow-400 dark:text-yellow-300",
-    challengers: "text-foreground/80",
-    specialists: "text-foreground/80",
-  };
 
   // Exclusive selection between tiers and suggestion groups
   const [selectedTier, setSelectedTier] = useState<
@@ -99,12 +52,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     const hasInSelected =
       selectedTier && providers.some((p) => p.tier === selectedTier);
     if (!hasInSelected) {
-      const order: (typeof tierOptions)[number]["id"][] = [
-        "leaders",
-        "challengers",
-        "specialists",
-      ];
-      const next = order.find((t) => providers.some((p) => p.tier === t));
+      const next = tierOptionsOrder.find((t) =>
+        providers.some((p) => p.tier === t)
+      );
       if (next && next !== selectedTier) setSelectedTier(next);
     }
   }, [providers, selectedTier, selectedSuggestionGroup, searchQuery]);
@@ -130,6 +80,12 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   const handleModelSelect = (providerId: string, modelId: string) => {
     onSelect(providerId, modelId);
     onClose?.();
+  };
+
+  // Handler for suggestion group selection
+  const handleSuggestionGroupSelect = (groupId: string) => {
+    setSelectedSuggestionGroup(groupId);
+    setSearchQuery("");
   };
 
   const providersByTier = useMemo(() => {
@@ -307,45 +263,14 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
               {/* Suggestion Groups */}
               {suggestionGroups && suggestionGroups.length > 0 && (
                 <>
-                  {suggestionGroups.map((group) => {
-                    const active =
-                      effectiveSelectedSuggestionGroup === group.id;
-                    return (
-                      <button
-                        key={group.id}
-                        className={cn(
-                          "h-8 text-xs inline-flex items-center gap-1.5 rounded-[6px] cursor-pointer",
-                          "transition-all duration-200 ease-in-out overflow-hidden",
-                          active
-                            ? "bg-primary text-primary-foreground px-2"
-                            : "text-foreground/80 hover:bg-background/50 px-2"
-                        )}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedSuggestionGroup(group.id);
-                          setSearchQuery("");
-                        }}
-                        title={
-                          active
-                            ? group.label
-                            : `${group.title} - ${group.label}`
-                        }
-                      >
-                        <DynamicIcon iconName={group.icon} size={14} />
-                        <span
-                          className={cn(
-                            "truncate transition-all duration-200 ease-in-out",
-                            active
-                              ? "max-w-[80px] opacity-100"
-                              : "max-w-0 opacity-0"
-                          )}
-                        >
-                          {group.title}
-                        </span>
-                      </button>
-                    );
-                  })}
+                  {suggestionGroups.map((group) => (
+                    <ModelDropdownSuggestionGroup
+                      key={group.id}
+                      group={group}
+                      isActive={effectiveSelectedSuggestionGroup === group.id}
+                      onSelect={handleSuggestionGroupSelect}
+                    />
+                  ))}
                 </>
               )}
             </div>
@@ -395,7 +320,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                 const suggested = list.filter((m) => m.isSuggested);
                 const others = list.filter((m) => !m.isSuggested);
                 const expanded = effectiveExpandedProviders.has(p.id);
-                const hasModels = list.length > 0;
 
                 return (
                   <div
@@ -409,72 +333,23 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                       </div>
                     </div>
                     <div className="flex flex-col">
-                      {!hasModels ? (
+                      {!list.length ? (
                         <div className="px-2 py-3 text-center text-sm text-muted-foreground">
                           No models match the filters
                         </div>
                       ) : (
                         <>
                           {suggested.map((m) => (
-                            <div
+                            <ModelDropdownItem
                               key={m.id}
-                              className={cn(
-                                "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
-                                "hover:bg-accent hover:text-accent-foreground",
-                                m.id === currentModelId
-                                  ? "bg-accent/50 font-semibold"
-                                  : "font-medium"
-                              )}
-                              onClick={() => handleModelSelect(p.id, m.id)}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="flex-1 min-w-0">
-                                  <div className="truncate">{m.name}</div>
-                                  <div className="mt-0.5 flex items-center gap-1">
-                                    {capabilityOptions
-                                      .filter((c) =>
-                                        Boolean(
-                                          (m as Record<string, unknown>)[c.id]
-                                        )
-                                      )
-                                      .map(({ id, Icon }) => (
-                                        <Icon
-                                          key={id}
-                                          className={cn(
-                                            "h-3 w-3 opacity-85",
-                                            capabilityColor[id]
-                                          )}
-                                        />
-                                      ))}
-                                  </div>
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  {m.isIncluded ? (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300">
-                                      Included
-                                    </span>
-                                  ) : null}
-                                  {m.isPremium ? (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300">
-                                      Premium
-                                    </span>
-                                  ) : null}
-                                  {m.isNew ? (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-800 dark:text-blue-300">
-                                      New
-                                    </span>
-                                  ) : null}
-                                  {m.isExperimental ? (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-fuchsia-500/15 text-fuchsia-800 dark:text-fuchsia-300">
-                                      Experimental
-                                    </span>
-                                  ) : null}
-                                </span>
-                              </div>
-                            </div>
+                              model={m}
+                              currentModelId={currentModelId}
+                              onSelect={handleModelSelect}
+                              providerId={p.id}
+                            />
                           ))}
 
-                          {others.length > 0 && !expanded ? (
+                          {others.length > 0 && !expanded && (
                             <button
                               className="mt-1 text-xs text-muted-foreground hover:text-foreground text-left px-2 py-1"
                               onClick={(e) => {
@@ -485,75 +360,24 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                             >
                               Show more
                             </button>
-                          ) : null}
+                          )}
 
-                          {others.length > 0 && expanded ? (
+                          {others.length > 0 && expanded && (
                             <div className="mt-2">
                               <div className="text-[11px] uppercase tracking-wide text-muted-foreground px-2 mb-1">
                                 Other models
                               </div>
                               {others.map((m) => (
-                                <div
+                                <ModelDropdownItem
                                   key={m.id}
-                                  className={cn(
-                                    "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
-                                    "hover:bg-accent hover:text-accent-foreground",
-                                    m.id === currentModelId
-                                      ? "bg-accent/50 font-semibold"
-                                      : "font-medium"
-                                  )}
-                                  onClick={() => handleModelSelect(p.id, m.id)}
-                                >
-                                  <div className="flex items-center justify-between gap-2">
-                                    <span className="flex-1 min-w-0">
-                                      <div className="truncate">{m.name}</div>
-                                      <div className="mt-0.5 flex items-center gap-1">
-                                        {capabilityOptions
-                                          .filter((c) =>
-                                            Boolean(
-                                              (m as Record<string, unknown>)[
-                                                c.id
-                                              ]
-                                            )
-                                          )
-                                          .map(({ id, Icon }) => (
-                                            <Icon
-                                              key={id}
-                                              className={cn(
-                                                "h-3 w-3 opacity-85",
-                                                capabilityColor[id]
-                                              )}
-                                            />
-                                          ))}
-                                      </div>
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      {m.isIncluded ? (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300">
-                                          Included
-                                        </span>
-                                      ) : null}
-                                      {m.isPremium ? (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300">
-                                          Premium
-                                        </span>
-                                      ) : null}
-                                      {m.isNew ? (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-800 dark:text-blue-300">
-                                          New
-                                        </span>
-                                      ) : null}
-                                      {m.isExperimental ? (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-fuchsia-500/15 text-fuchsia-800 dark:text-fuchsia-300">
-                                          Experimental
-                                        </span>
-                                      ) : null}
-                                    </span>
-                                  </div>
-                                </div>
+                                  model={m}
+                                  currentModelId={currentModelId}
+                                  onSelect={handleModelSelect}
+                                  providerId={p.id}
+                                />
                               ))}
                             </div>
-                          ) : null}
+                          )}
                         </>
                       )}
                     </div>
