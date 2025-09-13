@@ -1,10 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { cn } from "@/components/ui/utils";
 import { useModelsValue } from "@/hooks/use-models";
@@ -25,11 +22,13 @@ import { ModelDropdownSearch } from "./model-dropdown-search";
 interface ModelDropdownContentsProps {
   onSelect: (providerId: string, modelId: string) => void;
   currentModelId?: string;
+  onClose?: () => void;
 }
 
 export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   onSelect,
   currentModelId,
+  onClose,
 }) => {
   const { models, providers } = useModelsValue();
   const { groups: suggestionGroups } = useModelsValue();
@@ -125,6 +124,12 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     setSelectedTier(tier);
     setSelectedSuggestionGroup(null);
     setSearchQuery("");
+  };
+
+  // Handler that selects model and closes dropdown
+  const handleModelSelect = (providerId: string, modelId: string) => {
+    onSelect(providerId, modelId);
+    onClose?.();
   };
 
   const providersByTier = useMemo(() => {
@@ -411,16 +416,16 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                       ) : (
                         <>
                           {suggested.map((m) => (
-                            <DropdownMenuItem
+                            <div
                               key={m.id}
                               className={cn(
                                 "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
-                                "focus:bg-accent focus:text-accent-foreground",
+                                "hover:bg-accent hover:text-accent-foreground",
                                 m.id === currentModelId
                                   ? "bg-accent/50 font-semibold"
                                   : "font-medium"
                               )}
-                              onSelect={() => onSelect(p.id, m.id)}
+                              onClick={() => handleModelSelect(p.id, m.id)}
                             >
                               <div className="flex items-center justify-between gap-2">
                                 <span className="flex-1 min-w-0">
@@ -466,7 +471,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                   ) : null}
                                 </span>
                               </div>
-                            </DropdownMenuItem>
+                            </div>
                           ))}
 
                           {others.length > 0 && !expanded ? (
@@ -488,16 +493,16 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                 Other models
                               </div>
                               {others.map((m) => (
-                                <DropdownMenuItem
+                                <div
                                   key={m.id}
                                   className={cn(
                                     "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
-                                    "focus:bg-accent focus:text-accent-foreground",
+                                    "hover:bg-accent hover:text-accent-foreground",
                                     m.id === currentModelId
                                       ? "bg-accent/50 font-semibold"
                                       : "font-medium"
                                   )}
-                                  onSelect={() => onSelect(p.id, m.id)}
+                                  onClick={() => handleModelSelect(p.id, m.id)}
                                 >
                                   <div className="flex items-center justify-between gap-2">
                                     <span className="flex-1 min-w-0">
@@ -545,7 +550,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                       ) : null}
                                     </span>
                                   </div>
-                                </DropdownMenuItem>
+                                </div>
                               ))}
                             </div>
                           ) : null}

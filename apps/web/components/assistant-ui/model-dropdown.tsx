@@ -54,6 +54,7 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({ modelId, panelId }) => {
           <ModelDropdownContents
             onSelect={handleChangePanelModel}
             currentModelId={modelId}
+            onClose={() => setIsOpen(false)}
           />
         )}
       </DropdownMenuPortal>
