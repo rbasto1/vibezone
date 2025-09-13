@@ -18,7 +18,6 @@
     "db:seed": "turbo run db:seed",
     "db:studio": "turbo run db:studio"
   },
-  "packageManager": "pnpm@10.13.1",
   "pnpm": {
     "overrides": {
       "react": "19.1.1",
