@@ -8,13 +8,10 @@ import { GlobalComposerContext } from "@/components/providers/composer-provider"
 import { GlobalComposerProvider } from "@/components/providers/global-composer-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
-import {
-  usePanelsConfig,
-  usePanelsStateValue,
-  useUIState,
-} from "@/hooks/use-panels";
+import { usePanelsConfig, usePanelsStateValue } from "@/hooks/use-panels";
+import { useUIState } from "@/hooks/use-ui-state";
 import { MAX_PANELS } from "@/lib/constants";
-import { generatePanelId } from "@/lib/id";
+import { generateChatId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
 import type { FC } from "react";
 import { useContext, useMemo } from "react";
@@ -54,13 +51,13 @@ const AssistantContent: FC = () => {
     }
   };
 
-  const handleSelectModels = (modelIds: string[]) => {
+  const handleSelectModelsGroup = (modelIds: string[]) => {
     setPanelsConfig(
       modelIds.map((modelId): PanelConfig => {
         const provider = modelId.split(":")[0];
         if (!provider) throw new Error("Assert: this can't happen");
         return {
-          id: generatePanelId(),
+          id: generateChatId(),
           provider,
           model: modelId,
         };
@@ -70,10 +67,7 @@ const AssistantContent: FC = () => {
     setUIState({ suggestionsUsed: true });
   };
 
-  const panelCount = useMemo(
-    () => Math.min(Math.max(panelsConfig.length, 1), MAX_PANELS),
-    [panelsConfig.length]
-  );
+  const panelCount = Math.min(Math.max(panelsConfig.length, 1), MAX_PANELS);
   const anyPanelRunning = useMemo(
     () => Object.values(panelsState).some((p) => p.running),
     [panelsState]
@@ -103,7 +97,7 @@ const AssistantContent: FC = () => {
             <div className="mx-auto w-full max-w-3xl md:max-w-4xl lg:max-w-5xl flex flex-col gap-3 px-2 sm:px-3">
               {/* Global suggestions under panels - only show if not used */}
               {!uiState.suggestionsUsed && (
-                <ThreadWelcomeSuggestions onSelect={handleSelectModels} />
+                <ThreadWelcomeSuggestions onSelect={handleSelectModelsGroup} />
               )}
 
               {/* Global composer below panels */}

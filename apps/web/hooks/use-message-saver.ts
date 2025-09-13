@@ -1,10 +1,9 @@
 import { useSession } from "@/hooks/use-session";
 import { trpc } from "@/lib/trpc/client";
-import { currentChatAtom, resetMessageSaversAtom } from "@/store/chat";
 import type { ThreadMessage } from "@assistant-ui/react";
 import { useThread } from "@assistant-ui/react";
-import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
+import { useCurrentChatValue, useResetMessageSaversValue } from "./use-chat";
 import { usePanelsConfigValue } from "./use-panels";
 
 interface UseMessageSaverOptions {
@@ -16,8 +15,8 @@ export const useMessageSaver = ({
   panelId,
   modelId,
 }: UseMessageSaverOptions) => {
-  const currentChat = useAtomValue(currentChatAtom);
-  const resetSignal = useAtomValue(resetMessageSaversAtom);
+  const currentChat = useCurrentChatValue();
+  const resetSignal = useResetMessageSaversValue();
   const panelConfigs = usePanelsConfigValue();
   const thread = useThread();
   const utils = trpc.useUtils();

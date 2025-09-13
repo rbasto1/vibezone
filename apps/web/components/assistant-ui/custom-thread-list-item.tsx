@@ -38,15 +38,15 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2",
+        "mx-1 flex items-center gap-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2",
         isActive
-          ? "bg-muted ring-ring ring-2"
+          ? "bg-muted ring-ring ring-1"
           : "hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring"
       )}
     >
       <Button
         variant="ghost"
-        className="flex-grow px-3 py-2 text-start justify-start h-auto"
+        className="flex-grow justify-start h-auto"
         onClick={handleSelect}
         disabled={isLoading}
       >

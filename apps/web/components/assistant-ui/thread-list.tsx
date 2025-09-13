@@ -3,13 +3,13 @@ import type { FC } from "react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useCurrentChat, useNewChat } from "@/hooks/use-chat";
 import { useChatActions } from "@/hooks/use-chat-actions";
-import { usePanelsStateSetter, useUIStateSetter } from "@/hooks/use-panels";
+import { usePanelsStateSetter } from "@/hooks/use-panels";
 import { useRuntimes } from "@/hooks/use-response-registration";
 import { useSession } from "@/hooks/use-session";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { trpc } from "@/lib/trpc/client";
-import { currentChatAtom, newChatAtom } from "@/store/chat";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { CustomThreadListItem } from "./custom-thread-list-item";
 
 export const ThreadList: FC = () => {
@@ -25,7 +25,7 @@ const ThreadListNew: FC = () => {
   const getRuntimes = useRuntimes();
   const setPanelsState = usePanelsStateSetter();
   const setUIState = useUIStateSetter();
-  const [, createNewChat] = useAtom(newChatAtom);
+  const createNewChat = useNewChat();
 
   const handleNewThread = () => {
     // Generate new chat ID
@@ -54,8 +54,7 @@ const ThreadListNew: FC = () => {
 };
 
 const ThreadListItems: FC = () => {
-  const currentChat = useAtomValue(currentChatAtom);
-  const setCurrentChat = useSetAtom(currentChatAtom);
+  const [currentChat, setCurrentChat] = useCurrentChat();
   const { loadChatById } = useChatActions();
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
 
