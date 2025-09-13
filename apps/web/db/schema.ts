@@ -65,6 +65,7 @@ export const models = pgTable(
     pricing: jsonb("pricing"),
     topProvider: jsonb("top_provider"),
     perRequestLimits: jsonb("per_request_limits"),
+    // capabilityEffortControl: boolean("capability_effort_control"),
     // created from API (epoch seconds) -> timestamptz
     createdAt: timestampTzNow("created_at"),
 
@@ -80,7 +81,6 @@ export const models = pgTable(
     isPremium: boolean("is_premium"),
     isNew: boolean("is_new"),
     isIncluded: boolean("is_included"),
-    capabilityEffortControl: boolean("capability_effort_control"),
 
     updatedAt: timestampTzNowUpdated("updated_at"),
     deletedAt: timestampTz("deleted_at"),

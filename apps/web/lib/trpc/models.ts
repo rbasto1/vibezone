@@ -118,51 +118,44 @@ export const modelsRouter = t.router({
     }
 
     const existingModels: Set<string> = new Set(
-      (
-        await db
-          .select({ id: models.id })
-          .from(models)
-          .innerJoin(providers, eq(models.providerId, providers.id))
-          .where(and(isNull(models.deletedAt), isNull(providers.deletedAt)))
-      ).map((m) => m.id)
+      (await db.select({ id: models.id }).from(models)).map((m) => m.id)
     );
     const newModels = modelsData.filter((m) => !existingModels.has(m.id));
+    console.info(
+      `New models: ${newModels.length}`,
+      newModels.map((m) => m.id)
+    );
 
     // Upsert new models
     if (newModels.length) {
-      await db.insert(models).values(
-        newModels.map((m) => {
-          const providerId = m.id.split("/")[0];
-          const name = m.name.split(": ")[1];
-          if (!name) {
-            throw new Error(
-              `Assert: Model name does not conform to pattern 'Provider: Name': ${m.name}`
-            );
-          }
-          if (!providerId) throw new Error("Assert: Missing provider ID");
-          const isChat =
-            !!m.architecture.input_modalities?.includes("text") &&
-            !!m.architecture.output_modalities?.includes("text");
-          return {
-            id: m.id,
-            providerId,
-            name,
-            canonicalSlug: m.canonical_slug,
-            huggingFaceId: m.hugging_face_id,
-            description: m.description,
-            architectureModality: m.architecture.modality,
-            architectureInputModalities: m.architecture.input_modalities,
-            architectureOutputModalities: m.architecture.output_modalities,
-            architectureTokenizer: m.architecture.tokenizer,
-            architectureInstructType: m.architecture.instruct_type,
-            pricing: m.pricing,
-            topProvider: m.top_provider,
-            perRequestLimits: m.per_request_limits,
-            createdAt: new Date(m.created * 1000),
-            isChat,
-          } satisfies NewModel;
-        })
-      );
+      const values = newModels.map((m) => {
+        const providerId = m.id.split("/")[0];
+        const name = m.name.split(": ")[1] ?? m.name;
+
+        if (!providerId) throw new Error("Assert: Missing provider ID");
+        const isChat =
+          !!m.architecture.input_modalities?.includes("text") &&
+          !!m.architecture.output_modalities?.includes("text");
+        return {
+          id: m.id,
+          providerId,
+          name,
+          canonicalSlug: m.canonical_slug,
+          huggingFaceId: m.hugging_face_id,
+          description: m.description,
+          architectureModality: m.architecture.modality,
+          architectureInputModalities: m.architecture.input_modalities,
+          architectureOutputModalities: m.architecture.output_modalities,
+          architectureTokenizer: m.architecture.tokenizer,
+          architectureInstructType: m.architecture.instruct_type,
+          pricing: m.pricing,
+          topProvider: m.top_provider,
+          perRequestLimits: m.per_request_limits,
+          createdAt: new Date(m.created * 1000),
+          isChat,
+        } satisfies NewModel;
+      });
+      await db.insert(models).values(values);
 
       // Insert supported parameters
       await db
