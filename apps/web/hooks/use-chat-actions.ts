@@ -6,14 +6,14 @@ import { useCallback } from "react";
 import { usePanelsConfigSetter, usePanelsStateSetter } from "./use-panels";
 import { useRuntimes } from "./use-response-registration";
 
-type UseChatActionsResult = UseChatActionsSuccess | UseChatActionsError;
+export type UseChatActionsResult = UseChatActionsSuccess | UseChatActionsError;
 interface UseChatActionsSuccess {
   success: true;
-  threadsLoaded: number;
+  error: undefined;
 }
 interface UseChatActionsError {
   success: false;
-  error: unknown;
+  error: string;
 }
 
 export const useChatActions = () => {
@@ -25,7 +25,7 @@ export const useChatActions = () => {
   const loadChatById = useCallback(
     async (chatId: string): Promise<UseChatActionsResult> => {
       if (!getRuntimes) {
-        return { success: false, error: new Error("Runtimes not loaded") };
+        return { success: false, error: "Runtimes not loaded" };
       }
 
       try {
@@ -57,10 +57,13 @@ export const useChatActions = () => {
         setPanelsState(newPanelsState);
         setPanelsConfig(newPanelsConfig);
 
-        return { success: true, threadsLoaded: threads.length };
+        return { success: true, error: undefined };
       } catch (error) {
         console.error("Failed to load chat:", error);
-        return { success: false, error };
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : JSON.stringify(error),
+        };
       }
     },
     [

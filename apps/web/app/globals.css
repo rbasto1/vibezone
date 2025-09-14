@@ -216,4 +216,30 @@ html.dark {
     pointer-events: none;
     z-index: 1;
   }
+
+  /* Matrix loading animation for thread list items */
+  .matrix-loading {
+    position: relative;
+    animation: matrix-glow 2s ease-in-out infinite;
+    border: 1px solid var(--matrix-green);
+  }
+
+  .matrix-loading::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 255, 65, 0.1) 50%,
+      transparent 100%
+    );
+    animation: matrix-glass-sweep 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: inherit;
+  }
 }

@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
+import type { UseChatActionsResult } from "@/hooks/use-chat-actions";
 import {
   ArchiveIcon,
   Loader2Icon,
@@ -21,7 +22,7 @@ interface CustomThreadListItemProps {
   lastMessageAt: Date;
   isActive?: boolean;
   isLoading?: boolean;
-  onSelect: (chatId: string) => Promise<void>;
+  onSelect: (chatId: string) => Promise<UseChatActionsResult | null>;
   onArchive: (chatId: string) => Promise<unknown>;
   onRename: (chatId: string, newTitle: string) => Promise<unknown>;
 }
@@ -38,10 +39,15 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
 }) => {
   const [isArchiving, setIsArchiving] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
+  const [error, setError] = useState<string>();
 
   const handleSelect = async () => {
+    setError(undefined);
     if (isLoading) return;
-    await onSelect(chatId);
+    const result = await onSelect(chatId);
+    if (result?.error) {
+      setError(result.error);
+    }
   };
 
   const handleArchive = async (e: React.MouseEvent) => {
@@ -63,7 +69,9 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
         "mx-1 flex items-center gap-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2",
         isActive
           ? "bg-muted ring-ring ring-1"
-          : "hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring"
+          : "hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring",
+        isLoading && "matrix-loading",
+        error && "border border-destructive ring-destructive ring-1"
       )}
     >
       <Button
@@ -71,14 +79,22 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
         className="flex-1 min-w-0 justify-start h-auto text-left"
         onClick={handleSelect}
         disabled={isLoading}
+        title={error ? error : undefined}
       >
         <div className="flex flex-col items-start min-w-0 w-full">
-          <p className="text-sm font-medium truncate w-full">
-            {isLoading ? "Loading..." : title || "New Chat"}
+          <p
+            className={cn(
+              "text-sm font-medium truncate w-full",
+              error && "text-destructive"
+            )}
+          >
+            {isLoading ? "Loading..." : error ? error : title || "New Chat"}
           </p>
-          <p className="text-xs text-muted-foreground">
-            {lastMessageAt.toLocaleDateString()}
-          </p>
+          {!error && (
+            <p className="text-xs text-muted-foreground">
+              {lastMessageAt.toLocaleDateString()}
+            </p>
+          )}
         </div>
       </Button>
 

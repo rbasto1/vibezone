@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useCurrentChat, useNewChat } from "@/hooks/use-chat";
+import type { UseChatActionsResult } from "@/hooks/use-chat-actions";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import {
   usePanelsConfigSetter,
@@ -110,8 +111,10 @@ const ThreadListItems: FC = () => {
     },
   });
 
-  const handleSelectChat = async (chatId: string) => {
-    if (loadingChatId) return; // Prevent multiple simultaneous loads
+  const handleSelectChat = async (
+    chatId: string
+  ): Promise<UseChatActionsResult | null> => {
+    if (loadingChatId) return null; // Prevent multiple simultaneous loads
 
     setLoadingChatId(chatId);
 
@@ -129,6 +132,7 @@ const ThreadListItems: FC = () => {
       if (!result.success) {
         console.error(`Failed to load chat ${chatId}:`, result.error);
       }
+      return result;
     } finally {
       setLoadingChatId(null);
     }
