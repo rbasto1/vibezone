@@ -171,7 +171,7 @@ async function getChatName(chatId: string, firstUserMessage?: string) {
       method: "POST",
       body: JSON.stringify({
         id: "1",
-        maxTokens: 100,
+        maxTokens: 20,
         messages: [
           {
             id: "1",
@@ -180,7 +180,7 @@ async function getChatName(chatId: string, firstUserMessage?: string) {
               {
                 type: "text",
                 text: [
-                  "Looking at the following text, which is the first thing spoken in a conversation, generate a short title for the conversation (max 5 words, no more than 30 characters).",
+                  "Looking at the following text, which is the first thing spoken in a conversation, generate a short title for the conversation (max 5 words, no more than 30 characters). Do not include words like 'Inquiry' or 'Query'.",
                   "",
                   "```",
                   userQuery,

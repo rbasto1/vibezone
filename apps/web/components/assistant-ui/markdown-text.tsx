@@ -1,6 +1,8 @@
 "use client";
 
 import "@assistant-ui/react-markdown/styles/dot.css";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 
 import type { CodeHeaderProps } from "@assistant-ui/react-markdown";
 import {
@@ -19,8 +21,10 @@ import { cn } from "@/components/ui/utils";
 const MarkdownTextImpl = () => {
   return (
     <MarkdownTextPrimitive
-      remarkPlugins={[remarkGfm]}
+      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={[rehypeKatex]}
       className="aui-md"
+      preprocess={normalizeCustomMathTags}
       components={defaultComponents}
     />
   );
@@ -218,3 +222,32 @@ const defaultComponents = memoizeMarkdownComponents({
   },
   CodeHeader,
 });
+
+function normalizeCustomMathTags(input: string): string {
+  return (
+    input
+      // Convert [/math]...[/math] to $$...$$
+      .replace(
+        /\[\/math\]([\s\S]*?)\[\/math\]/g,
+        (_, content) => `$$${content.trim()}$$`
+      )
+
+      // Convert [/inline]...[/inline] to $...$
+      .replace(
+        /\[\/inline\]([\s\S]*?)\[\/inline\]/g,
+        (_, content) => `$${content.trim()}$`
+      )
+
+      // Convert \( ... \) to $...$ (inline math) - handles both single and double backslashes
+      .replace(
+        /\\{1,2}\(([\s\S]*?)\\{1,2}\)/g,
+        (_, content) => `$${content.trim()}$`
+      )
+
+      // Convert \[ ... \] to $$...$$ (block math) - handles both single and double backslashes
+      .replace(
+        /\\{1,2}\[([\s\S]*?)\\{1,2}\]/g,
+        (_, content) => `$$${content.trim()}$$`
+      )
+  );
+}

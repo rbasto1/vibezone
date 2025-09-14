@@ -1,3 +1,4 @@
+import "katex/dist/katex.min.css";
 import "./globals.css";
 
 import type { Metadata } from "next";
@@ -25,7 +26,8 @@ const geistMono = Geist_Mono({
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.vibezone.ai";
 const SITE_NAME = "Vibezone";
 const SITE_TITLE = "Vibezone — Compare AI Models";
-const SITE_DESC = "Test, compare, and evaluate AI models side-by-side with Vibezone.";
+const SITE_DESC =
+  "Test, compare, and evaluate AI models side-by-side with Vibezone.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

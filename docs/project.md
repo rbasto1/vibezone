@@ -4,7 +4,7 @@
 
 [x] Add SEO metadata
 [ ] Integrate API call for Zero Data Retention (/api/v1/endpoints/zdr)
-[ ] Render LaTeX and HTML
+[x] Render LaTeX and HTML
 [ ] Limit usage for anon users
 [ ] Limit usage for free users
 [ ] Upload images and PDF files (when the model supports it)
@@ -16,3 +16,4 @@
 [ ] Add Stripe integration
 [ ] Limit usage for paid users
 [ ] Improve error handling (sonner)
+[ ] Render reasoning

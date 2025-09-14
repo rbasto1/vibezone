@@ -79,7 +79,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
         className="flex-1 min-w-0 justify-start h-auto text-left"
         onClick={handleSelect}
         disabled={isLoading}
-        title={error ? error : undefined}
+        title={error ? error : title}
       >
         <div className="flex flex-col items-start min-w-0 w-full">
           <p
