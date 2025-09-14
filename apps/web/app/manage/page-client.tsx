@@ -38,7 +38,6 @@ const ManagePageClient: NextPage = () => {
     error: listError,
     isLoading,
   } = trpc.models.list.useQuery(undefined, {
-    staleTime: Infinity,
     placeholderData: (previousData) => previousData,
   });
   const utils = trpc.useUtils();

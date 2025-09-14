@@ -1,9 +1,12 @@
 import { Thread } from "@/components/assistant-ui/thread";
+import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
+import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
+import type { ChatOnFinishCallback, UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
 import { type FC } from "react";
 import { toast } from "sonner";
@@ -19,9 +22,11 @@ interface ResponsePanelProps {
 const panelGlobalContext: Record<string, PanelConfig> = {};
 
 export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
-  const { id, model } = panel;
+  const { id } = panel;
   panelGlobalContext[id] = panel;
   const [panelState, setPanelState] = usePanelState();
+  const setCurrentChat = useCurrentChatSetter();
+  const renameChatMutation = trpc.chats.renameChat.useMutation();
 
   const handleModelError = (error: Error) => {
     setPanelState(id, (currentState) => ({
@@ -31,11 +36,61 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
     }));
   };
 
-  const handleModelFinish = () => {
+  const handleModelFinish: ChatOnFinishCallback<UIMessage> = async () => {
     setPanelState(id, (currentState) => ({
       ...currentState,
       running: false,
     }));
+
+    // give it a time and then save the messages, no need to rush all panels at the same time
+    setTimeout(() => {
+      setPanelState(id, (currentState) => ({
+        ...currentState,
+        dirty: true,
+      }));
+    }, 2000);
+
+    // use the setter to have access to the current chat
+    setCurrentChat((currentChat) => {
+      if (currentChat.fetchedTitlePanelId) {
+        // chat was fetched or is being fetched by another panel
+        return currentChat;
+      }
+
+      // marks the chat as fetched by us, to prevent multiple calls to the backend
+      setCurrentChat({
+        ...currentChat,
+        fetchedTitlePanelId: id,
+      });
+
+      const firstUserMessage = currentChat.firstUserMessage;
+      if (!firstUserMessage) {
+        console.warn("No first user message found");
+        return currentChat;
+      }
+
+      // our backend will generate the title based on the conversation history
+      renameChatMutation
+        .mutateAsync({
+          chatId: currentChat.id,
+          title: null,
+          firstUserMessage,
+        })
+        .then((chat) => {
+          if (!chat.success) {
+            console.warn("Failed to rename chat", chat.message);
+            return;
+          }
+          // this happens after the mutation is successful, asynchronously
+          setCurrentChat((currentChat) => ({
+            ...currentChat,
+            title: chat.title,
+          }));
+        });
+
+      // make sure not to overwrite the fetched title panel id with empty value
+      return { ...currentChat, fetchedTitlePanelId: id };
+    });
   };
 
   const runtime = useChatRuntime({
@@ -93,14 +148,10 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
 
   return (
     <div className="flex flex-col border rounded-lg overflow-hidden h-full">
-      <PanelHeader
-        panelId={id}
-        modelId={model}
-        onStop={running ? handleStop : undefined}
-      />
+      <PanelHeader panel={panel} onStop={running ? handleStop : undefined} />
       <div className="flex-1 min-h-0">
         <AssistantRuntimeProvider runtime={runtime}>
-          <Thread panelId={id} modelId={model} error={error} />
+          <Thread panel={panel} error={error} />
           <ThreadScrollToBottom />
         </AssistantRuntimeProvider>
       </div>

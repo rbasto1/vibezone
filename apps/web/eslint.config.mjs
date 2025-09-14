@@ -1,4 +1,5 @@
 import nextPlugin from "@next/eslint-plugin-next";
+import reactRefresh from "eslint-plugin-react-refresh";
 import baseConfig from "../../packages/config/eslint.config.mjs";
 
 export default [
@@ -7,6 +8,7 @@ export default [
     files: ["**/*.{js,jsx,ts,tsx}"],
     plugins: {
       "@next/next": nextPlugin,
+      "react-refresh": reactRefresh,
     },
     languageOptions: {
       globals: {

@@ -8,10 +8,11 @@ import { GlobalComposerContext } from "@/components/providers/composer-provider"
 import { GlobalComposerProvider } from "@/components/providers/global-composer-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
+import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelsConfig, usePanelsStateValue } from "@/hooks/use-panels";
 import { useUIState } from "@/hooks/use-ui-state";
 import { MAX_PANELS } from "@/lib/constants";
-import { generateChatId } from "@/lib/id";
+import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
 import type { FC } from "react";
 import { useContext, useMemo } from "react";
@@ -30,6 +31,7 @@ const AssistantContent: FC = () => {
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelsState = usePanelsStateValue();
   const [uiState, setUIState] = useUIState();
+  const setCurrentChat = useCurrentChatSetter();
 
   const ctx = useContext(GlobalComposerContext);
   if (!ctx) throw new Error("GlobalComposerContext is not available");
@@ -53,11 +55,11 @@ const AssistantContent: FC = () => {
 
   const handleSelectModelsGroup = (modelIds: string[]) => {
     setPanelsConfig(
-      modelIds.map((modelId): PanelConfig => {
+      modelIds.map((modelId, order): PanelConfig => {
         const provider = modelId.split(":")[0];
         if (!provider) throw new Error("Assert: this can't happen");
         return {
-          id: generateChatId(),
+          id: generateThreadId(order),
           provider,
           model: modelId,
         };
@@ -104,7 +106,17 @@ const AssistantContent: FC = () => {
               <GlobalComposer
                 value={prompt}
                 onChange={setPrompt}
-                onSubmit={() => send(prompt)}
+                onSubmit={() => {
+                  send(prompt);
+                  setCurrentChat((currentChat) =>
+                    currentChat.firstUserMessage
+                      ? currentChat
+                      : {
+                          ...currentChat,
+                          firstUserMessage: prompt,
+                        }
+                  );
+                }}
                 onStopAll={anyPanelRunning ? handleStopAll : null}
               />
             </div>

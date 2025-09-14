@@ -22,14 +22,19 @@ export const usePanelsConfigValue = () => {
   return useAtomValue(panelConfigAtom);
 };
 
-export const usePanelStateValue = () => {
+export const usePanelStateValueGetter = () => {
   const panelStates = useAtomValue(panelStateAtom);
   return useCallback(
     (panelId: string) => {
-      return panelStates[panelId] || { running: false };
+      return panelStates[panelId] || { running: false, dirty: false };
     },
     [panelStates]
   );
+};
+
+export const usePanelStateValue = (id: string) => {
+  const panelStates = useAtomValue(panelStateAtom);
+  return panelStates[id] || { running: false, dirty: false };
 };
 
 export const usePanelsStateValue = () => {
@@ -71,7 +76,7 @@ export const usePanelStateSetter = () => {
         ...panelState,
         [panelId]:
           typeof updater === "function"
-            ? updater(panelState[panelId] || { running: false })
+            ? updater(panelState[panelId] || { running: false, dirty: false })
             : updater,
       }));
     },
@@ -117,7 +122,7 @@ export const usePanelsState = () => {
 };
 
 export const usePanelState = () => {
-  const getter = usePanelStateValue();
+  const getter = usePanelStateValueGetter();
   const setter = usePanelStateSetter();
   return [getter, setter] as const;
 };

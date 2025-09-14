@@ -22,7 +22,15 @@ export const TRPCProvider = ({
   children,
   dehydratedState,
 }: TRPCProviderProps) => {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          mutations: { retry: false },
+          queries: { retry: false, staleTime: Infinity },
+        },
+      })
+  );
   const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [

@@ -5,11 +5,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCurrentChat, useNewChat } from "@/hooks/use-chat";
 import { useChatActions } from "@/hooks/use-chat-actions";
-import { usePanelsStateSetter } from "@/hooks/use-panels";
+import {
+  usePanelsConfigSetter,
+  usePanelsStateSetter,
+} from "@/hooks/use-panels";
 import { useRuntimes } from "@/hooks/use-response-registration";
 import { useSession } from "@/hooks/use-session";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
+import type { PanelConfig } from "@/store/panels";
 import { CustomThreadListItem } from "./custom-thread-list-item";
 
 export const ThreadList: FC = () => {
@@ -24,10 +29,11 @@ export const ThreadList: FC = () => {
 const ThreadListNew: FC = () => {
   const getRuntimes = useRuntimes();
   const setPanelsState = usePanelsStateSetter();
+  const setPanelsConfig = usePanelsConfigSetter();
   const setUIState = useUIStateSetter();
   const createNewChat = useNewChat();
 
-  const handleNewThread = () => {
+  const handleNewChat = () => {
     // Generate new chat ID
     createNewChat();
 
@@ -38,6 +44,17 @@ const ThreadListNew: FC = () => {
     }
 
     setPanelsState({});
+    setPanelsConfig((config) =>
+      config.map(
+        (c, order) =>
+          ({
+            id: generateThreadId(order),
+            provider: c.provider,
+            model: c.model,
+            initialMessages: [],
+          }) satisfies PanelConfig
+      )
+    );
     setUIState({ suggestionsUsed: false });
   };
 
@@ -45,7 +62,7 @@ const ThreadListNew: FC = () => {
     <Button
       className="data-active:bg-muted hover:bg-muted justify-start"
       variant="ghost"
-      onClick={handleNewThread}
+      onClick={handleNewChat}
     >
       <PlusIcon />
       New Chat
@@ -59,8 +76,7 @@ const ThreadListItems: FC = () => {
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
 
   const session = useSession();
-  const { data: chats } = trpc.chats.listChats.useQuery(undefined, {
-    staleTime: Infinity,
+  const { data: chats, error } = trpc.chats.listChats.useQuery(undefined, {
     enabled: !!session?.user,
     placeholderData: (prev) => prev,
   });
@@ -79,6 +95,21 @@ const ThreadListItems: FC = () => {
     },
   });
 
+  const renameChatMutation = trpc.chats.renameChat.useMutation({
+    onSuccess: (value) => {
+      utils.chats.listChats.setData(undefined, (prev) => {
+        if (!value.success || !prev) return prev;
+
+        return prev.map((c) =>
+          c.id === renameChatMutation.variables?.chatId
+            ? { ...c, title: value.title }
+            : c
+        );
+      });
+      utils.chats.listChats.invalidate();
+    },
+  });
+
   const handleSelectChat = async (chatId: string) => {
     if (loadingChatId) return; // Prevent multiple simultaneous loads
 
@@ -89,6 +120,8 @@ const ThreadListItems: FC = () => {
       setCurrentChat({
         id: chatId,
         createdAt: new Date(), // This will be updated when we load the actual chat
+        addedToList: true,
+        fetchedTitlePanelId: "loaded-from-db",
       });
 
       // Load the chat data imperatively
@@ -101,9 +134,11 @@ const ThreadListItems: FC = () => {
     }
   };
 
-  const handleArchiveChat = (chatId: string) => {
-    archiveChatMutation.mutate({ chatId });
-  };
+  const handleArchiveChat = (chatId: string) =>
+    archiveChatMutation.mutateAsync({ chatId });
+
+  const handleRenameChat = (chatId: string, newTitle: string) =>
+    renameChatMutation.mutateAsync({ chatId, title: newTitle });
 
   if (!session?.user) {
     return (
@@ -111,6 +146,10 @@ const ThreadListItems: FC = () => {
         Please sign up or log in to save and load your chats
       </div>
     );
+  }
+
+  if (error) {
+    return <div className="text-sm p-2 text-destructive">{error.message}</div>;
   }
 
   if (!chats) {
@@ -137,10 +176,7 @@ const ThreadListItems: FC = () => {
           isLoading={loadingChatId === chat.id}
           onSelect={handleSelectChat}
           onArchive={handleArchiveChat}
-          isArchiving={
-            archiveChatMutation.isPending &&
-            archiveChatMutation.variables?.chatId === chat.id
-          }
+          onRename={handleRenameChat}
         />
       ))}
     </div>

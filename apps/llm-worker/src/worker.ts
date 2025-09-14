@@ -1,5 +1,9 @@
+import type { env } from "cloudflare:workers";
+import { handleProviderComplete } from "./complete";
 import { cors } from "./cors";
 import { handleProviderStream } from "./stream";
+
+export type Env = typeof env;
 
 export default {
   async fetch(
@@ -34,11 +38,15 @@ export default {
       );
     }
 
-    // Handle LLM streaming endpoint
-    if (url.pathname === "/stream") {
-      return handleProviderStream(request, env, headers);
+    switch (url.pathname) {
+      case "/stream":
+        // Handle LLM streaming endpoint
+        return handleProviderStream(request, env, headers);
+      case "/complete":
+        // Handle LLM non-streaming completion endpoint
+        return handleProviderComplete(request, env, headers);
+      default:
+        return Response.json({ error: "Not found" }, { status: 404, headers });
     }
-
-    return Response.json({ error: "Not found" }, { status: 404, headers });
   },
 };

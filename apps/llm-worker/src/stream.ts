@@ -1,6 +1,7 @@
 import { convertToModelMessages, streamText } from "ai";
 import { getOpenRouter } from "./lib/gateway";
 import { getConfigFromRequest } from "./lib/request";
+import type { Env } from "./worker";
 
 export async function handleProviderStream(
   request: Request,
@@ -23,18 +24,19 @@ export async function handleProviderStream(
     );
   }
 
-  const { modelId } = getConfigResult.config;
+  const { modelId, maxTokens } = getConfigResult.config;
   const messages = getConfigResult.messages;
 
   const adapter = getOpenRouter(env);
 
-  console.log(
+  console.info(
     `Starting stream (modelId=${modelId} messages=${messages.length})`
   );
 
   const result = streamText({
     model: adapter(modelId),
     messages: convertToModelMessages(messages),
+    maxOutputTokens: maxTokens,
     onError: (error) => {
       console.error("Caught an error creating stream text:", error);
     },
@@ -51,7 +53,7 @@ export async function handleProviderStream(
   return result.toUIMessageStreamResponse({
     headers,
     onFinish: (e) => {
-      console.log("Stream event finished:", e.responseMessage);
+      console.debug("Stream event finished:", e.responseMessage.id);
     },
   });
 }

@@ -4,12 +4,17 @@ export default [
   ...baseConfig,
   {
     languageOptions: {
+      parserOptions: {
+        project: "./tsconfig.json",
+      },
       globals: {
         Cloudflare: "readonly",
         ExecutionContext: "readonly",
         RequestInit: "readonly",
       },
     },
-    ignorePatterns: ["worker-configuration.d.ts"],
+  },
+  {
+    ignores: ["worker-configuration.d.ts", ".wrangler"],
   },
 ];

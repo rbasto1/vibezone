@@ -11,7 +11,7 @@ import {
 } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useSession } from "@/hooks/use-session";
-import { generateChatId } from "@/lib/id";
+import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
 import type { FC } from "react";
 import { useState } from "react";
@@ -37,7 +37,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({ panelCount }) => {
   const [chooseModelOpen, setChooseModelOpen] = useState(false);
 
   const handleAddPanel = (providerId: string, modelId: string) => {
-    const id = generateChatId();
+    const id = generateThreadId(panelCount);
     const newPanel = {
       id,
       provider: providerId,
@@ -46,7 +46,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({ panelCount }) => {
     setPanelsState((prev) => {
       const newPanels = {
         ...prev,
-        [id]: { running: false },
+        [id]: { running: false, dirty: false },
       };
       return newPanels;
     });

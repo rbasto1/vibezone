@@ -1,4 +1,5 @@
-import { ChatMessage, ChatRequestSchema } from "./schemas";
+import type { ChatMessage } from "./schemas";
+import { ChatRequestSchema } from "./schemas";
 
 export type GetConfigResponse =
   | GetConfigResponseSuccess
@@ -8,6 +9,7 @@ export interface GetConfigResponseSuccess {
   type: "success";
   config: {
     modelId: string;
+    maxTokens: number | undefined;
   };
   messages: ChatMessage[];
   error: null;
@@ -22,7 +24,7 @@ interface GetConfigResponseError {
 
 export function getConfigFromRequest(
   request: Request,
-  rawBody: any
+  rawBody: unknown
 ): GetConfigResponse {
   const bodyParse = ChatRequestSchema.safeParse(rawBody);
   if (!bodyParse.success) {
@@ -41,6 +43,7 @@ export function getConfigFromRequest(
     type: "success",
     config: {
       modelId,
+      maxTokens: bodyParse.data.maxTokens,
     },
     messages: bodyParse.data.messages,
     error: null,

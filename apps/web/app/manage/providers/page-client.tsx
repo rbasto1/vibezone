@@ -15,7 +15,6 @@ import { toast } from "sonner";
 
 const ProviderManagePageClient: NextPage = () => {
   const { data, error, isLoading } = trpc.providers.list.useQuery(undefined, {
-    staleTime: Infinity,
     placeholderData: (data) => data,
   });
   const utils = trpc.useUtils();

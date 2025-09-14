@@ -5,24 +5,22 @@ import { cn } from "@/components/ui/utils";
 import { XIcon } from "lucide-react";
 
 export interface PanelHeaderProps {
-  panelId: string;
-  modelId: string;
+  panel: PanelConfig;
   onStop?: () => void;
 }
 
 import { usePanelsConfig, usePanelsStateSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
+import type { PanelConfig } from "@/store/panels";
 import type { FC } from "react";
 import { ModelDropdown } from "./model-dropdown";
 
-export const PanelHeader: FC<PanelHeaderProps> = ({
-  panelId,
-  modelId,
-  onStop,
-}) => {
+export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
+  const panelId = panel.id;
+  const modelId = panel.model;
 
   const handleRemovePanel = () => {
     const newPanels = panelsConfig.filter((p) => p.id !== panelId);
