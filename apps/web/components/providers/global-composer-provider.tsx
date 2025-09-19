@@ -1,6 +1,12 @@
 "use client";
 
 import { usePanelStateSetter } from "@/hooks/use-panels";
+import { useSession } from "@/hooks/use-session";
+import {
+  ANON_DAILY_LIMIT,
+  canAnonSend,
+  consumeAnonSend,
+} from "@/lib/anon-quota";
 import type { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import React, { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -14,6 +20,7 @@ type Props = React.PropsWithChildren;
 export function GlobalComposerProvider({ children }: Props) {
   const [globalPrompt, setGlobalPrompt] = useState("");
   const setPanelState = usePanelStateSetter();
+  const session = useSession();
 
   // Registry of runtimes by panelId
   const registryRef = useRef<RuntimeRegistry>(new Map());
@@ -31,10 +38,22 @@ export function GlobalComposerProvider({ children }: Props) {
 
   const getRuntimes = useCallback(() => registryRef.current, []);
 
+  const isLoggedIn = !!session?.user;
   const send = useCallback(
     (text: string) => {
       const msg = text.trim();
       if (!msg) return;
+
+      // Anonymous quota enforcement: one send counts once, regardless of panel count
+      const plannedPanels = registryRef.current.size;
+      if (!isLoggedIn) {
+        if (!canAnonSend(Math.max(1, plannedPanels))) {
+          toast.error(
+            `Guest limit reached (${ANON_DAILY_LIMIT}/day). Please sign in.`
+          );
+          return;
+        }
+      }
 
       const runningPanels: string[] = [];
       for (const [panelId, runtime] of registryRef.current.entries()) {
@@ -62,10 +81,15 @@ export function GlobalComposerProvider({ children }: Props) {
         }));
       });
 
+      // After successfully enqueuing messages, consume credits for guests
+      if (!isLoggedIn && runningPanels.length > 0) {
+        consumeAnonSend(runningPanels.length);
+      }
+
       // Clear the global prompt
       setGlobalPrompt("");
     },
-    [setPanelState]
+    [setPanelState, isLoggedIn]
   );
 
   return (

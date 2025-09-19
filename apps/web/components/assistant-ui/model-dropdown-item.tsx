@@ -1,25 +1,17 @@
 "use client";
 
 import { cn } from "@/components/ui/utils";
+import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { capabilityColor, capabilityOptions } from "./model-dropdown-constants";
 
 interface ModelDropdownItemProps {
-  model: {
-    id: string;
-    name: string;
-    isIncluded?: boolean | null;
-    isPremium?: boolean | null;
-    isNew?: boolean | null;
-    isExperimental?: boolean | null;
-    capVision?: boolean;
-    capPdf?: boolean;
-    capReason?: boolean;
-    capImageGen?: boolean;
-    capTools?: boolean;
-  };
+  model: GetModelsListReturn["models"][number];
   currentModelId?: string;
   onSelect: (providerId: string, modelId: string) => void;
   providerId: string;
+  disabled?: boolean;
+  muted?: boolean;
+  titleText?: string;
 }
 
 export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
@@ -27,6 +19,9 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
   currentModelId,
   onSelect,
   providerId,
+  disabled = false,
+  muted = false,
+  titleText,
 }) => {
   return (
     <div
@@ -35,9 +30,15 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
         "hover:bg-accent hover:text-accent-foreground",
         model.id === currentModelId
           ? "bg-accent/50 font-semibold"
-          : "font-medium"
+          : "font-medium",
+        muted && "opacity-50",
+        disabled && "cursor-not-allowed hover:bg-transparent"
       )}
-      onClick={() => onSelect(providerId, model.id)}
+      onClick={() => {
+        if (disabled) return;
+        onSelect(providerId, model.id);
+      }}
+      title={titleText}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="flex-1 min-w-0">

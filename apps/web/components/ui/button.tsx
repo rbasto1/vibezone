@@ -1,7 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import { InlineSpinner } from "@/components/ui/inline-spinner";
+import { cn } from "@/components/ui/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import type { PropsWithChildren } from "react";
 import { Children, cloneElement, isValidElement } from "react";
 
 const buttonVariants = cva(
@@ -55,6 +57,7 @@ function Button({
 
   if (asChild) {
     // Ensure Slot receives exactly one child by cloning the only child
+    if (!children) return null;
     const onlyChild = Children.only(children);
     const childElement = isValidElement(onlyChild)
       ? loading
@@ -63,7 +66,7 @@ function Button({
             undefined,
             <>
               {spinner}
-              {(onlyChild.props as { children?: React.ReactNode }).children}
+              {(onlyChild.props as PropsWithChildren).children}
             </>
           )
         : onlyChild
@@ -72,7 +75,7 @@ function Button({
     return (
       <Comp
         data-slot="button"
-        className={buttonVariants({ variant, size, className })}
+        className={cn(buttonVariants({ variant, size, className }))}
         disabled={disabled || loading}
         {...restProps}
       >
@@ -84,7 +87,7 @@ function Button({
   return (
     <Comp
       data-slot="button"
-      className={buttonVariants({ variant, size, className })}
+      className={cn(buttonVariants({ variant, size, className }))}
       disabled={disabled || loading}
       {...restProps}
     >

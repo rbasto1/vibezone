@@ -10,8 +10,14 @@ import { Toaster } from "@/components/providers/toast-provider";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { cn } from "@/components/ui/utils";
 import { auth } from "@/lib/auth";
+import { SITE_URL } from "@/lib/constants";
 import { headers } from "next/headers";
 import type { PropsWithChildren } from "react";
+
+export const SITE_NAME = "Vibezone";
+export const SITE_TITLE = "Vibezone — Compare AI Models";
+export const SITE_DESC =
+  "Test, compare, and evaluate AI models side-by-side with Vibezone.";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,14 +29,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.vibezone.ai";
-const SITE_NAME = "Vibezone";
-const SITE_TITLE = "Vibezone — Compare AI Models";
-const SITE_DESC =
-  "Test, compare, and evaluate AI models side-by-side with Vibezone.";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || SITE_URL),
   title: {
     default: SITE_NAME,
     template: "%s — Vibezone",

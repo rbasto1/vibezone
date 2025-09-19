@@ -11,10 +11,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/components/ui/utils";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Hash, ThumbsUp, Trash2 } from "lucide-react";
+import { BadgeCheck, Crown, Hash, ThumbsUp, Trash2 } from "lucide-react";
 import type { NextPage } from "next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -181,7 +182,10 @@ const ManagePageClient: NextPage = () => {
               });
           };
 
-          const onToggle = (key: "isSuggested", v: boolean) => {
+          const onToggle = (
+            key: "isSuggested" | "isPremium" | "isIncluded",
+            v: boolean
+          ) => {
             const prev = m[key] as boolean | undefined;
             setCacheFields({ [key]: v } as Partial<typeof m>);
             updateMutation.mutateAsync({ id: m.id, [key]: v }).catch((e) => {
@@ -207,28 +211,62 @@ const ManagePageClient: NextPage = () => {
                 />
               </label>
 
-              <button
+              <Button
                 type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors " +
-                  (m.isSuggested
+                variant="outline"
+                className={cn(
+                  "transition-colors",
+                  m.isSuggested
                     ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
+                    : "border-transparent text-muted-foreground hover:bg-accent"
+                )}
                 aria-pressed={!!m.isSuggested}
                 title="Suggested"
                 onClick={() => onToggle("isSuggested", !m.isSuggested)}
               >
                 <ThumbsUp className="h-4 w-4" />
-              </button>
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(
+                  "transition-colors",
+                  m.isPremium
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-600"
+                    : "border-transparent text-muted-foreground hover:bg-accent"
+                )}
+                aria-pressed={!!m.isPremium}
+                title="Premium"
+                onClick={() => onToggle("isPremium", !m.isPremium)}
+              >
+                <Crown className="h-4 w-4" />
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(
+                  "transition-colors",
+                  m.isIncluded
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600"
+                    : "border-transparent text-muted-foreground hover:bg-accent"
+                )}
+                aria-pressed={!!m.isIncluded}
+                title="Included"
+                onClick={() => onToggle("isIncluded", !m.isIncluded)}
+              >
+                <BadgeCheck className="h-4 w-4" />
+              </Button>
 
               {/* Separator */}
               <div className="h-6 w-px bg-border/60" />
 
               {/* Delete button */}
-              <button
+              <Button
                 type="button"
-                className="inline-flex items-center gap-1 rounded px-2 py-1 border border-red-500/30 text-red-600 hover:bg-red-500/10 transition-colors"
+                variant="outline"
+                className="transition-colors text-red-900 hover:text-red-600"
                 title="Delete model"
                 onClick={(e) => {
                   e.preventDefault();
@@ -243,7 +281,7 @@ const ManagePageClient: NextPage = () => {
                 }}
               >
                 <Trash2 className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           );
         },

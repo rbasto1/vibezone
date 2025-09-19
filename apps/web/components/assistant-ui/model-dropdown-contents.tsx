@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
 import { useModelsValue } from "@/hooks/use-models";
+import { useSession } from "@/hooks/use-session";
 import { useEffect, useMemo, useState } from "react";
 import { ProviderIcon } from "../ui/providers/provider";
 import {
@@ -29,6 +30,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
 }) => {
   const { models, providers } = useModelsValue();
   const { groups: suggestionGroups } = useModelsValue();
+  const session = useSession();
 
   // Exclusive selection between tiers and suggestion groups
   const [selectedTier, setSelectedTier] = useState<
@@ -339,15 +341,36 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                         </div>
                       ) : (
                         <>
-                          {suggested.map((m) => (
-                            <ModelDropdownItem
-                              key={m.id}
-                              model={m}
-                              currentModelId={currentModelId}
-                              onSelect={handleModelSelect}
-                              providerId={p.id}
-                            />
-                          ))}
+                          {suggested.map((m) => {
+                            const restricted =
+                              !session?.user &&
+                              (Boolean(m.isPremium) || Boolean(m.isIncluded));
+                            const titleText = restricted
+                              ? "log in to use this model"
+                              : undefined;
+                            const onSelect = restricted
+                              ? () => {
+                                  try {
+                                    window.dispatchEvent(
+                                      new Event("vz:open-login")
+                                    );
+                                  } catch {
+                                    /*ignore*/
+                                  }
+                                }
+                              : handleModelSelect;
+                            return (
+                              <ModelDropdownItem
+                                key={m.id}
+                                model={m}
+                                currentModelId={currentModelId}
+                                onSelect={onSelect}
+                                providerId={p.id}
+                                muted={restricted}
+                                titleText={titleText}
+                              />
+                            );
+                          })}
 
                           {others.length > 0 && !expanded && (
                             <button
@@ -367,15 +390,37 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                               <div className="text-[11px] uppercase tracking-wide text-muted-foreground px-2 mb-1">
                                 Other models
                               </div>
-                              {others.map((m) => (
-                                <ModelDropdownItem
-                                  key={m.id}
-                                  model={m}
-                                  currentModelId={currentModelId}
-                                  onSelect={handleModelSelect}
-                                  providerId={p.id}
-                                />
-                              ))}
+                              {others.map((m) => {
+                                const restricted =
+                                  !session?.user &&
+                                  (Boolean(m.isPremium) ||
+                                    Boolean(m.isIncluded));
+                                const titleText = restricted
+                                  ? "log in to use this model"
+                                  : undefined;
+                                const onSelect = restricted
+                                  ? () => {
+                                      try {
+                                        window.dispatchEvent(
+                                          new Event("vz:open-login")
+                                        );
+                                      } catch {
+                                        /*ignore*/
+                                      }
+                                    }
+                                  : handleModelSelect;
+                                return (
+                                  <ModelDropdownItem
+                                    key={m.id}
+                                    model={m}
+                                    currentModelId={currentModelId}
+                                    onSelect={onSelect}
+                                    providerId={p.id}
+                                    muted={restricted}
+                                    titleText={titleText}
+                                  />
+                                );
+                              })}
                             </div>
                           )}
                         </>

@@ -2,13 +2,15 @@ import { Thread } from "@/components/assistant-ui/thread";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
+import { useSession } from "@/hooks/use-session";
+import { generateFingerprint } from "@/lib/limiting";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import type { ChatOnFinishCallback, UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
-import { type FC } from "react";
+import { useRef, type FC } from "react";
 import { toast } from "sonner";
 import { PanelHeader } from "./response-panel-header";
 import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
@@ -27,6 +29,9 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
   const [panelState, setPanelState] = usePanelState();
   const setCurrentChat = useCurrentChatSetter();
   const renameChatMutation = trpc.chats.renameChat.useMutation();
+  const session = useSession();
+  const sessionToken = useRef(session?.session.token);
+  sessionToken.current = session?.session.token;
 
   const handleModelError = (error: Error) => {
     setPanelState(id, (currentState) => ({
@@ -102,13 +107,16 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
           throw new Error("Assert: Panel not registered!");
         }
         const { model } = panelGlobalContext[id];
-        return fetch(url, {
-          ...init,
-          headers: {
-            ...init?.headers,
-            "x-vz-model-id": model,
-          },
-        });
+        return generateFingerprint(sessionToken.current).then((authorization) =>
+          fetch(url, {
+            ...init,
+            headers: {
+              ...init?.headers,
+              "x-vz-model-id": model,
+              authorization,
+            },
+          })
+        );
       },
     }),
     onError: handleModelError,

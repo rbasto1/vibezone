@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -44,6 +45,8 @@
 html {
   color-scheme: light;
   --radius: 0.625rem;
+  /* Amber glow color (light) */
+  --anon-glow-rgb: 245 158 11; /* amber-500 */
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -115,6 +118,9 @@ html.dark {
   --matrix-green: #00ff41;
   --matrix-green-glow: #00ff41;
   --matrix-green-dim: #00ff41;
+
+  /* Amber glow color (dark) */
+  --anon-glow-rgb: 252 211 77; /* amber-300 */
 }
 
 @layer base {
@@ -215,6 +221,49 @@ html.dark {
     animation: matrix-glass-sweep 3s ease-in-out infinite;
     pointer-events: none;
     z-index: 1;
+  }
+
+  /* Anonymous CTA gentle glow (CSS-only, no JS) */
+  @keyframes vz-amber-glow-cycle {
+    0%, 79% {
+      opacity: 0;
+      box-shadow: none;
+    }
+    80% {
+      opacity: 0.85;
+      box-shadow:
+        0 0 0 2px rgb(var(--anon-glow-rgb) / 0.55),
+        0 0 0 6px rgb(var(--anon-glow-rgb) / 0.35);
+    }
+    85% {
+      opacity: 1;
+      box-shadow:
+        0 0 0 4px rgb(var(--anon-glow-rgb) / 0.45),
+        0 0 0 10px rgb(var(--anon-glow-rgb) / 0.25);
+    }
+    90% {
+      opacity: 0.9;
+      box-shadow:
+        0 0 0 6px rgb(var(--anon-glow-rgb) / 0.2),
+        0 0 0 14px rgb(var(--anon-glow-rgb) / 0.12);
+    }
+    100% {
+      opacity: 0;
+      box-shadow: none;
+    }
+  }
+
+  .vz-glow-pulse {
+    position: relative;
+  }
+
+  .vz-glow-pulse::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    pointer-events: none;
+    animation: vz-amber-glow-cycle 5s ease-in-out infinite;
   }
 
   /* Matrix loading animation for thread list items */

@@ -125,30 +125,30 @@ export const useMessageSaver = (panel: PanelConfig) => {
             addedToList: true,
           };
         });
-      }
 
-      saveMessagesMutation.mutate(
-        {
-          chatId,
-          threadId: id, // panelId is the same as threadId
-          modelId: model,
-          messages: toSave.map((msg) => ({
-            id: msg.id,
-            role: msg.role,
-            content: msg.content,
-            attachments: msg.attachments || [],
-            metadata: msg.metadata || {},
-            status: msg.status || {},
-            createdAt: msg.createdAt,
-          })),
-        },
-        {
-          onError: (error) => {
-            console.error("Failed to save messages:", error);
-            // Keep ids marked as saved to avoid infinite retry loop
+        saveMessagesMutation.mutate(
+          {
+            chatId,
+            threadId: id, // panelId is the same as threadId
+            modelId: model,
+            messages: toSave.map((msg) => ({
+              id: msg.id,
+              role: msg.role,
+              content: msg.content,
+              attachments: msg.attachments || [],
+              metadata: msg.metadata || {},
+              status: msg.status || {},
+              createdAt: msg.createdAt,
+            })),
           },
-        }
-      );
+          {
+            onError: (error) => {
+              console.error("Failed to save messages:", error);
+              // Keep ids marked as saved to avoid infinite retry loop
+            },
+          }
+        );
+      }
 
       setCurrentChat((currentChat) => {
         return {

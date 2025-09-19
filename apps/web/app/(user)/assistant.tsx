@@ -18,6 +18,9 @@ import type { FC } from "react";
 import { useContext, useMemo } from "react";
 import { toast } from "sonner";
 import { AppSidebarLoader } from "./app-sidebar-loader";
+import { useSession } from "@/hooks/use-session";
+import { useModelsValue } from "@/hooks/use-models";
+import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 
 export const Assistant: FC = () => {
   return (
@@ -32,6 +35,8 @@ const AssistantContent: FC = () => {
   const panelsState = usePanelsStateValue();
   const [uiState, setUIState] = useUIState();
   const setCurrentChat = useCurrentChatSetter();
+  const session = useSession();
+  const { models } = useModelsValue();
 
   const ctx = useContext(GlobalComposerContext);
   if (!ctx) throw new Error("GlobalComposerContext is not available");
@@ -54,8 +59,24 @@ const AssistantContent: FC = () => {
   };
 
   const handleSelectModelsGroup = (modelIds: string[]) => {
+    // If anonymous, filter out premium/included models
+    const allowedModelIds = session?.user
+      ? modelIds
+      : modelIds.filter((id) => {
+          const m = models.find((mm) => mm.id === id);
+          return m && !m.isPremium && !m.isIncluded;
+        });
+
+    if (!session?.user && allowedModelIds.length < modelIds.length) {
+      toast.info("Sign in to use premium models");
+    }
+    if (allowedModelIds.length === 0) {
+      toast.error("No available models for guests. Please sign in.");
+      return;
+    }
+
     setPanelsConfig(
-      modelIds.map((modelId, order): PanelConfig => {
+      allowedModelIds.map((modelId, order): PanelConfig => {
         const provider = modelId.split(":")[0];
         if (!provider) throw new Error("Assert: this can't happen");
         return {
@@ -97,6 +118,8 @@ const AssistantContent: FC = () => {
 
             {/* Centered container for suggestions and composer */}
             <div className="mx-auto w-full max-w-3xl md:max-w-4xl lg:max-w-5xl flex flex-col gap-3 px-2 sm:px-3">
+              {/* Guest quota banner */}
+              <AnonQuotaBanner />
               {/* Global suggestions under panels - only show if not used */}
               {!uiState.suggestionsUsed && (
                 <ThreadWelcomeSuggestions onSelect={handleSelectModelsGroup} />

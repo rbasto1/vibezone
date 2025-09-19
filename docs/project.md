@@ -3,6 +3,7 @@
 ## Pending Tasks
 
 [x] Add SEO metadata
+[ ] Mobile version
 [ ] Integrate API call for Zero Data Retention (/api/v1/endpoints/zdr)
 [x] Render LaTeX and HTML
 [ ] Limit usage for anon users
@@ -17,3 +18,4 @@
 [ ] Limit usage for paid users
 [ ] Improve error handling (sonner)
 [ ] Render reasoning
+[ ] Add syntax highlighting (see packages/assistant-ui/apps/docs/content/docs/ui/SyntaxHighlighting.mdx)

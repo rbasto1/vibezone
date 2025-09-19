@@ -40,6 +40,7 @@ export async function handleProviderStream(
     onError: (error) => {
       console.error("Caught an error creating stream text:", error);
     },
+    abortSignal: request.signal,
   });
 
   // Set headers for streaming
