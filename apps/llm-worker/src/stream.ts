@@ -10,18 +10,15 @@ export async function handleProviderStream(
 ): Promise<Response> {
   const rawBody = await request.json().catch((error) => new Error(error));
   if (rawBody instanceof Error) {
-    return Response.json(
-      { error: `Body is invalid json: ${rawBody.message}` },
-      { status: 400, headers }
-    );
+    return new Response("Invalid json body", {
+      status: 400,
+      headers,
+    });
   }
 
   const getConfigResult = getConfigFromRequest(request, rawBody);
   if (getConfigResult.type === "error") {
-    return Response.json(
-      { error: getConfigResult.error },
-      { status: 400, headers }
-    );
+    return new Response(getConfigResult.error, { status: 400, headers });
   }
 
   const { modelId, maxTokens } = getConfigResult.config;

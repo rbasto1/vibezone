@@ -35,7 +35,7 @@ export function AnonQuotaBanner() {
           className="h-4 w-4 ml-2 text-amber-900 dark:text-amber-300"
           aria-hidden="true"
         />
-        <span>
+        <span suppressHydrationWarning>
           {ANON_DAILY_LIMIT} free messages/day — {remaining} remaining
         </span>
       </div>

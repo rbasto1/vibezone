@@ -38,7 +38,9 @@ function write(u: Usage) {
     try {
       // Notify listeners in-page about quota changes
       window.dispatchEvent(
-        new CustomEvent("vz:anon-quota", { detail: { remaining: Math.max(0, DAILY_LIMIT - u.count) } })
+        new CustomEvent("vz:anon-quota", {
+          detail: { remaining: Math.max(0, DAILY_LIMIT - u.count) },
+        })
       );
     } catch {
       // ignore
@@ -63,6 +65,10 @@ export function consumeAnonSend(count: number = 1): number {
   const next = { date: today(), count: Math.min(DAILY_LIMIT, u.count + inc) };
   write(next);
   return Math.max(0, DAILY_LIMIT - next.count);
+}
+
+export function serverOverride(): void {
+  write({ date: today(), count: DAILY_LIMIT });
 }
 
 export const ANON_DAILY_LIMIT = DAILY_LIMIT;

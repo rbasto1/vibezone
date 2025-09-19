@@ -54,7 +54,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
         >
           Sign in
         </Button>
-        {open ? (
+        {open && (
           <Dialog defaultOpen onOpenChange={(v) => setOpen(!!v)}>
             <DialogContent>
               <DialogHeader>
@@ -134,7 +134,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
               )}
             </DialogContent>
           </Dialog>
-        ) : null}
+        )}
       </>
     );
   }

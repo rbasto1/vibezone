@@ -24,11 +24,17 @@ export default {
     const [scheme, authToken] =
       request.headers.get("Authorization")?.split(" ") ?? [];
     if (!scheme || !authToken) {
-      return Response.json({ error: "Unauthorized" }, { status: 401, headers });
+      return new Response("Unauthorized", { status: 401, headers });
     }
 
     // we have an anon user, let's keep track of their usage based on a fingerprint
-    const check = await checkUsage(request.headers, scheme, authToken, env);
+    const check = await checkUsage(
+      request.headers,
+      scheme,
+      authToken,
+      env,
+      headers
+    );
     if (check instanceof Response) {
       return check;
     }
@@ -46,10 +52,7 @@ export default {
 
     // Only allow POST
     if (request.method !== "POST") {
-      return Response.json(
-        { error: "Method not allowed" },
-        { status: 405, headers }
-      );
+      return new Response("Method not allowed", { status: 405, headers });
     }
 
     switch (url.pathname) {
@@ -60,7 +63,7 @@ export default {
         // Handle LLM non-streaming completion endpoint
         return handleProviderComplete(request, env, headers);
       default:
-        return Response.json({ error: "Not found" }, { status: 404, headers });
+        return new Response("Not found", { status: 404, headers });
     }
   },
 };

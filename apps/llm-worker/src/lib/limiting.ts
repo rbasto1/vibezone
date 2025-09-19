@@ -6,14 +6,19 @@ import {
 } from "./constants";
 
 export async function checkUsage(
-  headers: Headers,
+  requestHeaders: Headers,
   scheme: string,
   token: string,
-  env: Env
+  env: Env,
+  headers: Headers
 ) {
-  const { userKey, limit, error } = await getUserKey(scheme, token, headers);
-  if (error) {
-    return error;
+  const { userKey, limit, error } = await getUserKey(
+    scheme,
+    token,
+    requestHeaders
+  );
+  if (error !== null) {
+    return new Response(error, { status: 401, headers });
   }
 
   if (limit === Infinity) return null;
@@ -31,11 +36,16 @@ export async function checkUsage(
       status: res.status,
       body: await res.text(),
     });
-    return Response.json({ error: "Too many requests" }, { status: 429 });
+    return new Response("Too many requests", { status: 429, headers });
   }
 
   const body: UsageResponse = await res.json();
-  console.debug({ message: "DO response", body: JSON.stringify(body) });
+  console.debug({
+    message: "Usage",
+    limit,
+    dayCount: body.dayCount,
+    monthCount: body.monthCount,
+  });
 
   if (body.dayCount <= limit) return null;
 
@@ -44,17 +54,30 @@ export async function checkUsage(
   });
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  return Response.json(
-    { error: "Too many requests" },
-    { status: 429, headers: { "Retry-After": tomorrow.toUTCString() } }
-  );
+  headers.append("Retry-After", tomorrow.toUTCString());
+  return new Response("Out of credits", {
+    status: 429,
+    headers,
+  });
+}
+
+type GetUserKeyReturn = GetUserKeyReturnSuccess | GetUserKeyReturnError;
+interface GetUserKeyReturnSuccess {
+  userKey: string;
+  limit: number;
+  error: null;
+}
+interface GetUserKeyReturnError {
+  userKey?: string;
+  limit?: number;
+  error: string;
 }
 
 export async function getUserKey(
   scheme: string,
   token: string,
-  headers: Headers
-) {
+  requestHeaders: Headers
+): Promise<GetUserKeyReturn> {
   switch (scheme) {
     case "Bearer": {
       // TODO: get userId from database
@@ -62,14 +85,14 @@ export async function getUserKey(
       return { userKey, limit: MAX_USER_REQUESTS_PER_DAY, error: null };
     }
     case "Anon": {
-      const userKey = await getFingerprint(token, headers);
+      const userKey = await getFingerprint(token, requestHeaders);
       return { userKey, limit: MAX_ANON_REQUESTS_PER_DAY, error: null };
     }
     case "Internal": {
       return { userKey: "", limit: Infinity, error: null };
     }
     default:
-      return { error: new Response("Invalid scheme", { status: 401 }) };
+      return { error: "Invalid scheme" };
   }
 }
 
