@@ -1,9 +1,9 @@
 import { AssistantCloud } from "assistant-cloud";
-import { SITE_URL } from "../constants";
+import { baseUrl } from "../base-url";
 
 export const getGlobalAssistantCloud = (token: string, userId: string) => {
   return new AssistantCloud({
-    baseUrl: process.env.NEXT_PUBLIC_SITE_URL || SITE_URL,
+    baseUrl,
     apiKey: token,
     userId,
     workspaceId: "",
