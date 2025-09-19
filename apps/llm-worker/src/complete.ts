@@ -29,9 +29,11 @@ export async function handleProviderComplete(
 
   const adapter = getOpenRouter(env);
 
-  console.info(
-    `Starting complete (modelId=${modelId} messages=${messages.length})`
-  );
+  console.info({
+    message: "Starting complete",
+    modelId,
+    messagesLength: messages.length,
+  });
 
   try {
     const result = await generateText({

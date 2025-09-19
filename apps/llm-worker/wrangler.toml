@@ -14,3 +14,12 @@ head_sampling_rate = 1
 
 [vars]
 WORKER_ALLOWED_ORIGIN = "https://www.vibezone.ai"
+
+# Durable Objects
+[[durable_objects.bindings]]
+name = "USAGE"
+class_name = "Usage"
+
+[[migrations]]
+tag = "usage-v1"
+new_classes = ["Usage"]
