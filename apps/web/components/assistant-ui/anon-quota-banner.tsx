@@ -1,30 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useAnonRemaining } from "@/hooks/use-anon-quota";
 import { useSession } from "@/hooks/use-session";
-import { ANON_DAILY_LIMIT, getAnonRemaining } from "@/lib/anon-quota";
+import { ANON_DAILY_LIMIT } from "@/store/anon-quota";
 import { AlertTriangle } from "lucide-react";
-import { useEffect, useState } from "react";
 
 export function AnonQuotaBanner() {
   const session = useSession();
-  const [remaining, setRemaining] = useState(getAnonRemaining());
-
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "vz_anon_msg_usage") {
-        setRemaining(getAnonRemaining());
-      }
-    };
-    const onCustom = () => setRemaining(getAnonRemaining());
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("vz:anon-quota", onCustom);
-
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("vz:anon-quota", onCustom);
-    };
-  }, []);
+  const remaining = useAnonRemaining();
 
   if (session?.user) return null;
 

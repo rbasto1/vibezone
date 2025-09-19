@@ -1,12 +1,9 @@
 "use client";
 
+import { useAnonQuotaSetter, useAnonRemaining } from "@/hooks/use-anon-quota";
 import { usePanelStateSetter } from "@/hooks/use-panels";
 import { useSession } from "@/hooks/use-session";
-import {
-  ANON_DAILY_LIMIT,
-  canAnonSend,
-  consumeAnonSend,
-} from "@/lib/anon-quota";
+import { ANON_DAILY_LIMIT } from "@/store/anon-quota";
 import type { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import React, { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -39,15 +36,17 @@ export function GlobalComposerProvider({ children }: Props) {
   const getRuntimes = useCallback(() => registryRef.current, []);
 
   const isLoggedIn = !!session?.user;
+  const remaining = useAnonRemaining();
+  const setAnonUsage = useAnonQuotaSetter();
   const send = useCallback(
     (text: string) => {
       const msg = text.trim();
       if (!msg) return;
 
-      // Anonymous quota enforcement: one send counts once, regardless of panel count
-      const plannedPanels = registryRef.current.size;
       if (!isLoggedIn) {
-        if (!canAnonSend(Math.max(1, plannedPanels))) {
+        // Anonymous quota enforcement
+        const plannedPanels = registryRef.current.size;
+        if (remaining < plannedPanels) {
           toast.error(
             `Guest limit reached (${ANON_DAILY_LIMIT}/day). Please sign in.`
           );
@@ -82,14 +81,17 @@ export function GlobalComposerProvider({ children }: Props) {
       });
 
       // After successfully enqueuing messages, consume credits for guests
-      if (!isLoggedIn && runningPanels.length > 0) {
-        consumeAnonSend(runningPanels.length);
+      if (!isLoggedIn && runningPanels.length) {
+        setAnonUsage((prev) => ({
+          date: prev.date,
+          count: prev.count + runningPanels.length,
+        }));
       }
 
       // Clear the global prompt
       setGlobalPrompt("");
     },
-    [setPanelState, isLoggedIn]
+    [isLoggedIn, remaining, setAnonUsage, setPanelState]
   );
 
   return (

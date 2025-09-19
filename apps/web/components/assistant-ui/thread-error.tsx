@@ -1,6 +1,6 @@
 import { CircleXIcon } from "@/components/ui/icons/circle-x-icon";
+import { useSetDepleted } from "@/hooks/use-anon-quota";
 import { useSession } from "@/hooks/use-session";
-import { serverOverride } from "@/lib/anon-quota";
 import { AlertCircleIcon } from "lucide-react";
 import type { FC } from "react";
 import { Button } from "../ui/button";
@@ -12,11 +12,12 @@ interface ThreadErrorProps {
 
 export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
   const session = useSession();
+  const setDepleted = useSetDepleted();
 
   if (error.message === "Out of credits") {
     const isLoggedIn = !!session?.user;
     if (!isLoggedIn) {
-      serverOverride();
+      setDepleted();
     }
     return (
       <div className="mx-auto w-full max-w-[var(--thread-max-width)] px-[var(--thread-padding-x)]">
