@@ -20,6 +20,6 @@ export const defaultAnonUsage = (): AnonUsage => ({ date: today(), count: 0 });
 export const anonUsageStorageAtom = atomWithStorage<AnonUsage>(
   ANON_STORAGE_KEY,
   defaultAnonUsage(),
-  createJSONStorage<AnonUsage>(() => localStorage),
+  createJSONStorage<AnonUsage>(),
   { getOnInit: true }
 );
