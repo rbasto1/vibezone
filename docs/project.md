@@ -10,7 +10,7 @@
 [x] Limit usage for anon users
 [ ] Limit usage for free users
 [x] Identify free models with a badge
-[ ] Improve db update from stage to stage
+[x] Improve db update from stage to stage
 [ ] Upload images and PDF files (when the model supports it)
 [ ] Add tools to browse the internet
 [ ] Add Privacy Policy and Terms of Service
