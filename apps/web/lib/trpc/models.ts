@@ -262,6 +262,7 @@ export async function listModels() {
         isPremium: model.isPremium,
         isNew: model.isNew,
         isIncluded: model.isIncluded,
+        isFree: model.isFree,
         createdAt: model.createdAt,
         // Capabilities (short names used in UI)
         capReason: modelParams.includes("reasoning"),

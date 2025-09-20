@@ -1,9 +1,9 @@
 "use client";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronDown } from "lucide-react";
 import { useState, type FC } from "react";
 import { Button } from "../ui/button";
@@ -13,9 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { ProviderIcon } from "../ui/providers/provider";
+import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { cn } from "../ui/utils";
 import { ModelDropdownContents } from "./model-dropdown-contents";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import { FreeTag } from "./tags";
 
 interface ModelDropdownProps {
   panelId: string;
@@ -29,8 +30,13 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
   className,
 }) => {
   const { providers, models } = useModelsValue();
-  const model = models.find((m) => m.id === modelId);
-  const provider = providers.find((p) => p.id === model?.providerId);
+  const model = models.find((m) => m.id === modelId) ?? {
+    id: modelId,
+    name: modelId,
+    providerId: modelId.split("/")[0] ?? "",
+    isFree: false,
+  };
+  const provider = providers.find((p) => p.id === model.providerId);
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -58,7 +64,7 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
           >
             <span className="flex items-center gap-2 truncate min-w-0">
               {provider && <ProviderIcon providerId={provider.id} />}
-              <span className="truncate">{model?.name ?? modelId}</span>
+              <span className="truncate">{model.name ?? modelId}</span>
               <ChevronDown className="h-4 w-4 flex-shrink-0" />
             </span>
           </Button>
@@ -85,7 +91,8 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
         >
           <span className="flex items-center gap-2 truncate min-w-0">
             {provider && <ProviderIcon providerId={provider.id} />}
-            <span className="truncate">{model?.name ?? modelId}</span>
+            <span className="truncate">{model.name ?? modelId}</span>
+            {model.isFree && <FreeTag className="hidden sm:inline-flex" />}
             <ChevronDown className="h-4 w-4 flex-shrink-0" />
           </span>
         </Button>
