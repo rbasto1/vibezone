@@ -81,6 +81,7 @@ export const models = pgTable(
     isPremium: boolean("is_premium"),
     isNew: boolean("is_new"),
     isIncluded: boolean("is_included"),
+    isFree: boolean("is_free").notNull().default(false),
 
     updatedAt: timestampTzNowUpdated("updated_at"),
     deletedAt: timestampTz("deleted_at"),

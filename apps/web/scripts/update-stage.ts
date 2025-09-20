@@ -93,11 +93,15 @@ async function updateProviders(sourceDb: Client, targetDb: Client) {
     process.exit(2);
   }
 
+  let updatedCount = 0;
   for (const row of rows) {
-    const anyDifference = Object.entries(fieldsObj).some(
-      ([f, field]) => row[f as keyof typeof row] !== field
-    );
-    if (!anyDifference) {
+    const anyDifference = Object.entries(row)
+      .filter(([f]) => f !== "createdAt" && f !== "updatedAt")
+      .filter(
+        ([f, field]) =>
+          JSON.stringify(row[f as keyof typeof row]) !== JSON.stringify(field)
+      );
+    if (!anyDifference.length) {
       continue;
     }
 
@@ -110,11 +114,16 @@ async function updateProviders(sourceDb: Client, targetDb: Client) {
         `Provider ${row.id} not found in target table (deleted=${!!row.deletedAt})`
       );
     } else {
-      console.info(`☑️ Provider ${row.id} updated`);
+      console.info(
+        `☑️ Provider ${row.id} updated (${anyDifference.join(", ")})`
+      );
+      updatedCount++;
     }
   }
   const count = rows.length;
-  console.info(`✅ Providers updated successfully: ${count} rows`);
+  console.info(
+    `✅ Providers updated successfully: ${updatedCount}/${count} rows`
+  );
 }
 
 async function updateModels(sourceDb: Client, targetDb: Client) {
@@ -147,11 +156,15 @@ async function updateModels(sourceDb: Client, targetDb: Client) {
     process.exit(5);
   }
 
+  let updatedCount = 0;
   for (const row of rows) {
-    const anyDifference = Object.entries(fieldsObj).some(
-      ([f, field]) => row[f as keyof typeof row] !== field
-    );
-    if (!anyDifference) {
+    const anyDifference = Object.entries(row)
+      .filter(([f]) => f !== "createdAt" && f !== "updatedAt")
+      .filter(
+        ([f, field]) =>
+          JSON.stringify(row[f as keyof typeof row]) !== JSON.stringify(field)
+      );
+    if (!anyDifference.length) {
       continue;
     }
 
@@ -164,11 +177,12 @@ async function updateModels(sourceDb: Client, targetDb: Client) {
         `Model ${row.id} not found in target table (deleted=${!!row.deletedAt})`
       );
     } else {
-      console.info(`☑️ Model ${row.id} updated`);
+      console.info(`☑️ Model ${row.id} updated (${anyDifference.join(", ")})`);
+      updatedCount++;
     }
   }
   const count = rows.length;
-  console.info(`✅ Models updated successfully: ${count} rows`);
+  console.info(`✅ Models updated successfully: ${updatedCount}/${count} rows`);
 }
 
 main();
