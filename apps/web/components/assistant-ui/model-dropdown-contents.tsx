@@ -206,23 +206,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     ? null
     : selectedSuggestionGroup;
 
-  const providerRowClass = cn(
-    "flex min-w-full gap-4 overflow-x-auto pb-2 items-stretch",
-    isSheet ? "flex-1" : "h-full"
-  );
-
-  const providerCardClass = cn(
-    "border rounded-md p-2 flex min-h-0 flex-col shrink-0",
-    isSheet
-      ? "h-full min-w-[min(300px,85vw)] max-w-[min(340px,92vw)]"
-      : "h-full min-w-[220px] max-w-[280px]"
-  );
-
-  const modelsContainerClass = cn(
-    "flex flex-1 min-h-0 flex-col overflow-y-auto",
-    !isSheet && "pr-1"
-  );
-
   const sheetFilters = (
     <div className="mb-3 flex w-full flex-col gap-1 px-1">
       <div className="flex w-full flex-wrap items-center gap-2">
@@ -324,12 +307,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
             );
           })}
 
-          {suggestionGroups && suggestionGroups.length > 0 && (
-            <div className="w-px h-8 bg-border mx-1" />
-          )}
-
-          {suggestionGroups && suggestionGroups.length > 0 && (
+          {suggestionGroups.length > 0 && (
             <>
+              <div className="w-px h-8 bg-border mx-1" />
               {suggestionGroups.map((group) => (
                 <ModelDropdownSuggestionGroup
                   key={group.id}
@@ -384,7 +364,11 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
             No providers available for the selected filters.
           </div>
         ) : (
-          <div className={providerRowClass}>
+          <div
+            className={
+              "flex min-w-full gap-4 overflow-x-auto pb-2 h-full items-start"
+            }
+          >
             {providersByTier.map((p) => {
               const list = modelsByProvider.get(p.id) ?? [];
               const suggested = list.filter((m) => m.isSuggested);
@@ -392,14 +376,23 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
               const expanded = effectiveExpandedProviders.has(p.id);
 
               return (
-                <div key={p.id} className={providerCardClass}>
+                <div
+                  key={p.id}
+                  className={
+                    "border rounded-md p-2 flex min-h-0 flex-col shrink-0 max-h-full min-w-[230px] max-w-[280px] grow"
+                  }
+                >
                   <div className="px-1 pb-2 mb-2 border-b">
                     <div className="text-xs tracking-wide text-muted-foreground flex items-center gap-2">
                       <ProviderIcon providerId={p.id} />
                       <span className="font-medium">{p.name}</span>
                     </div>
                   </div>
-                  <div className={modelsContainerClass}>
+                  <div
+                    className={
+                      "flex min-h-0 flex-col max-h-full overflow-y-auto pr-1"
+                    }
+                  >
                     {!list.length ? (
                       <div className="px-2 py-3 text-center text-sm text-muted-foreground">
                         No models match the filters
