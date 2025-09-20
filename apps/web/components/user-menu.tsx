@@ -48,7 +48,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
     return (
       <>
         <Button
-          variant="ghost"
+          variant="outline"
           className={cn("h-8 px-2 text-sm", className)}
           onClick={() => setOpen(true)}
         >

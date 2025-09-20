@@ -3,10 +3,10 @@
 ## Pending Tasks
 
 [x] Add SEO metadata
-[ ] Mobile version
+[-] Mobile version
 [ ] Integrate API call for Zero Data Retention (/api/v1/endpoints/zdr)
 [x] Render LaTeX and HTML
-[ ] Limit usage for anon users
+[x] Limit usage for anon users
 [ ] Limit usage for free users
 [ ] Upload images and PDF files (when the model supports it)
 [ ] Add tools to browse the internet

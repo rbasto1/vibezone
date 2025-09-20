@@ -13,20 +13,25 @@ export function AnonQuotaBanner() {
   if (session?.user) return null;
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border p-2.5 text-sm border-amber-300 dark:border-amber-500/40 dark:text-amber-200 bg-amber-200 text-amber-900 dark:bg-amber-500/40">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-2 rounded-xl border p-2 text-xs leading-tight border-amber-300 dark:border-amber-500/40 dark:text-amber-200 bg-amber-200 text-amber-900 dark:bg-amber-500/40 md:flex-row md:items-center md:justify-between md:gap-4 md:p-2.5 md:text-sm md:leading-normal">
+      <div className="flex items-start gap-1.5">
         <AlertTriangle
-          className="h-4 w-4 ml-2 text-amber-900 dark:text-amber-300"
+          className="hidden md:block h-4 w-4 text-amber-900 dark:text-amber-300"
           aria-hidden="true"
         />
-        <span suppressHydrationWarning>
-          {ANON_DAILY_LIMIT} free messages/day — {remaining} remaining
-        </span>
+        <div className="space-y-0.5">
+          <span className="block md:hidden" suppressHydrationWarning>
+            {remaining} of {ANON_DAILY_LIMIT} free messages remaining
+          </span>
+          <span className="hidden md:block" suppressHydrationWarning>
+            {ANON_DAILY_LIMIT} free messages/day — {remaining} remaining
+          </span>
+        </div>
       </div>
       <Button
         size="sm"
         className={
-          "bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-400 dark:text-black transition-all duration-1000 vz-glow-pulse"
+          "bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-400 dark:text-black transition-all duration-1000 vz-glow-pulse w-full md:w-auto"
         }
         onClick={() => {
           try {
@@ -36,7 +41,7 @@ export function AnonQuotaBanner() {
           }
         }}
       >
-        Log in to unlock more
+        Sign in to unlock more
       </Button>
     </div>
   );

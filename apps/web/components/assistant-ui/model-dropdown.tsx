@@ -12,14 +12,20 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { ProviderIcon } from "../ui/providers/provider";
+import { cn } from "../ui/utils";
 import { ModelDropdownContents } from "./model-dropdown-contents";
 
 interface ModelDropdownProps {
   panelId: string;
   modelId: string;
+  className?: string;
 }
 
-export const ModelDropdown: FC<ModelDropdownProps> = ({ modelId, panelId }) => {
+export const ModelDropdown: FC<ModelDropdownProps> = ({
+  modelId,
+  panelId,
+  className,
+}) => {
   const { providers, models } = useModelsValue();
   const model = models.find((m) => m.id === modelId);
   const provider = providers.find((p) => p.id === model?.providerId);
@@ -41,11 +47,15 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({ modelId, panelId }) => {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button title="Change model" variant="outline">
-          <span className="flex items-center gap-2 truncate max-w-[20vw]">
+        <Button
+          title="Change model"
+          variant="outline"
+          className={cn("w-full justify-between gap-2", className)}
+        >
+          <span className="flex items-center gap-2 truncate min-w-0">
             {provider && <ProviderIcon providerId={provider.id} />}
             <span className="truncate">{model?.name ?? modelId}</span>
-            <ChevronDown className="h-4 w-4 ml-4" />
+            <ChevronDown className="h-4 w-4 flex-shrink-0" />
           </span>
         </Button>
       </DropdownMenuTrigger>

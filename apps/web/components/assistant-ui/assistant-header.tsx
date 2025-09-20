@@ -5,6 +5,7 @@ import { UserMenu } from "@/components/user-menu";
 
 import { MAX_PANELS } from "@/lib/constants";
 
+import { useAnonRemaining } from "@/hooks/use-anon-quota";
 import {
   usePanelsConfigSetter,
   usePanelsStateSetter,
@@ -13,6 +14,7 @@ import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useSession } from "@/hooks/use-session";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
+import { ANON_DAILY_LIMIT } from "@/store/anon-quota";
 import type { FC } from "react";
 import { useState } from "react";
 import { Button } from "../ui/button";
@@ -26,15 +28,21 @@ import { ModelDropdownContents } from "./model-dropdown-contents";
 
 interface AssistantHeaderProps {
   panelCount: number;
+  suggestionsUsed: boolean;
 }
-
-export const AssistantHeader: FC<AssistantHeaderProps> = ({ panelCount }) => {
+export const AssistantHeader: FC<AssistantHeaderProps> = ({
+  panelCount,
+  suggestionsUsed,
+}) => {
   const authData = useSession();
   const setLastModels = trpc.users.setLastModels.useMutation();
   const setPanelsConfig = usePanelsConfigSetter();
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
   const [chooseModelOpen, setChooseModelOpen] = useState(false);
+  const remaining = useAnonRemaining();
+  const showMobileQuotaChip = !authData?.user && suggestionsUsed;
+  const remainingLabel = `${remaining} of ${ANON_DAILY_LIMIT}`;
 
   const handleAddPanel = (providerId: string, modelId: string) => {
     const id = generateThreadId(panelCount);
@@ -65,10 +73,10 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({ panelCount }) => {
   };
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-3 border-b px-4">
+    <header className="flex h-16 shrink-0 items-center border-b px-4">
       <SidebarTrigger />
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center">
         <DropdownMenu open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
           <DropdownMenuTrigger asChild>
             <Button
@@ -100,7 +108,21 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({ panelCount }) => {
         </DropdownMenu>
 
         <ThemeToggle />
-        <UserMenu />
+
+        <div className="flex items-center gap-2">
+          <div
+            aria-hidden={showMobileQuotaChip || undefined}
+            className={cn(
+              "md:hidden overflow-hidden rounded-full border border-amber-300 bg-amber-200 text-amber-900 text-xs font-semibold tracking-tight transition-all duration-800 ease-out whitespace-nowrap",
+              showMobileQuotaChip
+                ? "max-w-[96px] px-2 py-1 opacity-100 ml-2"
+                : "max-w-0 px-0 py-0 opacity-0"
+            )}
+          >
+            {remainingLabel}
+          </div>
+          <UserMenu />
+        </div>
       </div>
     </header>
   );

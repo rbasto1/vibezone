@@ -346,7 +346,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                               !session?.user &&
                               (Boolean(m.isPremium) || Boolean(m.isIncluded));
                             const titleText = restricted
-                              ? "log in to use this model"
+                              ? "Sign in to use this model"
                               : undefined;
                             const onSelect = restricted
                               ? () => {
@@ -396,7 +396,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                   (Boolean(m.isPremium) ||
                                     Boolean(m.isIncluded));
                                 const titleText = restricted
-                                  ? "log in to use this model"
+                                  ? "Sign in to use this model"
                                   : undefined;
                                 const onSelect = restricted
                                   ? () => {
