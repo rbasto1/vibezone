@@ -225,7 +225,8 @@ html.dark {
 
   /* Anonymous CTA gentle glow (CSS-only, no JS) */
   @keyframes vz-amber-glow-cycle {
-    0%, 79% {
+    0%,
+    79% {
       opacity: 0;
       box-shadow: none;
     }
@@ -290,5 +291,95 @@ html.dark {
     pointer-events: none;
     z-index: 1;
     border-radius: inherit;
+  }
+
+  /* Mobile tab glow effect */
+  @property --shimmer {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 33deg;
+  }
+
+  @keyframes shimmer {
+    0% {
+      --shimmer: 0deg;
+    }
+    100% {
+      --shimmer: 360deg;
+    }
+  }
+
+  @keyframes shine {
+    0% {
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    55% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Panel button glow effect */
+  .panel-button-glow {
+    --glow-hue: 120deg; /* Matrix green hue */
+    --shadow-hue: 120deg;
+    --spring-duration: 1.33s;
+    --inset: 4px;
+
+    position: relative;
+    isolation: isolate;
+    color: #00ff41 !important; /* Matrix green text */
+    z-index: 1;
+    transition: all var(--spring-duration) var(--spring-easing);
+  }
+
+  .panel-button-glow::before {
+    content: "";
+    position: absolute;
+    inset: calc(var(--inset) * -1);
+    border-radius: inherit;
+    pointer-events: none;
+    mask-image: conic-gradient(
+      from var(--shimmer, 0deg),
+      transparent 0%,
+      transparent 20%,
+      black 36%,
+      black 45%,
+      transparent 50%,
+      transparent 70%,
+      black 85%,
+      black 95%,
+      transparent 100%
+    );
+    mask-size: cover;
+    mix-blend-mode: plus-lighter;
+    animation:
+      shimmer 3s linear infinite both,
+      shine 2s ease-in-out infinite;
+  }
+
+  .panel-button-glow::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(0, 255, 65, 0.1);
+    box-shadow:
+      inset 0 0 0 1px hsla(var(--glow-hue), 70%, 60%, 0.3),
+      inset 0 0 10px 2px hsla(var(--glow-hue), 100%, 50%, 0.2),
+      0 0 10px 2px hsla(var(--glow-hue), 100%, 50%, 0.2);
+    z-index: -1;
+    animation: shine 3s ease-in-out infinite;
+  }
+
+  .panel-button-glow .text {
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.8);
   }
 }

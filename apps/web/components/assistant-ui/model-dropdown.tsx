@@ -3,6 +3,7 @@
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronDown } from "lucide-react";
 import { useState, type FC } from "react";
 import { Button } from "../ui/button";
@@ -12,18 +13,26 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { ProviderIcon } from "../ui/providers/provider";
+import { cn } from "../ui/utils";
 import { ModelDropdownContents } from "./model-dropdown-contents";
+import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 
 interface ModelDropdownProps {
   panelId: string;
   modelId: string;
+  className?: string;
 }
 
-export const ModelDropdown: FC<ModelDropdownProps> = ({ modelId, panelId }) => {
+export const ModelDropdown: FC<ModelDropdownProps> = ({
+  modelId,
+  panelId,
+  className,
+}) => {
   const { providers, models } = useModelsValue();
   const model = models.find((m) => m.id === modelId);
   const provider = providers.find((p) => p.id === model?.providerId);
   const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const setPanelsConfig = usePanelsConfigSetter();
   const saveLastModels = useSaveLastModels();
@@ -38,14 +47,46 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({ modelId, panelId }) => {
     });
   };
 
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button
+            title="Change model"
+            variant="outline"
+            className={cn("w-full justify-between gap-2", className)}
+          >
+            <span className="flex items-center gap-2 truncate min-w-0">
+              {provider && <ProviderIcon providerId={provider.id} />}
+              <span className="truncate">{model?.name ?? modelId}</span>
+              <ChevronDown className="h-4 w-4 flex-shrink-0" />
+            </span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="bottom" className="h-[100dvh] w-screen gap-0 p-0">
+          <ModelDropdownContents
+            onSelect={handleChangePanelModel}
+            currentModelId={modelId}
+            onClose={() => setIsOpen(false)}
+            variant="sheet"
+          />
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button title="Change model" variant="outline">
-          <span className="flex items-center gap-2 truncate max-w-[20vw]">
+        <Button
+          title="Change model"
+          variant="outline"
+          className={cn("w-full justify-between gap-2", className)}
+        >
+          <span className="flex items-center gap-2 truncate min-w-0">
             {provider && <ProviderIcon providerId={provider.id} />}
             <span className="truncate">{model?.name ?? modelId}</span>
-            <ChevronDown className="h-4 w-4 ml-4" />
+            <ChevronDown className="h-4 w-4 flex-shrink-0" />
           </span>
         </Button>
       </DropdownMenuTrigger>

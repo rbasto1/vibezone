@@ -5,6 +5,16 @@ import { UserMenu } from "@/components/user-menu";
 
 import { MAX_PANELS } from "@/lib/constants";
 
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuPortal,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/components/ui/utils";
+import { useAnonRemaining } from "@/hooks/use-anon-quota";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   usePanelsConfigSetter,
   usePanelsStateSetter,
@@ -13,28 +23,29 @@ import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useSession } from "@/hooks/use-session";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
+import { ANON_DAILY_LIMIT } from "@/store/anon-quota";
 import type { FC } from "react";
 import { useState } from "react";
-import { Button } from "../ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuPortal,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { cn } from "../ui/utils";
 import { ModelDropdownContents } from "./model-dropdown-contents";
 
 interface AssistantHeaderProps {
   panelCount: number;
+  suggestionsUsed: boolean;
 }
-
-export const AssistantHeader: FC<AssistantHeaderProps> = ({ panelCount }) => {
+export const AssistantHeader: FC<AssistantHeaderProps> = ({
+  panelCount,
+  suggestionsUsed,
+}) => {
   const authData = useSession();
   const setLastModels = trpc.users.setLastModels.useMutation();
   const setPanelsConfig = usePanelsConfigSetter();
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
+  const isMobile = useIsMobile();
   const [chooseModelOpen, setChooseModelOpen] = useState(false);
+  const remaining = useAnonRemaining();
+  const showMobileQuotaChip = !authData?.user && suggestionsUsed;
+  const remainingLabel = `${remaining} of ${ANON_DAILY_LIMIT}`;
 
   const handleAddPanel = (providerId: string, modelId: string) => {
     const id = generateThreadId(panelCount);
@@ -65,10 +76,10 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({ panelCount }) => {
   };
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-3 border-b px-4">
+    <header className="flex h-16 shrink-0 items-center border-b px-4">
       <SidebarTrigger />
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center">
         <DropdownMenu open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
           <DropdownMenuTrigger asChild>
             <Button
@@ -90,17 +101,64 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({ panelCount }) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuPortal>
-            {chooseModelOpen && (
-              <ModelDropdownContents
-                onSelect={handleAddPanel}
-                onClose={() => setChooseModelOpen(false)}
-              />
-            )}
+            {chooseModelOpen &&
+              (isMobile ? (
+                <Sheet open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        panelCount < MAX_PANELS
+                          ? "hover:bg-accent"
+                          : "opacity-60 cursor-not-allowed"
+                      )}
+                      disabled={panelCount >= MAX_PANELS}
+                      title={
+                        panelCount < MAX_PANELS
+                          ? "Add another AI chat"
+                          : `Maximum ${MAX_PANELS} models at a time; remove a model to add another`
+                      }
+                      aria-label="Add another AI chat"
+                    >
+                      Add AI
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="bottom"
+                    className="h-[100dvh] w-screen gap-0 p-0"
+                  >
+                    <ModelDropdownContents
+                      onSelect={handleAddPanel}
+                      onClose={() => setChooseModelOpen(false)}
+                      variant="sheet"
+                    />
+                  </SheetContent>
+                </Sheet>
+              ) : (
+                <ModelDropdownContents
+                  onSelect={handleAddPanel}
+                  onClose={() => setChooseModelOpen(false)}
+                />
+              ))}
           </DropdownMenuPortal>
         </DropdownMenu>
 
         <ThemeToggle />
-        <UserMenu />
+
+        <div className="flex items-center gap-2">
+          <div
+            suppressHydrationWarning
+            className={cn(
+              "md:hidden overflow-hidden rounded-full border border-amber-300 bg-amber-200 text-amber-900 text-xs font-semibold tracking-tight transition-all duration-800 ease-out whitespace-nowrap",
+              showMobileQuotaChip
+                ? "max-w-[96px] px-2 py-1 opacity-100 ml-2"
+                : "max-w-0 px-0 py-0 opacity-0"
+            )}
+          >
+            {remainingLabel}
+          </div>
+          <UserMenu />
+        </div>
       </div>
     </header>
   );

@@ -36,9 +36,13 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const canClose = panelsConfig.length > 1;
 
   return (
-    <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/40">
-      <div className="flex items-center gap-2 min-w-0">
-        <ModelDropdown panelId={panelId} modelId={modelId} />
+    <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/40 gap-2">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <ModelDropdown
+          panelId={panelId}
+          modelId={modelId}
+          className="h-8 text-sm"
+        />
       </div>
       <div className="flex items-center gap-1">
         {onStop && (

@@ -52,7 +52,7 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
             ) : (
               <>
                 <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  To continue chatting, please log in.
+                  To continue chatting, please sign in.
                 </h3>
                 <Button
                   variant="outline"
@@ -64,7 +64,7 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
                     }
                   }}
                 >
-                  Log in
+                  Sign in
                 </Button>
               </>
             )}
