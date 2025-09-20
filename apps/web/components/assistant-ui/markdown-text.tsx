@@ -16,6 +16,7 @@ import { memo, useState } from "react";
 import remarkGfm from "remark-gfm";
 
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { SyntaxHighlighter } from "./shiki-highlighter";
 import { cn } from "@/components/ui/utils";
 
 const MarkdownTextImpl = () => {
@@ -70,6 +71,7 @@ const useCopyToClipboard = ({
 };
 
 const defaultComponents = memoizeMarkdownComponents({
+  SyntaxHighlighter,
   h1: ({ className, ...props }) => (
     <h1
       className={cn(
@@ -202,7 +204,7 @@ const defaultComponents = memoizeMarkdownComponents({
   pre: ({ className, ...props }) => (
     <pre
       className={cn(
-        "overflow-x-auto rounded-b-lg bg-black p-4 text-white",
+        "overflow-x-auto !rounded-t-none rounded-b-lg bg-black p-4 text-white",
         className
       )}
       {...props}
