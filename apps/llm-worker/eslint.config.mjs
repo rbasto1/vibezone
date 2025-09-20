@@ -13,6 +13,9 @@ export default [
         RequestInit: "readonly",
       },
     },
+    rules: {
+      "no-undef": "off",
+    },
   },
   {
     ignores: ["worker-configuration.d.ts", ".wrangler"],

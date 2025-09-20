@@ -2,10 +2,6 @@
 
 // Client-side auth facade using better-auth/react.
 
-const baseURL = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
-  : "http://localhost:3022";
-
 export interface AuthUser {
   id: string;
   name: string | null;
@@ -20,8 +16,9 @@ export interface UseUserResult {
 }
 
 import { createAuthClient } from "better-auth/react";
+import { baseUrl } from "./base-url";
 
-export const authClient = createAuthClient({ baseURL });
+export const authClient = createAuthClient({ baseURL: baseUrl });
 
 export const useUser = (): UseUserResult => {
   const { data, isPending } = authClient.useSession();

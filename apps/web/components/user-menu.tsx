@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { GoogleSignInButton } from "@/components/auth/google-signin-button";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
+import { useEventListener } from "@/hooks/use-event-listener";
 import { useSession } from "@/hooks/use-session";
 import { sendMagicLink, signOut } from "@/lib/auth-client";
 
@@ -33,6 +34,10 @@ export const UserMenu = ({ className }: UserMenuProps) => {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  useEventListener(
+    "vz:open-login",
+    useCallback(() => setOpen(true), [])
+  );
   const isMobile =
     typeof navigator !== "undefined" &&
     /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -49,7 +54,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
         >
           Sign in
         </Button>
-        {open ? (
+        {open && (
           <Dialog defaultOpen onOpenChange={(v) => setOpen(!!v)}>
             <DialogContent>
               <DialogHeader>
@@ -129,7 +134,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
               )}
             </DialogContent>
           </Dialog>
-        ) : null}
+        )}
       </>
     );
   }

@@ -1,11 +1,10 @@
 import type { MetadataRoute } from "next";
+import { baseUrl } from "../lib/base-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || "https://www.vibezone.ai";
-
   const routes: MetadataRoute.Sitemap = [
     {
-      url: `${base}/`,
+      url: `${baseUrl}/`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
@@ -14,4 +13,3 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return routes;
 }
-

@@ -3,10 +3,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { magicLink } from "better-auth/plugins";
-
-const baseUrl = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
-  : "http://localhost:3022";
+import { baseUrl } from "./base-url";
 
 async function sendEmailWithResend(to: string, subject: string, html: string) {
   const apiKey = process.env.RESEND_API_KEY;

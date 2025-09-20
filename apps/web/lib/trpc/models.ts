@@ -34,6 +34,8 @@ export const modelsRouter = t.router({
         id: z.string().nonempty(),
         priority: z.number().int().nullable().optional(),
         isSuggested: z.boolean().optional(),
+        isPremium: z.boolean().optional(),
+        isIncluded: z.boolean().optional(),
         capabilityFast: z.boolean().optional(),
         capabilityEffortControl: z.boolean().optional(),
       })

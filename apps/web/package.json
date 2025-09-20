@@ -41,7 +41,7 @@
     "clsx": "^2.1.1",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.5",
-    "framer-motion": "^12.23.12",
+    "framer-motion": "^12.23.15",
     "jotai": "^2.13.1",
     "katex": "^0.16.22",
     "lucide-react": "^0.542.0",

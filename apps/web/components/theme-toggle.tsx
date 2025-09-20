@@ -30,19 +30,15 @@ export function ThemeToggle() {
     );
   }
 
-  const getThemeIcon = () => {
-    return resolvedTheme === "dark" ? (
-      <Moon className="h-4 w-4" />
-    ) : (
-      <Sun className="h-4 w-4" />
-    );
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8">
-          {getThemeIcon()}
+          {resolvedTheme === "dark" ? (
+            <Moon className="h-4 w-4" />
+          ) : (
+            <Sun className="h-4 w-4" />
+          )}
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>

@@ -2,6 +2,7 @@ import { chats, db, messages, threads } from "@/db";
 import { TRPCError } from "@trpc/server";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
+import { INTERNAL_SECRET } from "../constants";
 import { authenticatedProcedure, t } from "./server/initialize";
 
 export const chatsRouter = t.router({
@@ -194,6 +195,7 @@ async function getChatName(chatId: string, firstUserMessage?: string) {
       headers: {
         "Content-Type": "application/json",
         "x-vz-model-id": "openrouter/sonoma-dusk-alpha",
+        Authorization: `Internal ${INTERNAL_SECRET}`,
       },
     }
   );
