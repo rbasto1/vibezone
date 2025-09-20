@@ -56,11 +56,11 @@ export const UserMenu = ({ className }: UserMenuProps) => {
         </Button>
         {open && (
           <Dialog defaultOpen onOpenChange={(v) => setOpen(!!v)}>
-            <DialogContent>
+            <DialogContent aria-describedby="sign-in-description">
               <DialogHeader>
                 <DialogTitle>Sign in</DialogTitle>
                 {!sent && (
-                  <DialogDescription>
+                  <DialogDescription id="sign-in-description">
                     Sign in or sign up to continue. You will have more chat
                     credits, be able to save your conversations, and mark your
                     favorite models.
@@ -70,7 +70,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
 
               {sent ? (
                 <div className="space-y-4 text-center">
-                  <p className="text-sm">
+                  <p className="text-sm" id="sign-in-description">
                     Check your inbox for the sign-in link. It may take a minute
                     to arrive and can land in spam.
                   </p>

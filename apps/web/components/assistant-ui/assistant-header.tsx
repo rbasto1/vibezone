@@ -5,7 +5,16 @@ import { UserMenu } from "@/components/user-menu";
 
 import { MAX_PANELS } from "@/lib/constants";
 
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuPortal,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/components/ui/utils";
 import { useAnonRemaining } from "@/hooks/use-anon-quota";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   usePanelsConfigSetter,
   usePanelsStateSetter,
@@ -17,13 +26,6 @@ import { trpc } from "@/lib/trpc/client";
 import { ANON_DAILY_LIMIT } from "@/store/anon-quota";
 import type { FC } from "react";
 import { useState } from "react";
-import { Button } from "../ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuPortal,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { cn } from "../ui/utils";
 import { ModelDropdownContents } from "./model-dropdown-contents";
 
 interface AssistantHeaderProps {
@@ -39,6 +41,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
   const setPanelsConfig = usePanelsConfigSetter();
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
+  const isMobile = useIsMobile();
   const [chooseModelOpen, setChooseModelOpen] = useState(false);
   const remaining = useAnonRemaining();
   const showMobileQuotaChip = !authData?.user && suggestionsUsed;
@@ -98,12 +101,45 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuPortal>
-            {chooseModelOpen && (
-              <ModelDropdownContents
-                onSelect={handleAddPanel}
-                onClose={() => setChooseModelOpen(false)}
-              />
-            )}
+            {chooseModelOpen &&
+              (isMobile ? (
+                <Sheet open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        panelCount < MAX_PANELS
+                          ? "hover:bg-accent"
+                          : "opacity-60 cursor-not-allowed"
+                      )}
+                      disabled={panelCount >= MAX_PANELS}
+                      title={
+                        panelCount < MAX_PANELS
+                          ? "Add another AI chat"
+                          : `Maximum ${MAX_PANELS} models at a time; remove a model to add another`
+                      }
+                      aria-label="Add another AI chat"
+                    >
+                      Add AI
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent
+                    side="bottom"
+                    className="h-[100dvh] w-screen gap-0 p-0"
+                  >
+                    <ModelDropdownContents
+                      onSelect={handleAddPanel}
+                      onClose={() => setChooseModelOpen(false)}
+                      variant="sheet"
+                    />
+                  </SheetContent>
+                </Sheet>
+              ) : (
+                <ModelDropdownContents
+                  onSelect={handleAddPanel}
+                  onClose={() => setChooseModelOpen(false)}
+                />
+              ))}
           </DropdownMenuPortal>
         </DropdownMenu>
 
@@ -111,7 +147,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
 
         <div className="flex items-center gap-2">
           <div
-            aria-hidden={showMobileQuotaChip || undefined}
+            suppressHydrationWarning
             className={cn(
               "md:hidden overflow-hidden rounded-full border border-amber-300 bg-amber-200 text-amber-900 text-xs font-semibold tracking-tight transition-all duration-800 ease-out whitespace-nowrap",
               showMobileQuotaChip

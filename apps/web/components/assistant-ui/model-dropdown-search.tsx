@@ -10,6 +10,8 @@ interface ModelDropdownSearchProps {
   onSearchFocusChange: (isFocused: boolean) => void;
   searchQuery: string;
   isSearchFocused: boolean;
+  className?: string;
+  inputClassName?: string;
 }
 
 export const ModelDropdownSearch: React.FC<ModelDropdownSearchProps> = ({
@@ -17,6 +19,8 @@ export const ModelDropdownSearch: React.FC<ModelDropdownSearchProps> = ({
   onSearchFocusChange,
   searchQuery,
   isSearchFocused,
+  className,
+  inputClassName,
 }) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,7 +38,7 @@ export const ModelDropdownSearch: React.FC<ModelDropdownSearchProps> = ({
   }, [isSearchFocused]);
 
   return (
-    <div className="relative ml-auto">
+    <div className={cn("relative", className || "ml-auto")}>
       <div className="relative">
         {!isSearchFocused && !searchQuery && (
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -51,8 +55,9 @@ export const ModelDropdownSearch: React.FC<ModelDropdownSearchProps> = ({
           onBlur={() => onSearchFocusChange(false)}
           className={cn(
             "h-8 w-64 pl-10 pr-3 text-sm",
-            (isSearchFocused || searchQuery) && "pl-3", // Remove left padding when focused to hide magnifier
-            "transition-all duration-200"
+            (isSearchFocused || searchQuery) && "pl-3",
+            "transition-all duration-200",
+            inputClassName
           )}
         />
       </div>

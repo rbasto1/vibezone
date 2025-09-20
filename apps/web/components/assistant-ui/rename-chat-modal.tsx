@@ -52,10 +52,13 @@ export const RenameChatModal: FC<RenameChatModalProps> = ({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className="sm:max-w-[425px]"
+        aria-describedby="rename-chat-description"
+      >
         <DialogHeader>
           <DialogTitle>Rename Chat</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="rename-chat-description">
             Enter a new name for this chat conversation.
           </DialogDescription>
         </DialogHeader>
