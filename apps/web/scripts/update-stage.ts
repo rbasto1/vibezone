@@ -10,15 +10,17 @@ const providerFields: (keyof Provider)[] = [
   "deletedAt",
 ];
 const modelFields: (keyof Model)[] = [
-  "name",
-  "isChat",
-  "priority",
-  "isSuggested",
-  "isExperimental",
-  "isPremium",
-  "isNew",
-  "isIncluded",
   "deletedAt",
+  "isChat",
+  "isExperimental",
+  "isFree",
+  "isIncluded",
+  "isNew",
+  "isPremium",
+  "isSuggested",
+  "name",
+  "priority",
+  "topProvider",
 ];
 
 type Client = typeof db;
@@ -68,7 +70,7 @@ async function updateProviders(sourceDb: Client, targetDb: Client) {
     {}
   );
 
-  const tableEmpty = await targetDb
+  const targetRows = await targetDb
     .select({
       id: schema.providers.id,
       deletedAt: schema.providers.deletedAt,
@@ -76,7 +78,7 @@ async function updateProviders(sourceDb: Client, targetDb: Client) {
     })
     .from(schema.providers)
     .limit(1);
-  if (!tableEmpty.length) {
+  if (!targetRows.length) {
     console.info("No rows found in target table");
     process.exit(3);
   }
@@ -95,30 +97,28 @@ async function updateProviders(sourceDb: Client, targetDb: Client) {
 
   let updatedCount = 0;
   for (const row of rows) {
-    const anyDifference = Object.entries(row)
-      .filter(([f]) => f !== "createdAt" && f !== "updatedAt")
-      .filter(
-        ([f, field]) =>
-          JSON.stringify(row[f as keyof typeof row]) !== JSON.stringify(field)
+    const targetRow = targetRows.find((r) => r.id === row.id);
+    if (!targetRow) {
+      console.error(
+        `Provider ${row.id} not found in target table (deleted=${!!row.deletedAt})`
       );
+      continue;
+    }
+    const anyDifference = Object.keys(row).filter(
+      (f) =>
+        JSON.stringify(row[f as keyof typeof row]) !==
+        JSON.stringify(targetRow[f as keyof typeof targetRow])
+    );
     if (!anyDifference.length) {
       continue;
     }
 
-    const result = await targetDb
+    await targetDb
       .update(schema.providers)
       .set(row)
       .where(eq(schema.providers.id, row.id));
-    if (!result.rowCount) {
-      console.error(
-        `Provider ${row.id} not found in target table (deleted=${!!row.deletedAt})`
-      );
-    } else {
-      console.info(
-        `☑️ Provider ${row.id} updated (${anyDifference.join(", ")})`
-      );
-      updatedCount++;
-    }
+    console.info(`☑️ Provider ${row.id} updated (${anyDifference.join(", ")})`);
+    updatedCount++;
   }
   const count = rows.length;
   console.info(
@@ -132,14 +132,14 @@ async function updateModels(sourceDb: Client, targetDb: Client) {
     {}
   );
 
-  const tableEmpty = await targetDb
+  const targetRows = await targetDb
     .select({
       id: schema.models.id,
       deletedAt: schema.models.deletedAt,
       ...fieldsObj,
     })
     .from(schema.models);
-  if (!tableEmpty.length) {
+  if (!targetRows.length) {
     console.info("No rows found in target table");
     process.exit(6);
   }
@@ -158,28 +158,28 @@ async function updateModels(sourceDb: Client, targetDb: Client) {
 
   let updatedCount = 0;
   for (const row of rows) {
-    const anyDifference = Object.entries(row)
-      .filter(([f]) => f !== "createdAt" && f !== "updatedAt")
-      .filter(
-        ([f, field]) =>
-          JSON.stringify(row[f as keyof typeof row]) !== JSON.stringify(field)
+    const targetRow = targetRows.find((r) => r.id === row.id);
+    if (!targetRow) {
+      console.error(
+        `Model ${row.id} not found in target table (deleted=${!!row.deletedAt})`
       );
+      continue;
+    }
+    const anyDifference = Object.keys(row).filter(
+      (f) =>
+        JSON.stringify(row[f as keyof typeof row]) !==
+        JSON.stringify(targetRow[f as keyof typeof targetRow])
+    );
     if (!anyDifference.length) {
       continue;
     }
 
-    const result = await targetDb
+    await targetDb
       .update(schema.models)
       .set(row)
       .where(eq(schema.models.id, row.id));
-    if (!result.rowCount) {
-      console.error(
-        `Model ${row.id} not found in target table (deleted=${!!row.deletedAt})`
-      );
-    } else {
-      console.info(`☑️ Model ${row.id} updated (${anyDifference.join(", ")})`);
-      updatedCount++;
-    }
+    console.info(`☑️ Model ${row.id} updated (${anyDifference.join(", ")})`);
+    updatedCount++;
   }
   const count = rows.length;
   console.info(`✅ Models updated successfully: ${updatedCount}/${count} rows`);
