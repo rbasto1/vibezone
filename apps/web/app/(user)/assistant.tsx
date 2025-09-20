@@ -152,35 +152,51 @@ const AssistantContent: FC = () => {
                           modelNamesById.get(panel.model) ?? panel.model;
                         const label = `${index + 1}: ${modelLabel}`;
                         const isActive = activePanelId === panel.id;
+                        const isRunning = panelsState[panel.id]?.running;
                         return (
-                          <button
-                            key={panel.id}
-                            type="button"
-                            onClick={() => setMobileActivePanelId(panel.id)}
+                          <div
                             className={cn(
-                              "relative flex-1 basis-1/3 min-w-0 px-3 py-2 text-sm font-medium truncate border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                              "relative flex-1 basis-1/3 min-w-0",
                               isActive
-                                ? "border-primary text-foreground bg-background"
-                                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                                ? "border-b-2 border-primary"
+                                : "border-b-2 border-transparent hover:border-border"
                             )}
-                            aria-pressed={isActive}
-                            aria-selected={isActive}
-                            aria-label={`Switch to panel ${index + 1}`}
-                            role="tab"
                           >
-                            {label}
-                          </button>
+                            <button
+                              key={panel.id}
+                              type="button"
+                              onClick={() => setMobileActivePanelId(panel.id)}
+                              className={cn(
+                                "relative w-full h-full px-3 py-2 text-sm font-medium truncate transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                                isActive
+                                  ? "text-foreground bg-background"
+                                  : "text-muted-foreground hover:text-foreground",
+                                isRunning && "panel-button-glow"
+                              )}
+                              aria-pressed={isActive}
+                              aria-selected={isActive}
+                              aria-label={`Switch to panel ${index + 1}`}
+                              role="tab"
+                            >
+                              <span className="text">{label}</span>
+                            </button>
+                          </div>
                         );
                       })}
                     </div>
                   </div>
                 )}
                 <div className="flex-1 min-h-0">
-                  {activePanel ? (
-                    <div className="h-full">
-                      <ResponsePanel key={activePanel.id} panel={activePanel} />
+                  {panelsConfig.map((panel) => (
+                    <div
+                      className={cn(
+                        "h-full",
+                        activePanelId !== panel.id && "hidden"
+                      )}
+                    >
+                      <ResponsePanel key={panel.id} panel={panel} />
                     </div>
-                  ) : null}
+                  ))}
                 </div>
               </div>
             ) : (

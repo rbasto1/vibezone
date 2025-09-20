@@ -3,7 +3,7 @@
 ## Pending Tasks
 
 [x] Add SEO metadata
-[-] Mobile version
+[x] Mobile version
 [ ] Integrate API call for Zero Data Retention (/api/v1/endpoints/zdr)
 [x] Render LaTeX and HTML
 [x] Limit usage for anon users
@@ -19,3 +19,4 @@
 [ ] Improve error handling (sonner)
 [ ] Render reasoning
 [ ] Add syntax highlighting (see packages/assistant-ui/apps/docs/content/docs/ui/SyntaxHighlighting.mdx)
+[ ] Refactor vz-open-login event to use jotai state
