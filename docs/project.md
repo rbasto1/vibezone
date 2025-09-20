@@ -6,7 +6,7 @@
 [x] Mobile version
 [ ] Integrate API call for Zero Data Retention (/api/v1/endpoints/zdr)
 [x] Render LaTeX and HTML
-[ ] Add syntax highlighting (see packages/assistant-ui/apps/docs/content/docs/ui/SyntaxHighlighting.mdx)
+[x] Add syntax highlighting (see packages/assistant-ui/apps/docs/content/docs/ui/SyntaxHighlighting.mdx)
 [x] Limit usage for anon users
 [ ] Limit usage for free users
 [x] Identify free models with a badge
@@ -16,6 +16,7 @@
 [ ] Add Privacy Policy and Terms of Service
 [ ] Translate to Brazilian Portuguese
 [ ] Add Brazilian models
+[ ] Show deleted providers and models in the admin
 [ ] Import chats from OpenAI format
 [ ] Add Stripe integration
 [ ] Limit usage for paid users
