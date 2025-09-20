@@ -132,7 +132,13 @@ export const modelsRouter = t.router({
     if (newModels.length) {
       const values = newModels.map((m) => {
         const providerId = m.id.split("/")[0];
-        const name = m.name.split(": ")[1] ?? m.name;
+        const isFree = m.name.endsWith(" (free)");
+
+        // Remove the " (free)" suffix from the name if present
+        const name = (m.name.split(": ")[1] ?? m.name).replace(
+          /\s*\(free\)$/,
+          ""
+        );
 
         if (!providerId) throw new Error("Assert: Missing provider ID");
         const isChat =
@@ -155,6 +161,7 @@ export const modelsRouter = t.router({
           perRequestLimits: m.per_request_limits,
           createdAt: new Date(m.created * 1000),
           isChat,
+          isFree,
         } satisfies NewModel;
       });
       await db.insert(models).values(values);
@@ -255,6 +262,7 @@ export async function listModels() {
         isPremium: model.isPremium,
         isNew: model.isNew,
         isIncluded: model.isIncluded,
+        isFree: model.isFree,
         createdAt: model.createdAt,
         // Capabilities (short names used in UI)
         capReason: modelParams.includes("reasoning"),

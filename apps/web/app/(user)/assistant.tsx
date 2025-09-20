@@ -122,11 +122,6 @@ const AssistantContent: FC = () => {
   }, [models]);
   const activePanelId = mobileActivePanelId ?? panelsConfig[0]?.id;
   const showTabs = isMobile && panelsConfig.length > 1;
-  const hasPanels = panelsConfig.length > 0;
-  const activePanel = hasPanels
-    ? (panelsConfig.find((panel) => panel.id === activePanelId) ??
-      panelsConfig[0])
-    : undefined;
   const hideAnonBanner = isMobile && uiState.suggestionsUsed;
 
   return (
