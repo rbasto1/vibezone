@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
-import { useAttachmentsAppender } from "@/hooks/use-attachments";
+import { useAppendAttachments } from "@/hooks/use-attachments";
 import type { ImageMessagePart } from "@assistant-ui/react";
 import {
   AttachmentPrimitive,
@@ -218,7 +218,7 @@ export const ComposerAddAttachment: FC = () => {
   const onClick = useComposerAddAttachment();
 
   return (
-    <Button asChild onClick={onClick ?? undefined}>
+    <Button asChild onClick={onClick}>
       <TooltipIconButton
         tooltip="Add Attachment"
         side="bottom"
@@ -239,8 +239,7 @@ const useComposerAddAttachment = ({
   /** allow selecting multiple files */
   multiple?: boolean | undefined;
 } = {}) => {
-  const disabled = false; //useAssistantState(({ composer }) => !composer.isEditing);
-  const append = useAttachmentsAppender();
+  const append = useAppendAttachments();
 
   const callback = useCallback(() => {
     const input = document.createElement("input");
@@ -262,7 +261,7 @@ const useComposerAddAttachment = ({
       // for (const file of fileList) {
       //   api.composer().addAttachment(file);
       // }
-      append(fileList);
+      void append(fileList);
 
       document.body.removeChild(input);
     };
@@ -276,6 +275,5 @@ const useComposerAddAttachment = ({
     input.click();
   }, [append, multiple]);
 
-  if (disabled) return null;
   return callback;
 };

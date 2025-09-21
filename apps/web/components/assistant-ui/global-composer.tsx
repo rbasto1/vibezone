@@ -1,5 +1,9 @@
 "use client";
-import { useAttachments } from "@/hooks/use-attachments";
+import {
+  useAttachmentsValue,
+  useRemoveAttachment,
+} from "@/hooks/use-attachments";
+import type { Attachment } from "@assistant-ui/react";
 import { ArrowUpIcon } from "lucide-react";
 import React from "react";
 import { Button } from "../ui/button";
@@ -20,11 +24,12 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
   onSubmit,
   onStopAll,
 }) => {
-  const [attachments, setAttachments] = useAttachments();
+  const removeAttachment = useRemoveAttachment();
+  const attachments = useAttachmentsValue();
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
-  const handleRemoveAttachment = (attachment: File) => {
-    setAttachments((prev) => prev.filter((a) => a !== attachment));
+  const handleRemoveAttachment = (attachment: Attachment) => {
+    removeAttachment(attachment);
   };
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -33,6 +38,10 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
     if (target.closest("button")) return;
     textareaRef.current?.focus();
   };
+
+  const pendingAttachments = attachments.some(
+    (a) => a.status.type !== "complete"
+  );
 
   return (
     <div
@@ -50,6 +59,9 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            if (pendingAttachments) {
+              return;
+            }
             e.preventDefault();
             onSubmit();
           }
@@ -83,6 +95,7 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
             onClick={onSubmit}
             aria-label="Send to all AIs"
             className="self-start"
+            disabled={pendingAttachments}
           >
             <ArrowUpIcon className="size-5" />
           </Button>

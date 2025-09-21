@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import {
   Chip,
@@ -16,136 +16,50 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
+import type { Attachment } from "@assistant-ui/react";
 import type { LucideIcon } from "lucide-react";
-import {
-  FileArchive,
-  FileAudio,
-  FileCode,
-  File as FileIcon,
-  FileImage,
-  FileSpreadsheet,
-  FileText,
-  FileVideo,
-  XIcon,
-} from "lucide-react";
+import { File as FileIcon, FileImage, FileText, XIcon } from "lucide-react";
 
 interface AttachmentChipProps {
-  attachment: File;
-  onRemove: (attachment: File) => void;
+  attachment: Attachment;
+  onRemove: (attachment: Attachment) => void;
   className?: string;
 }
 
-const imageExtensions = [
-  "jpg",
-  "jpeg",
-  "png",
-  "gif",
-  "webp",
-  "heic",
-  "heif",
-  "bmp",
-  "svg",
-];
+const useImagePreview = (attachment: Attachment | undefined) => {
+  const [previewSrc, setPreviewSrc] = useState<string>();
 
-const videoExtensions = ["mp4", "mov", "avi", "mkv", "webm", "m4v"];
-const audioExtensions = ["mp3", "wav", "aac", "flac", "ogg", "m4a"];
-const archiveExtensions = ["zip", "rar", "7z", "tar", "gz", "bz2"];
-const spreadsheetExtensions = ["xls", "xlsx", "csv", "tsv", "ods"];
-const codeExtensions = [
-  "js",
-  "jsx",
-  "ts",
-  "tsx",
-  "json",
-  "py",
-  "rb",
-  "go",
-  "rs",
-  "java",
-  "cs",
-  "php",
-  "html",
-  "css",
-  "scss",
-  "sql",
-  "yml",
-  "yaml",
-  "xml",
-  "md",
-];
-
-const isImageFile = (file: File) => {
-  const mimeType = file.type;
-  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
-
-  return mimeType.startsWith("image/") || imageExtensions.includes(extension);
-};
-
-const useImagePreview = (file: File | undefined) => {
-  const [previewSrc, setPreviewSrc] = React.useState<string>();
-
-  React.useEffect(() => {
-    if (!file) {
+  useEffect(() => {
+    if (!attachment) {
       setPreviewSrc(undefined);
       return;
     }
 
-    const objectUrl = URL.createObjectURL(file);
+    if (!attachment.file) {
+      return;
+    }
+    const objectUrl = URL.createObjectURL(attachment.file);
     setPreviewSrc(objectUrl);
 
     return () => {
       URL.revokeObjectURL(objectUrl);
     };
-  }, [file]);
+  }, [attachment]);
 
   return previewSrc;
 };
 
-const guessIcon = (file: File): LucideIcon => {
-  const mimeType = file.type;
-  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
-
-  if (mimeType.startsWith("video/")) {
-    return FileVideo;
+const guessIcon = (attachment: Attachment): LucideIcon => {
+  switch (attachment.type) {
+    case "document":
+      return FileText;
+    case "image":
+      return FileImage;
+    case "file":
+      return FileText;
+    default:
+      return FileIcon;
   }
-
-  if (mimeType.startsWith("audio/")) {
-    return FileAudio;
-  }
-
-  if (mimeType === "application/pdf") {
-    return FileText;
-  }
-
-  if (isImageFile(file)) {
-    return FileImage;
-  }
-
-  if (extension === "pdf") {
-    return FileText;
-  }
-
-  if (videoExtensions.includes(extension)) {
-    return FileVideo;
-  }
-
-  if (audioExtensions.includes(extension)) {
-    return FileAudio;
-  }
-
-  if (spreadsheetExtensions.includes(extension)) {
-    return FileSpreadsheet;
-  }
-
-  if (archiveExtensions.includes(extension)) {
-    return FileArchive;
-  }
-
-  if (codeExtensions.includes(extension)) {
-    return FileCode;
-  }
-
-  return FileIcon;
 };
 
 const AttachmentChip: React.FC<AttachmentChipProps> = ({
@@ -154,8 +68,9 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
   className,
 }) => {
   const Icon = useMemo(() => guessIcon(attachment), [attachment]);
-  const isImage = useMemo(() => isImageFile(attachment), [attachment]);
-  const previewSrc = useImagePreview(isImage ? attachment : undefined);
+  const previewSrc = useImagePreview(
+    attachment.type === "image" ? attachment : undefined
+  );
 
   const handleRemove = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -172,10 +87,10 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
           <ChipLeading
             className={cn(
               "bg-background/80",
-              isImage && "bg-transparent shadow-none"
+              previewSrc && "bg-transparent shadow-none"
             )}
           >
-            {isImage && previewSrc ? (
+            {previewSrc ? (
               <span className="flex size-full items-center justify-center overflow-hidden rounded-lg bg-muted">
                 <img
                   src={previewSrc}

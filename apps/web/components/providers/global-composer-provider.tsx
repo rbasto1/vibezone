@@ -1,6 +1,7 @@
 "use client";
 
 import { useAnonQuotaSetter, useAnonRemaining } from "@/hooks/use-anon-quota";
+import { useCompleteAttachmentsValue } from "@/hooks/use-attachments";
 import { usePanelStateSetter } from "@/hooks/use-panels";
 import { useSession } from "@/hooks/use-session";
 import { ANON_DAILY_LIMIT } from "@/store/anon-quota";
@@ -18,6 +19,7 @@ export function GlobalComposerProvider({ children }: Props) {
   const [globalPrompt, setGlobalPrompt] = useState("");
   const setPanelState = usePanelStateSetter();
   const session = useSession();
+  const attachments = useCompleteAttachmentsValue();
 
   // Registry of runtimes by panelId
   const registryRef = useRef<RuntimeRegistry>(new Map());
@@ -41,7 +43,7 @@ export function GlobalComposerProvider({ children }: Props) {
   const send = useCallback(
     (text: string) => {
       const msg = text.trim();
-      if (!msg) return;
+      if (!msg || !attachments) return;
 
       if (!isLoggedIn) {
         // Anonymous quota enforcement
@@ -60,9 +62,9 @@ export function GlobalComposerProvider({ children }: Props) {
           runtime.thread.append({
             runConfig: { custom: { thisIscustom: true } },
             metadata: { custom: { thisIsMyMetadata: true } },
-            sourceId: "this is the source",
             role: "user",
             content: [{ type: "text", text: msg }],
+            attachments,
           });
           runningPanels.push(panelId);
         } catch (e) {
@@ -91,7 +93,7 @@ export function GlobalComposerProvider({ children }: Props) {
       // Clear the global prompt
       setGlobalPrompt("");
     },
-    [isLoggedIn, remaining, setAnonUsage, setPanelState]
+    [attachments, isLoggedIn, remaining, setAnonUsage, setPanelState]
   );
 
   return (

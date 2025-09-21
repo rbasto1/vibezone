@@ -1,4 +1,5 @@
 import { Thread } from "@/components/assistant-ui/thread";
+import { useAttachmentAdapter } from "@/hooks/use-attachments";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
@@ -10,9 +11,8 @@ import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import type { ChatOnFinishCallback, UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
-import { useMemo, useRef, type FC } from "react";
+import { useRef, type FC } from "react";
 import { toast } from "sonner";
-import { createAttachmentAdapter } from "@/lib/attachments";
 import { PanelHeader } from "./response-panel-header";
 import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
 
@@ -29,6 +29,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
   panelGlobalContext[id] = panel;
   const [panelState, setPanelState] = usePanelState();
   const setCurrentChat = useCurrentChatSetter();
+  const attachmentAdapter = useAttachmentAdapter();
   const renameChatMutation = trpc.chats.renameChat.useMutation();
   const session = useSession();
   const sessionToken = useRef(session?.session.token);
@@ -99,8 +100,6 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
     });
   };
 
-  const attachmentsAdapter = useMemo(() => createAttachmentAdapter(), []);
-
   const runtime = useChatRuntime({
     transport: new DefaultChatTransport({
       api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
@@ -126,7 +125,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
     onFinish: handleModelFinish,
     messages: panel.initialMessages,
     adapters: {
-      attachments: attachmentsAdapter,
+      attachments: attachmentAdapter,
     },
   });
 
