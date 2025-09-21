@@ -1,8 +1,9 @@
 "use client";
-import { ArrowUpIcon, PlusIcon } from "lucide-react";
+import { ArrowUpIcon } from "lucide-react";
 import React from "react";
 import { Button } from "../ui/button";
 import { StopButton } from "../ui/stop-button";
+import { ComposerAddAttachment } from "./attachment";
 
 export type GlobalComposerProps = {
   value: string;
@@ -25,8 +26,6 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
     if (target.closest("button")) return;
     textareaRef.current?.focus();
   };
-
-  const canAttach = false;
 
   return (
     <div
@@ -53,18 +52,8 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
       />
       {/* Footer with attach and send, styled like thread composer */}
       <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
-        {canAttach ? (
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => console.warn("Attachment clicked - not implemented")}
-            aria-label="Attach file"
-          >
-            <PlusIcon />
-          </Button>
-        ) : (
-          <div />
-        )}
+        <ComposerAddAttachment />
+        <div />
 
         {onStopAll ? (
           <StopButton

@@ -6,7 +6,6 @@ import { cn } from "@/components/ui/utils";
 import { useMessageSaver } from "@/hooks/use-message-saver";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantMessage } from "./assistant-message";
-import { EditComposer } from "./edit-composer";
 import { ThreadError } from "./thread-error";
 import { ThreadWelcome } from "./thread-welcome";
 import { UserMessage } from "./user-message";
@@ -44,7 +43,6 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
         <ThreadPrimitive.Messages
           components={{
             UserMessage,
-            EditComposer,
             AssistantMessage,
           }}
         />
