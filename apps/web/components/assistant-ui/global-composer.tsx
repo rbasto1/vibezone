@@ -58,8 +58,8 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
         ref={textareaRef}
       />
       {/* Footer with attach and send, styled like thread composer */}
-      <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
-        <div className="flex items-center gap-2">
+      <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-start justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
+        <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-2">
           <ComposerAddAttachment />
           {attachments.map((a, idx) => (
             <AttachmentChip
@@ -75,9 +75,15 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
             onClick={onStopAll}
             aria-label="Stop all AI responses"
             title="Stop all AI responses"
+            className="self-start"
           />
         ) : (
-          <Button size="icon" onClick={onSubmit} aria-label="Send to all AIs">
+          <Button
+            size="icon"
+            onClick={onSubmit}
+            aria-label="Send to all AIs"
+            className="self-start"
+          >
             <ArrowUpIcon className="size-5" />
           </Button>
         )}

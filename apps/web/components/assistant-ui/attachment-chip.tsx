@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useMemo } from "react";
 
@@ -73,24 +74,63 @@ const codeExtensions = [
   "md",
 ];
 
+const isImageFile = (file: File) => {
+  const mimeType = file.type;
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+
+  return mimeType.startsWith("image/") || imageExtensions.includes(extension);
+};
+
+const useImagePreview = (file: File | undefined) => {
+  const [previewSrc, setPreviewSrc] = React.useState<string>();
+
+  React.useEffect(() => {
+    if (!file) {
+      setPreviewSrc(undefined);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewSrc(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [file]);
+
+  return previewSrc;
+};
+
 const guessIcon = (file: File): LucideIcon => {
   const mimeType = file.type;
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
 
-  if (mimeType.startsWith("image/") || imageExtensions.includes(extension)) {
-    return FileImage;
-  }
-
-  if (mimeType.startsWith("video/") || videoExtensions.includes(extension)) {
+  if (mimeType.startsWith("video/")) {
     return FileVideo;
   }
 
-  if (mimeType.startsWith("audio/") || audioExtensions.includes(extension)) {
+  if (mimeType.startsWith("audio/")) {
     return FileAudio;
   }
 
-  if (mimeType === "application/pdf" || extension === "pdf") {
+  if (mimeType === "application/pdf") {
     return FileText;
+  }
+
+  if (isImageFile(file)) {
+    return FileImage;
+  }
+
+  if (extension === "pdf") {
+    return FileText;
+  }
+
+  if (videoExtensions.includes(extension)) {
+    return FileVideo;
+  }
+
+  if (audioExtensions.includes(extension)) {
+    return FileAudio;
   }
 
   if (spreadsheetExtensions.includes(extension)) {
@@ -114,6 +154,8 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
   className,
 }) => {
   const Icon = useMemo(() => guessIcon(attachment), [attachment]);
+  const isImage = useMemo(() => isImageFile(attachment), [attachment]);
+  const previewSrc = useImagePreview(isImage ? attachment : undefined);
 
   const handleRemove = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -127,8 +169,24 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
         <Chip
           className={cn("max-w-[12rem] cursor-default select-none", className)}
         >
-          <ChipLeading className="bg-background/80">
-            <Icon className="size-4" />
+          <ChipLeading
+            className={cn(
+              "bg-background/80",
+              isImage && "bg-transparent shadow-none"
+            )}
+          >
+            {isImage && previewSrc ? (
+              <span className="flex size-full items-center justify-center overflow-hidden rounded-lg bg-muted">
+                <img
+                  src={previewSrc}
+                  alt={attachment.name}
+                  className="size-full object-cover"
+                  draggable={false}
+                />
+              </span>
+            ) : (
+              <Icon className="size-4" />
+            )}
           </ChipLeading>
           <ChipLabel>{attachment.name}</ChipLabel>
           <ChipTrailing>
