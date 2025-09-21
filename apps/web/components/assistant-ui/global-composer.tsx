@@ -1,9 +1,11 @@
 "use client";
+import { useAttachments } from "@/hooks/use-attachments";
 import { ArrowUpIcon } from "lucide-react";
 import React from "react";
 import { Button } from "../ui/button";
 import { StopButton } from "../ui/stop-button";
-import { ComposerAddAttachment } from "./attachment";
+import { ComposerAddAttachment } from "./add-attachment";
+import { AttachmentChip } from "./attachment-chip";
 
 export type GlobalComposerProps = {
   value: string;
@@ -18,7 +20,12 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
   onSubmit,
   onStopAll,
 }) => {
+  const [attachments, setAttachments] = useAttachments();
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+  const handleRemoveAttachment = (attachment: File) => {
+    setAttachments((prev) => prev.filter((a) => a !== attachment));
+  };
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -52,8 +59,16 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
       />
       {/* Footer with attach and send, styled like thread composer */}
       <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
-        <ComposerAddAttachment />
-        <div />
+        <div className="flex items-center gap-2">
+          <ComposerAddAttachment />
+          {attachments.map((a, idx) => (
+            <AttachmentChip
+              key={`${idx}-${a.name}`}
+              attachment={a}
+              onRemove={handleRemoveAttachment}
+            />
+          ))}
+        </div>
 
         {onStopAll ? (
           <StopButton

@@ -1,7 +1,7 @@
 import {
   ComposerAddAttachment,
   ComposerAttachments,
-} from "@/components/assistant-ui/attachment";
+} from "@/components/assistant-ui/add-attachment";
 import { Button } from "@/components/ui/button";
 import { ComposerPrimitive } from "@assistant-ui/react";
 import type { FC } from "react";

@@ -2,10 +2,10 @@ import { MessagePrimitive } from "@assistant-ui/react";
 import { motion } from "framer-motion";
 import type { FC } from "react";
 
+import { UserMessageAttachments } from "./add-attachment";
 import { BranchPicker } from "./branch-picker";
 import { MarkdownText } from "./markdown-text";
 import { UserActionBar } from "./user-action-bar";
-import { UserMessageAttachments } from "./attachment";
 
 export const UserMessage: FC = () => {
   return (

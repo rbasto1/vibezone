@@ -1,8 +1,12 @@
 import { attachmentsAtom } from "@/store/attachments";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback } from "react";
 
 export const useAttachments = () => {
+  return useAtom(attachmentsAtom);
+};
+
+export const useAttachmentsValue = () => {
   return useAtomValue(attachmentsAtom);
 };
 
