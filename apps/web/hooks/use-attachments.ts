@@ -1,7 +1,12 @@
 import { attachmentsAtom } from "@/store/attachments";
-import type { Attachment, CompleteAttachment } from "@assistant-ui/react";
+import type {
+  Attachment,
+  AttachmentAdapter,
+  CompleteAttachment,
+} from "@assistant-ui/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback } from "react";
+import { toast } from "sonner";
 
 export const useAppendAttachments = () => {
   const { adapter } = useAtomValue(attachmentsAtom);
@@ -10,11 +15,10 @@ export const useAppendAttachments = () => {
   const appendAttachments = useCallback(
     async (list: FileList) => {
       for (const file of list) {
-        const attachment = await adapter.add({ file });
-        if (!("file" in attachment)) {
-          throw new Error("Attachment is not supported");
+        const attachment = await getAttachmentForFile(adapter, file);
+        if (!attachment) {
+          continue;
         }
-
         set((prev) => ({
           ...prev,
           attachments: prev.attachments.concat(attachment),
@@ -34,6 +38,21 @@ export const useAppendAttachments = () => {
 
   return appendAttachments;
 };
+
+async function getAttachmentForFile(adapter: AttachmentAdapter, file: File) {
+  try {
+    const attachment = await adapter.add({ file });
+    if (!("file" in attachment)) {
+      toast.error(`Operation failed`);
+      return null;
+    }
+    return attachment;
+  } catch (error) {
+    console.error(error);
+    toast.error(`File ${file.name} is not supported`);
+    return null;
+  }
+}
 
 export const useAttachmentsValue = () => {
   const { attachments } = useAtomValue(attachmentsAtom);

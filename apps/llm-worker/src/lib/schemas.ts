@@ -20,11 +20,18 @@ export const ChatMessagePartReasoningSchema = z.object({
     .optional(),
   state: z.enum(["done"]),
 });
+export const ChatMessagePartFileSchema = z.object({
+  type: z.literal("file"),
+  url: z.string(),
+  filename: z.string(),
+  mediaType: z.string(),
+});
 
 export const ChatMessagePartSchema = z.union([
   ChatMessagePartTextSchema,
   ChatMessagePartStepStartSchema,
   ChatMessagePartReasoningSchema,
+  ChatMessagePartFileSchema,
 ]);
 
 export const ChatMessageSchema = z.object({

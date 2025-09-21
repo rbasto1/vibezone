@@ -63,6 +63,7 @@ export default {
         // Handle LLM non-streaming completion endpoint
         return handleProviderComplete(request, env, headers);
       default:
+        console.error({ message: "Invalid path", path: url.pathname });
         return new Response("Not found", { status: 404, headers });
     }
   },

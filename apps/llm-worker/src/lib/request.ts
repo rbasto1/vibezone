@@ -28,6 +28,10 @@ export function getConfigFromRequest(
 ): GetConfigResponse {
   const bodyParse = ChatRequestSchema.safeParse(rawBody);
   if (!bodyParse.success) {
+    console.error({
+      message: "Zod validation failed",
+      error: bodyParse.error,
+    });
     return {
       type: "error",
       error: bodyParse.error.issues[0]?.message ?? "Parse error",
@@ -36,6 +40,7 @@ export function getConfigFromRequest(
 
   const modelId = request.headers.get("x-vz-model-id");
   if (!modelId) {
+    console.error({ message: "Missing model id header" });
     return { type: "error", error: "Missing model id" };
   }
 

@@ -9,6 +9,7 @@ export interface GatewayConfig {
 
 function getGatewayConfig(env: Env): GatewayConfig {
   if (!env.OPENROUTER_API_KEY) {
+    console.error({ message: "No OpenRouter API key configured" });
     throw new Error("No OpenRouter API key configured");
   }
 

@@ -10,22 +10,21 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
 import { useAppendAttachments } from "@/hooks/use-attachments";
-import type { ImageMessagePart } from "@assistant-ui/react";
+import type { Attachment, ImageMessagePart } from "@assistant-ui/react";
 import {
   AttachmentPrimitive,
   ComposerPrimitive,
   MessagePrimitive,
-  useAssistantApi,
   useAssistantState,
 } from "@assistant-ui/react";
-import { FileText, PlusIcon, XIcon } from "lucide-react";
+import { FileText, PlusIcon } from "lucide-react";
 import Image from "next/image";
 import type { PropsWithChildren } from "react";
-import { useCallback, useEffect, useState, type FC } from "react";
+import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import { Button } from "../ui/button";
 
 const useFileSrc = (file: File | undefined) => {
-  const [src, setSrc] = useState<string | undefined>(undefined);
+  const [src, setSrc] = useState<string>();
 
   useEffect(() => {
     if (!file) {
@@ -44,16 +43,16 @@ const useFileSrc = (file: File | undefined) => {
   return src;
 };
 
-const useAttachmentSrc = () => {
-  const { file, src } = useAssistantState((state) => {
-    if (state.attachment.type !== "image") return {};
-    if (state.attachment.file) return { file: state.attachment.file };
-    const src = state.attachment.content?.filter(
+const useAttachmentSrc = (attachment: Attachment) => {
+  const { file, src } = useMemo(() => {
+    if (attachment.type !== "image") return {};
+    if (attachment.file) return { file: attachment.file };
+    const src = attachment.content?.filter(
       (c): c is ImageMessagePart => c.type === "image"
     )[0]?.image;
     if (!src) return {};
     return { src };
-  });
+  }, [attachment]);
 
   return useFileSrc(file) ?? src;
 };
@@ -75,14 +74,21 @@ const AttachmentPreview: FC<AttachmentPreviewProps> = ({ src }) => {
           ? "aui-attachment-preview-image-loaded block h-auto max-h-[80vh] w-auto max-w-full object-contain"
           : "aui-attachment-preview-image-loading hidden"
       }
-      onLoadingComplete={() => setIsLoaded(true)}
+      onLoad={() => setIsLoaded(true)}
       priority={false}
     />
   );
 };
 
-const AttachmentPreviewDialog: FC<PropsWithChildren> = ({ children }) => {
-  const src = useAttachmentSrc();
+interface AttachmentPreviewDialogProps extends PropsWithChildren {
+  attachment: Attachment;
+}
+
+const AttachmentPreviewDialog: FC<AttachmentPreviewDialogProps> = ({
+  children,
+  attachment,
+}) => {
+  const src = useAttachmentSrc(attachment);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   if (!src) return children;
@@ -107,11 +113,13 @@ const AttachmentPreviewDialog: FC<PropsWithChildren> = ({ children }) => {
   );
 };
 
-const AttachmentThumb: FC = () => {
-  const isImage = useAssistantState(
-    ({ attachment }) => attachment.type === "image"
-  );
-  const src = useAttachmentSrc();
+interface AttachmentThumbProps {
+  attachment: Attachment;
+}
+
+const AttachmentThumb: FC<AttachmentThumbProps> = ({ attachment }) => {
+  const isImage = attachment.type === "image";
+  const src = useAttachmentSrc(attachment);
 
   return (
     <Avatar className="aui-attachment-tile-avatar h-full w-full rounded-none">
@@ -128,12 +136,7 @@ const AttachmentThumb: FC = () => {
 };
 
 const AttachmentUI: FC = () => {
-  const api = useAssistantApi();
-  const isComposer = api.attachment.source === "composer";
-
-  const isImage = useAssistantState(
-    ({ attachment }) => attachment.type === "image"
-  );
+  const attachment = useAssistantState(({ attachment }) => attachment);
   const typeLabel = useAssistantState(({ attachment }) => {
     const type = attachment.type;
     switch (type) {
@@ -150,49 +153,24 @@ const AttachmentUI: FC = () => {
 
   return (
     <Tooltip>
-      <AttachmentPrimitive.Root
-        className={cn(
-          "aui-attachment-root relative",
-          isImage &&
-            "aui-attachment-root-composer only:[&>#attachment-tile]:size-24"
-        )}
-      >
-        <AttachmentPreviewDialog>
-          <TooltipTrigger asChild>
-            <div
-              className={cn(
-                "aui-attachment-tile size-14 cursor-pointer overflow-hidden rounded-[14px] border bg-muted transition-opacity hover:opacity-75",
-                isComposer &&
-                  "aui-attachment-tile-composer border-foreground/20"
-              )}
-              role="button"
-              id="attachment-tile"
-              aria-label={`${typeLabel} attachment`}
-            >
-              <AttachmentThumb />
-            </div>
-          </TooltipTrigger>
-        </AttachmentPreviewDialog>
-        {isComposer && <AttachmentRemove />}
-      </AttachmentPrimitive.Root>
+      <AttachmentPreviewDialog attachment={attachment}>
+        <TooltipTrigger asChild>
+          <div
+            className={cn(
+              "aui-attachment-tile size-14 cursor-pointer overflow-hidden rounded-[14px] border bg-muted transition-opacity hover:opacity-75"
+            )}
+            role="button"
+            id="attachment-tile"
+            aria-label={`${typeLabel} attachment`}
+          >
+            <AttachmentThumb attachment={attachment} />
+          </div>
+        </TooltipTrigger>
+      </AttachmentPreviewDialog>
       <TooltipContent side="top">
         <AttachmentPrimitive.Name />
       </TooltipContent>
     </Tooltip>
-  );
-};
-
-const AttachmentRemove: FC = () => {
-  return (
-    <AttachmentPrimitive.Remove asChild>
-      <TooltipIconButton
-        tooltip="Remove file"
-        className="aui-attachment-tile-remove absolute top-1.5 right-1.5 size-3.5 rounded-full bg-white text-muted-foreground opacity-100 shadow-sm hover:!bg-white [&_svg]:text-black hover:[&_svg]:text-destructive"
-        side="top"
-      >
-        <XIcon className="aui-attachment-remove-icon size-3 dark:stroke-[2.5px]" />
-      </TooltipIconButton>
-    </AttachmentPrimitive.Remove>
   );
 };
 

@@ -20,6 +20,10 @@ export class Usage {
       case "/check":
         return this.handleCheck();
       default:
+        console.error({
+          message: "UsageDurableObject: Invalid path in request",
+          path: url.pathname,
+        });
         return new Response("Not found", { status: 404 });
     }
   }
