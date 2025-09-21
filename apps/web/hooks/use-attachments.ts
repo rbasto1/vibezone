@@ -88,3 +88,15 @@ export const useRemoveAttachment = () => {
     [adapter, set]
   );
 };
+
+export const useClearAttachments = () => {
+  const set = useSetAtom(attachmentsAtom);
+  return useCallback(
+    () =>
+      set(({ adapter, attachments }) => {
+        attachments.forEach((attachment) => adapter.remove(attachment));
+        return { adapter, attachments: [] };
+      }),
+    [set]
+  );
+};

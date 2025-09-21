@@ -1,7 +1,10 @@
 "use client";
 
 import { useAnonQuotaSetter, useAnonRemaining } from "@/hooks/use-anon-quota";
-import { useCompleteAttachmentsValue } from "@/hooks/use-attachments";
+import {
+  useClearAttachments,
+  useCompleteAttachmentsValue,
+} from "@/hooks/use-attachments";
 import { usePanelStateSetter } from "@/hooks/use-panels";
 import { useSession } from "@/hooks/use-session";
 import { ANON_DAILY_LIMIT } from "@/store/anon-quota";
@@ -20,6 +23,7 @@ export function GlobalComposerProvider({ children }: Props) {
   const setPanelState = usePanelStateSetter();
   const session = useSession();
   const attachments = useCompleteAttachmentsValue();
+  const clearAttachments = useClearAttachments();
 
   // Registry of runtimes by panelId
   const registryRef = useRef<RuntimeRegistry>(new Map());
@@ -92,8 +96,16 @@ export function GlobalComposerProvider({ children }: Props) {
 
       // Clear the global prompt
       setGlobalPrompt("");
+      clearAttachments();
     },
-    [attachments, isLoggedIn, remaining, setAnonUsage, setPanelState]
+    [
+      attachments,
+      clearAttachments,
+      isLoggedIn,
+      remaining,
+      setAnonUsage,
+      setPanelState,
+    ]
   );
 
   return (
