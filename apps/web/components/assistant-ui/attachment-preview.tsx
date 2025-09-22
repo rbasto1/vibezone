@@ -7,14 +7,17 @@ import Image from "next/image";
 import type { PropsWithChildren } from "react";
 import { useState, type FC } from "react";
 import { Button } from "../ui/button";
+import { cn } from "../ui/utils";
 
 interface AttachmentPreviewDialogProps extends PropsWithChildren {
   attachment: Attachment;
+  className?: string;
 }
 
 export const AttachmentPreviewDialog: FC<AttachmentPreviewDialogProps> = ({
   children,
   attachment,
+  className,
 }) => {
   const src = useAttachmentSrc(attachment);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -24,7 +27,10 @@ export const AttachmentPreviewDialog: FC<AttachmentPreviewDialogProps> = ({
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <Button
-        className="cursor-pointer transition-colors hover:bg-accent/50"
+        className={cn(
+          "cursor-pointer transition-colors hover:bg-accent/50",
+          className
+        )}
         onClick={() => setDialogOpen(true)}
       >
         {children}

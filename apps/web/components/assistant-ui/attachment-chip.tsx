@@ -19,6 +19,7 @@ import { cn } from "@/components/ui/utils";
 import type { Attachment } from "@assistant-ui/react";
 import type { LucideIcon } from "lucide-react";
 import { File as FileIcon, FileImage, FileText, XIcon } from "lucide-react";
+import { AttachmentPreviewDialog } from "./attachment-preview";
 
 interface AttachmentChipProps {
   attachment: Attachment;
@@ -90,18 +91,23 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
               previewSrc && "bg-transparent shadow-none"
             )}
           >
-            {previewSrc ? (
-              <span className="flex size-full items-center justify-center overflow-hidden rounded-lg bg-muted">
-                <img
-                  src={previewSrc}
-                  alt={attachment.name}
-                  className="size-full object-cover"
-                  draggable={false}
-                />
-              </span>
-            ) : (
-              <Icon className="size-4" />
-            )}
+            <AttachmentPreviewDialog
+              attachment={attachment}
+              className="bg-inherit"
+            >
+              {previewSrc ? (
+                <span className="flex size-full items-center justify-center overflow-hidden rounded-lg bg-muted">
+                  <img
+                    src={previewSrc}
+                    alt={attachment.name}
+                    className="size-full object-cover"
+                    draggable={false}
+                  />
+                </span>
+              ) : (
+                <Icon className="size-4" />
+              )}
+            </AttachmentPreviewDialog>
           </ChipLeading>
           <ChipLabel>{attachment.name}</ChipLabel>
           <ChipTrailing>
