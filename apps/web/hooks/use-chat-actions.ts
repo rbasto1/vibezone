@@ -84,17 +84,40 @@ const convertToUIMessage = (msg: Message): UIMessage => {
   // Convert content parts to UIMessage parts
   const parts = Array.isArray(msg.content)
     ? msg.content.map((part) => {
-        if (part.type === "text") {
-          return {
-            type: "text" as const,
-            text: part.text || "",
-          };
+        switch (part.type) {
+          case "text":
+            return {
+              type: "text" as const,
+              text: part.text || "",
+            };
+          case "file":
+            return {
+              type: "file" as const,
+              mediaType: part.mediaType,
+              filename: part.filename,
+              url: part.url,
+              providerMetadata: part.providerMetadata,
+            };
+          case "image":
+            return {
+              type: "file" as const,
+              mediaType: "image",
+              filename: part.filename,
+              url: part.image,
+              providerMetadata: part.providerMetadata,
+            };
+          case "reasoning":
+            return {
+              type: "reasoning" as const,
+              text: part.text,
+            };
+          default:
+            console.warn(`Unknown message part type: ${part.type}`);
+            return {
+              type: "text" as const,
+              text: JSON.stringify(part),
+            };
         }
-        // Add other content types as needed
-        return {
-          type: "text" as const,
-          text: JSON.stringify(part),
-        };
       })
     : [{ type: "text" as const, text: String(msg.content) }];
 

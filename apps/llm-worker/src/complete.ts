@@ -40,6 +40,7 @@ export async function handleProviderComplete(
       model: adapter(modelId),
       messages: convertToModelMessages(messages),
       maxOutputTokens: maxTokens,
+      temperature: 0.1,
     });
     console.info({
       message: "Complete finished",

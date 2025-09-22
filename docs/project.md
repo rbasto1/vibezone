@@ -12,16 +12,18 @@
 [x] Identify free models with a badge
 [x] Improve db update from stage to stage
 [x] Upload images and PDF files (when the model supports it)
-[ ] Add tools to browse the internet
+[x] Add tools to browse the internet
+[x] Render reasoning
+[x] Render images and files
 [ ] Add Privacy Policy and Terms of Service
 [ ] Translate to Brazilian Portuguese
 [ ] Add Brazilian models
 [ ] Show deleted providers and models in the admin
+[ ] Limit usage for paid users
 [ ] Import chats from OpenAI format
 [ ] Add Stripe integration
-[ ] Limit usage for paid users
 [ ] Improve error handling (sonner)
-[ ] Render reasoning
 [ ] Refactor vz-open-login event to use jotai state
 [ ] Fix toast colors
 [x] Simplify model selection metadata, add colors to capabilities buttons
+[ ] Backend processing of messages: save the AI response without the need for a frontend

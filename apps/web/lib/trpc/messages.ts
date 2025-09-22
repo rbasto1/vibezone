@@ -10,17 +10,7 @@ import { authenticatedProcedure, t } from "./server/initialize";
 const messageSchema = z.object({
   id: z.string(),
   role: z.enum(["user", "assistant", "system"]),
-  content: z
-    .array(
-      z
-        .object({
-          type: z.string(),
-          text: z.string().optional(),
-          // Add other content types as needed
-        })
-        .readonly()
-    )
-    .readonly(),
+  content: z.unknown(),
   attachments: z.array(z.any()).optional().readonly(),
   metadata: z.record(z.string(), z.any()).optional(),
   status: z.record(z.string(), z.any()).optional(),

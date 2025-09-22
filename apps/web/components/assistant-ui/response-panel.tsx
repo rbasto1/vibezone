@@ -105,8 +105,12 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
       api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
       fetch: (url, init) => {
         if (!panelGlobalContext[id]) {
-          // TODO: use sonner for a better UX
-          throw new Error("Assert: Panel not registered!");
+          toast.error("Assert: Panel not registered!");
+          return Promise.resolve(
+            new Response("Application error, please refresh the page", {
+              status: 400,
+            })
+          );
         }
         const { model } = panelGlobalContext[id];
         return generateFingerprint(sessionToken.current).then((authorization) =>
