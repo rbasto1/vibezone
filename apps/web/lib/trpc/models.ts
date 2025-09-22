@@ -214,6 +214,14 @@ export const modelsRouter = t.router({
 
 export async function listModels() {
   const result = await db.query.models.findMany({
+    columns: {
+      pricing: false,
+      topProvider: false,
+      perRequestLimits: false,
+      architectureModality: false,
+      architectureTokenizer: false,
+      architectureInstructType: false,
+    },
     where: and(
       isNull(models.deletedAt),
       isNull(providers.deletedAt),

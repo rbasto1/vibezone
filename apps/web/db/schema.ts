@@ -107,7 +107,7 @@ export const suggestionGroups = pgTable("suggestion_groups", {
   title: text("title").notNull(), // "Flagship Models", "Best Coders", etc.
   label: text("label").notNull(), // description text
   promoted: boolean("promoted").notNull().default(false), // whether to show prominently
-  models: text("models").array().notNull().default([]), // array of model IDs
+  models: text("models").array().notNull(), // array of model IDs
   createdAt: timestampTzNow("created_at"),
   updatedAt: timestampTzNowUpdated("updated_at"),
 });
