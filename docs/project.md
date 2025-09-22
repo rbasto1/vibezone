@@ -23,3 +23,4 @@
 [ ] Improve error handling (sonner)
 [ ] Render reasoning
 [ ] Refactor vz-open-login event to use jotai state
+[ ] Fix toast colors

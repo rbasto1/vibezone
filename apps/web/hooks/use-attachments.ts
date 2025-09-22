@@ -3,9 +3,10 @@ import type {
   Attachment,
   AttachmentAdapter,
   CompleteAttachment,
+  ImageMessagePart,
 } from "@assistant-ui/react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export const useAppendAttachments = () => {
@@ -99,4 +100,38 @@ export const useClearAttachments = () => {
       }),
     [set]
   );
+};
+
+export const useAttachmentSrc = (attachment: Attachment) => {
+  const { file, src } = useMemo(() => {
+    if (attachment.type !== "image") return {};
+    if (attachment.file) return { file: attachment.file };
+    const src = attachment.content?.filter(
+      (c): c is ImageMessagePart => c.type === "image"
+    )[0]?.image;
+    if (!src) return {};
+    return { src };
+  }, [attachment]);
+
+  return useFileSrc(file) ?? src;
+};
+
+const useFileSrc = (file: File | undefined) => {
+  const [src, setSrc] = useState<string>();
+
+  useEffect(() => {
+    if (!file) {
+      setSrc(undefined);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setSrc(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [file]);
+
+  return src;
 };
