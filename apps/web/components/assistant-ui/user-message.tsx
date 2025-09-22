@@ -8,6 +8,7 @@ import { UserMessageAttachments } from "./message-attachments";
 import { UserActionBar } from "./user-action-bar";
 
 export const UserMessage: FC = () => {
+  const branchingEnabled = false;
   return (
     <MessagePrimitive.Root asChild>
       <motion.div
@@ -17,7 +18,7 @@ export const UserMessage: FC = () => {
         animate={{ y: 0, opacity: 1 }}
         data-role="user"
       >
-        <UserActionBar />
+        {branchingEnabled && <UserActionBar />}
 
         <UserMessageAttachments />
 
