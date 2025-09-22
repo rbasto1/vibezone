@@ -27,7 +27,11 @@ export const TRPCProvider = ({
       new QueryClient({
         defaultOptions: {
           mutations: { retry: false },
-          queries: { retry: false, staleTime: Infinity },
+          queries: {
+            retry: false,
+            staleTime: Infinity,
+            placeholderData: (previousData: unknown) => previousData,
+          },
         },
       })
   );

@@ -23,10 +23,18 @@ import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 // Shared server function to list models for SSR and tRPC
+const ModelsListInputSchema = z
+  .object({
+    showDeleted: z.boolean().optional(),
+  })
+  .optional();
+
 export type GetModelsListReturn = Awaited<ReturnType<typeof listModels>>;
 
 export const modelsRouter = t.router({
-  list: publicProcedure.query(listModels),
+  list: publicProcedure
+    .input(ModelsListInputSchema)
+    .query(({ input }) => listModels(input?.showDeleted)),
 
   update: adminProcedure
     .input(
@@ -38,6 +46,7 @@ export const modelsRouter = t.router({
         isIncluded: z.boolean().optional(),
         capabilityFast: z.boolean().optional(),
         capabilityEffortControl: z.boolean().optional(),
+        deletedAt: z.date().nullable().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -212,7 +221,7 @@ export const modelsRouter = t.router({
   }),
 });
 
-export async function listModels() {
+export async function listModels(showDeleted = false) {
   const result = await db.query.models.findMany({
     columns: {
       pricing: false,
@@ -223,8 +232,8 @@ export async function listModels() {
       architectureInstructType: false,
     },
     where: and(
-      isNull(models.deletedAt),
-      isNull(providers.deletedAt),
+      showDeleted ? undefined : isNull(models.deletedAt),
+      showDeleted ? undefined : isNull(providers.deletedAt),
       eq(models.isChat, true)
     ),
     with: {
@@ -272,6 +281,7 @@ export async function listModels() {
         isIncluded: model.isIncluded,
         isFree: model.isFree,
         createdAt: model.createdAt,
+        deletedAt: model.deletedAt,
         // Capabilities (short names used in UI)
         capReason: modelParams.includes("reasoning"),
         capTools: modelParams.includes("tools"),

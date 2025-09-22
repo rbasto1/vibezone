@@ -2,23 +2,23 @@
 
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { DeleteIconButton } from "@/components/ui/delete-icon-button";
 import { Input } from "@/components/ui/input";
 import { QueryAlert } from "@/components/ui/query-alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/components/ui/utils";
 import type { Provider, ProviderTier } from "@/db";
 import { trpc } from "@/lib/trpc/client";
 import type { ProvidersListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef, Row, SortingState } from "@tanstack/react-table";
-import { cn } from "@/components/ui/utils";
-import { Crown, Rocket, ShieldAlertIcon, Trash2, Wrench } from "lucide-react";
+import { Crown, Rocket, ShieldAlertIcon, Wrench } from "lucide-react";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const ProviderManagePageClient: NextPage = () => {
-  const { data, error, isLoading } = trpc.providers.list.useQuery(undefined, {
-    placeholderData: (data) => data,
-  });
+  const listInput = useMemo(() => ({ showDeleted: true }), []);
+  const { data, error, isLoading } = trpc.providers.list.useQuery(listInput);
   const utils = trpc.useUtils();
   const update = trpc.providers.update.useMutation();
   const deleteMutation = trpc.providers.delete.useMutation({
@@ -56,12 +56,12 @@ const ProviderManagePageClient: NextPage = () => {
                     return;
                   }
                   // optimistic update
-                  utils.providers.list.setData(undefined, (prev) =>
+                  utils.providers.list.setData(listInput, (prev) =>
                     prev?.map((x) => (x.id === p.id ? { ...x, name: next } : x))
                   );
                   update.mutateAsync({ id: p.id, name: next }).catch(() => {
                     // revert on error
-                    utils.providers.list.setData(undefined, (prev) =>
+                    utils.providers.list.setData(listInput, (prev) =>
                       prev?.map((x) =>
                         x.id === p.id ? { ...x, name: p.name } : x
                       )
@@ -107,7 +107,7 @@ const ProviderManagePageClient: NextPage = () => {
                   if (next === p.order) return; // no change
 
                   // optimistic update
-                  utils.providers.list.setData(undefined, (prev) =>
+                  utils.providers.list.setData(listInput, (prev) =>
                     prev?.map((x) =>
                       x.id === p.id ? { ...x, order: next } : x
                     )
@@ -117,7 +117,7 @@ const ProviderManagePageClient: NextPage = () => {
                     .catch((error) => {
                       console.error("Order update failed:", error);
                       // revert on error
-                      utils.providers.list.setData(undefined, (prev) =>
+                      utils.providers.list.setData(listInput, (prev) =>
                         prev?.map((x) =>
                           x.id === p.id ? { ...x, order: p.order } : x
                         )
@@ -148,12 +148,12 @@ const ProviderManagePageClient: NextPage = () => {
             value: "leaders" | "challengers" | "specialists"
           ) => {
             // optimistic update
-            utils.providers.list.setData(undefined, (prev) =>
+            utils.providers.list.setData(listInput, (prev) =>
               prev?.map((x) => (x.id === p.id ? { ...x, tier: value } : x))
             );
             update.mutateAsync({ id: p.id, tier: value }).catch(() => {
               // revert on error
-              utils.providers.list.setData(undefined, (prev) =>
+              utils.providers.list.setData(listInput, (prev) =>
                 prev?.map((x) => (x.id === p.id ? { ...x, tier: p.tier } : x))
               );
             });
@@ -230,7 +230,7 @@ const ProviderManagePageClient: NextPage = () => {
           const current = Boolean(p.dataRetention);
           const toggle = () => {
             const next = !current;
-            utils.providers.list.setData(undefined, (prev) =>
+            utils.providers.list.setData(listInput, (prev) =>
               prev?.map((provider) =>
                 provider.id === p.id
                   ? { ...provider, dataRetention: next }
@@ -240,7 +240,7 @@ const ProviderManagePageClient: NextPage = () => {
             update
               .mutateAsync({ id: p.id, dataRetention: next })
               .catch((error) => {
-                utils.providers.list.setData(undefined, (prev) =>
+                utils.providers.list.setData(listInput, (prev) =>
                   prev?.map((provider) =>
                     provider.id === p.id
                       ? { ...provider, dataRetention: current }
@@ -290,27 +290,64 @@ const ProviderManagePageClient: NextPage = () => {
         header: "Actions",
         cell: ({ row }) => {
           const p = row.original;
+          const isDeleted = !!p.deletedAt;
           return (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1 rounded px-2 py-1 border border-red-500/30 text-red-600 hover:bg-red-500/10 transition-colors"
-              title="Delete provider"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            <DeleteIconButton
+              isDeleted={isDeleted}
+              onDelete={async () => {
+                if (isDeleted) {
+                  const previousDeletedAt = p.deletedAt;
+                  utils.providers.list.setData(listInput, (prev) =>
+                    prev?.map((provider) =>
+                      provider.id === p.id
+                        ? { ...provider, deletedAt: null }
+                        : provider
+                    )
+                  );
+                  update
+                    .mutateAsync({ id: p.id, deletedAt: null })
+                    .then(() => {
+                      toast.success(`Provider "${p.name}" restored`);
+                    })
+                    .catch((err) => {
+                      utils.providers.list.setData(listInput, (prev) =>
+                        prev?.map((provider) =>
+                          provider.id === p.id
+                            ? { ...provider, deletedAt: previousDeletedAt }
+                            : provider
+                        )
+                      );
+                      const message =
+                        err instanceof Error ? err.message : String(err);
+                      toast.error(`Failed to restore provider: ${message}`);
+                    });
+                  return;
+                }
+                utils.providers.list.setData(listInput, (prev) =>
+                  prev?.map((provider) =>
+                    provider.id === p.id
+                      ? { ...provider, deletedAt: new Date() }
+                      : provider
+                  )
+                );
                 deleteMutation.mutateAsync({ id: p.id }).catch((e) => {
                   const message = e instanceof Error ? e.message : String(e);
                   toast.error(`Failed to delete provider: ${message}`);
+                  utils.providers.list.setData(listInput, (prev) =>
+                    prev?.map((provider) =>
+                      provider.id === p.id
+                        ? { ...provider, deletedAt: null }
+                        : provider
+                    )
+                  );
                 });
               }}
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            />
           );
         },
       },
     ],
-    [update, deleteMutation, utils]
+    [update, deleteMutation, utils, listInput]
   );
 
   const [sorting, setSorting] = useState<SortingState>([

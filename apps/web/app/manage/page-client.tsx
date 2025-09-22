@@ -1,7 +1,14 @@
 "use client";
 
+import { BadgeCheck, Crown, Hash, ThumbsUp } from "lucide-react";
+import type { NextPage } from "next";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { DeleteIconButton } from "@/components/ui/delete-icon-button";
 import { QueryAlert } from "@/components/ui/query-alert";
 import {
   Select,
@@ -15,11 +22,6 @@ import { cn } from "@/components/ui/utils";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BadgeCheck, Crown, Hash, ThumbsUp, Trash2 } from "lucide-react";
-import type { NextPage } from "next";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { z } from "zod";
 import { getStorageItem, setStorageItem, storageKeys } from "./session-storage";
 
 const SortingSchema = z
@@ -31,16 +33,17 @@ const SortingSchema = z
   )
   .optional();
 
+// we can't import this from the db because the file is server-only
 const providerTiers = ["leaders", "challengers", "specialists"] as const;
 
 const ManagePageClient: NextPage = () => {
+  const listInput = useMemo(() => ({ showDeleted: true }), []);
+
   const {
     data: hydrated,
     error: listError,
     isLoading,
-  } = trpc.models.list.useQuery(undefined, {
-    placeholderData: (previousData) => previousData,
-  });
+  } = trpc.models.list.useQuery(listInput);
   const utils = trpc.useUtils();
   const updateMutation = trpc.models.update.useMutation();
   const deleteMutation = trpc.models.delete.useMutation({
@@ -156,7 +159,7 @@ const ManagePageClient: NextPage = () => {
         cell: ({ row }) => {
           const m = row.original;
           const setCacheFields = (patch: Partial<typeof m>) => {
-            utils.models.list.setData(undefined, (prev) => {
+            utils.models.list.setData(listInput, (prev) => {
               if (!prev) return prev;
               return {
                 ...prev,
@@ -263,31 +266,37 @@ const ManagePageClient: NextPage = () => {
               <div className="h-6 w-px bg-border/60" />
 
               {/* Delete button */}
-              <Button
-                type="button"
-                variant="outline"
-                className="transition-colors text-red-900 hover:text-red-600"
-                title="Delete model"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (confirm(`Are you sure you want to delete "${m.name}"?`)) {
-                    deleteMutation.mutateAsync({ id: m.id }).catch((e) => {
-                      const message =
-                        e instanceof Error ? e.message : String(e);
-                      toast.error(`Failed to delete model: ${message}`);
-                    });
+              <DeleteIconButton
+                isDeleted={!!m.deletedAt}
+                onDelete={() => {
+                  if (m.deletedAt) {
+                    const previousDeletedAt = m.deletedAt;
+                    setCacheFields({ deletedAt: null });
+                    updateMutation
+                      .mutateAsync({ id: m.id, deletedAt: null })
+                      .then(() => {
+                        toast.success(`Model "${m.name}" restored`);
+                      })
+                      .catch((err) => {
+                        setCacheFields({ deletedAt: previousDeletedAt });
+                        const message =
+                          err instanceof Error ? err.message : String(err);
+                        toast.error(`Failed to restore model: ${message}`);
+                      });
+                    return;
                   }
+                  deleteMutation.mutateAsync({ id: m.id }).catch((e) => {
+                    const message = e instanceof Error ? e.message : String(e);
+                    toast.error(`Failed to delete model: ${message}`);
+                  });
                 }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              />
             </div>
           );
         },
       },
     ],
-    [utils.models.list, updateMutation, deleteMutation]
+    [utils.models.list, updateMutation, deleteMutation, listInput]
   );
 
   const providerCounts = useMemo(() => {

@@ -6,18 +6,26 @@ import { adminProcedure, t } from "@/lib/trpc/server/initialize";
 import { asc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
-export async function getProvidersList() {
+export async function getProvidersList(showDeleted?: boolean) {
   return await db
     .select()
     .from(providers)
-    .where(isNull(providers.deletedAt))
+    .where(showDeleted ? undefined : isNull(providers.deletedAt))
     .orderBy(asc(providers.order), asc(providers.name));
 }
 
 const TierSchema = z.enum(providerTiers.enumValues);
 
+const ProvidersListInputSchema = z
+  .object({
+    showDeleted: z.boolean().optional(),
+  })
+  .optional();
+
 export const providersRouter = t.router({
-  list: adminProcedure.query(getProvidersList),
+  list: adminProcedure
+    .input(ProvidersListInputSchema)
+    .query(({ input }) => getProvidersList(input?.showDeleted)),
   update: adminProcedure
     .input(
       z
@@ -27,17 +35,19 @@ export const providersRouter = t.router({
           name: z.string().min(1).max(200).optional(),
           order: z.number().int().nullable().optional(),
           dataRetention: z.boolean().optional(),
+          deletedAt: z.date().nullable().optional(),
         })
         .refine(
           (v) =>
             typeof v.tier !== "undefined" ||
             typeof v.name !== "undefined" ||
             typeof v.order !== "undefined" ||
-            typeof v.dataRetention !== "undefined",
+            typeof v.dataRetention !== "undefined" ||
+            typeof v.deletedAt !== "undefined",
           {
             message:
-              "At least one of tier, name, order, or dataRetention must be provided",
-            path: ["dataRetention"],
+              "At least one of tier, name, order, dataRetention, or deletedAt must be provided",
+            path: ["deletedAt"],
           }
         )
     )
@@ -50,6 +60,8 @@ export const providersRouter = t.router({
       if (typeof input.order !== "undefined") updates.order = input.order;
       if (typeof input.dataRetention !== "undefined")
         updates.dataRetention = input.dataRetention;
+      if (typeof input.deletedAt !== "undefined")
+        updates.deletedAt = input.deletedAt;
       await db.update(providers).set(updates).where(eq(providers.id, input.id));
       return { ok: true } as const;
     }),

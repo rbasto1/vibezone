@@ -7,7 +7,9 @@ import ManagePageClient from "./page-client";
 
 const ManagePage: NextPage<PageProps<"/manage">> = async () => {
   const caller = await getServerCaller();
-  const state = await prefetch(caller, [caller.models.list.prefetch()]);
+  const state = await prefetch(caller, [
+    caller.models.list.prefetch({ showDeleted: true }),
+  ]);
 
   return (
     <HydrationBoundary state={state}>

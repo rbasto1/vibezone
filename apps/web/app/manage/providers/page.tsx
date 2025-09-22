@@ -7,7 +7,9 @@ import ProviderManagePageClient from "./page-client";
 
 const ProvidersPage: NextPage<PageProps<"/manage/providers">> = async () => {
   const caller = await getServerCaller();
-  const state = await prefetch(caller, [caller.providers.list.prefetch()]);
+  const state = await prefetch(caller, [
+    caller.providers.list.prefetch({ showDeleted: true }),
+  ]);
 
   return (
     <HydrationBoundary state={state}>
