@@ -103,15 +103,22 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     }
 
     if (selectedSuggestionGroup) {
-      const groupModels = models.filter((m) =>
-        m.groups?.has(selectedSuggestionGroup)
-      );
-      const providerIds = new Set(groupModels.map((m) => m.providerId));
+      const groupModels = suggestionGroups.find(
+        (g) => g.id === selectedSuggestionGroup
+      )?.models;
+      const providerIds = new Set(groupModels?.map((m) => m.split("/")[0]));
       return providers.filter((p) => providerIds.has(p.id));
     }
 
     return selectedTier ? providers.filter((p) => p.tier === selectedTier) : [];
-  }, [providers, selectedTier, selectedSuggestionGroup, models, searchQuery]);
+  }, [
+    models,
+    providers,
+    searchQuery,
+    selectedSuggestionGroup,
+    selectedTier,
+    suggestionGroups,
+  ]);
 
   const modelsByProvider = useMemo(() => {
     const byProvider = new Map<string, typeof models>();
@@ -122,7 +129,11 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       let list = models.filter((m) => m.providerId === p.id);
 
       if (selectedSuggestionGroup) {
-        list = list.filter((m) => m.groups?.has(selectedSuggestionGroup));
+        list = list.filter((m) =>
+          suggestionGroups
+            .find((g) => g.id === selectedSuggestionGroup)
+            ?.models.includes(m.id)
+        );
       }
 
       if (hasSearchQuery) {
@@ -157,9 +168,10 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   }, [
     models,
     providersByTier,
+    searchQuery,
     selectedCapabilities,
     selectedSuggestionGroup,
-    searchQuery,
+    suggestionGroups,
   ]);
 
   const [expandedProviders, setExpandedProviders] = useState(new Set<string>());
