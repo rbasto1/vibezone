@@ -3,7 +3,6 @@ import {
   useAttachmentsValue,
   useRemoveAttachment,
 } from "@/hooks/use-attachments";
-import type { Attachment } from "@assistant-ui/react";
 import { ArrowUpIcon } from "lucide-react";
 import React from "react";
 import { Button } from "../ui/button";
@@ -27,10 +26,6 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
   const removeAttachment = useRemoveAttachment();
   const attachments = useAttachmentsValue();
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
-
-  const handleRemoveAttachment = (attachment: Attachment) => {
-    removeAttachment(attachment);
-  };
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -77,7 +72,7 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
             <AttachmentChip
               key={`${a.id}`}
               attachment={a}
-              onRemove={handleRemoveAttachment}
+              onRemove={() => removeAttachment(a)}
             />
           ))}
         </div>

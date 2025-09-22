@@ -41,6 +41,10 @@ export async function handleProviderComplete(
       messages: convertToModelMessages(messages),
       maxOutputTokens: maxTokens,
     });
+    console.info({
+      message: "Complete finished",
+      result,
+    });
 
     return Response.json(
       {

@@ -181,7 +181,7 @@ async function getChatName(chatId: string, firstUserMessage?: string) {
               {
                 type: "text",
                 text: [
-                  "Looking at the following text, which is the first thing spoken in a conversation, generate a short title for the conversation (max 5 words, no more than 30 characters). Do not include words like 'Inquiry' or 'Query'.",
+                  "Looking at the following text, which is the first thing spoken in a conversation, generate a short title for the conversation (max 5 words, no more than 30 characters). Do not include words like 'Inquiry' or 'Query', and just respond with the title, no need to preface it.",
                   "",
                   "```",
                   userQuery,
@@ -194,7 +194,7 @@ async function getChatName(chatId: string, firstUserMessage?: string) {
       }),
       headers: {
         "Content-Type": "application/json",
-        "x-vz-model-id": "openrouter/sonoma-dusk-alpha",
+        "x-vz-model-id": "liquid/lfm-7b",
         Authorization: `Internal ${INTERNAL_SECRET}`,
       },
     }
