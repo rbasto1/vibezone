@@ -4,7 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ShieldAlertIcon } from "lucide-react";
 import { useState, type FC } from "react";
 import { Button } from "../ui/button";
 import {
@@ -81,6 +81,8 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
     );
   }
 
+  const dataRetention = model.isFree || provider?.dataRetention;
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
@@ -92,7 +94,10 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
           <span className="flex items-center gap-2 truncate min-w-0">
             {provider && <ProviderIcon providerId={provider.id} />}
             <span className="truncate">{model.name ?? modelId}</span>
-            {model.isFree && <FreeTag className="hidden sm:inline-flex" />}
+            {model.isFree && <FreeTag />}
+            {dataRetention && (
+              <ShieldAlertIcon className="h-4 w-4 text-red-500" aria-hidden />
+            )}
             <ChevronDown className="h-4 w-4 flex-shrink-0" />
           </span>
         </Button>

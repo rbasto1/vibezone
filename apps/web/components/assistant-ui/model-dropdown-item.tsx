@@ -1,9 +1,21 @@
 "use client";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
-import { capabilityColor, capabilityOptions } from "./model-dropdown-constants";
-import { FreeTag, IncludedTag, PremiumTag, NewTag, ExperimentalTag } from "./tags";
+import { ShieldAlertIcon } from "lucide-react";
+import { capabilityOptions } from "./model-dropdown-constants";
+import {
+  ExperimentalTag,
+  FreeTag,
+  IncludedTag,
+  NewTag,
+  PremiumTag,
+} from "./tags";
 
 interface ModelDropdownItemProps {
   model: GetModelsListReturn["models"][number];
@@ -13,6 +25,7 @@ interface ModelDropdownItemProps {
   disabled?: boolean;
   muted?: boolean;
   titleText?: string;
+  showRetentionWarning?: boolean;
 }
 
 export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
@@ -23,6 +36,7 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
   disabled = false,
   muted = false,
   titleText,
+  showRetentionWarning = false,
 }) => {
   return (
     <div
@@ -47,12 +61,25 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
           <div className="mt-0.5 flex items-center gap-1">
             {capabilityOptions
               .filter((c) => Boolean((model as Record<string, unknown>)[c.id]))
-              .map(({ id, Icon }) => (
-                <Icon
-                  key={id}
-                  className={cn("h-3 w-3 opacity-85", capabilityColor[id])}
-                />
+              .map(({ id, Icon, color }) => (
+                <Icon key={id} className={cn("h-3 w-3 opacity-85", color)} />
               ))}
+            {showRetentionWarning && (
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger asChild>
+                  <ShieldAlertIcon
+                    className="h-3 w-3 text-red-500"
+                    aria-label="This model may retain your data"
+                  />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  This model may retain your messages and attachments to train
+                  new versions.
+                  <br />
+                  Do not share with it any sensitive information in your chats.
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </span>
         <span className="flex items-center gap-1">

@@ -20,7 +20,6 @@ const modelFields: (keyof Model)[] = [
   "isSuggested",
   "name",
   "priority",
-  "topProvider",
 ];
 
 type Client = typeof db;

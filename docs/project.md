@@ -4,7 +4,7 @@
 
 [x] Add SEO metadata
 [x] Mobile version
-[ ] Tag providers that do not have zdr
+[x] Tag providers that do not have zdr
 [x] Render LaTeX and HTML
 [x] Add syntax highlighting (see packages/assistant-ui/apps/docs/content/docs/ui/SyntaxHighlighting.mdx)
 [x] Limit usage for anon users
@@ -24,4 +24,4 @@
 [ ] Render reasoning
 [ ] Refactor vz-open-login event to use jotai state
 [ ] Fix toast colors
-[ ] Simplify model selection metadata, add colors to capabilities buttons
+[x] Simplify model selection metadata, add colors to capabilities buttons

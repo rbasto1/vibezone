@@ -2,17 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
+import { ProviderIcon } from "@/components/ui/providers/provider";
 import { cn } from "@/components/ui/utils";
+import type { ProviderTier } from "@/db";
 import { useModelsValue } from "@/hooks/use-models";
 import { useSession } from "@/hooks/use-session";
 import { useEffect, useMemo, useState } from "react";
-import { ProviderIcon } from "../ui/providers/provider";
-import {
-  capabilityOptions,
-  tierColor,
-  tierOptions,
-  tierOptionsOrder,
-} from "./model-dropdown-constants";
+import { capabilityOptions, tierOptions } from "./model-dropdown-constants";
 import { ModelDropdownItem } from "./model-dropdown-item";
 import { ModelDropdownSearch } from "./model-dropdown-search";
 import { ModelDropdownSuggestionGroup } from "./model-dropdown-suggestion-group";
@@ -35,9 +31,12 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   const session = useSession();
 
   // Exclusive selection between tiers and suggestion groups
-  const [selectedTier, setSelectedTier] = useState<
-    "leaders" | "challengers" | "specialists" | null
-  >("leaders");
+  const [selectedTier, setSelectedTier] = useState<ProviderTier | null>(
+    () =>
+      providers.find((p) => p.id === currentModelId?.split("/")[0])?.tier ??
+      tierOptions[0]?.id ??
+      null
+  );
   const [selectedSuggestionGroup, setSelectedSuggestionGroup] =
     useState<string>();
   const [selectedCapabilities, setSelectedCapabilities] = useState(
@@ -57,9 +56,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     const hasInSelected =
       selectedTier && providers.some((p) => p.tier === selectedTier);
     if (!hasInSelected) {
-      const next = tierOptionsOrder.find((t) =>
-        providers.some((p) => p.tier === t)
-      );
+      const next = tierOptions.find(({ id }) =>
+        providers.some((p) => p.tier === id)
+      )?.id;
       if (next && next !== selectedTier) setSelectedTier(next);
     }
   }, [providers, selectedTier, selectedSuggestionGroup, searchQuery]);
@@ -163,9 +162,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     searchQuery,
   ]);
 
-  const [expandedProviders, setExpandedProviders] = useState<Set<string>>(
-    new Set()
-  );
+  const [expandedProviders, setExpandedProviders] = useState(new Set<string>());
 
   const autoExpandedProviders = useMemo(() => {
     const autoExpanded = new Set<string>();
@@ -210,7 +207,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     <div className="mb-3 flex w-full flex-col gap-1 px-1">
       <div className="flex w-full flex-wrap items-center gap-2">
         <div className="inline-flex flex-wrap items-center gap-1 rounded-md border bg-muted p-0.5">
-          {tierOptions.map(({ id, label, Icon }) => {
+          {tierOptions.map(({ id, label, Icon, color }) => {
             const active = effectiveSelectedTier === id;
             return (
               <button
@@ -226,7 +223,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                   handleTierSelect(id);
                 }}
               >
-                <Icon className={cn("size-4", tierColor[id])} />
+                <Icon className={cn("size-4", color)} />
                 {label}
               </button>
             );
@@ -248,7 +245,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       )}
 
       <div className="flex w-full flex-wrap items-center gap-2">
-        {capabilityOptions.map(({ id, label, Icon }) => {
+        {capabilityOptions.map(({ id, label, Icon, color }) => {
           const active = selectedCapabilities.has(id);
           return (
             <Button
@@ -263,7 +260,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                 toggleCapability(id);
               }}
             >
-              <Icon className="size-4" />
+              <Icon className={cn("size-4", color)} />
             </Button>
           );
         })}
@@ -284,7 +281,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     <div className="flex items-center gap-6 pb-3 border-b mb-3 shrink-0">
       <div className="flex items-center gap-3">
         <div className="inline-flex rounded-md border bg-muted p-0.5">
-          {tierOptions.map(({ id, label, Icon }) => {
+          {tierOptions.map(({ id, label, Icon, color }) => {
             const active = effectiveSelectedTier === id;
             return (
               <button
@@ -301,7 +298,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                   handleTierSelect(id);
                 }}
               >
-                <Icon className={cn("size-4", tierColor[id])} />
+                <Icon className={cn("size-4", color)} />
                 {label}
               </button>
             );
@@ -324,7 +321,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
-        {capabilityOptions.map(({ id, label, Icon }) => {
+        {capabilityOptions.map(({ id, label, Icon, color }) => {
           const active = selectedCapabilities.has(id);
           return (
             <Button
@@ -339,7 +336,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                 toggleCapability(id);
               }}
             >
-              <Icon className="size-4" />
+              <Icon className={cn("size-4", color)} />
             </Button>
           );
         })}
@@ -374,6 +371,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
               const suggested = list.filter((m) => m.isSuggested);
               const others = list.filter((m) => !m.isSuggested);
               const expanded = effectiveExpandedProviders.has(p.id);
+              const providerRetainsData = Boolean(p.dataRetention);
 
               return (
                 <div
@@ -426,6 +424,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                               providerId={p.id}
                               muted={restricted}
                               titleText={titleText}
+                              showRetentionWarning={
+                                providerRetainsData || Boolean(m.isFree)
+                              }
                             />
                           );
                         })}
@@ -475,6 +476,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                   providerId={p.id}
                                   muted={restricted}
                                   titleText={titleText}
+                                  showRetentionWarning={
+                                    providerRetainsData || Boolean(m.isFree)
+                                  }
                                 />
                               );
                             })}
