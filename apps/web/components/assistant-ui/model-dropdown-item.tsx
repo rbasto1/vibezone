@@ -8,7 +8,7 @@ import {
 import { cn } from "@/components/ui/utils";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { ShieldAlertIcon } from "lucide-react";
-import { capabilityColor, capabilityOptions } from "./model-dropdown-constants";
+import { capabilityOptions } from "./model-dropdown-constants";
 import {
   ExperimentalTag,
   FreeTag,
@@ -61,11 +61,8 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
           <div className="mt-0.5 flex items-center gap-1">
             {capabilityOptions
               .filter((c) => Boolean((model as Record<string, unknown>)[c.id]))
-              .map(({ id, Icon }) => (
-                <Icon
-                  key={id}
-                  className={cn("h-3 w-3 opacity-85", capabilityColor[id])}
-                />
+              .map(({ id, Icon, color }) => (
+                <Icon key={id} className={cn("h-3 w-3 opacity-85", color)} />
               ))}
             {showRetentionWarning && (
               <Tooltip delayDuration={100}>

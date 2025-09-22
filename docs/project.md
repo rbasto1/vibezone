@@ -24,4 +24,4 @@
 [ ] Render reasoning
 [ ] Refactor vz-open-login event to use jotai state
 [ ] Fix toast colors
-[ ] Simplify model selection metadata, add colors to capabilities buttons
+[x] Simplify model selection metadata, add colors to capabilities buttons
