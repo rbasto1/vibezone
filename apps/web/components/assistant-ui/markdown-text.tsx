@@ -1,23 +1,22 @@
 "use client";
 
-import "@assistant-ui/react-markdown/styles/dot.css";
+import { CheckIcon, CopyIcon } from "lucide-react";
+import type { FC } from "react";
+import { memo, useState } from "react";
 import rehypeKatex from "rehype-katex";
+import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
+import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { cn } from "@/components/ui/utils";
 import type { CodeHeaderProps } from "@assistant-ui/react-markdown";
 import {
   MarkdownTextPrimitive,
   unstable_memoizeMarkdownComponents as memoizeMarkdownComponents,
   useIsMarkdownCodeBlock,
 } from "@assistant-ui/react-markdown";
-import { CheckIcon, CopyIcon } from "lucide-react";
-import type { FC } from "react";
-import { memo, useState } from "react";
-import remarkGfm from "remark-gfm";
-
-import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import "@assistant-ui/react-markdown/styles/dot.css";
 import { SyntaxHighlighter } from "./shiki-highlighter";
-import { cn } from "@/components/ui/utils";
 
 const MarkdownTextImpl = () => {
   return (

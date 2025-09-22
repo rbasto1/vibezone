@@ -31,7 +31,7 @@ export async function handleProviderStream(
   );
 
   const result = streamText({
-    model: adapter(modelId),
+    model: adapter(`${modelId}:online`),
     messages: convertToModelMessages(messages),
     maxOutputTokens: maxTokens,
     onError: (error) => {

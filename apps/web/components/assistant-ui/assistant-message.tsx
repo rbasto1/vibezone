@@ -1,9 +1,14 @@
 import { MessagePrimitive } from "@assistant-ui/react";
 import { motion } from "framer-motion";
+import { StarIcon } from "lucide-react";
 import type { FC } from "react";
 
-import { StarIcon } from "lucide-react";
 import { AssistantActionBar } from "./assistant-action-bar";
+import { Audio } from "./assistant-message-part-audio";
+import { File } from "./assistant-message-part-file";
+import { Image } from "./assistant-message-part-image";
+import { Reasoning } from "./assistant-message-part-reasoning";
+import { Source } from "./assistant-message-part-source";
 import { BranchPicker } from "./branch-picker";
 import { MarkdownText } from "./markdown-text";
 import { MessageError } from "./message-error";
@@ -29,6 +34,11 @@ export const AssistantMessage: FC = () => {
           <MessagePrimitive.Content
             components={{
               Text: MarkdownText,
+              Reasoning,
+              Image,
+              File,
+              Source,
+              Unstable_Audio: Audio,
               tools: { Fallback: ToolFallback },
             }}
           />

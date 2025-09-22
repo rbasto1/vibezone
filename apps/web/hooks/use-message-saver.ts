@@ -31,18 +31,14 @@ export const useMessageSaver = (panel: PanelConfig) => {
   });
   const saveMessagesMutation = trpc.messages.saveMessages.useMutation({
     onSuccess: (res) => {
-      // If backend returned the chat, update cache with richer data
-      if (res?.chat) {
-        utils.chats.listChats.setData(undefined, (prev) => {
-          const existing = prev ?? [];
-          const has = existing.some((c) => c.id === res.chat!.id);
-          return has
-            ? existing.map((c) => (c.id === res.chat!.id ? res.chat! : c))
-            : [res.chat!, ...existing];
-        });
-      }
-      // Invalidate to refetch authoritative data
-      utils.chats.listChats.invalidate();
+      utils.chats.listChats.setData(undefined, (prev) => {
+        const existing = prev ?? [];
+        const has = existing.some((c) => c.id === res.chat.id);
+        return has
+          ? existing.map((c) => (c.id === res.chat.id ? res.chat : c))
+          : [res.chat, ...existing];
+      });
+      // utils.chats.listChats.invalidate();
     },
   });
   const savedMessageIds = useRef(
