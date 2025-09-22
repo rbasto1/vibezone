@@ -80,13 +80,6 @@ export async function listModels(showDeleted = false) {
       };
     }),
     providers: uniqueProviders,
-    groups: groups.map((g) => ({
-      id: g.id,
-      title: g.title,
-      label: g.label,
-      icon: g.icon,
-      promoted: g.promoted,
-      models: g.models.slice(0, 3),
-    })),
+    groups,
   };
 }
