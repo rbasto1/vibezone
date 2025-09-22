@@ -4,7 +4,7 @@
 
 [x] Add SEO metadata
 [x] Mobile version
-[ ] Tag providers that do not have zdr
+[x] Tag providers that do not have zdr
 [x] Render LaTeX and HTML
 [x] Add syntax highlighting (see packages/assistant-ui/apps/docs/content/docs/ui/SyntaxHighlighting.mdx)
 [x] Limit usage for anon users

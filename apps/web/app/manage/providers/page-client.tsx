@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { QueryAlert } from "@/components/ui/query-alert";
@@ -8,7 +9,8 @@ import type { Provider, ProviderTier } from "@/db";
 import { trpc } from "@/lib/trpc/client";
 import type { ProvidersListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef, Row, SortingState } from "@tanstack/react-table";
-import { Crown, Rocket, Trash2, Wrench } from "lucide-react";
+import { cn } from "@/components/ui/utils";
+import { Crown, Rocket, ShieldAlertIcon, Trash2, Wrench } from "lucide-react";
 import type { NextPage } from "next";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -156,7 +158,7 @@ const ProviderManagePageClient: NextPage = () => {
               );
             });
           };
-          const Button = ({
+          const TierButton = ({
             active,
             children,
             onClick,
@@ -192,31 +194,89 @@ const ProviderManagePageClient: NextPage = () => {
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
             >
-              <Button
+              <TierButton
                 active={p.tier === "leaders"}
                 onClick={() => setTier("leaders")}
                 title="Leaders"
               >
                 <Crown className="h-4 w-4" />
                 <span className="hidden sm:inline">Leaders</span>
-              </Button>
-              <Button
+              </TierButton>
+              <TierButton
                 active={p.tier === "challengers"}
                 onClick={() => setTier("challengers")}
                 title="Challengers"
               >
                 <Rocket className="h-4 w-4" />
                 <span className="hidden sm:inline">Challengers</span>
-              </Button>
-              <Button
+              </TierButton>
+              <TierButton
                 active={p.tier === "specialists"}
                 onClick={() => setTier("specialists")}
                 title="Specialists"
               >
                 <Wrench className="h-4 w-4" />
                 <span className="hidden sm:inline">Specialists</span>
-              </Button>
+              </TierButton>
             </div>
+          );
+        },
+      },
+      {
+        accessorKey: "dataRetention",
+        header: "Retention",
+        cell: ({ row }) => {
+          const p = row.original;
+          const current = Boolean(p.dataRetention);
+          const toggle = () => {
+            const next = !current;
+            utils.providers.list.setData(undefined, (prev) =>
+              prev?.map((provider) =>
+                provider.id === p.id
+                  ? { ...provider, dataRetention: next }
+                  : provider
+              )
+            );
+            update
+              .mutateAsync({ id: p.id, dataRetention: next })
+              .catch((error) => {
+                utils.providers.list.setData(undefined, (prev) =>
+                  prev?.map((provider) =>
+                    provider.id === p.id
+                      ? { ...provider, dataRetention: current }
+                      : provider
+                  )
+                );
+                const message =
+                  error instanceof Error ? error.message : String(error);
+                toast.error(`Failed to update data retention: ${message}`);
+              });
+          };
+
+          return (
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(
+                "transition-colors",
+                current
+                  ? "bg-red-500/10 border-red-500/30 text-red-500"
+                  : "border-transparent text-muted-foreground hover:bg-accent"
+              )}
+              aria-pressed={current}
+              title={
+                current
+                  ? "Provider may retain data"
+                  : "Provider does not retain data"
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                toggle();
+              }}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <ShieldAlertIcon className="h-4 w-4" />
+            </Button>
           );
         },
       },

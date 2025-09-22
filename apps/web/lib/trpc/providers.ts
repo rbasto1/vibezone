@@ -26,15 +26,18 @@ export const providersRouter = t.router({
           tier: TierSchema.optional(),
           name: z.string().min(1).max(200).optional(),
           order: z.number().int().nullable().optional(),
+          dataRetention: z.boolean().optional(),
         })
         .refine(
           (v) =>
             typeof v.tier !== "undefined" ||
             typeof v.name !== "undefined" ||
-            typeof v.order !== "undefined",
+            typeof v.order !== "undefined" ||
+            typeof v.dataRetention !== "undefined",
           {
-            message: "At least one of tier, name, or order must be provided",
-            path: ["tier"],
+            message:
+              "At least one of tier, name, order, or dataRetention must be provided",
+            path: ["dataRetention"],
           }
         )
     )
@@ -45,6 +48,8 @@ export const providersRouter = t.router({
       if (typeof input.tier !== "undefined") updates.tier = input.tier;
       if (typeof input.name !== "undefined") updates.name = input.name;
       if (typeof input.order !== "undefined") updates.order = input.order;
+      if (typeof input.dataRetention !== "undefined")
+        updates.dataRetention = input.dataRetention;
       await db.update(providers).set(updates).where(eq(providers.id, input.id));
       return { ok: true } as const;
     }),

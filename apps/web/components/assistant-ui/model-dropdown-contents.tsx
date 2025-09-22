@@ -37,7 +37,11 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   // Exclusive selection between tiers and suggestion groups
   const [selectedTier, setSelectedTier] = useState<
     "leaders" | "challengers" | "specialists" | null
-  >("leaders");
+  >(
+    () =>
+      providers.find((p) => p.id === currentModelId?.split("/")[0])?.tier ||
+      "leaders"
+  );
   const [selectedSuggestionGroup, setSelectedSuggestionGroup] =
     useState<string>();
   const [selectedCapabilities, setSelectedCapabilities] = useState(
@@ -163,9 +167,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     searchQuery,
   ]);
 
-  const [expandedProviders, setExpandedProviders] = useState<Set<string>>(
-    new Set()
-  );
+  const [expandedProviders, setExpandedProviders] = useState(new Set<string>());
 
   const autoExpandedProviders = useMemo(() => {
     const autoExpanded = new Set<string>();
@@ -374,6 +376,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
               const suggested = list.filter((m) => m.isSuggested);
               const others = list.filter((m) => !m.isSuggested);
               const expanded = effectiveExpandedProviders.has(p.id);
+              const providerRetainsData = Boolean(p.dataRetention);
 
               return (
                 <div
@@ -426,6 +429,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                               providerId={p.id}
                               muted={restricted}
                               titleText={titleText}
+                              showRetentionWarning={
+                                providerRetainsData || Boolean(m.isFree)
+                              }
                             />
                           );
                         })}
@@ -475,6 +481,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                   providerId={p.id}
                                   muted={restricted}
                                   titleText={titleText}
+                                  showRetentionWarning={
+                                    providerRetainsData || Boolean(m.isFree)
+                                  }
                                 />
                               );
                             })}
