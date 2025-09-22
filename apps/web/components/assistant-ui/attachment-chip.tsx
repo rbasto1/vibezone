@@ -18,7 +18,9 @@ import {
 import { cn } from "@/components/ui/utils";
 import type { Attachment } from "@assistant-ui/react";
 import type { LucideIcon } from "lucide-react";
-import { File as FileIcon, FileImage, FileText, XIcon } from "lucide-react";
+import { FileImageIcon, FileTextIcon, XIcon } from "lucide-react";
+import { FaRegFilePdf } from "react-icons/fa";
+import type { IconType } from "react-icons/lib";
 import { AttachmentPreviewDialog } from "./attachment-preview";
 
 interface AttachmentChipProps {
@@ -50,17 +52,14 @@ const useImagePreview = (attachment: Attachment | undefined) => {
   return previewSrc;
 };
 
-const guessIcon = (attachment: Attachment): LucideIcon => {
-  switch (attachment.type) {
-    case "document":
-      return FileText;
-    case "image":
-      return FileImage;
-    case "file":
-      return FileText;
-    default:
-      return FileIcon;
+const guessIcon = (attachment: Attachment): LucideIcon | IconType => {
+  if (attachment.contentType.startsWith("image/")) {
+    return FileImageIcon;
   }
+  if (attachment.contentType.startsWith("application/pdf")) {
+    return FaRegFilePdf;
+  }
+  return FileTextIcon;
 };
 
 const AttachmentChip: React.FC<AttachmentChipProps> = ({

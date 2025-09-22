@@ -14,8 +14,9 @@ import {
   MessagePrimitive,
   useAssistantState,
 } from "@assistant-ui/react";
-import { FileText } from "lucide-react";
+import { FileImageIcon, FileTextIcon } from "lucide-react";
 import { type FC } from "react";
+import { FaRegFilePdf } from "react-icons/fa";
 import { AttachmentPreviewDialog } from "./attachment-preview";
 
 interface AttachmentThumbProps {
@@ -25,6 +26,7 @@ interface AttachmentThumbProps {
 const AttachmentThumb: FC<AttachmentThumbProps> = ({ attachment }) => {
   const isImage = attachment.type === "image";
   const src = useAttachmentSrc(attachment);
+  const type = attachment.contentType;
 
   return (
     <Avatar className="aui-attachment-tile-avatar h-full w-full rounded-none">
@@ -34,7 +36,13 @@ const AttachmentThumb: FC<AttachmentThumbProps> = ({ attachment }) => {
         className="aui-attachment-tile-image object-cover"
       />
       <AvatarFallback delayMs={isImage ? 200 : 0}>
-        <FileText className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
+        {type.startsWith("image/") ? (
+          <FileImageIcon className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
+        ) : type == "application/pdf" ? (
+          <FaRegFilePdf className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
+        ) : (
+          <FileTextIcon className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
+        )}
       </AvatarFallback>
     </Avatar>
   );

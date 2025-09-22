@@ -50,7 +50,13 @@ async function getAttachmentForFile(adapter: AttachmentAdapter, file: File) {
     return attachment;
   } catch (error) {
     console.error(error);
-    toast.error(`File ${file.name} is not supported`);
+    if (!(error instanceof Error)) return;
+    if (error.message.startsWith("PDF size exceeds ")) {
+      const msg = error.message.substring("PDF size ".length);
+      toast.error(`File ${file.name} ${msg}`);
+    } else {
+      toast.error(`File ${file.name} is not supported`);
+    }
     return null;
   }
 }

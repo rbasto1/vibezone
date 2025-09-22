@@ -111,13 +111,24 @@ class PdfAttachmentAdapter implements AttachmentAdapter {
   }
 
   private async fileToBase64(file: File): Promise<string> {
-    const buffer = await file.arrayBuffer();
-    let binary = "";
-    const bytes = new Uint8Array(buffer);
-    bytes.forEach((byte) => {
-      binary += String.fromCharCode(byte);
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          // Remove the data URL prefix (e.g., "data:application/pdf;base64,")
+          const base64String = reader.result.split(',')[1];
+          if (base64String) {
+            resolve(base64String);
+          } else {
+            reject(new Error('Failed to extract base64 data from file'));
+          }
+        } else {
+          reject(new Error('Unexpected result type from FileReader'));
+        }
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
     });
-    return btoa(binary);
   }
 }
 
