@@ -43,7 +43,7 @@ export async function handleProviderComplete(
     });
     console.info({
       message: "Complete finished",
-      result,
+      result: result.text,
     });
 
     return Response.json(
