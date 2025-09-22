@@ -73,9 +73,9 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
       <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-start justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
         <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-2">
           <ComposerAddAttachment />
-          {attachments.map((a, idx) => (
+          {attachments.map((a) => (
             <AttachmentChip
-              key={`${idx}-${a.name}`}
+              key={`${a.id}`}
               attachment={a}
               onRemove={handleRemoveAttachment}
             />
