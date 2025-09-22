@@ -2,12 +2,12 @@ import {
   Brain,
   Crown,
   Eye,
-  FileText,
   Image as ImageIcon,
   Mountain,
   Wand2,
   Wrench,
 } from "lucide-react";
+import { FaRegFilePdf } from "react-icons/fa";
 
 // Filters: provider tiers and model flags
 export const tierOptions = [
@@ -30,7 +30,7 @@ export const tierColor: Record<(typeof tierOptions)[number]["id"], string> = {
 
 export const capabilityOptions = [
   { id: "capVision" as const, label: "Can see images", Icon: Eye },
-  { id: "capPdf" as const, label: "Can read PDFs", Icon: FileText },
+  { id: "capPdf" as const, label: "Can read PDFs", Icon: FaRegFilePdf },
   { id: "capReason" as const, label: "Reasoning", Icon: Brain },
   {
     id: "capImageGen" as const,

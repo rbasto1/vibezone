@@ -1,4 +1,5 @@
 import { Thread } from "@/components/assistant-ui/thread";
+import { useAttachmentAdapter } from "@/hooks/use-attachments";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
@@ -28,6 +29,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
   panelGlobalContext[id] = panel;
   const [panelState, setPanelState] = usePanelState();
   const setCurrentChat = useCurrentChatSetter();
+  const attachmentAdapter = useAttachmentAdapter();
   const renameChatMutation = trpc.chats.renameChat.useMutation();
   const session = useSession();
   const sessionToken = useRef(session?.session.token);
@@ -122,6 +124,9 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
     onError: handleModelError,
     onFinish: handleModelFinish,
     messages: panel.initialMessages,
+    adapters: {
+      attachments: attachmentAdapter,
+    },
   });
 
   // We will update the runtime using the global variable above

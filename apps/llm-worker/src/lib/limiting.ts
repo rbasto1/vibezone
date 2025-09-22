@@ -18,6 +18,7 @@ export async function checkUsage(
     requestHeaders
   );
   if (error !== null) {
+    console.error({ message: "Invalid auth", error });
     return new Response(error, { status: 401, headers });
   }
 

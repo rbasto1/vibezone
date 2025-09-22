@@ -22,6 +22,7 @@
     "@assistant-ui/react-ai-sdk": "workspace:*",
     "@assistant-ui/react-markdown": "workspace:*",
     "@neondatabase/serverless": "^1.0.1",
+    "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-select": "^2.2.6",

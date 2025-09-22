@@ -4,14 +4,14 @@
 
 [x] Add SEO metadata
 [x] Mobile version
-[ ] Integrate API call for Zero Data Retention (/api/v1/endpoints/zdr)
+[ ] Tag providers that do not have zdr
 [x] Render LaTeX and HTML
 [x] Add syntax highlighting (see packages/assistant-ui/apps/docs/content/docs/ui/SyntaxHighlighting.mdx)
 [x] Limit usage for anon users
 [ ] Limit usage for free users
 [x] Identify free models with a badge
 [x] Improve db update from stage to stage
-[ ] Upload images and PDF files (when the model supports it)
+[x] Upload images and PDF files (when the model supports it)
 [ ] Add tools to browse the internet
 [ ] Add Privacy Policy and Terms of Service
 [ ] Translate to Brazilian Portuguese
@@ -23,3 +23,5 @@
 [ ] Improve error handling (sonner)
 [ ] Render reasoning
 [ ] Refactor vz-open-login event to use jotai state
+[ ] Fix toast colors
+[ ] Simplify model selection metadata, add colors to capabilities buttons

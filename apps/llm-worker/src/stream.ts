@@ -35,7 +35,10 @@ export async function handleProviderStream(
     messages: convertToModelMessages(messages),
     maxOutputTokens: maxTokens,
     onError: (error) => {
-      console.error("Caught an error creating stream text:", error);
+      console.error({
+        message: "Caught an error creating stream text:",
+        error,
+      });
     },
     abortSignal: request.signal,
   });
@@ -51,7 +54,10 @@ export async function handleProviderStream(
   return result.toUIMessageStreamResponse({
     headers,
     onFinish: (e) => {
-      console.debug("Stream event finished:", e.responseMessage.id);
+      console.debug({
+        message: "Stream event finished:",
+        id: e.responseMessage.id,
+      });
     },
   });
 }

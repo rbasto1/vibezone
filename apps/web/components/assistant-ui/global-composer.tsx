@@ -1,8 +1,14 @@
 "use client";
-import { ArrowUpIcon, PlusIcon } from "lucide-react";
+import {
+  useAttachmentsValue,
+  useRemoveAttachment,
+} from "@/hooks/use-attachments";
+import { ArrowUpIcon } from "lucide-react";
 import React from "react";
 import { Button } from "../ui/button";
 import { StopButton } from "../ui/stop-button";
+import { ComposerAddAttachment } from "./add-attachment";
+import { AttachmentChip } from "./attachment-chip";
 
 export type GlobalComposerProps = {
   value: string;
@@ -17,6 +23,8 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
   onSubmit,
   onStopAll,
 }) => {
+  const removeAttachment = useRemoveAttachment();
+  const attachments = useAttachmentsValue();
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -26,7 +34,9 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
     textareaRef.current?.focus();
   };
 
-  const canAttach = false;
+  const pendingAttachments = attachments.some(
+    (a) => a.status.type !== "complete"
+  );
 
   return (
     <div
@@ -44,6 +54,9 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            if (pendingAttachments) {
+              return;
+            }
             e.preventDefault();
             onSubmit();
           }
@@ -52,28 +65,33 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
         ref={textareaRef}
       />
       {/* Footer with attach and send, styled like thread composer */}
-      <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
-        {canAttach ? (
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => console.warn("Attachment clicked - not implemented")}
-            aria-label="Attach file"
-          >
-            <PlusIcon />
-          </Button>
-        ) : (
-          <div />
-        )}
+      <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-start justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
+        <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-2">
+          <ComposerAddAttachment />
+          {attachments.map((a) => (
+            <AttachmentChip
+              key={`${a.id}`}
+              attachment={a}
+              onRemove={() => removeAttachment(a)}
+            />
+          ))}
+        </div>
 
         {onStopAll ? (
           <StopButton
             onClick={onStopAll}
             aria-label="Stop all AI responses"
             title="Stop all AI responses"
+            className="self-start"
           />
         ) : (
-          <Button size="icon" onClick={onSubmit} aria-label="Send to all AIs">
+          <Button
+            size="icon"
+            onClick={onSubmit}
+            aria-label="Send to all AIs"
+            className="self-start"
+            disabled={pendingAttachments}
+          >
             <ArrowUpIcon className="size-5" />
           </Button>
         )}
