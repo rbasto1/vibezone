@@ -88,13 +88,13 @@ const AssistantContent: FC = () => {
     if (!session?.user && allowedModelIds.length < modelIds.length) {
       toast.info("Sign in to use premium models");
     }
-    if (allowedModelIds.length === 0) {
+    if (!allowedModelIds.length) {
       toast.error("No available models for guests. Please sign in.");
       return;
     }
 
     setPanelsConfig(
-      allowedModelIds.map((modelId, order): PanelConfig => {
+      allowedModelIds.slice(0, 3).map((modelId, order): PanelConfig => {
         const provider = modelId.split(":")[0];
         if (!provider) throw new Error("Assert: this can't happen");
         return {

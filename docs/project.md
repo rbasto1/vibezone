@@ -6,7 +6,7 @@
 [x] Mobile version
 [x] Tag providers that do not have zdr
 [x] Render LaTeX and HTML
-[x] Add syntax highlighting (see packages/assistant-ui/apps/docs/content/docs/ui/SyntaxHighlighting.mdx)
+[x] Add syntax highlighting
 [x] Limit usage for anon users
 [x] Identify free models with a badge
 [x] Improve db update from stage to stage
@@ -14,7 +14,7 @@
 [x] Add tools to browse the internet
 [x] Render reasoning
 [x] Render images and files
-[ ] Improve ssr of db models/providers (use script to generate json)
+[x] Improve ssr of db models/providers (use script to generate json)
 [ ] Add Privacy Policy and Terms of Service
 [ ] Translate to Brazilian Portuguese
 [ ] Add Brazilian models
