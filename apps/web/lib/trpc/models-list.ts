@@ -1,7 +1,6 @@
 import { and, asc, desc, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db";
-import type { Provider } from "@/db/schema";
 import { models, providers } from "@/db/schema";
 
 export async function listModels(showDeleted = false) {
@@ -33,12 +32,15 @@ export async function listModels(showDeleted = false) {
 
   const uniqueProviders = result
     .map((item) => item.provider)
-    .reduce((acc, provider) => {
-      if (!acc.some((p) => p.id === provider.id)) {
-        acc.push(provider);
-      }
-      return acc;
-    }, [] as Provider[])
+    .reduce(
+      (acc, provider) => {
+        if (!acc.some((p) => p.id === provider.id)) {
+          acc.push(provider);
+        }
+        return acc;
+      },
+      [] as (typeof result)[0]["provider"][]
+    )
     .sort((a, b) => {
       // Sort by order first, then by name as fallback
       const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
@@ -79,7 +81,16 @@ export async function listModels(showDeleted = false) {
         },
       };
     }),
-    providers: uniqueProviders,
+    providers: uniqueProviders.map((provider) => ({
+      id: provider.id,
+      name: provider.name,
+      tier: provider.tier,
+      order: provider.order,
+      dataRetention: provider.dataRetention || !provider.privacyPolicyUrl,
+      createdAt: provider.createdAt,
+      updatedAt: provider.updatedAt,
+      deletedAt: provider.deletedAt,
+    })),
     groups,
   };
 }

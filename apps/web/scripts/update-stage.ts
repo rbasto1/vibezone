@@ -7,6 +7,8 @@ const providerFields: (keyof Provider)[] = [
   "name",
   "tier",
   "order",
+  "dataRetention",
+  "privacyPolicyUrl",
   "deletedAt",
 ];
 const modelFields: (keyof Model)[] = [

@@ -216,13 +216,8 @@ const ManagePageClient: NextPage = () => {
 
               <Button
                 type="button"
-                variant="outline"
-                className={cn(
-                  "transition-colors",
-                  m.isSuggested
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-transparent text-muted-foreground hover:bg-accent"
-                )}
+                variant={m.isSuggested ? "default" : "outline"}
+                className="transition-colors"
                 aria-pressed={!!m.isSuggested}
                 title="Suggested"
                 onClick={() => onToggle("isSuggested", !m.isSuggested)}

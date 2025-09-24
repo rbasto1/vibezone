@@ -15,7 +15,8 @@
 [x] Render reasoning
 [x] Render images and files
 [x] Improve ssr of db models/providers (use script to generate json)
-[ ] Add Privacy Policy and Terms of Service
+[ ] Only allow upload of files if logged in
+[x] Add Privacy Policy and Terms of Service
 [ ] Translate to Brazilian Portuguese
 [ ] Add Brazilian models
 [ ] Limit usage for free users
