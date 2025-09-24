@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 
 const PrivacyPage: NextPage = () => {
   return (
-    <article className="mx-auto w-full max-w-3xl px-4 sm:px-6 md:px-8 py-8 space-y-8">
+    <article className="mx-auto w-full max-w-3xl px-4 sm:px-6 md:px-8 space-y-8">
       <header className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
           Privacy Policy
