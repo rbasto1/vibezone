@@ -40,7 +40,7 @@ export const GlobalComposer: React.FC<GlobalComposerProps> = ({
 
   return (
     <div
-      className="bg-background relative flex w-full flex-col gap-0 pb-4 md:pb-6 cursor-text"
+      className="relative flex w-full flex-col gap-0 cursor-text"
       onClick={handleContainerClick}
     >
       {/* Input box (top section) */}

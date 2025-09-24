@@ -32,3 +32,4 @@
 [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
 [ ] Projects (group threads)
 [ ] Search chats (backend search of all messages)
+[ ] Keep composer text in localStorage
