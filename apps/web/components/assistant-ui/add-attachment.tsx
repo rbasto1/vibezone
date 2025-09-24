@@ -16,6 +16,7 @@ import { cn } from "@/components/ui/utils";
 import { useAppendAttachments } from "@/hooks/use-attachments";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
+import { useSession } from "@/hooks/use-session";
 import { ComposerPrimitive } from "@assistant-ui/react";
 import { PlusIcon } from "lucide-react";
 import { Fragment, useCallback, useMemo, type FC } from "react";
@@ -55,6 +56,8 @@ const formatModelNames = (names: string[]) => {
 export const ComposerAddAttachment: FC = () => {
   const panels = usePanelsConfigValue();
   const { models } = useModelsValue();
+  const session = useSession();
+  const isLoggedIn = !!session?.user;
 
   const attachmentsCapabilities = useMemo(() => {
     const modelsMap = new Map(models.map((model) => [model.id, model]));
@@ -147,6 +150,16 @@ export const ComposerAddAttachment: FC = () => {
                 if (item.disabled) {
                   event.preventDefault();
                   event.stopPropagation();
+                  return;
+                }
+                if (!isLoggedIn) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  try {
+                    window.dispatchEvent(new Event("vz:open-login"));
+                  } catch {
+                    /* ignore */
+                  }
                   return;
                 }
                 item.onSelect();
