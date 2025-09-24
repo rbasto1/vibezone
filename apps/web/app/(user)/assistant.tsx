@@ -18,6 +18,7 @@ import { useUIState } from "@/hooks/use-ui-state";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
+import Link from "next/link";
 import type { FC } from "react";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -217,7 +218,6 @@ const AssistantContent: FC = () => {
               {!uiState.suggestionsUsed && (
                 <ThreadWelcomeSuggestions onSelect={handleSelectModelsGroup} />
               )}
-
               {/* Global composer below panels */}
               <GlobalComposer
                 value={prompt}
@@ -236,6 +236,14 @@ const AssistantContent: FC = () => {
                 }}
                 onStopAll={anyPanelRunning ? handleStopAll : null}
               />
+            </div>
+            <div className="flex justify-center text-xs gap-4 [&>a]:underline">
+              <span>
+                AI can make mistakes. Always check important responses
+                independently.
+              </span>
+              <Link href="/privacy">Privacy Policy</Link>
+              <Link href="/terms">Terms of Use</Link>
             </div>
           </div>
         </SidebarInset>

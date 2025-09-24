@@ -35,6 +35,7 @@ export const providers = pgTable("providers", {
   tier: providerTiers().notNull().default("specialists"),
   order: integer("order"), // custom ordering for display
   dataRetention: boolean("data_retention").notNull().default(false),
+  privacyPolicyUrl: text("privacy_policy_url"),
   createdAt: timestampTzNow("created_at"),
   updatedAt: timestampTzNowUpdated("updated_at"),
   deletedAt: timestampTz("deleted_at"),

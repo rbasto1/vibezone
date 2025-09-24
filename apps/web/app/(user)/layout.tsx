@@ -1,5 +1,5 @@
 import { HydrationBoundary } from "@tanstack/react-query";
-import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { headers } from "next/headers";
 import { Suspense, type PropsWithChildren } from "react";
 
@@ -88,17 +88,9 @@ async function getUserPreferredModels(userId: string | undefined) {
 
 let defaultModelsCache: Pick<Model, "id" | "providerId">[] | null = null;
 async function getDefaultModels() {
-  defaultModelsCache ??= await db
-    .select({ id: models.id, providerId: models.providerId })
-    .from(models)
-    .where(
-      and(
-        isNotNull(models.priority),
-        isNull(models.deletedAt),
-        eq(models.isChat, true)
-      )
-    )
-    .orderBy(models.priority)
-    .limit(MAX_PANELS);
+  defaultModelsCache ??= modelsList.models
+    .filter((m) => !!m.priority)
+    .toSorted((a, b) => (a.priority ?? 0) - (b.priority ?? 0))
+    .slice(0, MAX_PANELS);
   return defaultModelsCache;
 }

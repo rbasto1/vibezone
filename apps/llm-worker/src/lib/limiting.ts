@@ -24,6 +24,9 @@ export async function checkUsage(
 
   if (limit === Infinity) return null;
 
+  // TODO: check if user has access
+  // If user is not logged in, model has to have included=false and premium=false
+
   // Use Durable Object keyed by the user key
   const ns = env.USAGE;
   const id = ns.idFromName(userKey);

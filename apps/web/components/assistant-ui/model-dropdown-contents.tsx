@@ -383,7 +383,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
               const suggested = list.filter((m) => m.isSuggested);
               const others = list.filter((m) => !m.isSuggested);
               const expanded = effectiveExpandedProviders.has(p.id);
-              const providerRetainsData = Boolean(p.dataRetention);
+              const providerRetainsData = !!p.dataRetention;
 
               return (
                 <div

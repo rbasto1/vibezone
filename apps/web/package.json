@@ -13,7 +13,7 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "dotenvx run -- tsx db/seed.ts",
     "db:update-stage": "dotenvx run -- tsx scripts/update-stage.ts",
-    "generate:models-ts": "dotenvx run -- tsx scripts/generate-models-ts.ts",
+    "generate:data-ts": "dotenvx run -- tsx scripts/generate-data-ts.ts",
     "set-vercel-envs": "dotenvx run -- tsx scripts/set-vercel-envs.ts"
   },
   "dependencies": {
