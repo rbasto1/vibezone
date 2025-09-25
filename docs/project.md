@@ -20,13 +20,14 @@
 - [x] Archive -> Delete
 - [x] When loading saved threads, make the suggestions disappear
 - [x] Store usage per user in db
-- [ ] "Full Screen" button on each chat
+- [x] "Full Screen" button on each chat
 - [ ] Disable auto-scroll
 - [ ] Thumb up/down (or stars?)
 - [ ] Auto-refresh chat list in timer
 - [ ] Translate to Brazilian Portuguese
 - [ ] Add Brazilian models
 - [ ] Limit usage for free users
+- [ ] Create job to update costs in usage table
 - [x] Show deleted providers and models in the admin
 - [ ] Limit usage for paid users
 - [ ] Import chats from OpenAI format

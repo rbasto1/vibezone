@@ -40,7 +40,7 @@ const AssistantContent: FC = () => {
   const session = useSession();
   const { models } = useModelsValue();
   const isMobile = useIsMobile();
-  const [mobileActivePanelId, setMobileActivePanelId] = useState<string>();
+  const [focusPanelId, setFocusPanelId] = useState<string>();
 
   const ctx = useContext(GlobalComposerContext);
   if (!ctx) throw new Error("GlobalComposerContext is not available");
@@ -48,19 +48,26 @@ const AssistantContent: FC = () => {
   const { prompt, setPrompt, send, getRuntimes } = ctx;
 
   useEffect(() => {
-    if (!panelsConfig.length) {
-      setMobileActivePanelId(undefined);
+    if (isMobile) {
+      setFocusPanelId((current) => {
+        if (current && panelsConfig.some((panel) => panel.id === current)) {
+          return current;
+        }
+
+        return panelsConfig[0]?.id;
+      });
       return;
     }
 
-    setMobileActivePanelId((current) => {
-      if (current && panelsConfig.some((panel) => panel.id === current)) {
-        return current;
+    setFocusPanelId((current) => {
+      if (!current) return undefined;
+      const exists = panelsConfig.some((panel) => panel.id === current);
+      if (!exists || panelsConfig.length <= 1) {
+        return undefined;
       }
-
-      return panelsConfig[0]?.id;
+      return current;
     });
-  }, [panelsConfig]);
+  }, [isMobile, panelsConfig]);
 
   const handleStopAll = () => {
     const failures: string[] = [];
@@ -121,9 +128,9 @@ const AssistantContent: FC = () => {
     }
     return entries;
   }, [models]);
-  const activePanelId = mobileActivePanelId ?? panelsConfig[0]?.id;
   const showTabs = isMobile && panelsConfig.length > 1;
   const hideAnonBanner = isMobile && uiState.suggestionsUsed;
+  const canToggleFocus = !isMobile && panelsConfig.length > 1;
 
   return (
     <SidebarProvider>
@@ -135,80 +142,88 @@ const AssistantContent: FC = () => {
             suggestionsUsed={uiState.suggestionsUsed}
           />
           <div className="flex-1 overflow-hidden p-3 flex flex-col gap-3">
-            {isMobile ? (
-              <div className="flex flex-col gap-3 flex-1 min-h-0">
-                {showTabs && (
-                  <div className="-mx-1 px-1">
-                    <div
-                      className="flex items-center border-b border-border rounded-t-md overflow-hidden"
-                      role="tablist"
-                    >
-                      {panelsConfig.map((panel, index) => {
-                        const modelLabel =
-                          modelNamesById.get(panel.model) ?? panel.model;
-                        const label = `${index + 1}: ${modelLabel}`;
-                        const isActive = activePanelId === panel.id;
-                        const isRunning = panelsState[panel.id]?.running;
-                        return (
-                          <div
+            <div className="flex flex-col gap-3 flex-1 min-h-0">
+              {showTabs && (
+                <div className="-mx-1 px-1">
+                  <div
+                    className="flex items-center border-b border-border rounded-t-md overflow-hidden"
+                    role="tablist"
+                  >
+                    {panelsConfig.map((panel, index) => {
+                      const modelLabel =
+                        modelNamesById.get(panel.model) ?? panel.model;
+                      const label = `${index + 1}: ${modelLabel}`;
+                      const isActive = focusPanelId === panel.id;
+                      const isRunning = panelsState[panel.id]?.running;
+                      return (
+                        <div
+                          className={cn(
+                            "relative flex-1 basis-1/3 min-w-0",
+                            isActive
+                              ? "border-b-2 border-primary"
+                              : "border-b-2 border-transparent hover:border-border"
+                          )}
+                        >
+                          <button
+                            key={panel.id}
+                            type="button"
+                            onClick={() => setFocusPanelId(panel.id)}
                             className={cn(
-                              "relative flex-1 basis-1/3 min-w-0",
+                              "relative w-full h-full px-3 py-2 text-sm font-medium truncate transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                               isActive
-                                ? "border-b-2 border-primary"
-                                : "border-b-2 border-transparent hover:border-border"
+                                ? "text-foreground bg-background"
+                                : "text-muted-foreground hover:text-foreground",
+                              isRunning && "panel-button-glow"
                             )}
+                            aria-pressed={isActive}
+                            aria-selected={isActive}
+                            aria-label={`Switch to panel ${index + 1}`}
+                            role="tab"
                           >
-                            <button
-                              key={panel.id}
-                              type="button"
-                              onClick={() => setMobileActivePanelId(panel.id)}
-                              className={cn(
-                                "relative w-full h-full px-3 py-2 text-sm font-medium truncate transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                                isActive
-                                  ? "text-foreground bg-background"
-                                  : "text-muted-foreground hover:text-foreground",
-                                isRunning && "panel-button-glow"
-                              )}
-                              aria-pressed={isActive}
-                              aria-selected={isActive}
-                              aria-label={`Switch to panel ${index + 1}`}
-                              role="tab"
-                            >
-                              <span className="text">{label}</span>
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
+                            <span className="text">{label}</span>
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
-                <div className="flex-1 min-h-0">
-                  {panelsConfig.map((panel) => (
-                    <div
-                      className={cn(
-                        "h-full",
-                        activePanelId !== panel.id && "hidden"
-                      )}
-                    >
-                      <ResponsePanel key={panel.id} panel={panel} />
-                    </div>
-                  ))}
                 </div>
-              </div>
-            ) : (
+              )}
               <div
                 className={cn(
-                  "grid gap-3 flex-1 min-h-0 auto-rows-fr w-full",
-                  panelCount === 1 && "grid-cols-1",
-                  panelCount === 2 && "md:grid-cols-2",
-                  panelCount === 3 && "md:grid-cols-3"
+                  "flex-1 min-h-0",
+                  !isMobile && "grid gap-3  auto-rows-fr w-full",
+                  !isMobile && panelCount === 1 && "grid-cols-1",
+                  !isMobile && panelCount === 2 && "md:grid-cols-2",
+                  !isMobile && panelCount === 3 && "md:grid-cols-3"
                 )}
               >
-                {panelsConfig.map((panel) => (
-                  <ResponsePanel key={panel.id} panel={panel} />
-                ))}
+                {panelsConfig.map((panel) => {
+                  const isFocused = focusPanelId === panel.id;
+                  const isDimmed =
+                    Boolean(focusPanelId) && focusPanelId !== panel.id;
+                  return (
+                    <ResponsePanel
+                      key={panel.id}
+                      panel={panel}
+                      isFocused={isFocused}
+                      onToggleFocus={
+                        canToggleFocus
+                          ? () =>
+                              setFocusPanelId((current) =>
+                                current === panel.id ? undefined : panel.id
+                              )
+                          : undefined
+                      }
+                      className={cn(
+                        "transition-all duration-300",
+                        isDimmed && "hidden",
+                        isFocused && "md:col-span-full"
+                      )}
+                    />
+                  );
+                })}
               </div>
-            )}
+            </div>
 
             {/* Centered container for suggestions and composer */}
             <div className="mx-auto w-full max-w-3xl md:max-w-4xl lg:max-w-5xl flex flex-col gap-3 px-2 sm:px-3">
