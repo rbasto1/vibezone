@@ -1,6 +1,6 @@
 "use client";
 import { ArrowUpIcon } from "lucide-react";
-import type { FC } from "react";
+import type { FC, MouseEvent } from "react";
 import { useContext, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
@@ -53,7 +53,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
 
   const { getRuntimes } = ctx;
 
-  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleContainerClick = (e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     // Don't steal focus when clicking on actual buttons
     if (target.closest("button")) return;
