@@ -1,4 +1,5 @@
 import { Thread } from "@/components/assistant-ui/thread";
+import { cn } from "@/components/ui/utils";
 import { useAttachmentAdapter } from "@/hooks/use-attachments";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
@@ -11,6 +12,7 @@ import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import type { ChatOnFinishCallback, UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { useRef, type FC } from "react";
 import { toast } from "sonner";
 import { PanelHeader } from "./response-panel-header";
@@ -18,13 +20,21 @@ import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
 
 interface ResponsePanelProps {
   panel: PanelConfig;
+  className?: string;
+  isFocused?: boolean;
+  onToggleFocus?: () => void;
 }
 
 // Since we can't use ModelContextProviders (see comment below), we will
 // have to hack our way out
 const panelGlobalContext: Record<string, PanelConfig> = {};
 
-export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
+export const ResponsePanel: FC<ResponsePanelProps> = ({
+  panel,
+  className,
+  isFocused = false,
+  onToggleFocus,
+}) => {
   const { id } = panel;
   panelGlobalContext[id] = panel;
   const [panelState, setPanelState] = usePanelState();
@@ -163,8 +173,32 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({ panel }) => {
 
   const { running, error } = panelState(id);
 
+  const FocusIcon = isFocused ? Minimize2 : Maximize2;
+  const focusButtonLabel = isFocused ? "Exit focus view" : "Focus this panel";
+
   return (
-    <div className="flex flex-col border rounded-lg overflow-hidden h-full">
+    <div
+      className={cn(
+        "group relative flex flex-col border rounded-lg overflow-hidden h-full transition-all duration-300",
+        isFocused && "ring-1 ring-primary/40 shadow-lg",
+        className
+      )}
+    >
+      {onToggleFocus && (
+        <button
+          type="button"
+          onClick={onToggleFocus}
+          aria-pressed={isFocused}
+          aria-label={focusButtonLabel}
+          title={focusButtonLabel}
+          className={cn(
+            "absolute right-2 bottom-2 z-10 flex h-8 w-8 items-center justify-center rounded-md border border-border/40 bg-background/70 text-foreground/80 backdrop-blur transition-opacity cursor-pointer",
+            isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          )}
+        >
+          <FocusIcon className="h-4 w-4" />
+        </button>
+      )}
       <PanelHeader panel={panel} onStop={running ? handleStop : undefined} />
       <div className="flex-1 min-h-0">
         <AssistantRuntimeProvider runtime={runtime}>
