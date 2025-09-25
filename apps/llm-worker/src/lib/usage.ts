@@ -1,0 +1,78 @@
+import type { ProviderMetadata } from "ai";
+import { z } from "zod";
+import type { VibezoneContext } from "../worker";
+import { schema } from "./db";
+
+interface PersistUsageParams {
+  request: Request;
+  vzContext: VibezoneContext;
+  providerMetadata: Promise<ProviderMetadata | undefined>;
+  isAborted: boolean;
+}
+
+const OpenRouterMetadataSchema = z.object({
+  openrouter: z.object({
+    usage: z.object({
+      promptTokens: z.number(),
+      completionTokens: z.number(),
+      totalTokens: z.number(),
+    }),
+    provider: z.string(),
+  }),
+});
+
+export const persistUsage = async (params: PersistUsageParams) => {
+  const { request, isAborted, vzContext, providerMetadata } = params;
+  const modelId = vzContext.completionRequest.config.modelId;
+  const { db, usageContext } = vzContext;
+  if (!usageContext) {
+    throw new Error("Usage context not found");
+  }
+
+  const metadata = await providerMetadata;
+  console.info({
+    message: "Persisting usage",
+    metadata: JSON.stringify(metadata),
+    isAborted,
+  });
+
+  const openrouterMetadata = OpenRouterMetadataSchema.safeParse(metadata).data;
+  const openrouterUsage = openrouterMetadata?.openrouter.usage;
+
+  try {
+    const ip =
+      request.headers.get("CF-Connecting-IP") ??
+      request.headers.get("X-Forwarded-For") ??
+      null;
+
+    await db.insert(schema.usage).values({
+      userId: usageContext.userId,
+      userKey: usageContext.userKey,
+      ip,
+      userAgent: request.headers.get("User-Agent"),
+      cfRay: request.headers.get("CF-Ray"),
+      geo: extractGeo(request),
+      modelId,
+      providerMetadata: metadata,
+      tokensPrompt: openrouterUsage?.promptTokens,
+      tokensCompletion: openrouterUsage?.completionTokens,
+      responseStatus: isAborted ? "aborted" : "finished",
+    });
+  } catch (error) {
+    console.error({ message: "Failed to persist usage log", error });
+  }
+};
+
+function extractGeo(request: Request): Record<string, unknown> | null {
+  const cf = (request as Request & { cf?: unknown }).cf;
+  if (!cf) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(JSON.stringify(cf));
+  } catch (error) {
+    console.warn({ message: "Failed to serialize geo data", error });
+    return null;
+  }
+}

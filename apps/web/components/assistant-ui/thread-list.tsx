@@ -75,6 +75,7 @@ const ThreadListItems: FC = () => {
   const [currentChat, setCurrentChat] = useCurrentChat();
   const { loadChatById } = useChatActions();
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
+  const setUIState = useUIStateSetter();
 
   const session = useSession();
   const { data: chats, error } = trpc.chats.listChats.useQuery(undefined, {
@@ -132,6 +133,9 @@ const ThreadListItems: FC = () => {
       if (!result.success) {
         console.error(`Failed to load chat ${chatId}:`, result.error);
       }
+
+      setUIState({ suggestionsUsed: true });
+
       return result;
     } finally {
       setLoadingChatId(null);

@@ -1,28 +1,17 @@
 import { convertToModelMessages, streamText } from "ai";
+import { waitUntil } from "cloudflare:workers";
 import { getOpenRouter } from "./lib/gateway";
-import { getConfigFromRequest } from "./lib/request";
-import type { Env } from "./worker";
+import { persistUsage } from "./lib/usage";
+import type { VibezoneContext } from "./worker";
 
 export async function handleProviderStream(
   request: Request,
-  env: Env,
-  headers: Headers
+  headers: Headers,
+  vzContext: VibezoneContext
 ): Promise<Response> {
-  const rawBody = await request.json().catch((error) => new Error(error));
-  if (rawBody instanceof Error) {
-    return new Response("Invalid json body", {
-      status: 400,
-      headers,
-    });
-  }
-
-  const getConfigResult = getConfigFromRequest(request, rawBody);
-  if (getConfigResult.type === "error") {
-    return new Response(getConfigResult.error, { status: 400, headers });
-  }
-
-  const { modelId, maxTokens } = getConfigResult.config;
-  const messages = getConfigResult.messages;
+  const { env, completionRequest } = vzContext;
+  const { modelId, maxTokens } = completionRequest.config;
+  const messages = completionRequest.messages;
 
   const adapter = getOpenRouter(env);
 
@@ -58,6 +47,14 @@ export async function handleProviderStream(
         message: "Stream event finished:",
         id: e.responseMessage.id,
       });
+      waitUntil(
+        persistUsage({
+          request,
+          vzContext,
+          providerMetadata: result.providerMetadata,
+          isAborted: e.isAborted,
+        })
+      );
     },
   });
 }
