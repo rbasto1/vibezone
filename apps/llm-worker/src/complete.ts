@@ -1,31 +1,14 @@
 import { convertToModelMessages, generateText } from "ai";
 import { getOpenRouter } from "./lib/gateway";
-import { getConfigFromRequest } from "./lib/request";
-import type { Env } from "./worker";
+import type { VibezoneContext } from "./worker";
 
 export async function handleProviderComplete(
-  request: Request,
-  env: Env,
+  vzContext: VibezoneContext,
   headers: Headers
 ): Promise<Response> {
-  const rawBody = await request.json().catch((error) => new Error(error));
-  if (rawBody instanceof Error) {
-    return Response.json(
-      { error: `Body is invalid json: ${rawBody.message}` },
-      { status: 400, headers }
-    );
-  }
-
-  const getConfigResult = getConfigFromRequest(request, rawBody);
-  if (getConfigResult.type === "error") {
-    return Response.json(
-      { error: getConfigResult.error },
-      { status: 400, headers }
-    );
-  }
-
-  const { modelId, maxTokens } = getConfigResult.config;
-  const messages = getConfigResult.messages;
+  const { env, completionRequest } = vzContext;
+  const { modelId, maxTokens } = completionRequest.config;
+  const messages = completionRequest.messages;
 
   const adapter = getOpenRouter(env);
 

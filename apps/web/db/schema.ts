@@ -4,10 +4,12 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgEnum,
   pgTable,
   text,
   timestamp,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 const timestampTz = (name: string) =>
@@ -231,6 +233,43 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
 }));
 
+export const usage = pgTable(
+  "usage",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id").references(() => user.id),
+    userKey: text("user_key"),
+    ip: text("ip"),
+    userAgent: text("user_agent"),
+    cfRay: text("cf_ray"),
+    geo: jsonb("geo"),
+    modelId: text("model_id").references(() => models.id),
+    providerMetadata: jsonb("provider_metadata"),
+    tokensPrompt: integer("tokens_prompt"),
+    tokensCompletion: integer("tokens_completion"),
+    costPrompt: numeric("cost_prompt"),
+    costCompletion: numeric("cost_completion"),
+    responseStatus: text("response_status"),
+    createdAt: timestampTzNow("created_at"),
+  },
+  (table) => [
+    index("usage_user_id_idx").on(table.userId),
+    index("usage_user_key_idx").on(table.userKey),
+    index("usage_model_id_idx").on(table.modelId),
+  ]
+);
+
+export const usageRelations = relations(usage, ({ one }) => ({
+  user: one(user, {
+    fields: [usage.userId],
+    references: [user.id],
+  }),
+  model: one(models, {
+    fields: [usage.modelId],
+    references: [models.id],
+  }),
+}));
+
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
 
 export type Account = typeof account.$inferSelect;
@@ -255,3 +294,5 @@ export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
 export type Chat = typeof chats.$inferSelect;
 export type NewChat = typeof chats.$inferInsert;
+export type Usage = typeof usage.$inferSelect;
+export type NewUsage = typeof usage.$inferInsert;

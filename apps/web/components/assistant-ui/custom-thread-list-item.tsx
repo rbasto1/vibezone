@@ -9,10 +9,10 @@ import {
 import { cn } from "@/components/ui/utils";
 import type { UseChatActionsResult } from "@/hooks/use-chat-actions";
 import {
-  ArchiveIcon,
   Loader2Icon,
   MoreVerticalIcon,
   PencilIcon,
+  TrashIcon,
 } from "lucide-react";
 import { useState, type FC } from "react";
 
@@ -111,9 +111,9 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
             {isArchiving ? (
               <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <ArchiveIcon className="mr-2 h-4 w-4" />
+              <TrashIcon className="mr-2 h-4 w-4" />
             )}
-            Archive
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

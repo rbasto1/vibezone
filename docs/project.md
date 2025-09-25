@@ -2,34 +2,41 @@
 
 ## Pending Tasks
 
-[x] Add SEO metadata
-[x] Mobile version
-[x] Tag providers that do not have zdr
-[x] Render LaTeX and HTML
-[x] Add syntax highlighting
-[x] Limit usage for anon users
-[x] Identify free models with a badge
-[x] Improve db update from stage to stage
-[x] Upload images and PDF files (when the model supports it)
-[x] Add tools to browse the internet
-[x] Render reasoning
-[x] Render images and files
-[x] Improve ssr of db models/providers (use script to generate json)
-[x] Only allow upload of files if logged in
-[x] Add Privacy Policy and Terms of Service
-[ ] Translate to Brazilian Portuguese
-[ ] Add Brazilian models
-[ ] Limit usage for free users
-[x] Show deleted providers and models in the admin
-[ ] Limit usage for paid users
-[ ] Import chats from OpenAI format
-[ ] Add Stripe integration
-[ ] Improve error handling (sonner)
-[ ] Refactor vz-open-login event to use jotai state
-[ ] Fix toast colors
-[x] Simplify model selection metadata, add colors to capabilities buttons
-[ ] Backend processing of messages: save the AI response without the need for a frontend
-[ ] See if a History adapter solves the problem instead of hacking AssistantCloud
-[ ] Projects (group threads)
-[ ] Search chats (backend search of all messages)
-[ ] Keep composer text in localStorage
+- [x] Add SEO metadata
+- [x] Mobile version
+- [x] Tag providers that do not have zdr
+- [x] Render LaTeX and HTML
+- [x] Add syntax highlighting
+- [x] Limit usage for anon users
+- [x] Identify free models with a badge
+- [x] Improve db update from stage to stage
+- [x] Upload images and PDF files (when the model supports it)
+- [x] Add tools to browse the internet
+- [x] Render reasoning
+- [x] Render images and files
+- [x] Improve ssr of db models/providers (use script to generate json)
+- [x] Only allow upload of files if logged in
+- [x] Add Privacy Policy and Terms of Service
+- [x] Archive -> Delete
+- [x] When loading saved threads, make the suggestions disappear
+- [x] Store usage per user in db
+- [ ] "Full Screen" button on each chat
+- [ ] Disable auto-scroll
+- [ ] Thumb up/down (or stars?)
+- [ ] Auto-refresh chat list in timer
+- [ ] Translate to Brazilian Portuguese
+- [ ] Add Brazilian models
+- [ ] Limit usage for free users
+- [x] Show deleted providers and models in the admin
+- [ ] Limit usage for paid users
+- [ ] Import chats from OpenAI format
+- [ ] Add Stripe integration
+- [ ] Improve error handling (sonner)
+- [ ] Refactor vz-open-login event to use jotai state
+- [ ] Fix toast colors
+- [x] Simplify model selection metadata, add colors to capabilities buttons
+- [ ] Backend processing of messages: save the AI response without the need for a frontend
+- [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
+- [ ] Projects (group threads) - paying only
+- [ ] Search chats (backend search of all messages)
+- [ ] Keep composer text in localStorage

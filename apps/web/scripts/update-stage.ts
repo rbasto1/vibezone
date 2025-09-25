@@ -77,8 +77,7 @@ async function updateProviders(sourceDb: Client, targetDb: Client) {
       deletedAt: schema.providers.deletedAt,
       ...fieldsObj,
     })
-    .from(schema.providers)
-    .limit(1);
+    .from(schema.providers);
   if (!targetRows.length) {
     console.info("No rows found in target table");
     process.exit(3);
@@ -100,9 +99,9 @@ async function updateProviders(sourceDb: Client, targetDb: Client) {
   for (const row of rows) {
     const targetRow = targetRows.find((r) => r.id === row.id);
     if (!targetRow) {
-      console.error(
-        `Provider ${row.id} not found in target table (deleted=${!!row.deletedAt})`
-      );
+      if (!row.deletedAt) {
+        console.error(`⚠️ Provider ${row.id} not found in target table`);
+      }
       continue;
     }
     const anyDifference = Object.keys(row).filter(
@@ -161,9 +160,9 @@ async function updateModels(sourceDb: Client, targetDb: Client) {
   for (const row of rows) {
     const targetRow = targetRows.find((r) => r.id === row.id);
     if (!targetRow) {
-      console.error(
-        `Model ${row.id} not found in target table (deleted=${!!row.deletedAt})`
-      );
+      if (!row.deletedAt) {
+        console.error(`⚠️ Model ${row.id} not found in target table`);
+      }
       continue;
     }
     const anyDifference = Object.keys(row).filter(
