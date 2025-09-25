@@ -80,7 +80,8 @@ const ThreadListItems: FC = () => {
   const session = useSession();
   const { data: chats, error } = trpc.chats.listChats.useQuery(undefined, {
     enabled: !!session?.user,
-    placeholderData: (prev) => prev,
+    refetchInterval: 60 * 1000,
+    refetchOnWindowFocus: true,
   });
   const utils = trpc.useUtils();
   const archiveChatMutation = trpc.chats.archiveChat.useMutation({

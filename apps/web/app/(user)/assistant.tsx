@@ -5,11 +5,9 @@ import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ResponsePanel } from "@/components/assistant-ui/response-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
-import { GlobalComposerContext } from "@/components/providers/composer-provider";
 import { GlobalComposerProvider } from "@/components/providers/global-composer-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
-import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfig, usePanelsStateValue } from "@/hooks/use-panels";
@@ -20,7 +18,7 @@ import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
 import Link from "next/link";
 import type { FC } from "react";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AppSidebarLoader } from "./app-sidebar-loader";
 
@@ -36,16 +34,10 @@ const AssistantContent: FC = () => {
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelsState = usePanelsStateValue();
   const [uiState, setUIState] = useUIState();
-  const setCurrentChat = useCurrentChatSetter();
   const session = useSession();
   const { models } = useModelsValue();
   const isMobile = useIsMobile();
   const [focusPanelId, setFocusPanelId] = useState<string>();
-
-  const ctx = useContext(GlobalComposerContext);
-  if (!ctx) throw new Error("GlobalComposerContext is not available");
-
-  const { prompt, setPrompt, send, getRuntimes } = ctx;
 
   useEffect(() => {
     if (isMobile) {
@@ -68,21 +60,6 @@ const AssistantContent: FC = () => {
       return current;
     });
   }, [isMobile, panelsConfig]);
-
-  const handleStopAll = () => {
-    const failures: string[] = [];
-    for (const runtime of getRuntimes().values()) {
-      try {
-        runtime.thread.cancelRun();
-      } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
-        failures.push(message);
-      }
-    }
-    if (failures.length) {
-      toast.error(`Some panels failed to stop: ${failures.join("; ")}`);
-    }
-  };
 
   const handleSelectModelsGroup = (modelIds: string[]) => {
     // If anonymous, filter out premium/included models
@@ -117,10 +94,6 @@ const AssistantContent: FC = () => {
   };
 
   const panelCount = Math.min(Math.max(panelsConfig.length, 1), MAX_PANELS);
-  const anyPanelRunning = useMemo(
-    () => Object.values(panelsState).some((p) => p.running),
-    [panelsState]
-  );
   const modelNamesById = useMemo(() => {
     const entries = new Map<string, string>();
     for (const model of models) {
@@ -234,23 +207,7 @@ const AssistantContent: FC = () => {
                 <ThreadWelcomeSuggestions onSelect={handleSelectModelsGroup} />
               )}
               {/* Global composer below panels */}
-              <GlobalComposer
-                value={prompt}
-                onChange={setPrompt}
-                onSubmit={() => {
-                  send(prompt);
-                  setUIState({ suggestionsUsed: true });
-                  setCurrentChat((currentChat) =>
-                    currentChat.firstUserMessage
-                      ? currentChat
-                      : {
-                          ...currentChat,
-                          firstUserMessage: prompt,
-                        }
-                  );
-                }}
-                onStopAll={anyPanelRunning ? handleStopAll : null}
-              />
+              <GlobalComposer panelsState={panelsState} />
             </div>
             <div className="flex justify-center text-xs gap-4 [&>a]:underline">
               <span>

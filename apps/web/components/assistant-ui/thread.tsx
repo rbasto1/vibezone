@@ -35,7 +35,10 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
       }}
     >
       {/* aui-thread-viewport */}
-      <ThreadPrimitive.Viewport className="relative flex min-w-0 flex-1 flex-col gap-6 overflow-y-scroll">
+      <ThreadPrimitive.Viewport
+        className="relative flex min-w-0 flex-1 flex-col gap-6 overflow-y-scroll"
+        autoScroll={false}
+      >
         <ThreadPrimitive.If empty>
           <ThreadWelcome />
         </ThreadPrimitive.If>

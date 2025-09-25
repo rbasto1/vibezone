@@ -21,13 +21,17 @@
 - [x] When loading saved threads, make the suggestions disappear
 - [x] Store usage per user in db
 - [x] "Full Screen" button on each chat
-- [ ] Disable auto-scroll
-- [ ] Thumb up/down (or stars?)
-- [ ] Auto-refresh chat list in timer
+- [x] Disable auto-scroll
+- [ ] Create job to update costs in usage table
+- [ ] Tracking/usage dashboard
+- [x] Auto-refresh chat list with timer
 - [ ] Translate to Brazilian Portuguese
 - [ ] Add Brazilian models
-- [ ] Limit usage for free users
-- [ ] Create job to update costs in usage table
+- [ ] Add user profile (name, avatar, age, gender, country, etc)
+- [ ] Add user preferences (auto-scroll, language, hidden providers, pre-prompt)
+- [x] Keep composer text in SessionStorage
+- [ ] Thumb up/down (or stars?)
+- [x] Limit usage for free users (400)
 - [x] Show deleted providers and models in the admin
 - [ ] Limit usage for paid users
 - [ ] Import chats from OpenAI format
@@ -40,4 +44,3 @@
 - [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
 - [ ] Projects (group threads) - paying only
 - [ ] Search chats (backend search of all messages)
-- [ ] Keep composer text in localStorage
