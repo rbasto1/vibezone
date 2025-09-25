@@ -55,7 +55,7 @@ export async function checkUsage(
       // TODO: eventually we will deny access to Premium models
     }
   } else {
-    if (!model.isIncluded && !model.isPremium) {
+    if (model.isIncluded || model.isPremium) {
       console.error({ message: "Please sign in to use this model", modelId });
       return new Response("Please sign in to use this model", {
         status: 403,
