@@ -5,13 +5,10 @@ import { createContext } from "react";
 export type RuntimeRegistry = Map<string, ReturnType<typeof useChatRuntime>>; // panelId -> runtime
 
 export const GlobalComposerContext = createContext<{
-  prompt: string;
-  setPrompt: (v: string) => void;
   register: (
     panelId: string,
     runtime: ReturnType<typeof useChatRuntime>
   ) => void;
   unregister: (panelId: string) => void;
-  send: (text: string) => void;
   getRuntimes: () => RuntimeRegistry;
 } | null>(null);
