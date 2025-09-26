@@ -22,7 +22,7 @@ import { cn } from "@/components/ui/utils";
 import { trpc } from "@/lib/trpc/client";
 import type { ModelsListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
-import { getStorageItem, setStorageItem, storageKeys } from "./session-storage";
+import { getStorageItem, setStorageItem, storageKeys } from "../session-storage";
 
 const SortingSchema = z
   .array(
@@ -36,7 +36,7 @@ const SortingSchema = z
 // we can't import this from the db because the file is server-only
 const providerTiers = ["leaders", "challengers", "specialists"] as const;
 
-const ManagePageClient: NextPage = () => {
+const ModelsPageClient: NextPage = () => {
   const listInput = useMemo(() => ({ showDeleted: true }), []);
 
   const {
@@ -453,7 +453,7 @@ const ManagePageClient: NextPage = () => {
   );
 };
 
-export default ManagePageClient;
+export default ModelsPageClient;
 
 function formatDate(value?: string | Date | null) {
   if (!value) return "";
