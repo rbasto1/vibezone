@@ -1,0 +1,11 @@
+-- create a dedicated role for Metabase
+CREATE USER mb WITH PASSWORD '<same password from .env>';
+
+-- give Metabase full rights on its database
+GRANT CONNECT ON DATABASE metabase TO mb;
+GRANT USAGE ON SCHEMA public TO mb;
+GRANT CREATE ON DATABASE metabase TO mb;
+GRANT CREATE, USAGE ON SCHEMA public TO mb;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO mb;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO mb;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO mb;

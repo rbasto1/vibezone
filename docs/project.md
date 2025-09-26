@@ -22,8 +22,8 @@
 - [x] Store usage per user in db
 - [x] "Full Screen" button on each chat
 - [x] Disable auto-scroll
-- [ ] Create job to update costs in usage table
-- [ ] Tracking/usage dashboard
+- [x] Create job to update costs in usage table
+- [x] Tracking/usage dashboard
 - [x] Auto-refresh chat list with timer
 - [ ] Translate to Brazilian Portuguese
 - [ ] Add Brazilian models
