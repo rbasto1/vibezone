@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Building2,
   Crown,
+  DollarSign,
   Layers,
   Medal,
   MessageCircle,
@@ -31,30 +32,40 @@ const formatNumber = (value: number): string => numberFormatter.format(value);
 const ManagePage: NextPage<PageProps<"/manage">> = async () => {
   const lastSevenDays = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
 
-  const totalUsersPromise = db
-    .select({ value: sql<number>`count(*)::int` })
+  const userStatsPromise = db
+    .select({
+      totalUsers: sql<number>`count(*)::int`.as("totalUsers"),
+      newUsers:
+        sql<number>`count(case when ${user.createdAt} > ${lastSevenDays} then 1 else 0 end)::int`.as(
+          "newUsers"
+        ),
+    })
     .from(user);
-  const newUsersPromise = db
-    .select({ value: sql<number>`count(*)::int` })
-    .from(user)
-    .where(gte(user.createdAt, lastSevenDays));
-  const completionsPromise = db
-    .select({ value: sql<number>`count(*)::int` })
+
+  const usageStatsPromise = db
+    .select({
+      completions: sql<number>`count(*)::int`.as("completions"),
+      loggedInCompletions:
+        sql<number>`count(case when ${usage.userId} is not null then 1 else 0 end)::int`.as(
+          "loggedInCompletions"
+        ),
+      uniqueModels: sql<number>`count(distinct ${usage.modelId})::int`.as(
+        "uniqueModels"
+      ),
+      totalCost:
+        sql<number>`coalesce(sum(${usage.costPrompt} + ${usage.costCompletion}), 0)::numeric`.as(
+          "totalCost"
+        ),
+    })
     .from(usage)
     .where(gte(usage.createdAt, lastSevenDays));
-  const loggedInCompletionsPromise = db
-    .select({ value: sql<number>`count(*)::int` })
-    .from(usage)
-    .where(and(gte(usage.createdAt, lastSevenDays), isNotNull(usage.userId)));
-  const uniqueModelsPromise = db
-    .select({ value: sql<number>`count(distinct ${usage.modelId})::int` })
-    .from(usage)
-    .where(and(gte(usage.createdAt, lastSevenDays), isNotNull(usage.modelId)));
+
   const uniqueProvidersPromise = db
     .select({ value: sql<number>`count(distinct ${models.providerId})::int` })
     .from(usage)
     .innerJoin(models, eq(models.id, usage.modelId))
     .where(gte(usage.createdAt, lastSevenDays));
+
   const chatsModifiedPromise = db
     .select({ value: sql<number>`count(*)::int` })
     .from(chats)
@@ -90,32 +101,29 @@ const ManagePage: NextPage<PageProps<"/manage">> = async () => {
     .limit(1);
 
   const [
-    totalUsersRes,
-    newUsersRes,
-    completionsRes,
-    loggedInCompletionsRes,
-    uniqueModelsRes,
+    userStatsRes,
+    usageStatsRes,
     uniqueProvidersRes,
     chatsModifiedRes,
     topModelRes,
     topProviderRes,
   ] = await Promise.all([
-    totalUsersPromise,
-    newUsersPromise,
-    completionsPromise,
-    loggedInCompletionsPromise,
-    uniqueModelsPromise,
+    userStatsPromise,
+    usageStatsPromise,
     uniqueProvidersPromise,
     chatsModifiedPromise,
     topModelPromise,
     topProviderPromise,
   ]);
 
-  const totalUsers = totalUsersRes[0]?.value ?? 0;
-  const newUsers = newUsersRes[0]?.value ?? 0;
-  const completions = completionsRes[0]?.value ?? 0;
-  const loggedInCompletions = loggedInCompletionsRes[0]?.value ?? 0;
-  const uniqueModels = uniqueModelsRes[0]?.value ?? 0;
+  const totalUsers = userStatsRes[0]?.totalUsers ?? 0;
+  const newUsers = userStatsRes[0]?.newUsers ?? 0;
+  const completions = usageStatsRes[0]?.completions ?? 0;
+  const loggedInCompletions = usageStatsRes[0]?.loggedInCompletions ?? 0;
+  const uniqueModels = usageStatsRes[0]?.uniqueModels ?? 0;
+  const totalCost = Number(usageStatsRes[0]?.totalCost ?? 0);
+  const averageCostPer100Completions =
+    completions > 0 ? (totalCost / completions) * 100 : 0;
   const uniqueProviders = uniqueProvidersRes[0]?.value ?? 0;
   const chatsModified = chatsModifiedRes[0]?.value ?? 0;
 
@@ -173,6 +181,12 @@ const ManagePage: NextPage<PageProps<"/manage">> = async () => {
       icon: Building2,
       title: "Active Providers",
       value: formatNumber(uniqueProviders),
+      subtitle: "Last 7 days",
+    },
+    {
+      icon: DollarSign,
+      title: "Avg Cost/100 Completions",
+      value: `$${averageCostPer100Completions.toFixed(2)}`,
       subtitle: "Last 7 days",
     },
     {

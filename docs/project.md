@@ -25,6 +25,12 @@
 - [x] Create job to update costs in usage table
 - [x] Tracking/usage dashboard
 - [x] Auto-refresh chat list with timer
+- [x] Move chevron to the right
+- [x] Prevent errors when choosing suggested models
+- [ ] Prevent selecting the same model twice
+- [x] Add cost/completion to dashboard
+- [x] Improve dashboard queries
+- [ ] Warn about discarding a panel
 - [ ] Translate to Brazilian Portuguese
 - [ ] Add Brazilian models
 - [ ] Add user profile (name, avatar, age, gender, country, etc)

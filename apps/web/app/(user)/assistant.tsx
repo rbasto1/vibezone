@@ -70,11 +70,12 @@ const AssistantContent: FC = () => {
           return m && !m.isPremium && !m.isIncluded;
         });
 
-    if (!session?.user && allowedModelIds.length < modelIds.length) {
-      toast.info("Sign in to use premium models");
-    }
     if (!allowedModelIds.length) {
-      toast.error("No available models for guests. Please sign in.");
+      try {
+        window.dispatchEvent(new Event("vz:open-login"));
+      } catch {
+        toast.error("Please sign in to use these models.");
+      }
       return;
     }
 

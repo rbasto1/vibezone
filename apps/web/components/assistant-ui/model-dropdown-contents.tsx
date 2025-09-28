@@ -431,13 +431,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                             <ModelDropdownItem
                               key={m.id}
                               model={m}
-                              currentModelId={currentModelId}
+                              selected={m.id === currentModelId}
                               onSelect={onSelect}
                               providerId={p.id}
                               muted={restricted}
                               titleText={titleText}
                               showRetentionWarning={
-                                providerRetainsData || Boolean(m.isFree)
+                                providerRetainsData || !!m.isFree
                               }
                             />
                           );
@@ -483,7 +483,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                 <ModelDropdownItem
                                   key={m.id}
                                   model={m}
-                                  currentModelId={currentModelId}
+                                  selected={m.id === currentModelId}
                                   onSelect={onSelect}
                                   providerId={p.id}
                                   muted={restricted}

@@ -19,7 +19,7 @@ import {
 
 interface ModelDropdownItemProps {
   model: GetModelsListReturn["models"][number];
-  currentModelId?: string;
+  selected: boolean;
   onSelect: (providerId: string, modelId: string) => void;
   providerId: string;
   disabled?: boolean;
@@ -30,7 +30,7 @@ interface ModelDropdownItemProps {
 
 export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
   model,
-  currentModelId,
+  selected,
   onSelect,
   providerId,
   disabled = false,
@@ -43,9 +43,7 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
       className={cn(
         "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
         "hover:bg-accent hover:text-accent-foreground",
-        model.id === currentModelId
-          ? "bg-accent/50 font-semibold"
-          : "font-medium",
+        selected ? "bg-accent/50 font-semibold" : "font-medium",
         muted && "opacity-50",
         disabled && "cursor-not-allowed hover:bg-transparent"
       )}
