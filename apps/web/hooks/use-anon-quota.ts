@@ -1,12 +1,18 @@
+"use client";
+
 import {
-  ANON_DAILY_LIMIT,
   anonUsageStorageAtom,
   defaultAnonUsage,
-  today,
   type AnonUsage,
 } from "@/store/anon-quota";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
+
+export const ANON_DAILY_LIMIT = 20;
+
+export function today(): string {
+  return new Date().toISOString().substring(0, 10);
+}
 
 function ensureToday(u: AnonUsage): AnonUsage {
   const t = today();
@@ -16,8 +22,17 @@ function ensureToday(u: AnonUsage): AnonUsage {
   return u;
 }
 
-function clampCount(count: number): number {
+function clampCount(count: number | null): number | null {
+  if (count === null) return null;
   return Math.min(ANON_DAILY_LIMIT, Math.max(0, count));
+}
+
+function isPromise<T>(value: T | Promise<T>): value is Promise<T> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as Promise<T>).then === "function"
+  );
 }
 
 export const useAnonQuotaValue = () => {
@@ -36,11 +51,14 @@ export const useAnonQuotaSetter = () => {
         | ((prev: AnonUsage) => Partial<AnonUsage>)
     ) => {
       set((prev) => {
-        const base = ensureToday(prev ?? defaultAnonUsage());
+        const resolved = isPromise(prev) ? defaultAnonUsage : prev;
+        const base = ensureToday(resolved ?? defaultAnonUsage);
         const next = typeof update === "function" ? update(base) : update;
         const merged: AnonUsage = {
           date: today(),
-          count: clampCount("count" in next ? (next.count ?? 0) : base.count),
+          count: clampCount(
+            "count" in next ? (next.count ?? null) : base.count
+          ),
         };
         return merged;
       });
@@ -64,5 +82,6 @@ export const useAnonQuota = () => {
 
 export const useAnonRemaining = () => {
   const { count } = useAnonQuotaValue();
+  if (count === null) return null;
   return Math.max(0, ANON_DAILY_LIMIT - count);
 };

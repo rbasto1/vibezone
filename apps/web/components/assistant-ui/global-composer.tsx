@@ -4,24 +4,25 @@ import type { FC, MouseEvent } from "react";
 import { useContext, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
-import { useStateSessionStorage } from "@/hooks/use-session-storage";
-
 import { GlobalComposerContext } from "@/components/providers/composer-provider";
+import { Button } from "@/components/ui/button";
+import { StopButton } from "@/components/ui/stop-button";
+import {
+  ANON_DAILY_LIMIT,
+  useAnonQuotaSetter,
+  useAnonRemaining,
+} from "@/hooks/use-anon-quota";
 import {
   useAttachmentsValue,
   useClearAttachments,
   useCompleteAttachmentsValue,
   useRemoveAttachment,
 } from "@/hooks/use-attachments";
-
-import { Button } from "@/components/ui/button";
-import { StopButton } from "@/components/ui/stop-button";
-import { useAnonQuotaSetter, useAnonRemaining } from "@/hooks/use-anon-quota";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
-import { usePanelStateSetter } from "@/hooks/use-panels";
+import { usePanelsStateSetter } from "@/hooks/use-panels";
 import { useSession } from "@/hooks/use-session";
+import { useStateSessionStorage } from "@/hooks/use-session-storage";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { ANON_DAILY_LIMIT } from "@/store/anon-quota";
 import type { PanelState } from "@/store/panels";
 import { ComposerAddAttachment } from "./add-attachment";
 import { AttachmentChip } from "./attachment-chip";
@@ -39,7 +40,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
   const setUIState = useUIStateSetter();
   const remaining = useAnonRemaining();
   const clearAttachments = useClearAttachments();
-  const setPanelState = usePanelStateSetter();
+  const setPanelsState = usePanelsStateSetter();
   const setAnonUsage = useAnonQuotaSetter();
   const session = useSession();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -85,7 +86,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
     const isLoggedIn = !!session?.user;
     if (!isLoggedIn) {
       // Anonymous quota enforcement
-      if (remaining < runtimes.size) {
+      if (remaining !== null && remaining < runtimes.size) {
         toast.error(
           `Guest limit reached (${ANON_DAILY_LIMIT}/day). Please sign in.`
         );
@@ -105,25 +106,31 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
         });
         runningPanels.push(panelId);
       } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
+        const message = e instanceof Error ? e.message : JSON.stringify(e);
         toast.error(`Send failed for a panel: ${message}`);
       }
     }
 
     // Update panel states to running
-    runningPanels.forEach((panelId) => {
-      setPanelState(panelId, (currentState) => ({
-        ...currentState,
-        running: true,
-        error: undefined,
-      }));
-    });
+    setPanelsState((prev) =>
+      runningPanels.reduce(
+        (acc, panelId) => {
+          acc[panelId] = {
+            ...prev[panelId]!,
+            running: true,
+            error: undefined,
+          };
+          return acc;
+        },
+        { ...prev }
+      )
+    );
 
     // After successfully enqueuing messages, consume credits for guests
     if (!isLoggedIn && runningPanels.length) {
       setAnonUsage((prev) => ({
         date: prev.date,
-        count: prev.count + runningPanels.length,
+        count: (prev.count ?? 0) + runningPanels.length,
       }));
     }
 

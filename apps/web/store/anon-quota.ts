@@ -1,25 +1,28 @@
 "use client";
 
+import { today } from "@/hooks/use-anon-quota";
+import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
-export const ANON_STORAGE_KEY = "vz_anon_msg_usage";
-export const ANON_DAILY_LIMIT = 20;
+const ANON_STORAGE_KEY = "vz_anon_msg_usage";
 
-export type AnonUsage = {
+export interface AnonUsage {
   date: string; // YYYY-MM-DD
-  count: number;
-};
-
-export function today(): string {
-  return new Date().toISOString().substring(0, 10);
+  count: number | null;
 }
 
-export const defaultAnonUsage = (): AnonUsage => ({ date: today(), count: 0 });
+export const defaultAnonUsage: AnonUsage = {
+  date: today(),
+  count: null,
+};
 
 // Bare storage-backed atom; hooks layer enforces business rules
-export const anonUsageStorageAtom = atomWithStorage<AnonUsage>(
-  ANON_STORAGE_KEY,
-  defaultAnonUsage(),
-  createJSONStorage<AnonUsage>(),
-  { getOnInit: true }
-);
+export const anonUsageStorageAtom =
+  typeof window !== "undefined"
+    ? atomWithStorage<AnonUsage>(
+        ANON_STORAGE_KEY,
+        defaultAnonUsage,
+        createJSONStorage(() => window.localStorage),
+        { getOnInit: true }
+      )
+    : atom(defaultAnonUsage);

@@ -48,7 +48,11 @@ export const useChatActions = () => {
         const newPanelsState: Record<string, PanelState> =
           newPanelsConfig.reduce(
             (acc, panel) => {
-              acc[panel.id] = { running: false, dirty: false };
+              acc[panel.id] = {
+                running: false,
+                dirty: false,
+                hasMessages: true,
+              };
               return acc;
             },
             {} as Record<string, PanelState>

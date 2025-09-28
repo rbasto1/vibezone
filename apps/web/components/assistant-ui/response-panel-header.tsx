@@ -1,36 +1,56 @@
 "use client";
 
+import { XIcon } from "lucide-react";
+import type { FC } from "react";
+import { useState } from "react";
+
 import { StopButton } from "@/components/ui/stop-button";
 import { cn } from "@/components/ui/utils";
-import { XIcon } from "lucide-react";
+import {
+  usePanelsConfig,
+  usePanelsStateSetter,
+  usePanelStateValue,
+} from "@/hooks/use-panels";
+import { useSaveLastModels } from "@/hooks/use-save-last-models";
+import type { PanelConfig } from "@/store/panels";
+import { ConfirmCloseModal } from "./confirm-close-modal";
+import { ModelDropdown } from "./model-dropdown";
 
 export interface PanelHeaderProps {
   panel: PanelConfig;
   onStop?: () => void;
 }
 
-import { usePanelsConfig, usePanelsStateSetter } from "@/hooks/use-panels";
-import { useSaveLastModels } from "@/hooks/use-save-last-models";
-import type { PanelConfig } from "@/store/panels";
-import type { FC } from "react";
-import { ModelDropdown } from "./model-dropdown";
-
 export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
-  const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
   const panelId = panel.id;
   const modelId = panel.model;
+  const [panelsConfig, setPanelsConfig] = usePanelsConfig();
+  const panelState = usePanelStateValue(panelId);
 
-  const handleRemovePanel = () => {
-    const newPanels = panelsConfig.filter((p) => p.id !== panelId);
-    setPanelsConfig(newPanels);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
+  const handleRemoveClick = () => {
+    if (panelState.hasMessages) {
+      setShowConfirmClose(true);
+    } else {
+      removePanel();
+    }
+  };
+
+  const removePanel = () => {
+    setPanelsConfig((prev) => {
+      const next = prev.filter((p) => p.id !== panelId);
+      saveLastModels(next);
+      return next;
+    });
     setPanelsState((currentState) => {
       const newState = { ...currentState };
       delete newState[panelId];
       return newState;
     });
-    saveLastModels(newPanels);
+    setShowConfirmClose(false);
   };
 
   const canClose = panelsConfig.length > 1;
@@ -57,7 +77,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
             "p-1 rounded hover:bg-muted cursor-pointer",
             canClose ? "opacity-100" : "opacity-40 cursor-not-allowed"
           )}
-          onClick={handleRemovePanel}
+          onClick={handleRemoveClick}
           aria-label="Close panel"
           title={canClose ? "Close panel" : "At least one panel must remain"}
           disabled={!canClose}
@@ -65,6 +85,12 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           <XIcon className="h-4 w-4" />
         </button>
       </div>
+      {showConfirmClose && (
+        <ConfirmCloseModal
+          onOpenChange={setShowConfirmClose}
+          onConfirm={removePanel}
+        />
+      )}
     </div>
   );
 };

@@ -15,6 +15,7 @@ export const panelConfigAtom = atom<PanelConfig[]>([]);
 export interface PanelState {
   running: boolean;
   dirty: boolean; // whether the panel has unsaved changes
+  hasMessages: boolean;
   error?: Error;
 }
 

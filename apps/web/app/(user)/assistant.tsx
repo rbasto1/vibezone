@@ -6,6 +6,7 @@ import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ResponsePanel } from "@/components/assistant-ui/response-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
 import { GlobalComposerProvider } from "@/components/providers/global-composer-provider";
+import { ClientOnly } from "@/components/ui/client-only";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -103,7 +104,8 @@ const AssistantContent: FC = () => {
     return entries;
   }, [models]);
   const showTabs = isMobile && panelsConfig.length > 1;
-  const hideAnonBanner = isMobile && uiState.suggestionsUsed;
+  const hideAnonBanner =
+    !!session?.user || (isMobile && uiState.suggestionsUsed);
   const canToggleFocus = !isMobile && panelsConfig.length > 1;
 
   return (
@@ -131,6 +133,7 @@ const AssistantContent: FC = () => {
                       const isRunning = panelsState[panel.id]?.running;
                       return (
                         <div
+                          key={panel.id}
                           className={cn(
                             "relative flex-1 basis-1/3 min-w-0",
                             isActive
@@ -139,7 +142,6 @@ const AssistantContent: FC = () => {
                           )}
                         >
                           <button
-                            key={panel.id}
                             type="button"
                             onClick={() => setFocusPanelId(panel.id)}
                             className={cn(
@@ -202,7 +204,11 @@ const AssistantContent: FC = () => {
             {/* Centered container for suggestions and composer */}
             <div className="mx-auto w-full max-w-3xl md:max-w-4xl lg:max-w-5xl flex flex-col gap-3 px-2 sm:px-3">
               {/* Guest quota banner */}
-              {!hideAnonBanner && <AnonQuotaBanner />}
+              {!hideAnonBanner && (
+                <ClientOnly>
+                  <AnonQuotaBanner />
+                </ClientOnly>
+              )}
               {/* Global suggestions under panels - only show if not used */}
               {!uiState.suggestionsUsed && (
                 <ThreadWelcomeSuggestions onSelect={handleSelectModelsGroup} />
