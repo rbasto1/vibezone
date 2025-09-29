@@ -22,6 +22,7 @@
 - [x] Store usage per user in db
 - [x] "Full Screen" button on each chat
 - [x] Disable auto-scroll
+- [x] Add scroll to bottom button
 - [x] Create job to update costs in usage table
 - [x] Tracking/usage dashboard
 - [x] Auto-refresh chat list with timer
@@ -35,7 +36,8 @@
 - [x] Show deleted providers and models in the admin
 - [ ] Limit usage for paid users
 - [ ] Import chats from OpenAI format
-- [ ] Add Stripe integration
+- [ ] Add Stripe integration (Clerk? Autumn? Polar?)
+- [ ] Add analytics (Posthog?)
 - [ ] Improve error handling (sonner)
 - [ ] Refactor vz-open-login event to use jotai state
 - [ ] Fix toast colors
@@ -44,3 +46,4 @@
 - [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
 - [ ] Projects (group threads) - paying only
 - [ ] Search chats (backend search of all messages)
+- [ ] Explore bot protection (Vercel BotID? Arcjet? hCaptcha?)

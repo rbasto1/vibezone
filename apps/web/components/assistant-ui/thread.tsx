@@ -7,6 +7,7 @@ import { useMessageSaver } from "@/hooks/use-message-saver";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantMessage } from "./assistant-message";
 import { ThreadError } from "./thread-error";
+import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
 import { ThreadWelcome } from "./thread-welcome";
 import { UserMessage } from "./user-message";
 
@@ -57,6 +58,8 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
           {/* aui-thread-viewport-spacer */}
           <motion.div className="min-h-6 min-w-6 shrink-0" />
         </ThreadPrimitive.If>
+
+        <ThreadScrollToBottom />
       </ThreadPrimitive.Viewport>
       {children}
     </ThreadPrimitive.Root>
