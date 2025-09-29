@@ -1,0 +1,13 @@
+{
+  "Assistant": {
+    "signinWarning": "Faça login para usar esses modelos.",
+    "panelTabLabel": "{index}: {modelName}",
+    "panelAriaLabel": "Ir para o painel {index}",
+    "aiDisclaimer": "IA pode cometer erros. Verifique respostas importantes de forma independente.",
+    "privacyPolicy": "Política de Privacidade",
+    "termsOfUse": "Termos de Uso"
+  },
+  "PageLoader": {
+    "loading": "Aguarde..."
+  }
+}

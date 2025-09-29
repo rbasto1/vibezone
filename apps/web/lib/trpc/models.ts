@@ -4,10 +4,16 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
-import type { NewModel, NewProvider, NewSupportedParameter } from "@/db/schema";
+import type {
+  NewModel,
+  NewModelTranslation,
+  NewProvider,
+  NewSupportedParameter,
+} from "@/db/schema";
 import {
   models,
   modelSupportedParameters,
+  modelTranslations,
   providers,
   supportedParameters,
 } from "@/db/schema";
@@ -17,6 +23,7 @@ import {
   publicProcedure,
   t,
 } from "@/lib/trpc/server/initialize";
+import { deepl, localeToTargetLanguageCode } from "../deepl/deepl";
 import { listModels } from "./models-list";
 
 // Shared server function to list models for SSR and tRPC
@@ -192,6 +199,8 @@ export const modelsRouter = t.router({
           )
         )
         .onConflictDoNothing();
+
+      await translateModelDescriptions(values);
     }
 
     // Soft-delete models not present anymore
@@ -217,3 +226,42 @@ export const modelsRouter = t.router({
     };
   }),
 });
+
+async function translateModelDescriptions(
+  models: Pick<NewModel, "id" | "description">[]
+) {
+  const locales = await db.query.locales.findMany();
+
+  const records: NewModelTranslation[] = [];
+
+  for (const { id: localeId } of locales) {
+    const texts: string[] = [];
+    for (const model of models) {
+      const { description } = model;
+      texts.push(description ?? "");
+    }
+
+    const targetLanguageCode = localeToTargetLanguageCode(localeId);
+    const translation = await deepl.translateText(
+      texts,
+      "en",
+      targetLanguageCode
+    );
+
+    if (translation.length) {
+      for (let i = 0; i < translation.length; i++) {
+        const item = translation[i];
+        const model = models[i];
+        if (!item || !model?.description) continue;
+
+        records.push({
+          modelId: model.id,
+          localeId,
+          description: item.text,
+        });
+      }
+    }
+  }
+
+  await db.insert(modelTranslations).values(records);
+}

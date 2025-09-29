@@ -7,6 +7,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -95,6 +96,30 @@ export const models = pgTable(
   ]
 );
 
+export const locales = pgTable("locales", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  available: boolean("available").notNull().default(false),
+  createdAt: timestampTzNow("created_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
+});
+
+export const modelTranslations = pgTable(
+  "model_translations",
+  {
+    modelId: text("model_id")
+      .notNull()
+      .references(() => models.id),
+    localeId: text("locale_id")
+      .notNull()
+      .references(() => locales.id),
+    description: text("description"),
+    createdAt: timestampTzNow("created_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
+  },
+  (table) => [primaryKey({ columns: [table.modelId, table.localeId] })]
+);
+
 export const supportedParameters = pgTable("supported_parameters", {
   // same as OpenRouter parameter id, e.g. "reasoning", "seed"
   id: text("supported_parameter_id").primaryKey(),
@@ -130,6 +155,7 @@ export const modelsRelations = relations(models, ({ one, many }) => ({
     references: [providers.id],
   }),
   supportedParameters: many(modelSupportedParameters),
+  translations: many(modelTranslations),
 }));
 
 export const providersRelations = relations(providers, ({ many }) => ({
@@ -270,6 +296,24 @@ export const usageRelations = relations(usage, ({ one }) => ({
   }),
 }));
 
+export const localesRelations = relations(locales, ({ many }) => ({
+  modelTranslations: many(modelTranslations),
+}));
+
+export const modelTranslationsRelations = relations(
+  modelTranslations,
+  ({ one }) => ({
+    model: one(models, {
+      fields: [modelTranslations.modelId],
+      references: [models.id],
+    }),
+    locale: one(locales, {
+      fields: [modelTranslations.localeId],
+      references: [locales.id],
+    }),
+  })
+);
+
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
 
 export type Account = typeof account.$inferSelect;
@@ -296,3 +340,7 @@ export type Chat = typeof chats.$inferSelect;
 export type NewChat = typeof chats.$inferInsert;
 export type Usage = typeof usage.$inferSelect;
 export type NewUsage = typeof usage.$inferInsert;
+export type Locale = typeof locales.$inferSelect;
+export type NewLocale = typeof locales.$inferInsert;
+export type ModelTranslation = typeof modelTranslations.$inferSelect;
+export type NewModelTranslation = typeof modelTranslations.$inferInsert;

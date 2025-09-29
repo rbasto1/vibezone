@@ -1,0 +1,13 @@
+{
+  "Assistant": {
+    "signinWarning": "Melden Sie sich an, um diese Modelle zu verwenden.",
+    "panelTabLabel": "{index}: {modelName}",
+    "panelAriaLabel": "Gehen Sie zum Panel {index}",
+    "aiDisclaimer": "Künstliche Intelligenz kann Fehler begehen. Überprüfen Sie wichtige Antworten unabhängig voneinander.",
+    "privacyPolicy": "Datenschutzrichtlinie",
+    "termsOfUse": "Nutzungsbedingungen"
+  },
+  "PageLoader": {
+    "loading": "Warten..."
+  }
+}

@@ -2,9 +2,11 @@
 
 import { InlineSpinner } from "@/components/ui/inline-spinner";
 import { cn } from "@/components/ui/utils";
+import { useTranslations } from "next-intl";
 import { useEffect, useState, type FC } from "react";
 
 export const PageLoader: FC = () => {
+  const t = useTranslations("PageLoader");
   const [tooLong, setTooLong] = useState(false);
 
   useEffect(() => {
@@ -30,7 +32,7 @@ export const PageLoader: FC = () => {
           )}
         >
           <InlineSpinner />
-          <p className="text-sm font-medium">Please wait...</p>
+          <p className="text-sm font-medium">{t("loading")}</p>
         </div>
       </div>
     );

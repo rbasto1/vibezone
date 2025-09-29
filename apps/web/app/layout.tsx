@@ -2,8 +2,8 @@ import "katex/dist/katex.min.css";
 import "./globals.css";
 
 import type { Metadata } from "next";
-import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 
 import { SessionProvider } from "@/components/providers/session-provider";
 import { Toaster } from "@/components/providers/toast-provider";
@@ -12,6 +12,8 @@ import { cn } from "@/components/ui/utils";
 import { auth } from "@/lib/auth";
 import { SITE_URL } from "@/lib/constants";
 import { headers } from "next/headers";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import type { PropsWithChildren } from "react";
 
 export const SITE_NAME = "Vibezone";
@@ -85,9 +87,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const authData = await auth.api.getSession({
     headers: await headers(),
   });
+  const locale = await getLocale();
+  const messages = await getMessages();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         {/* Structured data for better SEO */}
         <script
@@ -113,15 +117,17 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       >
         <TRPCProvider>
           <SessionProvider serverAuthData={authData?.user ? authData : null}>
-            <ThemeProvider
-              attribute="class"
-              storageKey="theme"
-              defaultTheme="system"
-              enableSystem
-            >
-              {children}
-              <Toaster />
-            </ThemeProvider>
+            <NextIntlClientProvider locale={locale} messages={messages}>
+              <ThemeProvider
+                attribute="class"
+                storageKey="theme"
+                defaultTheme="system"
+                enableSystem
+              >
+                {children}
+                <Toaster />
+              </ThemeProvider>
+            </NextIntlClientProvider>
           </SessionProvider>
         </TRPCProvider>
       </body>
