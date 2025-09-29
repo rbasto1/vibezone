@@ -16,7 +16,6 @@ import { Maximize2, Minimize2 } from "lucide-react";
 import { useRef, type FC } from "react";
 import { toast } from "sonner";
 import { PanelHeader } from "./response-panel-header";
-import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
 
 interface ResponsePanelProps {
   panel: PanelConfig;
@@ -204,7 +203,6 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
       <div className="flex-1 min-h-0">
         <AssistantRuntimeProvider runtime={runtime}>
           <Thread panel={panel} error={error} />
-          <ThreadScrollToBottom />
         </AssistantRuntimeProvider>
       </div>
     </div>
