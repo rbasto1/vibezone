@@ -115,11 +115,17 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
     setPanelsState((prev) =>
       runningPanels.reduce(
         (acc, panelId) => {
-          acc[panelId] = {
-            ...prev[panelId]!,
-            running: true,
-            error: undefined,
-          };
+          acc[panelId] = prev[panelId]
+            ? {
+                ...prev[panelId],
+                running: true,
+                error: undefined,
+              }
+            : {
+                running: true,
+                dirty: false,
+                hasMessages: false,
+              };
           return acc;
         },
         { ...prev }
