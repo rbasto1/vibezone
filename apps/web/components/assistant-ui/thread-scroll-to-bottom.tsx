@@ -1,10 +1,10 @@
 import { ThreadPrimitive } from "@assistant-ui/react";
 import { ArrowDownIcon } from "lucide-react";
-import type { FC } from "react";
+import type { FC, MouseEvent } from "react";
 import { TooltipIconButton } from "./tooltip-icon-button";
 
 export const ThreadScrollToBottom: FC = () => {
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleClick = (event: MouseEvent<HTMLElement>) => {
     const scrollableParent = event.currentTarget.closest(".overflow-y-scroll");
     if (!scrollableParent) return;
 
