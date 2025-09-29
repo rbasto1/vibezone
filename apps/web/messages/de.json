@@ -9,5 +9,11 @@
   },
   "PageLoader": {
     "loading": "Warten..."
+  },
+  "LanguageSwitcher": {
+    "trigger": "Sprache wechseln",
+    "english": "Englisch",
+    "portugueseBrazil": "Portugiesisch (Brasilien)",
+    "german": "Deutsch"
   }
 }

@@ -248,20 +248,20 @@ async function translateModelDescriptions(
       targetLanguageCode
     );
 
-    if (translation.length) {
-      for (let i = 0; i < translation.length; i++) {
-        const item = translation[i];
-        const model = models[i];
-        if (!item || !model?.description) continue;
+    for (let i = 0; i < translation.length; i++) {
+      const item = translation[i];
+      const model = models[i];
+      if (!item || !model?.description) continue;
 
-        records.push({
-          modelId: model.id,
-          localeId,
-          description: item.text,
-        });
-      }
+      records.push({
+        modelId: model.id,
+        localeId,
+        description: item.text,
+      });
     }
   }
 
-  await db.insert(modelTranslations).values(records);
+  if (records.length) {
+    await db.insert(modelTranslations).values(records);
+  }
 }

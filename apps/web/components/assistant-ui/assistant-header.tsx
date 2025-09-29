@@ -1,5 +1,6 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
+import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 
@@ -141,6 +142,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
         </DropdownMenu>
 
         <ThemeToggle />
+        <LanguageToggle />
 
         <div className="flex items-center gap-2">
           {showMobileQuotaChip ? <AnonMobileQuotaLabel /> : <div />}
