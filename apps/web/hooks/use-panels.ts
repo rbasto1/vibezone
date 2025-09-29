@@ -8,33 +8,20 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback } from "react";
 
 // Value hooks - read-only access
-export const usePanelConfigValue = () => {
+export const usePanelConfigValue = (id: string) => {
   const panelConfigs = useAtomValue(panelConfigAtom);
-  return useCallback(
-    (panelId: string) => {
-      return panelConfigs.find((panel) => panel.id === panelId);
-    },
-    [panelConfigs]
-  );
+  return panelConfigs.find((panel) => panel.id === id);
 };
 
 export const usePanelsConfigValue = () => {
   return useAtomValue(panelConfigAtom);
 };
 
-export const usePanelStateValueGetter = () => {
-  const panelStates = useAtomValue(panelStateAtom);
-  return useCallback(
-    (panelId: string) => {
-      return panelStates[panelId] || { running: false, dirty: false };
-    },
-    [panelStates]
-  );
-};
-
 export const usePanelStateValue = (id: string) => {
   const panelStates = useAtomValue(panelStateAtom);
-  return panelStates[id] || { running: false, dirty: false };
+  return (
+    panelStates[id] || { running: false, dirty: false, hasMessages: false }
+  );
 };
 
 export const usePanelsStateValue = () => {
@@ -42,17 +29,14 @@ export const usePanelsStateValue = () => {
 };
 
 // Setter hooks - write-only access
-export const usePanelConfigSetter = () => {
+export const usePanelConfigSetter = (id: string) => {
   const setPanelConfigs = useSetAtom(panelConfigAtom);
 
   return useCallback(
-    (
-      panelId: string,
-      updater: PanelConfig | ((currentPanel: PanelConfig) => PanelConfig)
-    ) => {
+    (updater: PanelConfig | ((currentPanel: PanelConfig) => PanelConfig)) => {
       setPanelConfigs((panels) =>
         panels.map((panel) =>
-          panel.id === panelId
+          panel.id === id
             ? typeof updater === "function"
               ? updater(panel)
               : updater
@@ -60,27 +44,30 @@ export const usePanelConfigSetter = () => {
         )
       );
     },
-    [setPanelConfigs]
+    [setPanelConfigs, id]
   );
 };
 
-export const usePanelStateSetter = () => {
+export const usePanelStateSetter = (id: string) => {
   const setPanelState = useSetAtom(panelStateAtom);
 
   return useCallback(
-    (
-      panelId: string,
-      updater: PanelState | ((currentState: PanelState) => PanelState)
-    ) => {
+    (updater: PanelState | ((currentState: PanelState) => PanelState)) => {
       setPanelState((panelState) => ({
         ...panelState,
-        [panelId]:
+        [id]:
           typeof updater === "function"
-            ? updater(panelState[panelId] || { running: false, dirty: false })
+            ? updater(
+                panelState[id] || {
+                  running: false,
+                  dirty: false,
+                  hasMessages: false,
+                }
+              )
             : updater,
       }));
     },
-    [setPanelState]
+    [setPanelState, id]
   );
 };
 
@@ -121,8 +108,14 @@ export const usePanelsState = () => {
   return useAtom(panelStateAtom);
 };
 
-export const usePanelState = () => {
-  const getter = usePanelStateValueGetter();
-  const setter = usePanelStateSetter();
-  return [getter, setter] as const;
+export const usePanelState = (id: string) => {
+  const value = usePanelStateValue(id);
+  const setter = usePanelStateSetter(id);
+  return [value, setter] as const;
+};
+
+export const usePanelConfig = (id: string) => {
+  const value = usePanelConfigValue(id);
+  const setter = usePanelConfigSetter(id);
+  return [value, setter] as const;
 };

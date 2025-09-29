@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/components/ui/utils";
-import { useAnonRemaining } from "@/hooks/use-anon-quota";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   usePanelsConfigSetter,
@@ -23,9 +22,9 @@ import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useSession } from "@/hooks/use-session";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
-import { ANON_DAILY_LIMIT } from "@/store/anon-quota";
 import type { FC } from "react";
 import { useState } from "react";
+import { AnonMobileQuotaLabel } from "./anon-mobile-quota-label";
 import { ModelDropdownContents } from "./model-dropdown-contents";
 
 interface AssistantHeaderProps {
@@ -43,9 +42,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
   const saveLastModels = useSaveLastModels();
   const isMobile = useIsMobile();
   const [chooseModelOpen, setChooseModelOpen] = useState(false);
-  const remaining = useAnonRemaining();
   const showMobileQuotaChip = !authData?.user && suggestionsUsed;
-  const remainingLabel = `${remaining} of ${ANON_DAILY_LIMIT}`;
 
   const handleAddPanel = (providerId: string, modelId: string) => {
     const id = generateThreadId(panelCount);
@@ -57,7 +54,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
     setPanelsState((prev) => {
       const newPanels = {
         ...prev,
-        [id]: { running: false, dirty: false },
+        [id]: { running: false, dirty: false, hasMessages: false },
       };
       return newPanels;
     });
@@ -146,17 +143,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
         <ThemeToggle />
 
         <div className="flex items-center gap-2">
-          <div
-            suppressHydrationWarning
-            className={cn(
-              "md:hidden overflow-hidden rounded-full border border-amber-300 bg-amber-200 text-amber-900 text-xs font-semibold tracking-tight transition-all duration-800 ease-out whitespace-nowrap",
-              showMobileQuotaChip
-                ? "max-w-[96px] px-2 py-1 opacity-100 ml-2"
-                : "max-w-0 px-0 py-0 opacity-0"
-            )}
-          >
-            {remainingLabel}
-          </div>
+          {showMobileQuotaChip ? <AnonMobileQuotaLabel /> : <div />}
           <UserMenu />
         </div>
       </div>

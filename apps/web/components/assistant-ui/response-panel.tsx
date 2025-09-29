@@ -37,7 +37,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
 }) => {
   const { id } = panel;
   panelGlobalContext[id] = panel;
-  const [panelState, setPanelState] = usePanelState();
+  const [panelState, setPanelState] = usePanelState(id);
   const setCurrentChat = useCurrentChatSetter();
   const attachmentAdapter = useAttachmentAdapter();
   const renameChatMutation = trpc.chats.renameChat.useMutation();
@@ -46,7 +46,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   sessionToken.current = session?.session.token;
 
   const handleModelError = (error: Error) => {
-    setPanelState(id, (currentState) => ({
+    setPanelState((currentState) => ({
       ...currentState,
       error,
       running: false,
@@ -54,16 +54,17 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   };
 
   const handleModelFinish: ChatOnFinishCallback<UIMessage> = async () => {
-    setPanelState(id, (currentState) => ({
+    setPanelState((currentState) => ({
       ...currentState,
       running: false,
     }));
 
     // give it a time and then save the messages, no need to rush all panels at the same time
     setTimeout(() => {
-      setPanelState(id, (currentState) => ({
+      setPanelState((currentState) => ({
         ...currentState,
         dirty: true,
+        hasMessages: true,
       }));
     }, 2000);
 
@@ -171,7 +172,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
     }
   };
 
-  const { running, error } = panelState(id);
+  const { running, error } = panelState;
 
   const FocusIcon = isFocused ? Minimize2 : Maximize2;
   const focusButtonLabel = isFocused ? "Exit focus view" : "Focus this panel";

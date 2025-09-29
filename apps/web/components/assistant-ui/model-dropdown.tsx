@@ -98,8 +98,8 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
             {dataRetention && (
               <ShieldAlertIcon className="h-4 w-4 text-red-500" aria-hidden />
             )}
-            <ChevronDown className="h-4 w-4 flex-shrink-0" />
           </span>
+          <ChevronDown className="h-4 w-4 flex-shrink-0" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuPortal>
