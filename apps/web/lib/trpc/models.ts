@@ -238,7 +238,20 @@ async function translateModelDescriptions(
     const texts: string[] = [];
     for (const model of models) {
       const { description } = model;
-      texts.push(description ?? "");
+
+      if (localeId === "en") {
+        records.push({
+          modelId: model.id,
+          localeId,
+          description,
+        });
+      } else {
+        texts.push(description ?? "");
+      }
+    }
+
+    if (localeId === "en") {
+      continue;
     }
 
     const targetLanguageCode = localeToTargetLanguageCode(localeId);

@@ -1,5 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import Link from "next/link";
+import type { FC } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+
 import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
@@ -17,11 +23,6 @@ import { useUIState } from "@/hooks/use-ui-state";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import type { FC } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { AppSidebarLoader } from "./app-sidebar-loader";
 
 const Assistant: FC = () => {
@@ -235,8 +236,4 @@ const AssistantContent: FC = () => {
   );
 };
 
-const Page: FC = () => {
-  return <Assistant />;
-};
-
-export default Page;
+export default Assistant;

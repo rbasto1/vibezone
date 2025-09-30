@@ -37,32 +37,71 @@ async function main() {
   const sourceDb = db;
   const targetDb = drizzle(targetConnStr, { schema });
 
+  await copyLocales(sourceDb, targetDb);
   await copySuggestionGroups(sourceDb, targetDb);
   await updateProviders(sourceDb, targetDb);
   await updateModels(sourceDb, targetDb);
 }
 
-async function copySuggestionGroups(sourceDb: Client, targetDb: Client) {
-  const rows = await sourceDb.select().from(schema.suggestionGroups);
+async function copyLocales(sourceDb: Client, targetDb: Client) {
+  const rows = await sourceDb.select().from(schema.locales);
   if (!rows.length) {
-    console.error("No rows found in source table");
+    console.error("No rows found in source 'locales' table");
     process.exit(2);
   }
 
-  const tableEmpty = await targetDb
-    .select()
-    .from(schema.suggestionGroups)
-    .limit(1);
+  const existingRows = await targetDb.select().from(schema.locales);
 
-  if (tableEmpty.length) {
-    console.info("Deleting existing rows from target table");
-    await targetDb.delete(schema.suggestionGroups);
+  const missingLocales = rows.filter(
+    (row) => !existingRows.some((r) => r.id === row.id)
+  );
+
+  if (!missingLocales.length) {
+    console.info("🔵 No missing locales found");
+    return;
   }
+
+  console.info(`Inserting ${missingLocales.length} missing locales`);
+  await targetDb.insert(schema.locales).values(missingLocales);
+
+  const count = rows.length;
+  console.info(`✅ Locales copied successfully: ${count} rows`);
+}
+
+async function copySuggestionGroups(sourceDb: Client, targetDb: Client) {
+  const rows = await sourceDb.select().from(schema.suggestionGroups);
+  if (!rows.length) {
+    console.error("No rows found in source 'suggestionGroups' table");
+    process.exit(2);
+  }
+
+  console.info("🟡 Deleting existing rows from target tables");
+  await targetDb.delete(schema.suggestionGroupTranslations);
+  await targetDb.delete(schema.suggestionGroups);
 
   await targetDb.insert(schema.suggestionGroups).values(rows);
 
+  await copySuggestionGroupsTranslations(sourceDb, targetDb);
+
   const count = rows.length;
   console.info(`✅ Suggestion groups copied successfully: ${count} rows`);
+}
+
+async function copySuggestionGroupsTranslations(
+  sourceDb: Client,
+  targetDb: Client
+) {
+  const rows = await sourceDb.select().from(schema.suggestionGroupTranslations);
+  if (!rows.length) {
+    console.warn("No rows found in source 'suggestionGroupTranslations' table");
+    return;
+  }
+
+  await targetDb.insert(schema.suggestionGroupTranslations).values(rows);
+  const count = rows.length;
+  console.info(
+    `✅ Suggestion group translations copied successfully: ${count} rows`
+  );
 }
 
 async function updateProviders(sourceDb: Client, targetDb: Client) {
