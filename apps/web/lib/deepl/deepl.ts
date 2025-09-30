@@ -1,9 +1,8 @@
 import * as DeepL from "deepl-node";
 
 const authKey = process.env.DEEPL_API_KEY;
-if (!authKey) throw new Error("Missing DEEPL_API_KEY");
 
-export const deepl = new DeepL.DeepLClient(authKey);
+export const deepl = new DeepL.DeepLClient(authKey ?? "fail");
 
 export function localeToTargetLanguageCode(
   locale: string
