@@ -1,3 +1,4 @@
+"use client";
 /* eslint-disable @next/next/no-img-element */
 import type { FC } from "react";
 import { useState } from "react";
@@ -9,6 +10,7 @@ import type {
   ToolCallMessagePartStatus,
 } from "@assistant-ui/react";
 import { useMessagePartImage } from "@assistant-ui/react";
+import { useTranslations } from "next-intl";
 
 type ImageProps = ImagePropsComplete | ImageMessagePartProps;
 interface ImagePropsComplete {
@@ -45,6 +47,7 @@ function ImageFromState() {
 
 export const Image: FC<ImageProps> = (props) => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const t = useTranslations("AssistantMessageImage");
 
   if (!("src" in props)) {
     // When the LLM responds with an image, it appears that the correct adapter is used
@@ -71,7 +74,7 @@ export const Image: FC<ImageProps> = (props) => {
         />
         {!isLoaded ? (
           <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground/70">
-            Loading image...
+            {t("loading")}
           </div>
         ) : null}
       </div>

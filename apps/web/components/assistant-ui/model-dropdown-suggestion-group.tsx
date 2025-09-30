@@ -2,10 +2,14 @@
 
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { cn } from "@/components/ui/utils";
-import type { SuggestionGroup } from "@/db";
+import type { GetModelsListReturn } from "@/lib/trpc/models";
+import { useLocale } from "next-intl";
 
 interface ModelDropdownSuggestionGroupProps {
-  group: Pick<SuggestionGroup, "id" | "title" | "label" | "icon">;
+  group: Pick<
+    GetModelsListReturn["groups"][number],
+    "id" | "icon" | "translations"
+  >;
   isActive: boolean;
   onSelect: (groupId: string) => void;
 }
@@ -13,6 +17,11 @@ interface ModelDropdownSuggestionGroupProps {
 export const ModelDropdownSuggestionGroup: React.FC<
   ModelDropdownSuggestionGroupProps
 > = ({ group, isActive, onSelect }) => {
+  const locale = useLocale();
+  const translation =
+    group.translations.find((t) => t.localeId === locale) ??
+    group.translations.find((t) => t.localeId === "en");
+  const { title, label } = translation ?? { title: group.id, label: "" };
   return (
     <button
       key={group.id}
@@ -28,7 +37,7 @@ export const ModelDropdownSuggestionGroup: React.FC<
         e.stopPropagation();
         onSelect(group.id);
       }}
-      title={isActive ? group.label : `${group.title} - ${group.label}`}
+      title={isActive ? label : `${title} - ${label}`}
     >
       <DynamicIcon iconName={group.icon} size={14} />
       <span
@@ -37,7 +46,7 @@ export const ModelDropdownSuggestionGroup: React.FC<
           isActive ? "max-w-[80px] opacity-100" : "max-w-0 opacity-0"
         )}
       >
-        {group.title}
+        {title}
       </span>
     </button>
   );

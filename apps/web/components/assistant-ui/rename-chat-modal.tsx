@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useTranslations } from "next-intl";
 import { useState, type FC } from "react";
 
 interface RenameChatModalProps {
@@ -23,6 +26,7 @@ export const RenameChatModal: FC<RenameChatModalProps> = ({
   onRename,
   onClose,
 }) => {
+  const t = useTranslations("RenameChatModal");
   const [newTitle, setNewTitle] = useState(currentTitle);
   const [isRenaming, setIsRenaming] = useState(false);
 
@@ -57,9 +61,9 @@ export const RenameChatModal: FC<RenameChatModalProps> = ({
         aria-describedby="rename-chat-description"
       >
         <DialogHeader>
-          <DialogTitle>Rename Chat</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription id="rename-chat-description">
-            Enter a new name for this chat conversation.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -68,7 +72,7 @@ export const RenameChatModal: FC<RenameChatModalProps> = ({
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Enter chat name..."
+              placeholder={t("placeholder")}
               autoFocus
               disabled={isRenaming}
             />
@@ -80,14 +84,14 @@ export const RenameChatModal: FC<RenameChatModalProps> = ({
               onClick={onClose}
               disabled={isRenaming}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               type="submit"
               disabled={isRenaming || !newTitle.trim()}
               loading={isRenaming}
             >
-              Rename
+              {t("rename")}
             </Button>
           </DialogFooter>
         </form>

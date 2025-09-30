@@ -1,3 +1,5 @@
+"use client";
+
 import { RenameChatModal } from "@/components/assistant-ui/rename-chat-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +16,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, type FC } from "react";
 
 interface CustomThreadListItemProps {
@@ -37,6 +40,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   onArchive,
   onRename,
 }) => {
+  const t = useTranslations("ThreadListItem");
   const [isArchiving, setIsArchiving] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [error, setError] = useState<string>();
@@ -88,7 +92,11 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
               error && "text-destructive"
             )}
           >
-            {isLoading ? "Loading..." : error ? error : title || "New Chat"}
+            {isLoading
+              ? t("loading")
+              : error
+                ? error
+                : title || t("untitled")}
           </p>
           {!error && (
             <p className="text-xs text-muted-foreground">
@@ -105,7 +113,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleRename}>
             <PencilIcon className="mr-2 h-4 w-4" />
-            Rename
+            {t("rename")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleArchive} disabled={isArchiving}>
             {isArchiving ? (
@@ -113,7 +121,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
             ) : (
               <TrashIcon className="mr-2 h-4 w-4" />
             )}
-            Delete
+            {t("delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -1,3 +1,5 @@
+"use client";
+
 import { PlusIcon } from "lucide-react";
 import type { FC } from "react";
 import { useState } from "react";
@@ -17,6 +19,7 @@ import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import { CustomThreadListItem } from "./custom-thread-list-item";
+import { useTranslations } from "next-intl";
 
 export const ThreadList: FC = () => {
   return (
@@ -28,6 +31,7 @@ export const ThreadList: FC = () => {
 };
 
 const ThreadListNew: FC = () => {
+  const t = useTranslations("ThreadList");
   const getRuntimes = useRuntimes();
   const setPanelsState = usePanelsStateSetter();
   const setPanelsConfig = usePanelsConfigSetter();
@@ -66,12 +70,13 @@ const ThreadListNew: FC = () => {
       onClick={handleNewChat}
     >
       <PlusIcon />
-      New Chat
+      {t("newChat")}
     </Button>
   );
 };
 
 const ThreadListItems: FC = () => {
+  const t = useTranslations("ThreadList");
   const [currentChat, setCurrentChat] = useCurrentChat();
   const { loadChatById } = useChatActions();
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
@@ -152,7 +157,7 @@ const ThreadListItems: FC = () => {
   if (!session?.user) {
     return (
       <div className="text-sm text-muted-foreground p-2">
-        Please sign up or log in to save and load your chats
+        {t("loginRequired")}
       </div>
     );
   }
@@ -163,13 +168,15 @@ const ThreadListItems: FC = () => {
 
   if (!chats) {
     return (
-      <div className="text-sm text-muted-foreground p-2">Loading chats...</div>
+      <div className="text-sm text-muted-foreground p-2">
+        {t("loading")}
+      </div>
     );
   }
 
   if (!chats.length) {
     return (
-      <div className="text-sm text-muted-foreground p-2">No chats yet</div>
+      <div className="text-sm text-muted-foreground p-2">{t("empty")}</div>
     );
   }
 

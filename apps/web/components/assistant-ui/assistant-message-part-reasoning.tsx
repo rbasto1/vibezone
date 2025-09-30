@@ -1,3 +1,5 @@
+"use client";
+
 import type { FC, KeyboardEvent } from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { z } from "zod";
@@ -5,6 +7,7 @@ import { z } from "zod";
 import { cn } from "@/components/ui/utils";
 import { safeParse } from "@/lib/json";
 import { useMessagePartReasoning } from "@assistant-ui/react";
+import { useTranslations } from "next-intl";
 
 const ReasoningSchema = z.object({
   text: z.string(),
@@ -13,6 +16,7 @@ const ReasoningSchema = z.object({
 
 export const Reasoning: FC = () => {
   const reasoning = useMessagePartReasoning();
+  const t = useTranslations("AssistantMessageReasoning");
   const [isExpanded, setIsExpanded] = useState(false);
   const streamRef = useRef<HTMLDivElement | null>(null);
   const contentId = useId();
@@ -56,7 +60,7 @@ export const Reasoning: FC = () => {
   return (
     <div>
       <div className="flex items-center text-[10px] uppercase tracking-[0.28em] text-muted-foreground/70">
-        <span>Reasoning</span>
+        <span>{t("title")}</span>
         {reasoningType ? (
           <span className="text-[9px] uppercase tracking-[0.32em] text-muted-foreground/50">
             {reasoningType}
@@ -108,7 +112,7 @@ export const Reasoning: FC = () => {
             role="button"
             tabIndex={0}
           >
-            Collapse reasoning
+            {t("collapse")}
           </div>
         )}
       </div>

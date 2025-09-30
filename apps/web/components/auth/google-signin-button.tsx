@@ -4,12 +4,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/utils";
 import { signInWithGoogle } from "@/lib/auth-client";
+import { useTranslations } from "next-intl";
 
 interface GoogleSignInButtonProps extends React.ComponentProps<typeof Button> {
   className?: string;
 }
 
 export const GoogleSignInButton = ({ className, ...props }: GoogleSignInButtonProps) => {
+  const t = useTranslations("Auth");
   const [loading, setLoading] = useState(false);
 
   return (
@@ -33,8 +35,7 @@ export const GoogleSignInButton = ({ className, ...props }: GoogleSignInButtonPr
         <path fill="#4CAF50" d="M24 44c5.217 0 9.985-1.996 13.57-5.243l-6.25-5.287C29.32 35.459 26.787 36 24 36c-5.255 0-9.787-3.311-11.394-7.946l-6.49 5.001C9.435 39.556 16.195 44 24 44z"/>
         <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.001 3.007-3.161 5.429-5.983 6.97l.001-.001 6.25 5.287C33.264 41.096 38 44 44 44c8.837 0 16-7.163 16-16 0-1.341-.138-2.651-.389-3.917z" transform="scale(.5) translate( -4, -4)"/>
       </svg>
-      {loading ? "Redirecting…" : "Continue with Google"}
+      {loading ? t("google.redirect") : t("google.cta")}
     </Button>
   );
 };
-

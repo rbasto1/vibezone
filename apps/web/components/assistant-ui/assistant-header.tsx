@@ -1,5 +1,8 @@
+"use client";
+
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
+import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 
@@ -26,6 +29,7 @@ import type { FC } from "react";
 import { useState } from "react";
 import { AnonMobileQuotaLabel } from "./anon-mobile-quota-label";
 import { ModelDropdownContents } from "./model-dropdown-contents";
+import { useTranslations } from "next-intl";
 
 interface AssistantHeaderProps {
   panelCount: number;
@@ -35,6 +39,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
   panelCount,
   suggestionsUsed,
 }) => {
+  const t = useTranslations("AssistantHeader");
   const authData = useSession();
   const setLastModels = trpc.users.setLastModels.useMutation();
   const setPanelsConfig = usePanelsConfigSetter();
@@ -43,6 +48,12 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
   const isMobile = useIsMobile();
   const [chooseModelOpen, setChooseModelOpen] = useState(false);
   const showMobileQuotaChip = !authData?.user && suggestionsUsed;
+  const canAddMore = panelCount < MAX_PANELS;
+  const addButtonTitle = canAddMore
+    ? t("addAnotherTooltip")
+    : t("maxModelsTooltip", { max: MAX_PANELS });
+  const addButtonLabel = t("addAiButton");
+  const addButtonAriaLabel = t("addAiAriaLabel");
 
   const handleAddPanel = (providerId: string, modelId: string) => {
     const id = generateThreadId(panelCount);
@@ -82,19 +93,13 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
             <Button
               variant="outline"
               className={cn(
-                panelCount < MAX_PANELS
-                  ? "hover:bg-accent"
-                  : "opacity-60 cursor-not-allowed"
+                canAddMore ? "hover:bg-accent" : "opacity-60 cursor-not-allowed"
               )}
-              disabled={panelCount >= MAX_PANELS}
-              title={
-                panelCount < MAX_PANELS
-                  ? "Add another AI chat"
-                  : `Maximum ${MAX_PANELS} models at a time; remove a model to add another`
-              }
-              aria-label="Add another AI chat"
+              disabled={!canAddMore}
+              title={addButtonTitle}
+              aria-label={addButtonAriaLabel}
             >
-              Add AI
+              {addButtonLabel}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuPortal>
@@ -105,19 +110,15 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
                     <Button
                       variant="outline"
                       className={cn(
-                        panelCount < MAX_PANELS
+                        canAddMore
                           ? "hover:bg-accent"
                           : "opacity-60 cursor-not-allowed"
                       )}
-                      disabled={panelCount >= MAX_PANELS}
-                      title={
-                        panelCount < MAX_PANELS
-                          ? "Add another AI chat"
-                          : `Maximum ${MAX_PANELS} models at a time; remove a model to add another`
-                      }
-                      aria-label="Add another AI chat"
+                      disabled={!canAddMore}
+                      title={addButtonTitle}
+                      aria-label={addButtonAriaLabel}
                     >
-                      Add AI
+                      {addButtonLabel}
                     </Button>
                   </SheetTrigger>
                   <SheetContent
@@ -141,6 +142,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
         </DropdownMenu>
 
         <ThemeToggle />
+        <LanguageToggle />
 
         <div className="flex items-center gap-2">
           {showMobileQuotaChip ? <AnonMobileQuotaLabel /> : <div />}

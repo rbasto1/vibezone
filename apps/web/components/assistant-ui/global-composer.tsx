@@ -3,6 +3,7 @@ import { ArrowUpIcon } from "lucide-react";
 import type { FC, MouseEvent } from "react";
 import { useContext, useMemo, useRef } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { GlobalComposerContext } from "@/components/providers/composer-provider";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ interface GlobalComposerProps {
 }
 
 export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
+  const t = useTranslations("GlobalComposer");
   const [prompt, setPrompt] = useStateSessionStorage("prompt");
   const removeAttachment = useRemoveAttachment();
   const attachments = useAttachmentsValue();
@@ -72,7 +74,11 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
       }
     }
     if (failures.length) {
-      toast.error(`Some panels failed to stop: ${failures.join("; ")}`);
+      toast.error(
+        t("stopAllError", {
+          failures: failures.join("; "),
+        })
+      );
     }
   };
 
@@ -88,7 +94,9 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
       // Anonymous quota enforcement
       if (remaining !== null && remaining < runtimes.size) {
         toast.error(
-          `Guest limit reached (${ANON_DAILY_LIMIT}/day). Please sign in.`
+          t("guestLimit", {
+            limit: ANON_DAILY_LIMIT,
+          })
         );
         return false;
       }
@@ -107,7 +115,11 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
         runningPanels.push(panelId);
       } catch (e) {
         const message = e instanceof Error ? e.message : JSON.stringify(e);
-        toast.error(`Send failed for a panel: ${message}`);
+        toast.error(
+          t("sendFailed", {
+            message,
+          })
+        );
       }
     }
 
@@ -163,6 +175,9 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
     (a) => a.status.type !== "complete"
   );
 
+  const stopAllLabel = t("stopAllLabel");
+  const sendLabel = t("sendLabel");
+
   return (
     <div
       className="relative flex w-full flex-col gap-0 cursor-text"
@@ -170,7 +185,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
     >
       {/* Input box (top section) */}
       <textarea
-        placeholder="Ask all of the AIs..."
+        placeholder={t("placeholder")}
         name="global-composer"
         autoFocus
         className="bg-muted border-border dark:border-muted-foreground/15 focus:outline-primary placeholder:text-muted-foreground max-h-[calc(50dvh)] min-h-16 w-full resize-none rounded-t-2xl border-x border-t px-4 pt-2 pb-3 text-base outline-none"
@@ -205,15 +220,16 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
         {onStopAll ? (
           <StopButton
             onClick={onStopAll}
-            aria-label="Stop all AI responses"
-            title="Stop all AI responses"
+            aria-label={stopAllLabel}
+            title={stopAllLabel}
             className="self-start"
           />
         ) : (
           <Button
             size="icon"
             onClick={handleSubmit}
-            aria-label="Send to all AIs"
+            aria-label={sendLabel}
+            title={sendLabel}
             className="self-start"
             disabled={pendingAttachments}
           >

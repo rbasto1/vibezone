@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { ImageResponse } from "next/og";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "edge";
 export const alt = "Vibezone — Compare AI Models";
@@ -9,9 +10,13 @@ export const size = {
 };
 export const contentType = "image/png";
 
-export default function TwitterImage() {
-  const title = "Vibezone";
-  const subtitle = "Compare AI Models";
+export default async function TwitterImage() {
+  const t = await getTranslations("SocialImage");
+
+  const title = t("title");
+  const subtitle = t("subtitle");
+  const tagline = t("tagline");
+  const domain = t("domain");
 
   return new ImageResponse(
     (
@@ -51,10 +56,10 @@ export default function TwitterImage() {
           {subtitle}
         </div>
         <div style={{ marginTop: 28, fontSize: 26, opacity: 0.9 }}>
-          Test, compare, and evaluate models side-by-side.
+          {tagline}
         </div>
         <div style={{ marginTop: 40, fontSize: 24, opacity: 0.8 }}>
-          vibezone.ai
+          {domain}
         </div>
       </div>
     ),

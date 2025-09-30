@@ -1,13 +1,13 @@
 import "server-only";
 
 import { db } from "@/db";
-import { suggestionGroups } from "@/db/schema";
+import { suggestionGroups, suggestionGroupTranslations } from "@/db/schema";
 import {
   adminProcedure,
   publicProcedure,
   t,
 } from "@/lib/trpc/server/initialize";
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 export const suggestionGroupsRouter = t.router({
@@ -164,6 +164,72 @@ export const suggestionGroupsRouter = t.router({
         })
         .where(eq(suggestionGroups.id, input.groupId));
 
+      return { ok: true } as const;
+    }),
+
+  listTranslations: adminProcedure
+    .input(z.object({ suggestionGroupId: z.string().nonempty() }))
+    .query(async ({ input }) => {
+      return await db.query.suggestionGroupTranslations.findMany({
+        where: eq(
+          suggestionGroupTranslations.suggestionGroupId,
+          input.suggestionGroupId
+        ),
+        orderBy: [asc(suggestionGroupTranslations.localeId)],
+      });
+    }),
+
+  updateTranslation: adminProcedure
+    .input(
+      z.object({
+        suggestionGroupId: z.string().nonempty(),
+        localeId: z.string().nonempty(),
+        title: z.string(),
+        label: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      await db
+        .insert(suggestionGroupTranslations)
+        .values({
+          suggestionGroupId: input.suggestionGroupId,
+          localeId: input.localeId,
+          title: input.title,
+          label: input.label,
+        })
+        .onConflictDoUpdate({
+          target: [
+            suggestionGroupTranslations.suggestionGroupId,
+            suggestionGroupTranslations.localeId,
+          ],
+          set: {
+            title: input.title,
+            label: input.label,
+          },
+        });
+
+      return { ok: true } as const;
+    }),
+
+  deleteTranslation: adminProcedure
+    .input(
+      z.object({
+        suggestionGroupId: z.string().nonempty(),
+        localeId: z.string().nonempty(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      await db
+        .delete(suggestionGroupTranslations)
+        .where(
+          and(
+            eq(
+              suggestionGroupTranslations.suggestionGroupId,
+              input.suggestionGroupId
+            ),
+            eq(suggestionGroupTranslations.localeId, input.localeId)
+          )
+        );
       return { ok: true } as const;
     }),
 });

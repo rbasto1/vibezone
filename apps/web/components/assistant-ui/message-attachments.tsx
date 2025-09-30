@@ -18,12 +18,14 @@ import { FileImageIcon, FileTextIcon } from "lucide-react";
 import { type FC } from "react";
 import { FaRegFilePdf } from "react-icons/fa";
 import { AttachmentPreviewDialog } from "./attachment-preview";
+import { useTranslations } from "next-intl";
 
 interface AttachmentThumbProps {
   attachment: Attachment;
+  altText: string;
 }
 
-const AttachmentThumb: FC<AttachmentThumbProps> = ({ attachment }) => {
+const AttachmentThumb: FC<AttachmentThumbProps> = ({ attachment, altText }) => {
   const isImage = attachment.type === "image";
   const src = useAttachmentSrc(attachment);
   const type = attachment.contentType;
@@ -32,7 +34,7 @@ const AttachmentThumb: FC<AttachmentThumbProps> = ({ attachment }) => {
     <Avatar className="aui-attachment-tile-avatar h-full w-full rounded-none">
       <AvatarImage
         src={src}
-        alt="Attachment preview"
+        alt={altText}
         className="aui-attachment-tile-image object-cover"
       />
       <AvatarFallback delayMs={isImage ? 200 : 0}>
@@ -50,6 +52,23 @@ const AttachmentThumb: FC<AttachmentThumbProps> = ({ attachment }) => {
 
 export const AttachmentUI: FC = () => {
   const attachment = useAssistantState(({ attachment }) => attachment);
+  const t = useTranslations("MessageAttachments");
+
+  const typeName = (() => {
+    switch (attachment.type) {
+      case "image":
+        return t("types.image");
+      case "document":
+        return t("types.document");
+      case "file":
+        return t("types.file");
+      default:
+        return attachment.type;
+    }
+  })();
+
+  const altText = t("previewAlt");
+  const ariaLabel = t("ariaLabel", { type: typeName });
 
   return (
     <Tooltip>
@@ -61,9 +80,9 @@ export const AttachmentUI: FC = () => {
             )}
             role="button"
             id="attachment-tile"
-            aria-label={`${typeLabel(attachment)} attachment`}
+            aria-label={ariaLabel}
           >
-            <AttachmentThumb attachment={attachment} />
+            <AttachmentThumb attachment={attachment} altText={altText} />
           </div>
         </TooltipTrigger>
       </AttachmentPreviewDialog>
@@ -80,17 +99,4 @@ export const UserMessageAttachments: FC = () => {
       <MessagePrimitive.Attachments components={{ Attachment: AttachmentUI }} />
     </div>
   );
-};
-
-const typeLabel = ({ type }: Attachment) => {
-  switch (type) {
-    case "image":
-      return "Image";
-    case "document":
-      return "Document";
-    case "file":
-      return "File";
-    default:
-      throw new Error(`Unknown attachment type: ${type}`);
-  }
 };

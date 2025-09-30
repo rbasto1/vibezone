@@ -15,6 +15,7 @@ import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import type { PanelConfig } from "@/store/panels";
 import { ConfirmCloseModal } from "./confirm-close-modal";
 import { ModelDropdown } from "./model-dropdown";
+import { useTranslations } from "next-intl";
 
 export interface PanelHeaderProps {
   panel: PanelConfig;
@@ -22,6 +23,7 @@ export interface PanelHeaderProps {
 }
 
 export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
+  const t = useTranslations("ResponsePanelHeader");
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
   const panelId = panel.id;
@@ -54,6 +56,9 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   };
 
   const canClose = panelsConfig.length > 1;
+  const stopLabel = t("stopLabel");
+  const closeAria = t("closeAria");
+  const closeTooltip = canClose ? t("closeTooltip") : t("closeDisabledTooltip");
 
   return (
     <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/40 gap-2">
@@ -68,8 +73,8 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
         {onStop && (
           <StopButton
             onClick={onStop}
-            aria-label="Stop streaming"
-            title="Stop streaming this AI response"
+            aria-label={stopLabel}
+            title={stopLabel}
           />
         )}
         <button
@@ -78,8 +83,8 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
             canClose ? "opacity-100" : "opacity-40 cursor-not-allowed"
           )}
           onClick={handleRemoveClick}
-          aria-label="Close panel"
-          title={canClose ? "Close panel" : "At least one panel must remain"}
+          aria-label={closeAria}
+          title={closeTooltip}
           disabled={!canClose}
         >
           <XIcon className="h-4 w-4" />

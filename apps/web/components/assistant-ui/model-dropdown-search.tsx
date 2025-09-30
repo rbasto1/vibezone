@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/components/ui/utils";
 import { Search } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 
 interface ModelDropdownSearchProps {
   onSearchChange: (query: string) => void;
@@ -22,6 +23,7 @@ export const ModelDropdownSearch: React.FC<ModelDropdownSearchProps> = ({
   className,
   inputClassName,
 }) => {
+  const t = useTranslations("ModelDropdownSearch");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Keyboard shortcut handling for search
@@ -47,7 +49,9 @@ export const ModelDropdownSearch: React.FC<ModelDropdownSearchProps> = ({
           ref={searchInputRef}
           type="text"
           placeholder={
-            isSearchFocused ? "Search models..." : "Type / to search"
+            isSearchFocused
+              ? t("focusedPlaceholder")
+              : t("shortcutPlaceholder")
           }
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}

@@ -22,6 +22,7 @@ import { FileImageIcon, FileTextIcon, XIcon } from "lucide-react";
 import { FaRegFilePdf } from "react-icons/fa";
 import type { IconType } from "react-icons/lib";
 import { AttachmentPreviewDialog } from "./attachment-preview";
+import { useTranslations } from "next-intl";
 
 interface AttachmentChipProps {
   attachment: Attachment;
@@ -67,6 +68,7 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
   onRemove,
   className,
 }) => {
+  const t = useTranslations("AttachmentChip");
   const Icon = useMemo(() => guessIcon(attachment), [attachment]);
   const previewSrc = useImagePreview(
     attachment.type === "image" ? attachment : undefined
@@ -111,7 +113,7 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
           <ChipLabel>{attachment.name}</ChipLabel>
           <ChipTrailing>
             <ChipDismissButton
-              aria-label={`Remove ${attachment.name}`}
+              aria-label={t("remove", { name: attachment.name ?? "" })}
               onClick={handleRemove}
               className="hover:bg-destructive/15"
             >

@@ -5,6 +5,7 @@ import { chatsRouter } from "../chats";
 import { messagesRouter } from "../messages";
 import { modelsRouter } from "../models";
 import { providersRouter } from "../providers";
+import { localesRouter } from "../locales";
 import { suggestionGroupsRouter } from "../suggestion-groups";
 import { usersRouter } from "../users";
 import { t } from "./initialize";
@@ -16,6 +17,7 @@ export const appRouter = t.router({
   providers: providersRouter,
   suggestionGroups: suggestionGroupsRouter,
   users: usersRouter,
+  locales: localesRouter,
 });
 
 export type AppRouter = typeof appRouter;
@@ -31,3 +33,5 @@ export type ProvidersListOutput = RouterOutputs["providers"]["list"];
 // suggestion groups
 export type SuggestionGroupsListOutput =
   RouterOutputs["suggestionGroups"]["list"];
+// locales
+export type LocalesListOutput = RouterOutputs["locales"]["list"];

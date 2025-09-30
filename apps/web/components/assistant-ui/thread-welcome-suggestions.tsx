@@ -1,7 +1,9 @@
+import { motion } from "framer-motion";
+import { useLocale } from "next-intl";
+import type { FC } from "react";
+
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { useModelsValue } from "@/hooks/use-models";
-import { motion } from "framer-motion";
-import type { FC } from "react";
 
 export interface ThreadWelcomeSuggestionsProps {
   onSelect: (modelIds: string[]) => void;
@@ -11,16 +13,26 @@ export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
   onSelect,
 }) => {
   const { groups } = useModelsValue();
+  const locale = useLocale();
 
   const items = groups
     .filter((group) => group.promoted)
-    .map((group) => ({
-      key: group.id,
-      icon: <DynamicIcon iconName={group.icon} size={32} />,
-      title: group.title,
-      label: group.label,
-      models: group.models,
-    }));
+    .map((group) => {
+      const translation = group.translations.find(
+        (t) => t.localeId === locale
+      ) ??
+        group.translations.find((t) => t.localeId === "en") ?? {
+          title: group.id,
+          label: "",
+        };
+      return {
+        key: group.id,
+        icon: <DynamicIcon iconName={group.icon} size={32} />,
+        title: translation.title,
+        label: translation.label,
+        models: group.models,
+      };
+    });
   return (
     <div className="flex w-full gap-3 overflow-x-auto pb-2 -mx-2 px-2 snap-x snap-mandatory md:grid md:auto-rows-fr md:[grid-template-columns:repeat(auto-fit,minmax(0,1fr))] md:gap-2 md:overflow-visible md:pb-0 md:mx-0 md:px-0 md:snap-none">
       {items.map((s, i) => (

@@ -7,6 +7,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -95,6 +96,30 @@ export const models = pgTable(
   ]
 );
 
+export const locales = pgTable("locales", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  available: boolean("available").notNull().default(false),
+  createdAt: timestampTzNow("created_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
+});
+
+export const modelTranslations = pgTable(
+  "model_translations",
+  {
+    modelId: text("model_id")
+      .notNull()
+      .references(() => models.id),
+    localeId: text("locale_id")
+      .notNull()
+      .references(() => locales.id),
+    description: text("description"),
+    createdAt: timestampTzNow("created_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
+  },
+  (table) => [primaryKey({ columns: [table.modelId, table.localeId] })]
+);
+
 export const supportedParameters = pgTable("supported_parameters", {
   // same as OpenRouter parameter id, e.g. "reasoning", "seed"
   id: text("supported_parameter_id").primaryKey(),
@@ -115,6 +140,25 @@ export const suggestionGroups = pgTable("suggestion_groups", {
   updatedAt: timestampTzNowUpdated("updated_at"),
 });
 
+export const suggestionGroupTranslations = pgTable(
+  "suggestion_group_translations",
+  {
+    suggestionGroupId: text("suggestion_group_id")
+      .notNull()
+      .references(() => suggestionGroups.id),
+    localeId: text("locale_id")
+      .notNull()
+      .references(() => locales.id),
+    title: text("title").notNull(),
+    label: text("label").notNull(),
+    createdAt: timestampTzNow("created_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.suggestionGroupId, table.localeId] }),
+  ]
+);
+
 export const modelSupportedParameters = pgTable("model_supported_parameters", {
   modelId: text("model_id")
     .notNull()
@@ -130,6 +174,7 @@ export const modelsRelations = relations(models, ({ one, many }) => ({
     references: [providers.id],
   }),
   supportedParameters: many(modelSupportedParameters),
+  translations: many(modelTranslations),
 }));
 
 export const providersRelations = relations(providers, ({ many }) => ({
@@ -270,6 +315,46 @@ export const usageRelations = relations(usage, ({ one }) => ({
   }),
 }));
 
+export const localesRelations = relations(locales, ({ many }) => ({
+  modelTranslations: many(modelTranslations),
+  suggestionGroupTranslations: many(suggestionGroupTranslations),
+}));
+
+export const modelTranslationsRelations = relations(
+  modelTranslations,
+  ({ one }) => ({
+    model: one(models, {
+      fields: [modelTranslations.modelId],
+      references: [models.id],
+    }),
+    locale: one(locales, {
+      fields: [modelTranslations.localeId],
+      references: [locales.id],
+    }),
+  })
+);
+
+export const suggestionGroupsRelations = relations(
+  suggestionGroups,
+  ({ many }) => ({
+    translations: many(suggestionGroupTranslations),
+  })
+);
+
+export const suggestionGroupTranslationsRelations = relations(
+  suggestionGroupTranslations,
+  ({ one }) => ({
+    suggestionGroup: one(suggestionGroups, {
+      fields: [suggestionGroupTranslations.suggestionGroupId],
+      references: [suggestionGroups.id],
+    }),
+    locale: one(locales, {
+      fields: [suggestionGroupTranslations.localeId],
+      references: [locales.id],
+    }),
+  })
+);
+
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
 
 export type Account = typeof account.$inferSelect;
@@ -286,6 +371,10 @@ export type Model = typeof models.$inferSelect;
 export type NewModel = typeof models.$inferInsert;
 export type SuggestionGroup = typeof suggestionGroups.$inferSelect;
 export type NewSuggestionGroup = typeof suggestionGroups.$inferInsert;
+export type SuggestionGroupTranslation =
+  typeof suggestionGroupTranslations.$inferSelect;
+export type NewSuggestionGroupTranslation =
+  typeof suggestionGroupTranslations.$inferInsert;
 export type SupportedParameter = typeof supportedParameters.$inferSelect;
 export type NewSupportedParameter = typeof supportedParameters.$inferInsert;
 export type Thread = typeof threads.$inferSelect;
@@ -296,3 +385,7 @@ export type Chat = typeof chats.$inferSelect;
 export type NewChat = typeof chats.$inferInsert;
 export type Usage = typeof usage.$inferSelect;
 export type NewUsage = typeof usage.$inferInsert;
+export type Locale = typeof locales.$inferSelect;
+export type NewLocale = typeof locales.$inferInsert;
+export type ModelTranslation = typeof modelTranslations.$inferSelect;
+export type NewModelTranslation = typeof modelTranslations.$inferInsert;

@@ -7,6 +7,7 @@ import { cn } from "@/components/ui/utils";
 import type { ProviderTier } from "@/db";
 import { useModelsValue } from "@/hooks/use-models";
 import { useSession } from "@/hooks/use-session";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { capabilityOptions, tierOptions } from "./model-dropdown-constants";
 import { ModelDropdownItem } from "./model-dropdown-item";
@@ -26,6 +27,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   onClose,
   variant = "dropdown",
 }) => {
+  const t = useTranslations("ModelDropdown");
   const { models, providers } = useModelsValue();
   const { groups: suggestionGroups } = useModelsValue();
   const session = useSession();
@@ -219,8 +221,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     <div className="mb-3 flex w-full flex-col gap-1 px-1">
       <div className="flex w-full flex-wrap items-center gap-2">
         <div className="inline-flex flex-wrap items-center gap-1 rounded-md border bg-muted p-0.5">
-          {tierOptions.map(({ id, label, Icon, color }) => {
+          {tierOptions.map(({ id, labelKey, Icon, color }) => {
             const active = effectiveSelectedTier === id;
+            const label = t(labelKey);
             return (
               <button
                 key={id}
@@ -257,8 +260,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       )}
 
       <div className="flex w-full flex-wrap items-center gap-2">
-        {capabilityOptions.map(({ id, label, Icon, color }) => {
+        {capabilityOptions.map(({ id, labelKey, Icon, color }) => {
           const active = selectedCapabilities.has(id);
+          const label = t(labelKey);
           return (
             <Button
               key={id}
@@ -293,8 +297,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     <div className="flex items-center gap-6 pb-3 border-b mb-3 shrink-0">
       <div className="flex items-center gap-3">
         <div className="inline-flex rounded-md border bg-muted p-0.5">
-          {tierOptions.map(({ id, label, Icon, color }) => {
+          {tierOptions.map(({ id, labelKey, Icon, color }) => {
             const active = effectiveSelectedTier === id;
+            const label = t(labelKey);
             return (
               <button
                 key={id}
@@ -333,8 +338,9 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
-        {capabilityOptions.map(({ id, label, Icon, color }) => {
+        {capabilityOptions.map(({ id, labelKey, Icon, color }) => {
           const active = selectedCapabilities.has(id);
+          const label = t(labelKey);
           return (
             <Button
               key={id}
@@ -370,7 +376,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       <div className="flex-1 overflow-hidden">
         {providersByTier.length === 0 ? (
           <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
-            No providers available for the selected filters.
+            {t("noProviders")}
           </div>
         ) : (
           <div
@@ -405,7 +411,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                   >
                     {!list.length ? (
                       <div className="px-2 py-3 text-center text-sm text-muted-foreground">
-                        No models match the filters
+                        {t("noModels")}
                       </div>
                     ) : (
                       <>
@@ -414,7 +420,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                             !session?.user &&
                             (Boolean(m.isPremium) || Boolean(m.isIncluded));
                           const titleText = restricted
-                            ? "Sign in to use this model"
+                            ? t("signInToUse")
                             : undefined;
                           const onSelect = restricted
                             ? () => {
@@ -445,28 +451,28 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
 
                         {others.length > 0 && !expanded && (
                           <button
-                            className="mt-1 text-xs text-muted-foreground hover:text-foreground text-left px-2 py-1"
+                            className="mt-1 text-xs text-muted-foreground hover:text-foreground text-left px-2 py-1 cursor-pointer"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               toggleProviderExpanded(p.id);
                             }}
                           >
-                            Show more
+                            {t("showMore")}
                           </button>
                         )}
 
                         {others.length > 0 && expanded && (
                           <div className="mt-2">
                             <div className="text-[11px] uppercase tracking-wide text-muted-foreground px-2 mb-1">
-                              Other models
+                              {t("otherModels")}
                             </div>
                             {others.map((m) => {
                               const restricted =
                                 !session?.user &&
                                 (Boolean(m.isPremium) || Boolean(m.isIncluded));
                               const titleText = restricted
-                                ? "Sign in to use this model"
+                                ? t("signInToUse")
                                 : undefined;
                               const onSelect = restricted
                                 ? () => {

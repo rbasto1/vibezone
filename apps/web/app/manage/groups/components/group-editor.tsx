@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc/client";
 import type { SuggestionGroupsListOutput } from "@/lib/trpc/server/server";
 import { Edit, Save, Trash2 } from "lucide-react";
@@ -18,9 +19,20 @@ export function GroupEditor({
   onIsEditingChange,
   onGroupDeleted,
 }: GroupEditorProps) {
+  const locales = trpc.locales.list.useQuery();
+  const translations = trpc.suggestionGroups.listTranslations.useQuery({
+    suggestionGroupId: selectedGroup.id,
+  });
   const utils = trpc.useUtils();
   const updateGroupMutation = trpc.suggestionGroups.update.useMutation();
   const deleteGroupMutation = trpc.suggestionGroups.delete.useMutation();
+  const updateTranslationMutation =
+    trpc.suggestionGroups.updateTranslation.useMutation({
+      onSuccess: () => {
+        utils.suggestionGroups.listTranslations.invalidate();
+      },
+    });
+  const translateMutation = trpc.locales.translate.useMutation();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -28,6 +40,11 @@ export function GroupEditor({
     title: "",
     label: "",
     icon: "",
+  });
+  const [selectedLocale, setSelectedLocale] = useState<string>();
+  const [editTranslation, setEditTranslation] = useState({
+    title: "",
+    label: "",
   });
 
   const handleStartEdit = () => {
@@ -45,6 +62,7 @@ export function GroupEditor({
     setIsEditing(false);
     setEditForm({ id: "", title: "", label: "", icon: "" });
     onIsEditingChange(false);
+    setSelectedLocale(undefined);
   };
 
   const handleSaveEdit = async () => {
@@ -92,20 +110,29 @@ export function GroupEditor({
       toast.error(`Failed to delete group: ${message}`);
     }
   };
+
+  const handleTranslate = async () => {
+    if (!selectedLocale) return;
+    const result = await translateMutation.mutateAsync({
+      text: [selectedGroup.title, selectedGroup.label],
+      locale: selectedLocale,
+    });
+    const title = result.translated[0];
+    const label = result.translated[1];
+    if (!title || !label) {
+      toast.error("Failed to translate");
+      return;
+    }
+    setEditTranslation({
+      title,
+      label,
+    });
+  };
+
   return (
     <div className="rounded-lg border p-4">
       <div className="flex items-center justify-between mb-4">
-        {isEditing ? (
-          <input
-            type="text"
-            value={editForm.title}
-            onChange={(e) =>
-              setEditForm({ ...editForm, title: e.target.value })
-            }
-            className="text-lg font-medium bg-background border rounded px-2 py-1 flex-1 mr-4"
-            placeholder="Group title"
-          />
-        ) : (
+        {!isEditing && (
           <h2 className="text-lg font-medium">{selectedGroup.title}</h2>
         )}
         <div className="flex items-center gap-2">
@@ -138,13 +165,13 @@ export function GroupEditor({
                 />
                 <span className="text-sm">Promoted</span>
               </label>
-              <button
+              <Button
+                variant="destructive"
                 onClick={handleDeleteGroup}
                 disabled={
                   selectedGroup.models.length > 0 ||
                   deleteGroupMutation.isPending
                 }
-                className="p-2 rounded hover:bg-destructive/10 text-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 title={
                   selectedGroup.models.length > 0
                     ? "Cannot delete group with models"
@@ -152,39 +179,156 @@ export function GroupEditor({
                 }
               >
                 <Trash2 className="h-4 w-4" />
-              </button>
+              </Button>
             </>
           )}
         </div>
       </div>
       {isEditing ? (
-        <div className="space-y-3 mb-4">
-          <input
+        <div className="space-y-3 mb-4 flex flex-col">
+          <label htmlFor="id">Group ID</label>
+          <Input
+            id="id"
             type="text"
             value={editForm.id}
             onChange={(e) => setEditForm({ ...editForm, id: e.target.value })}
-            className="w-full bg-background border rounded px-3 py-2"
             placeholder="Group ID"
           />
-          <input
+          <label htmlFor="icon">
+            Icon name (e.g., Star, Code2, Drama, Zap)
+          </label>
+          <Input
+            id="icon"
+            type="text"
+            value={editForm.icon}
+            onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })}
+            placeholder="Icon name (e.g., Star, Code2, Drama, Zap)"
+          />
+          <label htmlFor="title">Group title</label>
+          <Input
+            id="title"
+            type="text"
+            value={editForm.title}
+            onChange={(e) =>
+              setEditForm({ ...editForm, title: e.target.value })
+            }
+            placeholder="Group title"
+          />
+          <label htmlFor="label">Group description</label>
+          <Input
+            id="label"
             type="text"
             value={editForm.label}
             onChange={(e) =>
               setEditForm({ ...editForm, label: e.target.value })
             }
-            className="w-full bg-background border rounded px-3 py-2"
             placeholder="Group description"
-          />
-          <input
-            type="text"
-            value={editForm.icon}
-            onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })}
-            className="w-full bg-background border rounded px-3 py-2"
-            placeholder="Icon name (e.g., Star, Code2, Drama, Zap)"
           />
         </div>
       ) : (
         <p className="text-muted-foreground mb-4">{selectedGroup.label}</p>
+      )}
+
+      <div className="space-y-3 mt-4 flex flex-row gap-2 border-t pt-4">
+        {locales.data?.map((locale) => (
+          <Button
+            key={locale.id}
+            variant={
+              selectedLocale === locale.id
+                ? "default"
+                : translations.data?.some((t) => t.localeId === locale.id)
+                  ? "outline"
+                  : "destructive"
+            }
+            disabled={!isEditing}
+            onClick={() => {
+              setSelectedLocale((prev) => {
+                const next = prev === locale.id ? undefined : locale.id;
+                const currentTranslation = translations.data?.find(
+                  (t) => t.localeId === locale.id
+                );
+                setEditTranslation({
+                  title: currentTranslation?.title ?? "",
+                  label: currentTranslation?.label ?? "",
+                });
+                return next;
+              });
+            }}
+          >
+            {locale.id}
+          </Button>
+        ))}
+      </div>
+
+      {!isEditing && (
+        <div className="text-xs text-muted-foreground">
+          {translations.data?.map((t) => (
+            <div key={t.localeId}>
+              <strong>{t.localeId}</strong>: {t.title} - {t.label}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {selectedLocale && (
+        <div className="space-y-3 flex flex-col">
+          <label htmlFor="title">Group title</label>
+          <Input
+            id="title"
+            type="text"
+            value={editTranslation.title}
+            onChange={(e) =>
+              setEditTranslation({ ...editTranslation, title: e.target.value })
+            }
+            placeholder="Group title"
+          />
+          <label htmlFor="label">Group description</label>
+          <Input
+            id="label"
+            type="text"
+            value={editTranslation.label}
+            onChange={(e) =>
+              setEditTranslation({ ...editTranslation, label: e.target.value })
+            }
+            placeholder="Group description"
+          />
+          <div className="flex flex-row gap-2">
+            <Button
+              onClick={() => {
+                updateTranslationMutation.mutate({
+                  suggestionGroupId: selectedGroup.id,
+                  localeId: selectedLocale,
+                  title: editTranslation.title,
+                  label: editTranslation.label,
+                });
+              }}
+              loading={updateTranslationMutation.isPending}
+            >
+              Save
+            </Button>
+            {selectedLocale === "en" ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditTranslation({
+                    title: selectedGroup.title,
+                    label: selectedGroup.label,
+                  });
+                }}
+              >
+                Copy
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={handleTranslate}
+                loading={translateMutation.isPending}
+              >
+                Translate
+              </Button>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

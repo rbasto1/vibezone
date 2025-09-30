@@ -31,7 +31,8 @@
 - [x] Add cost/completion to dashboard
 - [x] Improve dashboard queries
 - [x] Warn about discarding a panel
-- [ ] Translate to Brazilian Portuguese
+- [x] Translate to Brazilian Portuguese
+- [ ] Assign .br domains
 - [ ] Add Brazilian models
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [ ] Add user preferences (auto-scroll, language, hidden providers, pre-prompt)

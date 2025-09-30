@@ -1,0 +1,215 @@
+{
+  "AnonQuota": {
+    "mobileChip": "{remaining} of {limit}",
+    "mobileBanner": "{remaining} of {limit} free messages remaining",
+    "desktopBanner": "{limit} free messages/day — {remaining} remaining",
+    "signInCta": "Sign in to unlock more"
+  },
+  "Assistant": {
+    "signinWarning": "Please sign in to use these models.",
+    "panelTabLabel": "{index}: {modelName}",
+    "panelAriaLabel": "Switch to panel {index}",
+    "aiDisclaimer": "AI can make mistakes. Always check important responses independently.",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfUse": "Terms of Use"
+  },
+  "AssistantHeader": {
+    "addAnotherTooltip": "Add another AI chat",
+    "maxModelsTooltip": "Maximum {max} models at a time; remove a model to add another",
+    "addAiButton": "Add AI",
+    "addAiAriaLabel": "Add another AI chat"
+  },
+  "AssistantMessageFile": {
+    "defaultFilename": "download",
+    "statusPreparing": "Preparing file...",
+    "statusFailed": "File generation failed",
+    "download": "Download"
+  },
+  "AssistantMessageImage": {
+    "loading": "Loading image..."
+  },
+  "AssistantMessageReasoning": {
+    "title": "Reasoning",
+    "collapse": "Collapse reasoning"
+  },
+  "AssistantTags": {
+    "experimental": "Experimental",
+    "free": "Free",
+    "included": "Included",
+    "new": "New",
+    "premium": "Premium"
+  },
+  "AttachmentChip": {
+    "remove": "Remove {name}"
+  },
+  "ConfirmCloseModal": {
+    "title": "Close this chat?",
+    "descriptionLoss": "If you close the chat, your conversation with this AI will be lost.",
+    "descriptionAlternate": "You can choose another model without closing the chat by clicking the model name in the chat header.",
+    "descriptionConfirm": "Are you sure you want to close this chat?",
+    "cancel": "Cancel",
+    "confirm": "Close Chat"
+  },
+  "GlobalComposer": {
+    "stopAllError": "Some panels failed to stop: {failures}",
+    "guestLimit": "Guest limit reached ({limit}/day). Please sign in.",
+    "sendFailed": "Send failed for a panel: {message}",
+    "placeholder": "Ask all of the AIs...",
+    "stopAllLabel": "Stop all AI responses",
+    "sendLabel": "Send to all AIs"
+  },
+  "LanguageSwitcher": {
+    "trigger": "Change language",
+    "english": "English",
+    "portugueseBrazil": "Portuguese (Brazil)",
+    "german": "German"
+  },
+  "Layout": {
+    "siteName": "Vibezone",
+    "siteTitle": "Vibezone — Compare AI Models",
+    "siteDescription": "Test, compare, and evaluate AI models side-by-side with Vibezone.",
+    "titleTemplate": "%s — Vibezone",
+    "openGraphLocale": "en_US"
+  },
+  "MessageAttachments": {
+    "previewAlt": "Attachment preview",
+    "ariaLabel": "{type} attachment",
+    "types": {
+      "image": "Image",
+      "document": "Document",
+      "file": "File"
+    }
+  },
+  "ModelDropdown": {
+    "tiers": {
+      "leaders": "Leaders",
+      "challengers": "Challengers",
+      "specialists": "Specialists"
+    },
+    "capabilities": {
+      "vision": "Can see images",
+      "pdf": "Can read PDFs",
+      "reasoning": "Reasoning",
+      "imageGeneration": "Can generate images",
+      "tools": "Tools use"
+    },
+    "noProviders": "No providers available for the selected filters.",
+    "noModels": "No models match the filters",
+    "signInToUse": "Sign in to use this model",
+    "showMore": "Show more",
+    "otherModels": "Other models",
+    "retentionIconAria": "This model may retain your data",
+    "retentionTooltip": "This model may retain your messages and attachments to train new versions.<lineBreak/>Do not share sensitive information in your chats."
+  },
+  "ModelDropdownSearch": {
+    "focusedPlaceholder": "Search models...",
+    "shortcutPlaceholder": "Type / to search"
+  },
+  "PageLoader": {
+    "loading": "Please wait..."
+  },
+  "RenameChatModal": {
+    "title": "Rename Chat",
+    "description": "Enter a new name for this chat conversation.",
+    "placeholder": "Enter chat name...",
+    "cancel": "Cancel",
+    "rename": "Rename"
+  },
+  "ResponsePanel": {
+    "stopFailed": "Failed to stop: {message}",
+    "exitFocus": "Exit focus view",
+    "focusPanel": "Focus this panel",
+    "panelNotRegistered": "Panel not registered.",
+    "transportError": "Application error, please refresh the page"
+  },
+  "ResponsePanelHeader": {
+    "stopLabel": "Stop streaming this AI response",
+    "closeAria": "Close panel",
+    "closeTooltip": "Close panel",
+    "closeDisabledTooltip": "At least one panel must remain"
+  },
+  "SocialImage": {
+    "title": "Vibezone",
+    "subtitle": "Compare AI Models",
+    "tagline": "Test, compare, and evaluate models side-by-side.",
+    "domain": "vibezone.ai"
+  },
+  "ThreadError": {
+    "loggedInTitle": "You ran out of daily credits for today",
+    "loggedInBody": "You can continue using the app tomorrow.",
+    "anonymousTitle": "To continue chatting, please sign in.",
+    "signInButton": "Sign in",
+    "genericTitle": "Something went wrong"
+  },
+  "ThreadList": {
+    "newChat": "New Chat",
+    "loginRequired": "Please sign up or log in to save and load your chats",
+    "loading": "Loading chats...",
+    "empty": "No chats yet"
+  },
+  "ThreadListItem": {
+    "loading": "Loading...",
+    "untitled": "New Chat",
+    "rename": "Rename",
+    "delete": "Delete"
+  },
+  "ThreadWelcome": {
+    "greeting": "Hello there!",
+    "prompt": "How can I help you today?"
+  },
+  "ToolFallback": {
+    "showDetails": "Show tool details",
+    "hideDetails": "Hide tool details",
+    "argumentsHeading": "Arguments",
+    "resultHeading": "Result",
+    "usedToolPrefix": "Used tool:"
+  },
+  "Auth": {
+    "google": {
+      "cta": "Continue with Google",
+      "redirect": "Redirecting…"
+    }
+  },
+  "AuthEmail": {
+    "subject": "Your sign-in link",
+    "linkText": "Sign in",
+    "body": {
+      "intro": "Click the link below to sign in:",
+      "expiry": "This link will expire shortly. If you didn't request it, ignore this email."
+    }
+  },
+  "Sidebar": {
+    "homeAria": "Vibezone Home",
+    "logoAlt": "Vibezone Logo",
+    "help": {
+      "title": "Help & Support",
+      "subtitle": "Coming Soon"
+    }
+  },
+  "ThemeToggle": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "UserMenu": {
+    "signInButton": "Sign in",
+    "dialog": {
+      "title": "Sign in",
+      "description": "Sign in or sign up to continue. You'll get more chat credits, save conversations, and mark favorite models."
+    },
+    "email": {
+      "heading": "Sign in with email",
+      "placeholder": "you@example.com",
+      "sending": "Sending...",
+      "send": "Send link",
+      "sent": "Check your inbox for the sign-in link. It may take a minute to arrive and can land in spam.",
+      "close": "Close"
+    },
+    "dividerOr": "OR",
+    "profileLabel": "Profile",
+    "profileMenu": "Open profile menu",
+    "fallbackName": "User",
+    "signOut": "Sign out"
+  }
+}

@@ -1,0 +1,215 @@
+{
+  "AnonQuota": {
+    "mobileChip": "{remaining} de {limit}",
+    "mobileBanner": "{remaining} de {limit} mensagens grátis restantes",
+    "desktopBanner": "{limit} mensagens grátis/dia — {remaining} restantes",
+    "signInCta": "Faça login para liberar mais"
+  },
+  "Assistant": {
+    "signinWarning": "Faça login para usar esses modelos.",
+    "panelTabLabel": "{index}: {modelName}",
+    "panelAriaLabel": "Ir para o painel {index}",
+    "aiDisclaimer": "IA pode cometer erros. Verifique respostas importantes de forma independente.",
+    "privacyPolicy": "Política de Privacidade",
+    "termsOfUse": "Termos de Uso"
+  },
+  "AssistantHeader": {
+    "addAnotherTooltip": "Adicionar outro chat de IA",
+    "maxModelsTooltip": "Máximo de {max} modelos por vez; remova um modelo para adicionar outro",
+    "addAiButton": "Adicionar IA",
+    "addAiAriaLabel": "Adicionar outro chat de IA"
+  },
+  "AssistantMessageFile": {
+    "defaultFilename": "download",
+    "statusPreparing": "Preparando arquivo...",
+    "statusFailed": "Falha ao gerar arquivo",
+    "download": "Baixar"
+  },
+  "AssistantMessageImage": {
+    "loading": "Carregando imagem..."
+  },
+  "AssistantMessageReasoning": {
+    "title": "Raciocínio",
+    "collapse": "Recolher raciocínio"
+  },
+  "AssistantTags": {
+    "experimental": "Experimental",
+    "free": "Grátis",
+    "included": "Incluído",
+    "new": "Novo",
+    "premium": "Premium"
+  },
+  "AttachmentChip": {
+    "remove": "Remover {name}"
+  },
+  "ConfirmCloseModal": {
+    "title": "Fechar este chat?",
+    "descriptionLoss": "Se você fechar o chat, sua conversa com esta IA será perdida.",
+    "descriptionAlternate": "Você pode escolher outro modelo sem fechar o chat clicando no nome do modelo no cabeçalho.",
+    "descriptionConfirm": "Tem certeza de que deseja fechar este chat?",
+    "cancel": "Cancelar",
+    "confirm": "Fechar chat"
+  },
+  "GlobalComposer": {
+    "stopAllError": "Alguns painéis não puderam ser interrompidos: {failures}",
+    "guestLimit": "Limite como convidado atingido ({limit}/dia). Faça login.",
+    "sendFailed": "Falha ao enviar para um painel: {message}",
+    "placeholder": "Pergunte a todas as IAs...",
+    "stopAllLabel": "Parar todas as respostas de IA",
+    "sendLabel": "Enviar para todas as IAs"
+  },
+  "LanguageSwitcher": {
+    "trigger": "Alterar idioma",
+    "english": "Inglês",
+    "portugueseBrazil": "Português (Brasil)",
+    "german": "Alemão"
+  },
+  "Layout": {
+    "siteName": "Vibezone",
+    "siteTitle": "Vibezone — Compare Modelos de IA",
+    "siteDescription": "Teste, compare e avalie modelos de IA lado a lado com a Vibezone.",
+    "titleTemplate": "%s — Vibezone",
+    "openGraphLocale": "pt_BR"
+  },
+  "MessageAttachments": {
+    "previewAlt": "Prévia do anexo",
+    "ariaLabel": "Anexo: {type}",
+    "types": {
+      "image": "Imagem",
+      "document": "Documento",
+      "file": "Arquivo"
+    }
+  },
+  "ModelDropdown": {
+    "tiers": {
+      "leaders": "Líderes",
+      "challengers": "Desafiantes",
+      "specialists": "Especialistas"
+    },
+    "capabilities": {
+      "vision": "Pode ver imagens",
+      "pdf": "Pode ler PDFs",
+      "reasoning": "Raciocínio",
+      "imageGeneration": "Pode gerar imagens",
+      "tools": "Uso de ferramentas"
+    },
+    "noProviders": "Nenhum provedor disponível para os filtros selecionados.",
+    "noModels": "Nenhum modelo corresponde aos filtros",
+    "signInToUse": "Faça login para usar este modelo",
+    "showMore": "Mostrar mais",
+    "otherModels": "Outros modelos",
+    "retentionIconAria": "Este modelo pode reter seus dados",
+    "retentionTooltip": "Este modelo pode reter suas mensagens e anexos para treinar novas versões.<lineBreak/>Não compartilhe informações sensíveis em seus chats."
+  },
+  "ModelDropdownSearch": {
+    "focusedPlaceholder": "Pesquisar modelos...",
+    "shortcutPlaceholder": "Digite / para pesquisar"
+  },
+  "PageLoader": {
+    "loading": "Aguarde..."
+  },
+  "RenameChatModal": {
+    "title": "Renomear chat",
+    "description": "Informe um novo nome para esta conversa.",
+    "placeholder": "Digite o nome do chat...",
+    "cancel": "Cancelar",
+    "rename": "Renomear"
+  },
+  "ResponsePanel": {
+    "stopFailed": "Falha ao interromper: {message}",
+    "exitFocus": "Sair da visualização destacada",
+    "focusPanel": "Destacar este painel",
+    "panelNotRegistered": "Painel não registrado.",
+    "transportError": "Erro na aplicação, atualize a página"
+  },
+  "ResponsePanelHeader": {
+    "stopLabel": "Parar a resposta desta IA",
+    "closeAria": "Fechar painel",
+    "closeTooltip": "Fechar painel",
+    "closeDisabledTooltip": "Ao menos um painel deve permanecer"
+  },
+  "SocialImage": {
+    "title": "Vibezone",
+    "subtitle": "Compare modelos de IA",
+    "tagline": "Teste, compare e avalie modelos lado a lado.",
+    "domain": "vibezone.ai"
+  },
+  "ThreadError": {
+    "loggedInTitle": "Você esgotou os créditos diários de hoje",
+    "loggedInBody": "Você poderá continuar usando o app amanhã.",
+    "anonymousTitle": "Para continuar conversando, faça login.",
+    "signInButton": "Fazer login",
+    "genericTitle": "Algo deu errado"
+  },
+  "ThreadList": {
+    "newChat": "Novo chat",
+    "loginRequired": "Cadastre-se ou faça login para salvar e carregar seus chats",
+    "loading": "Carregando chats...",
+    "empty": "Nenhum chat ainda"
+  },
+  "ThreadListItem": {
+    "loading": "Carregando...",
+    "untitled": "Novo chat",
+    "rename": "Renomear",
+    "delete": "Excluir"
+  },
+  "ThreadWelcome": {
+    "greeting": "Olá!",
+    "prompt": "Como posso ajudar você hoje?"
+  },
+  "ToolFallback": {
+    "showDetails": "Mostrar detalhes da ferramenta",
+    "hideDetails": "Ocultar detalhes da ferramenta",
+    "argumentsHeading": "Argumentos",
+    "resultHeading": "Resultado",
+    "usedToolPrefix": "Ferramenta usada:"
+  },
+  "Auth": {
+    "google": {
+      "cta": "Continuar com o Google",
+      "redirect": "Redirecionando…"
+    }
+  },
+  "AuthEmail": {
+    "subject": "Seu link de acesso",
+    "linkText": "Entrar",
+    "body": {
+      "intro": "Clique no link abaixo para entrar:",
+      "expiry": "Este link expira em poucos minutos. Se você não solicitou, basta ignorar este e-mail."
+    }
+  },
+  "Sidebar": {
+    "homeAria": "Página inicial da Vibezone",
+    "logoAlt": "Logotipo da Vibezone",
+    "help": {
+      "title": "Ajuda e suporte",
+      "subtitle": "Em breve"
+    }
+  },
+  "ThemeToggle": {
+    "toggle": "Alternar tema",
+    "light": "Claro",
+    "dark": "Escuro",
+    "system": "Sistema"
+  },
+  "UserMenu": {
+    "signInButton": "Entrar",
+    "dialog": {
+      "title": "Entrar",
+      "description": "Faça login ou cadastre-se para continuar. Você terá mais créditos, poderá salvar conversas e marcar modelos favoritos."
+    },
+    "email": {
+      "heading": "Entrar com e-mail",
+      "placeholder": "voce@exemplo.com",
+      "sending": "Enviando...",
+      "send": "Enviar link",
+      "sent": "Verifique sua caixa de entrada para o link de acesso. Pode levar um minuto e cair no spam.",
+      "close": "Fechar"
+    },
+    "dividerOr": "OU",
+    "profileLabel": "Perfil",
+    "profileMenu": "Abrir menu do perfil",
+    "fallbackName": "Usuário",
+    "signOut": "Sair"
+  }
+}

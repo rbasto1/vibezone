@@ -10,6 +10,7 @@ const GroupsPage: NextPage<PageProps<"/manage/groups">> = async () => {
   const state = await prefetch(caller, [
     caller.suggestionGroups.list.prefetch(),
     caller.models.list.prefetch(),
+    caller.locales.list.prefetch(),
   ]);
 
   return (

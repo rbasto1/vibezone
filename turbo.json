@@ -3,9 +3,6 @@
   "globalDependencies": ["**/.env.*local"],
   "tasks": {
     "build": {},
-    "@assistant-ui/x-buildutils#build": {
-      "inputs": ["**/*.*", "!.turbo"]
-    },
     "assistant-stream#build": {
       "dependsOn": ["^build"],
       "inputs": ["**/*.*", "!.turbo"],
@@ -131,7 +128,8 @@
     "NEXT_PUBLIC_*",
     "OPENROUTER_API_KEY",
     "RESEND_API_KEY",
-    "RESEND_FROM"
+    "RESEND_FROM",
+    "DEEPL_API_KEY"
   ],
   "concurrency": "2"
 }

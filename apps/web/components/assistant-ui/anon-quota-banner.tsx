@@ -3,9 +3,19 @@
 import { Button } from "@/components/ui/button";
 import { ANON_DAILY_LIMIT, useAnonRemaining } from "@/hooks/use-anon-quota";
 import { AlertTriangle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function AnonQuotaBanner() {
-  const remaining = useAnonRemaining();
+  const t = useTranslations("AnonQuota");
+  const remaining = useAnonRemaining() ?? "";
+  const mobileLabel = t("mobileBanner", {
+    remaining,
+    limit: ANON_DAILY_LIMIT,
+  });
+  const desktopLabel = t("desktopBanner", {
+    remaining,
+    limit: ANON_DAILY_LIMIT,
+  });
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border p-2 text-xs leading-tight border-amber-300 dark:border-amber-500/40 dark:text-amber-200 bg-amber-200 text-amber-900 dark:bg-amber-500/40 md:flex-row md:items-center md:justify-between md:gap-4 md:p-2.5 md:text-sm md:leading-normal">
@@ -15,12 +25,8 @@ export function AnonQuotaBanner() {
           aria-hidden="true"
         />
         <div className="space-y-0.5">
-          <span className="block md:hidden">
-            {remaining} of {ANON_DAILY_LIMIT} free messages remaining
-          </span>
-          <span className="hidden md:block">
-            {ANON_DAILY_LIMIT} free messages/day — {remaining} remaining
-          </span>
+          <span className="block md:hidden">{mobileLabel}</span>
+          <span className="hidden md:block">{desktopLabel}</span>
         </div>
       </div>
       <Button
@@ -36,7 +42,7 @@ export function AnonQuotaBanner() {
           }
         }}
       >
-        Sign in to unlock more
+        {t("signInCta")}
       </Button>
     </div>
   );

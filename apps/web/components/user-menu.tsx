@@ -23,6 +23,7 @@ import { cn } from "@/components/ui/utils";
 import { useEventListener } from "@/hooks/use-event-listener";
 import { useSession } from "@/hooks/use-session";
 import { sendMagicLink, signOut } from "@/lib/auth-client";
+import { useTranslations } from "next-intl";
 
 interface UserMenuProps {
   className?: string;
@@ -34,6 +35,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const t = useTranslations("UserMenu");
   useEventListener(
     "vz:open-login",
     useCallback(() => setOpen(true), [])
@@ -43,6 +45,14 @@ export const UserMenu = ({ className }: UserMenuProps) => {
     /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   const user = authData?.user;
+  const dialogDescription = t("dialog.description");
+  const handleOpenChange = (v: boolean) => {
+    setOpen(v);
+    if (!v) {
+      setEmail("");
+      setSent(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -52,18 +62,16 @@ export const UserMenu = ({ className }: UserMenuProps) => {
           className={cn("h-8 px-2 text-sm", className)}
           onClick={() => setOpen(true)}
         >
-          Sign in
+          {t("signInButton")}
         </Button>
         {open && (
-          <Dialog defaultOpen onOpenChange={(v) => setOpen(!!v)}>
+          <Dialog defaultOpen onOpenChange={handleOpenChange}>
             <DialogContent aria-describedby="sign-in-description">
               <DialogHeader>
-                <DialogTitle>Sign in</DialogTitle>
+                <DialogTitle>{t("dialog.title")}</DialogTitle>
                 {!sent && (
                   <DialogDescription id="sign-in-description">
-                    Sign in or sign up to continue. You will have more chat
-                    credits, be able to save your conversations, and mark your
-                    favorite models.
+                    {dialogDescription}
                   </DialogDescription>
                 )}
               </DialogHeader>
@@ -71,15 +79,14 @@ export const UserMenu = ({ className }: UserMenuProps) => {
               {sent ? (
                 <div className="space-y-4 text-center">
                   <p className="text-sm" id="sign-in-description">
-                    Check your inbox for the sign-in link. It may take a minute
-                    to arrive and can land in spam.
+                    {t("email.sent")}
                   </p>
                   <div className="pt-2">
                     <Button
                       className="min-w-[240px]"
-                      onClick={() => setOpen(false)}
+                      onClick={() => handleOpenChange(false)}
                     >
-                      Close
+                      {t("email.close")}
                     </Button>
                   </div>
                 </div>
@@ -92,12 +99,16 @@ export const UserMenu = ({ className }: UserMenuProps) => {
                   {/* Divider with OR */}
                   <div className="flex items-center gap-2">
                     <div className="h-px flex-1 bg-border" />
-                    <span className="text-muted-foreground text-xs">OR</span>
+                    <span className="text-muted-foreground text-xs">
+                      {t("dividerOr")}
+                    </span>
                     <div className="h-px flex-1 bg-border" />
                   </div>
 
                   <div className="space-y-2">
-                    <div className="text-sm font-medium">Login with email</div>
+                    <div className="text-sm font-medium">
+                      {t("email.heading")}
+                    </div>
                     <form
                       className="space-y-2"
                       onSubmit={(e) => {
@@ -112,7 +123,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
                     >
                       <input
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder={t("email.placeholder")}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         autoFocus={!isMobile}
@@ -125,7 +136,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
                           className="min-w-[240px]"
                           disabled={sending || email.trim() === ""}
                         >
-                          {sending ? "Sending..." : "Send link"}
+                          {sending ? t("email.sending") : t("email.send")}
                         </Button>
                       </div>
                     </form>
@@ -150,22 +161,24 @@ export const UserMenu = ({ className }: UserMenuProps) => {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={user.image}
-              alt={user.name || user.email || "User"}
+              alt={user.name || user.email || t("fallbackName")}
               className="size-6 rounded-full"
               referrerPolicy="no-referrer"
               rel="noreferrer noopener"
             />
           ) : null}
           <span className="hidden sm:inline text-sm">
-            {user?.name || user?.email || "Profile"}
+            {user?.name || user?.email || t("profileLabel")}
           </span>
-          <span className="sr-only">Open profile menu</span>
+          <span className="sr-only">{t("profileMenu")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel>
           <div className="flex flex-col">
-            <span className="font-medium truncate">{user?.name || "User"}</span>
+            <span className="font-medium truncate">
+              {user?.name || t("fallbackName")}
+            </span>
             {user?.email && (
               <span className="text-muted-foreground text-xs truncate">
                 {user.email}
@@ -174,7 +187,9 @@ export const UserMenu = ({ className }: UserMenuProps) => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>Sign out</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => signOut()}>
+          {t("signOut")}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
