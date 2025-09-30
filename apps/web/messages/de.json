@@ -173,7 +173,10 @@
   "AuthEmail": {
     "subject": "Dein Anmeldelink",
     "linkText": "Anmelden",
-    "bodyHtml": "<p>Klicke auf den Link unten, um dich anzumelden:</p><p><a href=\"{url}\">{linkText}</a></p><p>Dieser Link läuft in Kürze ab. Wenn du ihn nicht angefordert hast, ignoriere diese E-Mail.</p>"
+    "body": {
+      "intro": "Klicke auf den Link unten, um dich anzumelden:",
+      "expiry": "Dieser Link läuft in Kürze ab. Wenn du ihn nicht angefordert hast, ignoriere diese E-Mail."
+    }
   },
   "Sidebar": {
     "homeAria": "Vibezone-Startseite",

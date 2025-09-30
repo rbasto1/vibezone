@@ -46,6 +46,13 @@ export const UserMenu = ({ className }: UserMenuProps) => {
 
   const user = authData?.user;
   const dialogDescription = t("dialog.description");
+  const handleOpenChange = (v: boolean) => {
+    setOpen(v);
+    if (!v) {
+      setEmail("");
+      setSent(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -58,7 +65,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
           {t("signInButton")}
         </Button>
         {open && (
-          <Dialog defaultOpen onOpenChange={(v) => setOpen(!!v)}>
+          <Dialog defaultOpen onOpenChange={handleOpenChange}>
             <DialogContent aria-describedby="sign-in-description">
               <DialogHeader>
                 <DialogTitle>{t("dialog.title")}</DialogTitle>
@@ -77,7 +84,7 @@ export const UserMenu = ({ className }: UserMenuProps) => {
                   <div className="pt-2">
                     <Button
                       className="min-w-[240px]"
-                      onClick={() => setOpen(false)}
+                      onClick={() => handleOpenChange(false)}
                     >
                       {t("email.close")}
                     </Button>

@@ -173,7 +173,10 @@
   "AuthEmail": {
     "subject": "Your sign-in link",
     "linkText": "Sign in",
-    "bodyHtml": "<p>Click the link below to sign in:</p><p><a href=\"{url}\">{linkText}</a></p><p>This link will expire shortly. If you didn't request it, ignore this email.</p>"
+    "body": {
+      "intro": "Click the link below to sign in:",
+      "expiry": "This link will expire shortly. If you didn't request it, ignore this email."
+    }
   },
   "Sidebar": {
     "homeAria": "Vibezone Home",

@@ -173,7 +173,10 @@
   "AuthEmail": {
     "subject": "Seu link de acesso",
     "linkText": "Entrar",
-    "bodyHtml": "<p>Clique no link abaixo para entrar:</p><p><a href=\"{url}\">{linkText}</a></p><p>Este link expira em poucos minutos. Se você não solicitou, basta ignorar este e-mail.</p>"
+    "body": {
+      "intro": "Clique no link abaixo para entrar:",
+      "expiry": "Este link expira em poucos minutos. Se você não solicitou, basta ignorar este e-mail."
+    }
   },
   "Sidebar": {
     "homeAria": "Página inicial da Vibezone",

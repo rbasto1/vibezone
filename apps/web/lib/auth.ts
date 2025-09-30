@@ -12,7 +12,10 @@ import { baseUrl } from "./base-url";
 const AUTH_EMAIL_LOCALES = ["en", "pt-BR", "de"] as const;
 type AuthEmailLocale = (typeof AUTH_EMAIL_LOCALES)[number];
 
-const authEmailMessages: Record<AuthEmailLocale, Record<string, string>> = {
+const authEmailMessages: Record<
+  AuthEmailLocale,
+  (typeof enMessages)["AuthEmail"]
+> = {
   en: enMessages.AuthEmail,
   "pt-BR": ptBrMessages.AuthEmail,
   de: deMessages.AuthEmail,
@@ -73,10 +76,12 @@ export const auth = betterAuth({
       sendMagicLink: async ({ email, url }) => {
         const t = getAuthEmailTranslator();
         const subject = t("subject");
-        const html = t("bodyHtml", {
-          url,
-          linkText: t("linkText"),
-        });
+        const linkText = t("linkText");
+        const html = [
+          `<p>${t("body.intro")}</p>`,
+          `<p><a href="${url}">${linkText}</a></p>`,
+          `<p>${t("body.expiry")}</p>`,
+        ].join("");
         await sendEmailWithResend(email, subject, html);
       },
     }),
