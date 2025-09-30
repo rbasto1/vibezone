@@ -2,31 +2,37 @@ import type { Metadata, NextPage } from "next";
 
 import type { ProviderPrivacyInfo } from "@/generated/providers-privacy";
 import { providersPrivacy } from "@/generated/providers-privacy";
+import { siteDomain, siteName } from "@/lib/branding";
 import { type PropsWithChildren } from "react";
 
-const title = "Privacy Policy | Vibezone";
+const title = `Privacy Policy | ${siteName}`;
 
 export const metadata: Metadata = {
   title,
-  description:
-    "Learn how Vibezone protects your privacy and handles your data. Our privacy policy explains our data collection, usage, and protection practices.",
+  description: `Learn how ${siteName} protects your privacy and handles your data. Our privacy policy explains our data collection, usage, and protection practices.`,
   keywords: [
     "privacy policy",
     "data protection",
-    "Vibezone privacy",
+    `${siteName} privacy`,
     "user data",
     "privacy terms",
   ],
   openGraph: {
     title,
-    description:
-      "Learn how Vibezone protects your privacy and handles your data.",
+    description: `Learn how ${siteName} protects your privacy and handles your data.`,
     type: "website",
     url: "/privacy",
   },
 };
 
 const PrivacyPage: NextPage = () => {
+  const nameFull =
+    siteDomain === "multipla.ia.br" ? "Multipla.ia.br" : "Vibezone.ai";
+  const supportEmail =
+    siteDomain === "multipla.ia.br"
+      ? "support@multipla.ia.br"
+      : "support@vibezone.ai";
+
   return (
     <article className="mx-auto w-full max-w-3xl px-4 sm:px-6 md:px-8 space-y-8">
       <header className="space-y-1">
@@ -74,17 +80,17 @@ const PrivacyPage: NextPage = () => {
         <section>
           <SectionHeader num={null}>Introduction</SectionHeader>
           <p>
-            Vibezone.ai (“Vibezone,” “we,” “our,” or “us”) values your trust and
-            takes your privacy seriously. This Privacy Policy explains how we
-            handle the personal information we collect when you use our website,
-            applications, and services (together, the “Service”). It also
-            describes the choices available to you regarding your data.
+            {nameFull} (“{siteName},” “we,” “our,” or “us”) values your trust
+            and takes your privacy seriously. This Privacy Policy explains how
+            we handle the personal information we collect when you use our
+            website, applications, and services (together, the “Service”). It
+            also describes the choices available to you regarding your data.
           </p>
           <p>This Privacy Policy applies whenever you:</p>
           <ItemList>
             <li>
-              Visit our website at https://www.vibezone.ai and any related pages
-              that link to this Privacy Policy (the “Site”);
+              Visit our website at https://www.{siteDomain} and any related
+              pages that link to this Privacy Policy (the “Site”);
             </li>
             <li>
               Use or interact with the Service, including through integrated
@@ -123,7 +129,7 @@ const PrivacyPage: NextPage = () => {
         <section>
           <SectionHeader num={1}>Information We Collect</SectionHeader>
           <p>
-            We collect different types of information when you use Vibezone.ai
+            We collect different types of information when you use {nameFull}{" "}
             (“Service”), some of which may be considered personal data under
             applicable laws.
           </p>
@@ -197,7 +203,7 @@ const PrivacyPage: NextPage = () => {
             Cookies and Tracking Technologies
           </SectionHeader>
           <p>
-            Like most online services, Vibezone uses cookies and similar
+            Like most online services, {siteName} uses cookies and similar
             technologies to operate and improve our Service.
           </p>
 
@@ -231,11 +237,11 @@ const PrivacyPage: NextPage = () => {
               function correctly.
             </li>
             <li>
-              <strong>Do Not Track / Global Privacy Control</strong>: Vibezone
+              <strong>Do Not Track / Global Privacy Control</strong>: {siteName}{" "}
               respects standard browser signals where required by law.
             </li>
             <li>
-              <strong>Consent</strong>: By using Vibezone, you consent to the
+              <strong>Consent</strong>: By using {siteName}, you consent to the
               use of cookies as described here. You may withdraw or modify your
               consent at any time through your browser settings.
             </li>
@@ -320,21 +326,22 @@ const PrivacyPage: NextPage = () => {
             </li>
             <li>
               <strong>Model providers</strong>: When you send a message through
-              Vibezone, your inputs are transmitted to the chosen model provider
-              (e.g. OpenAI, Anthropic). These providers process your data in
-              line with their own privacy policies (see <ProviderPoliciesLink />
+              {siteName}, your inputs are transmitted to the chosen model
+              provider (e.g. OpenAI, Anthropic). These providers process your
+              data in line with their own privacy policies (see{" "}
+              <ProviderPoliciesLink />
               ).
             </li>
             <li>
               <strong>Legal obligations</strong>: We may disclose information if
               required by law, regulation, legal process, or governmental
               request, or if we believe it is necessary to protect the rights,
-              property, or safety of Vibezone, our users, or the public.
+              property, or safety of {siteName}, our users, or the public.
             </li>
             <li>
-              <strong>Business transactions</strong>: If Vibezone is involved in
-              a merger, acquisition, or sale of assets, your personal data may
-              be transferred as part of that transaction.
+              <strong>Business transactions</strong>: If {siteName} is involved
+              in a merger, acquisition, or sale of assets, your personal data
+              may be transferred as part of that transaction.
             </li>
             <li>
               <strong>With your consent</strong>: In any other situation, we
@@ -352,7 +359,7 @@ const PrivacyPage: NextPage = () => {
             any time by logging into the Service. If you would like to delete
             your account (including your chat history), you may request this by
             contacting us at{" "}
-            <a href="mailto:support@vibezone.ai">support@vibezone.ai</a>. Once
+            <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. Once
             confirmed, deletion cannot be reversed, though in some cases we may
             retain limited information if required by law or for legitimate
             business purposes (such as security, fraud prevention, or
@@ -401,10 +408,10 @@ const PrivacyPage: NextPage = () => {
           <SectionSubheader>How to Exercise Your Rights</SectionSubheader>
           <p>
             To exercise your rights, please contact us at{" "}
-            <a href="mailto:support@vibezone.ai">support@vibezone.ai</a>. We may
-            need to verify your identity before fulfilling your request. If
-            permitted by law, you may also authorize an agent to make requests
-            on your behalf.
+            <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. We may need
+            to verify your identity before fulfilling your request. If permitted
+            by law, you may also authorize an agent to make requests on your
+            behalf.
           </p>
 
           <SectionSubheader>Marketing Communications</SectionSubheader>
@@ -434,7 +441,7 @@ const PrivacyPage: NextPage = () => {
             The security of your account also depends on you. If you use Google
             login, your account security is managed by Google. If you log in via
             email link, please keep your email account secure, as access to that
-            account may allow access to your Vibezone account.
+            account may allow access to your {siteName} account.
           </p>
           <p>
             Please note that no method of transmission over the internet or
@@ -453,9 +460,9 @@ const PrivacyPage: NextPage = () => {
             process personal data according to their own privacy practices.
           </p>
           <p>
-            This Privacy Policy applies only to data collected by Vibezone. Once
-            you leave our Site or interact with a third-party service, their
-            terms and privacy policy will govern the use of your data. We
+            This Privacy Policy applies only to data collected by {siteName}.
+            Once you leave our Site or interact with a third-party service,
+            their terms and privacy policy will govern the use of your data. We
             encourage you to review their policies (see <ProviderPoliciesLink />{" "}
             for model providers).
           </p>
@@ -484,8 +491,8 @@ const PrivacyPage: NextPage = () => {
           <p>
             Our Service is not directed to children under the age of 13, and we
             do not knowingly collect personal data from anyone under 13. If you
-            are under 13, you may not use Vibezone or provide any personal data
-            to us.
+            are under 13, you may not use {siteName} or provide any personal
+            data to us.
           </p>
           <p>
             If we become aware that we have collected personal data from a child
@@ -504,7 +511,7 @@ const PrivacyPage: NextPage = () => {
             </li>
           </ItemList>
           <p>
-            By using Vibezone, you represent and warrant that you meet these
+            By using {siteName}, you represent and warrant that you meet these
             eligibility requirements.
           </p>
         </section>
@@ -512,11 +519,11 @@ const PrivacyPage: NextPage = () => {
         <section>
           <SectionHeader num={10}>International Data Transfers</SectionHeader>
           <p>
-            Vibezone is operated from servers that may be located in the United
-            States or other countries. If you access the Service from outside
-            these regions, please be aware that your personal data may be
-            transferred to and stored in a country that may not provide the same
-            level of data protection as your home jurisdiction.
+            {siteName} is operated from servers that may be located in the
+            United States or other countries. If you access the Service from
+            outside these regions, please be aware that your personal data may
+            be transferred to and stored in a country that may not provide the
+            same level of data protection as your home jurisdiction.
           </p>
           <p>
             Where required by law (such as for residents of the European
@@ -590,16 +597,16 @@ const PrivacyPage: NextPage = () => {
             Appendix: LLM Providers Policies
           </SectionHeader>
           <p>
-            Vibezone connects you to large language models (“LLMs”) operated by
-            third-party providers. These providers may process your inputs and
-            outputs in accordance with their own privacy practices and terms of
-            service, which may include using data for model training or other
+            {siteName} connects you to large language models (“LLMs”) operated
+            by third-party providers. These providers may process your inputs
+            and outputs in accordance with their own privacy practices and terms
+            of service, which may include using data for model training or other
             purposes.
           </p>
           <p>
             We make a best effort to highlight when this might be the case, but
             ultimately you are responsible for reviewing and understanding the
-            privacy policies and terms of use of each provider. Vibezone’s
+            privacy policies and terms of use of each provider. {siteName}’s
             notices are provided for convenience only and should not be taken as
             authoritative statements of a provider’s policies.
           </p>

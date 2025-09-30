@@ -64,13 +64,6 @@
     "portugueseBrazil": "Portugiesisch (Brasilien)",
     "german": "Deutsch"
   },
-  "Layout": {
-    "siteName": "Vibezone",
-    "siteTitle": "Vibezone — KI-Modelle vergleichen",
-    "siteDescription": "Teste, vergleiche und bewerte KI-Modelle Seite an Seite mit Vibezone.",
-    "titleTemplate": "%s — Vibezone",
-    "openGraphLocale": "de_DE"
-  },
   "MessageAttachments": {
     "previewAlt": "Anhangsvorschau",
     "ariaLabel": "{type}-Anhang",
@@ -129,10 +122,8 @@
     "closeDisabledTooltip": "Mindestens ein Panel muss bestehen bleiben"
   },
   "SocialImage": {
-    "title": "Vibezone",
     "subtitle": "KI-Modelle vergleichen",
-    "tagline": "Teste, vergleiche und bewerte Modelle nebeneinander.",
-    "domain": "vibezone.ai"
+    "tagline": "Teste, vergleiche und bewerte Modelle nebeneinander."
   },
   "ThreadError": {
     "loggedInTitle": "Du hast deine täglichen Credits für heute verbraucht",
@@ -179,8 +170,7 @@
     }
   },
   "Sidebar": {
-    "homeAria": "Vibezone-Startseite",
-    "logoAlt": "Vibezone-Logo",
+    "homeAria": "Startseite",
     "help": {
       "title": "Hilfe & Support",
       "subtitle": "Bald verfügbar"

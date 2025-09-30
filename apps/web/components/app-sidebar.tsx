@@ -3,7 +3,7 @@
 import { HelpCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import * as React from "react";
+import React from "react";
 
 import {
   Sidebar,
@@ -15,9 +15,9 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-
-import { ThreadList } from "./assistant-ui/thread-list";
+import { siteName } from "@/lib/branding";
 import { useTranslations } from "next-intl";
+import { ThreadList } from "./assistant-ui/thread-list";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Sidebar");
@@ -31,7 +31,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
                   <Image
                     src="/assets/icon-64.png"
-                    alt={t("logoAlt")}
+                    alt={siteName}
                     width={24}
                     height={24}
                     className="size-6"
@@ -39,7 +39,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">Vibezone</span>
+                  <span className="font-semibold">{siteName}</span>
                 </div>
               </Link>
             </SidebarMenuButton>

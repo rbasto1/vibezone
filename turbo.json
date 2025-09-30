@@ -128,7 +128,6 @@
     "NEXT_PUBLIC_*",
     "OPENROUTER_API_KEY",
     "RESEND_API_KEY",
-    "RESEND_FROM",
     "DEEPL_API_KEY"
   ],
   "concurrency": "2"

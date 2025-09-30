@@ -2,18 +2,19 @@ import "katex/dist/katex.min.css";
 import "./globals.css";
 
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Geist, Geist_Mono } from "next/font/google";
 
 import { SessionProvider } from "@/components/providers/session-provider";
 import { Toaster } from "@/components/providers/toast-provider";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { cn } from "@/components/ui/utils";
 import { auth } from "@/lib/auth";
-import { SITE_URL } from "@/lib/constants";
-import { headers } from "next/headers";
+import { baseUrl } from "@/lib/base-url";
+import { siteDescription, siteName } from "@/lib/branding";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
+import { headers } from "next/headers";
 import type { PropsWithChildren } from "react";
 
 const geistSans = Geist({
@@ -26,41 +27,36 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const metadataBaseUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || SITE_URL);
+const metadataBaseUrl = new URL(baseUrl);
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("Layout");
-  const siteName = t("siteName");
-  const siteTitle = t("siteTitle");
-  const siteDescription = t("siteDescription");
-
   return {
     metadataBase: metadataBaseUrl,
     title: {
       default: siteName,
-      template: t("titleTemplate"),
+      template: "%s — {siteName}",
     },
     description: siteDescription,
     applicationName: siteName,
     openGraph: {
       type: "website",
-      url: SITE_URL,
+      url: baseUrl,
       siteName,
-      title: siteTitle,
+      title: siteName,
       description: siteDescription,
-      locale: t("openGraphLocale"),
+      locale: siteName === "Multipla IA" ? "pt_BR" : "en_US",
       images: [
         {
           url: "/opengraph-image",
           width: 1200,
           height: 630,
-          alt: siteTitle,
+          alt: siteName,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: siteTitle,
+      title: siteName,
       description: siteDescription,
       images: ["/twitter-image"],
     },
@@ -93,9 +89,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   });
   const locale = await getLocale();
   const messages = await getMessages();
-  const t = await getTranslations("Layout");
-  const siteName = t("siteName");
-  const siteDescription = t("siteDescription");
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -108,11 +101,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
               "@context": "https://schema.org",
               "@type": "WebSite",
               name: siteName,
-              url: SITE_URL,
+              url: baseUrl,
               description: siteDescription,
               potentialAction: {
                 "@type": "SearchAction",
-                target: `${SITE_URL}/?q={search_term_string}`,
+                target: `${baseUrl}/?q={search_term_string}`,
                 "query-input": "required name=search_term_string",
               },
             }),

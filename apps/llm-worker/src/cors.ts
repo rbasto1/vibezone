@@ -5,7 +5,8 @@ export function cors(env: Env, request: Request) {
   const origin = request.headers.get("Origin");
 
   const allowed = [
-    env.WORKER_ALLOWED_ORIGIN,
+    "https://www.vibezone.ai",
+    "https://multipla.ia.br",
     "http://localhost:3022",
     /https:\/\/\S+-rbasto-team\.vercel\.app/,
   ];

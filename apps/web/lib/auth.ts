@@ -43,9 +43,10 @@ const getAuthEmailTranslator = (locale?: string) => {
 
 async function sendEmailWithResend(to: string, subject: string, html: string) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM;
-  if (!apiKey || !from)
-    throw new Error("Missing RESEND_API_KEY or RESEND_FROM");
+  if (!apiKey) {
+    throw new Error("Missing RESEND_API_KEY");
+  }
+  const from = `no-reply@vibezone.ai`;
 
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",

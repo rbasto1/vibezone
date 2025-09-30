@@ -13,7 +13,7 @@
   Example usage:
     VERCEL_TOKEN=... VERCEL_PROJECT=my-project \
     GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... AUTH_SECRET=... \
-    RESEND_API_KEY=... RESEND_FROM="Your App <no-reply@domain.com>" \
+    RESEND_API_KEY=... \
     NEXT_PUBLIC_LLM_WORKER_URL=... \
     pnpm dlx tsx scripts/set-vercel-envs.ts
 */

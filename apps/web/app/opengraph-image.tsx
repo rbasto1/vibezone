@@ -1,9 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
-import { ImageResponse } from "next/og";
 import { getTranslations } from "next-intl/server";
+import { ImageResponse } from "next/og";
+
+import { siteDomain, siteName } from "@/lib/branding";
 
 export const runtime = "edge";
-export const alt = "Vibezone — Compare AI Models";
+export const alt = `${siteName} — Compare AI Models`;
 export const size = {
   width: 1200,
   height: 630,
@@ -13,10 +15,8 @@ export const contentType = "image/png";
 export default async function OpengraphImage() {
   const t = await getTranslations("SocialImage");
 
-  const title = t("title");
   const subtitle = t("subtitle");
   const tagline = t("tagline");
-  const domain = t("domain");
 
   return new ImageResponse(
     (
@@ -43,7 +43,7 @@ export default async function OpengraphImage() {
             letterSpacing: -1,
           }}
         >
-          {title}
+          {siteName}
         </div>
         <div
           style={{
@@ -59,7 +59,7 @@ export default async function OpengraphImage() {
           {tagline}
         </div>
         <div style={{ marginTop: 40, fontSize: 24, opacity: 0.8 }}>
-          {domain}
+          {siteDomain}
         </div>
       </div>
     ),

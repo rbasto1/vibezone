@@ -64,13 +64,6 @@
     "portugueseBrazil": "Portuguese (Brazil)",
     "german": "German"
   },
-  "Layout": {
-    "siteName": "Vibezone",
-    "siteTitle": "Vibezone — Compare AI Models",
-    "siteDescription": "Test, compare, and evaluate AI models side-by-side with Vibezone.",
-    "titleTemplate": "%s — Vibezone",
-    "openGraphLocale": "en_US"
-  },
   "MessageAttachments": {
     "previewAlt": "Attachment preview",
     "ariaLabel": "{type} attachment",
@@ -129,10 +122,8 @@
     "closeDisabledTooltip": "At least one panel must remain"
   },
   "SocialImage": {
-    "title": "Vibezone",
     "subtitle": "Compare AI Models",
-    "tagline": "Test, compare, and evaluate models side-by-side.",
-    "domain": "vibezone.ai"
+    "tagline": "Test, compare, and evaluate models side-by-side."
   },
   "ThreadError": {
     "loggedInTitle": "You ran out of daily credits for today",
@@ -179,8 +170,7 @@
     }
   },
   "Sidebar": {
-    "homeAria": "Vibezone Home",
-    "logoAlt": "Vibezone Logo",
+    "homeAria": "Homepage",
     "help": {
       "title": "Help & Support",
       "subtitle": "Coming Soon"

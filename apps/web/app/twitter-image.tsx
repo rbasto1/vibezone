@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import { ImageResponse } from "next/og";
+import { siteDomain, siteName } from "@/lib/branding";
 import { getTranslations } from "next-intl/server";
+import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Vibezone — Compare AI Models";
+export const alt = `${siteName} — Compare AI Models`;
 export const size = {
   width: 1200,
   height: 630,
@@ -13,10 +14,8 @@ export const contentType = "image/png";
 export default async function TwitterImage() {
   const t = await getTranslations("SocialImage");
 
-  const title = t("title");
   const subtitle = t("subtitle");
   const tagline = t("tagline");
-  const domain = t("domain");
 
   return new ImageResponse(
     (
@@ -43,7 +42,7 @@ export default async function TwitterImage() {
             letterSpacing: -1,
           }}
         >
-          {title}
+          {siteName}
         </div>
         <div
           style={{
@@ -59,7 +58,7 @@ export default async function TwitterImage() {
           {tagline}
         </div>
         <div style={{ marginTop: 40, fontSize: 24, opacity: 0.8 }}>
-          {domain}
+          {siteDomain}
         </div>
       </div>
     ),

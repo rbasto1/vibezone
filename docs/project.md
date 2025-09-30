@@ -32,12 +32,13 @@
 - [x] Improve dashboard queries
 - [x] Warn about discarding a panel
 - [x] Translate to Brazilian Portuguese
-- [ ] Assign .br domains
+- [x] Assign .br domains
 - [ ] Add Brazilian models
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [ ] Add user preferences (auto-scroll, language, hidden providers, pre-prompt)
 - [x] Keep composer text in SessionStorage
 - [ ] Thumb up/down (or stars?)
+- [ ] Paginate chat history
 - [x] Limit usage for free users (400)
 - [x] Show deleted providers and models in the admin
 - [ ] Limit usage for paid users

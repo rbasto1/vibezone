@@ -1,5 +1,6 @@
 "use client";
 
+import { siteName } from "@/lib/branding";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -15,17 +16,17 @@ export default function LegalLayout({ children }: LegalLayoutProps) {
         <Link
           href="/"
           className="flex items-center gap-2"
-          aria-label="Vibezone Home"
+          aria-label={`${siteName} Home`}
         >
           <Image
             src="/assets/icon-64.png"
-            alt="Vibezone Logo"
+            alt={`${siteName} Logo`}
             width={24}
             height={24}
             className="size-6"
             priority
           />
-          <span className="font-semibold">Vibezone</span>
+          <span className="font-semibold">{siteName}</span>
         </Link>
       </header>
       <main className="container mx-auto flex-1 px-4 py-8">{children}</main>

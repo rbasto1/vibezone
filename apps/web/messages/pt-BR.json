@@ -64,13 +64,6 @@
     "portugueseBrazil": "Português (Brasil)",
     "german": "Alemão"
   },
-  "Layout": {
-    "siteName": "Vibezone",
-    "siteTitle": "Vibezone — Compare Modelos de IA",
-    "siteDescription": "Teste, compare e avalie modelos de IA lado a lado com a Vibezone.",
-    "titleTemplate": "%s — Vibezone",
-    "openGraphLocale": "pt_BR"
-  },
   "MessageAttachments": {
     "previewAlt": "Prévia do anexo",
     "ariaLabel": "Anexo: {type}",
@@ -129,10 +122,8 @@
     "closeDisabledTooltip": "Ao menos um painel deve permanecer"
   },
   "SocialImage": {
-    "title": "Vibezone",
     "subtitle": "Compare modelos de IA",
-    "tagline": "Teste, compare e avalie modelos lado a lado.",
-    "domain": "vibezone.ai"
+    "tagline": "Teste, compare e avalie modelos lado a lado."
   },
   "ThreadError": {
     "loggedInTitle": "Você esgotou os créditos diários de hoje",
@@ -179,8 +170,7 @@
     }
   },
   "Sidebar": {
-    "homeAria": "Página inicial da Vibezone",
-    "logoAlt": "Logotipo da Vibezone",
+    "homeAria": "Página principal",
     "help": {
       "title": "Ajuda e suporte",
       "subtitle": "Em breve"
