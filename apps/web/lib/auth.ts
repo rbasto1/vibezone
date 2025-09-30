@@ -8,6 +8,7 @@ import deMessages from "../messages/de.json";
 import enMessages from "../messages/en.json";
 import ptBrMessages from "../messages/pt-BR.json";
 import { baseUrl } from "./base-url";
+import { readLocaleFromBaseUrl } from "./i18n/detect-locale";
 
 const AUTH_EMAIL_LOCALES = ["en", "pt-BR", "de"] as const;
 type AuthEmailLocale = (typeof AUTH_EMAIL_LOCALES)[number];
@@ -74,7 +75,8 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-        const t = getAuthEmailTranslator();
+        const locale = readLocaleFromBaseUrl(baseUrl);
+        const t = getAuthEmailTranslator(locale);
         const subject = t("subject");
         const linkText = t("linkText");
         const html = [

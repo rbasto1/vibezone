@@ -105,7 +105,7 @@ function parseAcceptLanguage(header: string): LanguagePreference[] {
   return preferences.toSorted((a, b) => b.weight - a.weight);
 }
 
-function readLocaleFromBaseUrl(
+export function readLocaleFromBaseUrl(
   candidate: string | null | undefined
 ): AppLocale | undefined {
   if (!candidate) return undefined;
