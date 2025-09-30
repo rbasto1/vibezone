@@ -54,9 +54,9 @@
     "stopAllError": "Einige Panels konnten nicht gestoppt werden: {failures}",
     "guestLimit": "Gastlimit erreicht ({limit}/Tag). Bitte melde dich an.",
     "sendFailed": "Senden an ein Panel fehlgeschlagen: {message}",
-    "placeholder": "Frag alle AIs...",
+    "placeholder": "Frag alle KI...",
     "stopAllLabel": "Alle KI-Antworten stoppen",
-    "sendLabel": "An alle AIs senden"
+    "sendLabel": "An alle KI senden"
   },
   "LanguageSwitcher": {
     "trigger": "Sprache wechseln",

@@ -2,7 +2,7 @@ import * as fs from "fs";
 
 import { db, models as modelsTable, providers as providersTable } from "@/db";
 import { listModels } from "@/lib/trpc/models-list";
-import { and, asc, eq, exists, isNull } from "drizzle-orm";
+import { and, eq, exists, isNull } from "drizzle-orm";
 
 const dstFolder = "../generated";
 
@@ -85,6 +85,7 @@ async function generateModelsForLimiting() {
       isIncluded: true,
       isPremium: true,
     },
+    orderBy: [modelsTable.id],
   });
 
   // Convert array to record with model id as key
@@ -140,7 +141,7 @@ async function generateProvidersForPrivacyPolicy() {
       name: true,
       privacyPolicyUrl: true,
     },
-    orderBy: [asc(providersTable.name)],
+    orderBy: [providersTable.name],
   });
 
   if (!fs.existsSync(fullPath)) {

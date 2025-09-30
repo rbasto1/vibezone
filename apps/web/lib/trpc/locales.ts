@@ -5,6 +5,7 @@ import { locales } from "@/db/schema";
 import { adminProcedure, t } from "@/lib/trpc/server/initialize";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { deepl, localeToTargetLanguageCode } from "../deepl/deepl";
 
 export async function getLocalesList() {
   return await db.select().from(locales).orderBy(locales.id);
@@ -16,8 +17,8 @@ export const localesRouter = t.router({
   create: adminProcedure
     .input(
       z.object({
-        id: z.string().min(1).max(10),
-        name: z.string().min(1).max(100),
+        id: z.string().nonempty().max(5),
+        name: z.string().nonempty().max(30),
         available: z.boolean().default(false),
       })
     )
@@ -34,8 +35,8 @@ export const localesRouter = t.router({
     .input(
       z
         .object({
-          id: z.string().min(1),
-          name: z.string().min(1).max(100).optional(),
+          id: z.string().nonempty(),
+          name: z.string().nonempty().max(100).optional(),
           available: z.boolean().optional(),
         })
         .refine(
@@ -60,10 +61,27 @@ export const localesRouter = t.router({
     }),
 
   delete: adminProcedure
-    .input(z.object({ id: z.string().min(1) }))
+    .input(z.object({ id: z.string().nonempty() }))
     .mutation(async ({ input }) => {
       await db.delete(locales).where(eq(locales.id, input.id));
       return { ok: true } as const;
+    }),
+
+  translate: adminProcedure
+    .input(
+      z.object({
+        text: z.string().nonempty().array().min(1),
+        locale: z.string().nonempty(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const targetLanguage = localeToTargetLanguageCode(input.locale);
+      const result = await deepl.translateText(
+        input.text,
+        "en",
+        targetLanguage
+      );
+      return { translated: result.map((i) => i.text) } as const;
     }),
 });
 

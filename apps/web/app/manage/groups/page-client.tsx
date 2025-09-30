@@ -13,17 +13,13 @@ const GroupsPageClient: NextPage = () => {
     data: suggestionGroups,
     error: groupsError,
     isLoading: groupsLoading,
-  } = trpc.suggestionGroups.list.useQuery(undefined, {
-    placeholderData: (previousData) => previousData,
-  });
+  } = trpc.suggestionGroups.list.useQuery();
 
   const {
     data: modelsData,
     error: modelsError,
     isLoading: modelsLoading,
-  } = trpc.models.list.useQuery(undefined, {
-    placeholderData: (previousData) => previousData,
-  });
+  } = trpc.models.list.useQuery();
   const modelsDataSafe = modelsData ?? {
     models: [],
     providers: [],

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "i18n-check": "npx @lingual/i18n-check@latest --source en --locales messages",
     "prettier-fix": "prettier --write .",
     "db:push": "drizzle-kit push --verbose",
     "db:studio": "drizzle-kit studio",

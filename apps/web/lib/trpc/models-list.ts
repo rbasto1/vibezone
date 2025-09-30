@@ -1,7 +1,12 @@
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db";
-import { models, providers } from "@/db/schema";
+import {
+  models,
+  providers,
+  suggestionGroups,
+  suggestionGroupTranslations,
+} from "@/db/schema";
 
 export async function listModels(showDeleted = false) {
   const result = await db.query.models.findMany({
@@ -22,13 +27,27 @@ export async function listModels(showDeleted = false) {
       provider: true,
       supportedParameters: true,
     },
-    orderBy: [
-      asc(models.providerId),
-      desc(models.createdAt),
-      desc(models.name),
-    ],
+    orderBy: [models.id],
   });
-  const groups = await db.query.suggestionGroups.findMany();
+  const groups = await db.query.suggestionGroups.findMany({
+    columns: {
+      id: true,
+      icon: true,
+      promoted: true,
+      models: true,
+    },
+    with: {
+      translations: {
+        columns: {
+          localeId: true,
+          title: true,
+          label: true,
+        },
+        orderBy: [suggestionGroupTranslations.localeId],
+      },
+    },
+    orderBy: [suggestionGroups.id],
+  });
 
   const uniqueProviders = result
     .map((item) => item.provider)

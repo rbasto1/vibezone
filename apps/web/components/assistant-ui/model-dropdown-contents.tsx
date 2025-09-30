@@ -7,12 +7,12 @@ import { cn } from "@/components/ui/utils";
 import type { ProviderTier } from "@/db";
 import { useModelsValue } from "@/hooks/use-models";
 import { useSession } from "@/hooks/use-session";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { capabilityOptions, tierOptions } from "./model-dropdown-constants";
 import { ModelDropdownItem } from "./model-dropdown-item";
 import { ModelDropdownSearch } from "./model-dropdown-search";
 import { ModelDropdownSuggestionGroup } from "./model-dropdown-suggestion-group";
-import { useTranslations } from "next-intl";
 
 interface ModelDropdownContentsProps {
   onSelect: (providerId: string, modelId: string) => void;
@@ -451,7 +451,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
 
                         {others.length > 0 && !expanded && (
                           <button
-                            className="mt-1 text-xs text-muted-foreground hover:text-foreground text-left px-2 py-1"
+                            className="mt-1 text-xs text-muted-foreground hover:text-foreground text-left px-2 py-1 cursor-pointer"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();

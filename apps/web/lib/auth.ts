@@ -3,7 +3,39 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { magicLink } from "better-auth/plugins";
+import { createTranslator } from "next-intl";
+import deMessages from "../messages/de.json";
+import enMessages from "../messages/en.json";
+import ptBrMessages from "../messages/pt-BR.json";
 import { baseUrl } from "./base-url";
+
+const AUTH_EMAIL_LOCALES = ["en", "pt-BR", "de"] as const;
+type AuthEmailLocale = (typeof AUTH_EMAIL_LOCALES)[number];
+
+const authEmailMessages: Record<AuthEmailLocale, Record<string, string>> = {
+  en: enMessages.AuthEmail,
+  "pt-BR": ptBrMessages.AuthEmail,
+  de: deMessages.AuthEmail,
+};
+
+const defaultAuthLocale: AuthEmailLocale = AUTH_EMAIL_LOCALES.includes(
+  process.env.DEFAULT_LOCALE as AuthEmailLocale
+)
+  ? (process.env.DEFAULT_LOCALE as AuthEmailLocale)
+  : "en";
+
+const getAuthEmailTranslator = (locale?: string) => {
+  const normalizedLocale = AUTH_EMAIL_LOCALES.includes(
+    locale as AuthEmailLocale
+  )
+    ? (locale as AuthEmailLocale)
+    : defaultAuthLocale;
+
+  return createTranslator({
+    locale: normalizedLocale,
+    messages: authEmailMessages[normalizedLocale],
+  });
+};
 
 async function sendEmailWithResend(to: string, subject: string, html: string) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -39,12 +71,12 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-        const subject = "Your sign-in link";
-        const html = `
-          <p>Click the link below to sign in:</p>
-          <p><a href="${url}">Sign in</a></p>
-          <p>This link will expire shortly. If you didn't request it, ignore this email.</p>
-        `;
+        const t = getAuthEmailTranslator();
+        const subject = t("subject");
+        const html = t("bodyHtml", {
+          url,
+          linkText: t("linkText"),
+        });
         await sendEmailWithResend(email, subject, html);
       },
     }),

@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/utils";
 import type { Model, Provider } from "@/db";
 import { ArrowDown, ArrowUp, ChevronsDown, ChevronsUp, X } from "lucide-react";
@@ -74,14 +75,15 @@ export function GroupModelsListItem({
           {model.provider.name} - {model.name}
         </div>
       </div>
-      <button
+      <Button
+        variant="ghost"
+        className="hover:bg-destructive/10 text-destructive hover:text-destructive-foreground transition-colors"
         onClick={() => onRemoveModel?.(model.id)}
         disabled={isEditing}
-        className="p-2 rounded hover:bg-destructive/10 text-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         title="Remove from group"
       >
         <X className="h-4 w-4" />
-      </button>
+      </Button>
     </div>
   );
 }

@@ -140,6 +140,25 @@ export const suggestionGroups = pgTable("suggestion_groups", {
   updatedAt: timestampTzNowUpdated("updated_at"),
 });
 
+export const suggestionGroupTranslations = pgTable(
+  "suggestion_group_translations",
+  {
+    suggestionGroupId: text("suggestion_group_id")
+      .notNull()
+      .references(() => suggestionGroups.id),
+    localeId: text("locale_id")
+      .notNull()
+      .references(() => locales.id),
+    title: text("title").notNull(),
+    label: text("label").notNull(),
+    createdAt: timestampTzNow("created_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.suggestionGroupId, table.localeId] }),
+  ]
+);
+
 export const modelSupportedParameters = pgTable("model_supported_parameters", {
   modelId: text("model_id")
     .notNull()
@@ -298,6 +317,7 @@ export const usageRelations = relations(usage, ({ one }) => ({
 
 export const localesRelations = relations(locales, ({ many }) => ({
   modelTranslations: many(modelTranslations),
+  suggestionGroupTranslations: many(suggestionGroupTranslations),
 }));
 
 export const modelTranslationsRelations = relations(
@@ -309,6 +329,27 @@ export const modelTranslationsRelations = relations(
     }),
     locale: one(locales, {
       fields: [modelTranslations.localeId],
+      references: [locales.id],
+    }),
+  })
+);
+
+export const suggestionGroupsRelations = relations(
+  suggestionGroups,
+  ({ many }) => ({
+    translations: many(suggestionGroupTranslations),
+  })
+);
+
+export const suggestionGroupTranslationsRelations = relations(
+  suggestionGroupTranslations,
+  ({ one }) => ({
+    suggestionGroup: one(suggestionGroups, {
+      fields: [suggestionGroupTranslations.suggestionGroupId],
+      references: [suggestionGroups.id],
+    }),
+    locale: one(locales, {
+      fields: [suggestionGroupTranslations.localeId],
       references: [locales.id],
     }),
   })
@@ -330,6 +371,10 @@ export type Model = typeof models.$inferSelect;
 export type NewModel = typeof models.$inferInsert;
 export type SuggestionGroup = typeof suggestionGroups.$inferSelect;
 export type NewSuggestionGroup = typeof suggestionGroups.$inferInsert;
+export type SuggestionGroupTranslation =
+  typeof suggestionGroupTranslations.$inferSelect;
+export type NewSuggestionGroupTranslation =
+  typeof suggestionGroupTranslations.$inferInsert;
 export type SupportedParameter = typeof supportedParameters.$inferSelect;
 export type NewSupportedParameter = typeof supportedParameters.$inferInsert;
 export type Thread = typeof threads.$inferSelect;
