@@ -1,14 +1,18 @@
+"use client";
+
 import { ArrowDownToLine } from "lucide-react";
 import type { FC } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/utils";
 import { createObjectUrl } from "@/lib/object-url";
 import { useMessagePartFile } from "@assistant-ui/react";
 import { Image } from "./assistant-message-part-image";
+import { useTranslations } from "next-intl";
 
 export const File: FC = () => {
+  const t = useTranslations("AssistantMessageFile");
   const filePart = useMessagePartFile();
   const isImage = filePart.mimeType === "image";
   const [objectUrl, setObjectUrl] = useState<string>();
@@ -24,13 +28,13 @@ export const File: FC = () => {
     return () => URL.revokeObjectURL(url);
   }, [filePart.data, filePart.mimeType, isImage]);
 
-  const filename = filePart.filename ?? "download";
-
-  const statusLabel = useMemo(() => {
-    if (filePart.status.type === "running") return "Preparing file...";
-    if (filePart.status.type === "incomplete") return "File generation failed";
-    return null;
-  }, [filePart.status]);
+  const filename = filePart.filename ?? t("defaultFilename");
+  const statusLabel =
+    filePart.status.type === "running"
+      ? t("statusPreparing")
+      : filePart.status.type === "incomplete"
+        ? t("statusFailed")
+        : null;
 
   if (isImage) {
     return (
@@ -72,7 +76,7 @@ export const File: FC = () => {
           >
             <ArrowDownToLine className="size-4" />
             <span className="text-xs uppercase tracking-[0.26em]">
-              Download
+              {t("download")}
             </span>
           </a>
         </Button>

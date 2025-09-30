@@ -30,7 +30,7 @@ export default [
         "warn",
         {
           allowConstantExport: true,
-          allowExportNames: ["metadata"],
+          allowExportNames: ["metadata", "generateMetadata"],
         },
       ],
     },

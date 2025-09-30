@@ -16,6 +16,7 @@ import {
   NewTag,
   PremiumTag,
 } from "./tags";
+import { useTranslations } from "next-intl";
 
 interface ModelDropdownItemProps {
   model: GetModelsListReturn["models"][number];
@@ -38,6 +39,7 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
   titleText,
   showRetentionWarning = false,
 }) => {
+  const t = useTranslations("ModelDropdown");
   return (
     <div
       className={cn(
@@ -67,14 +69,13 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
                 <TooltipTrigger asChild>
                   <ShieldAlertIcon
                     className="h-3 w-3 text-red-500"
-                    aria-label="This model may retain your data"
+                    aria-label={t("retentionIconAria")}
                   />
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  This model may retain your messages and attachments to train
-                  new versions.
-                  <br />
-                  Do not share with it any sensitive information in your chats.
+                  {t.rich("retentionTooltip", {
+                    lineBreak: () => <br />,
+                  })}
                 </TooltipContent>
               </Tooltip>
             )}

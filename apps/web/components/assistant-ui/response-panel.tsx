@@ -1,3 +1,5 @@
+"use client";
+
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAttachmentAdapter } from "@/hooks/use-attachments";
@@ -16,6 +18,7 @@ import { Maximize2, Minimize2 } from "lucide-react";
 import { useRef, type FC } from "react";
 import { toast } from "sonner";
 import { PanelHeader } from "./response-panel-header";
+import { useTranslations } from "next-intl";
 
 interface ResponsePanelProps {
   panel: PanelConfig;
@@ -34,6 +37,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   isFocused = false,
   onToggleFocus,
 }) => {
+  const t = useTranslations("ResponsePanel");
   const { id } = panel;
   panelGlobalContext[id] = panel;
   const [panelState, setPanelState] = usePanelState(id);
@@ -43,6 +47,8 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const session = useSession();
   const sessionToken = useRef(session?.session.token);
   sessionToken.current = session?.session.token;
+  const panelNotRegisteredMessage = t("panelNotRegistered");
+  const transportErrorMessage = t("transportError");
 
   const handleModelError = (error: Error) => {
     setPanelState((currentState) => ({
@@ -115,9 +121,9 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
       api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
       fetch: (url, init) => {
         if (!panelGlobalContext[id]) {
-          toast.error("Assert: Panel not registered!");
+          toast.error(panelNotRegisteredMessage);
           return Promise.resolve(
-            new Response("Application error, please refresh the page", {
+            new Response(transportErrorMessage, {
               status: 400,
             })
           );
@@ -167,14 +173,18 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
       runtime.thread.cancelRun();
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      toast.error(`Failed to stop: ${message}`);
+      toast.error(
+        t("stopFailed", {
+          message,
+        })
+      );
     }
   };
 
   const { running, error } = panelState;
 
   const FocusIcon = isFocused ? Minimize2 : Maximize2;
-  const focusButtonLabel = isFocused ? "Exit focus view" : "Focus this panel";
+  const focusButtonLabel = isFocused ? t("exitFocus") : t("focusPanel");
 
   return (
     <div

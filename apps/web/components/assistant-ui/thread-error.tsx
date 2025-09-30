@@ -1,3 +1,5 @@
+"use client";
+
 import { CircleXIcon } from "@/components/ui/icons/circle-x-icon";
 import { useSetDepleted } from "@/hooks/use-anon-quota";
 import { useSession } from "@/hooks/use-session";
@@ -5,6 +7,7 @@ import { AlertCircleIcon } from "lucide-react";
 import type { FC } from "react";
 import { Button } from "../ui/button";
 import { cn } from "../ui/utils";
+import { useTranslations } from "next-intl";
 
 interface ThreadErrorProps {
   error: Error;
@@ -13,6 +16,7 @@ interface ThreadErrorProps {
 export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
   const session = useSession();
   const setDepleted = useSetDepleted();
+  const t = useTranslations("ThreadError");
 
   if (error.message === "Out of credits") {
     const isLoggedIn = !!session?.user;
@@ -43,16 +47,16 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
             {isLoggedIn ? (
               <>
                 <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                  You ran out of daily credits for today
+                  {t("loggedInTitle")}
                 </h3>
                 <div className="mt-1 text-sm text-red-700 dark:text-red-300 overflow-y-hidden">
-                  <p>You can continue using the app tomorrow.</p>
+                  <p>{t("loggedInBody")}</p>
                 </div>
               </>
             ) : (
               <>
                 <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  To continue chatting, please sign in.
+                  {t("anonymousTitle")}
                 </h3>
                 <Button
                   variant="outline"
@@ -64,7 +68,7 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
                     }
                   }}
                 >
-                  Sign in
+                  {t("signInButton")}
                 </Button>
               </>
             )}
@@ -82,7 +86,7 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-            Something went wrong
+            {t("genericTitle")}
           </h3>
           <p className="mt-1 text-sm text-red-700 dark:text-red-300 overflow-y-hidden">
             {error.message}

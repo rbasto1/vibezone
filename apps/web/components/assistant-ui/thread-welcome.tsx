@@ -1,8 +1,12 @@
+"use client";
+
 import { ThreadPrimitive } from "@assistant-ui/react";
 import { motion } from "framer-motion";
 import type { FC } from "react";
+import { useTranslations } from "next-intl";
 
 export const ThreadWelcome: FC = () => {
+  const t = useTranslations("ThreadWelcome");
   return (
     <ThreadPrimitive.Empty>
       {/* aui-thread-welcome-root */}
@@ -19,7 +23,7 @@ export const ThreadWelcome: FC = () => {
               // aui-thread-welcome-message-motion-1
               className="text-2xl font-semibold"
             >
-              Hello there!
+              {t("greeting")}
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -29,7 +33,7 @@ export const ThreadWelcome: FC = () => {
               // aui-thread-welcome-message-motion-2
               className="text-muted-foreground/65 text-2xl"
             >
-              How can I help you today?
+              {t("prompt")}
             </motion.div>
           </div>
         </div>

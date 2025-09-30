@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -7,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslations } from "next-intl";
 
 type ConfirmCloseModalProps = {
   onOpenChange: (open: boolean) => void;
@@ -17,28 +20,23 @@ export function ConfirmCloseModal({
   onOpenChange,
   onConfirm,
 }: ConfirmCloseModalProps) {
+  const t = useTranslations("ConfirmCloseModal");
+
   return (
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Close this chat?</DialogTitle>
-          <DialogDescription>
-            If you close the chat, your conversation with this AI will be lost.
-          </DialogDescription>
-          <DialogDescription>
-            You can choose another model without closing the chat by clicking on
-            the model name on the chat header.
-          </DialogDescription>
-          <DialogDescription>
-            Are you sure you want to close this chat?
-          </DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("descriptionLoss")}</DialogDescription>
+          <DialogDescription>{t("descriptionAlternate")}</DialogDescription>
+          <DialogDescription>{t("descriptionConfirm")}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button variant="destructive" onClick={onConfirm}>
-            Close Chat
+            {t("confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>
