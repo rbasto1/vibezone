@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, Crown, Hash, ThumbsUp } from "lucide-react";
+import { BadgeCheck, Crown, Hash, ThumbsUp, XSquareIcon } from "lucide-react";
 import type { NextPage } from "next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -19,10 +19,17 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/components/ui/utils";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { trpc } from "@/lib/trpc/client";
-import type { ModelsListOutput } from "@/lib/trpc/server/server";
+import type { ModelsAdminListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
-import { getStorageItem, setStorageItem, storageKeys } from "../session-storage";
+import {
+  getStorageItem,
+  setStorageItem,
+  storageKeys,
+} from "../session-storage";
+
+const stableEmpty: never[] = [];
 
 const SortingSchema = z
   .array(
@@ -37,18 +44,16 @@ const SortingSchema = z
 const providerTiers = ["leaders", "challengers", "specialists"] as const;
 
 const ModelsPageClient: NextPage = () => {
-  const listInput = useMemo(() => ({ showDeleted: true }), []);
-
   const {
-    data: hydrated,
+    data,
     error: listError,
     isLoading,
-  } = trpc.models.list.useQuery(listInput);
+  } = trpc.models.adminList.useQuery();
   const utils = trpc.useUtils();
   const updateMutation = trpc.models.update.useMutation();
   const deleteMutation = trpc.models.delete.useMutation({
     onSuccess: async () => {
-      await utils.models.list.invalidate().catch(() => {
+      await utils.models.adminList.invalidate().catch(() => {
         toast.warning("Failed to invalidate models list");
       });
       toast.success("Model deleted successfully");
@@ -56,7 +61,7 @@ const ModelsPageClient: NextPage = () => {
   });
   const syncMutation = trpc.models.syncFromOpenRouter.useMutation({
     onSuccess: async (res) => {
-      await utils.models.list.invalidate().catch(() => {
+      await utils.models.adminList.invalidate().catch(() => {
         toast.warning("Failed to invalidate models list");
       });
       toast.success(
@@ -77,15 +82,15 @@ const ModelsPageClient: NextPage = () => {
   const [priorityOnly, setPriorityOnly] = useState(
     () => getStorageItem(storageKeys.managePriority, z.boolean()) ?? false
   );
+  const [deletedOnly, setDeletedOnly] = useState(
+    () => getStorageItem(storageKeys.manageDeleted, z.boolean()) ?? false
+  );
   const [tierFilter, setTierFilter] = useState(
     getStorageItem(storageKeys.manageTier) ?? "all"
   );
 
-  const providers = useMemo(
-    () => hydrated?.providers ?? [],
-    [hydrated?.providers]
-  );
-  const models = useMemo(() => hydrated?.models ?? [], [hydrated?.models]);
+  const models = data?.models ?? stableEmpty;
+  const providers = data?.providers ?? stableEmpty;
 
   // Create ordered list of providers for keyboard navigation
   const orderedProviders = useMemo(() => {
@@ -140,13 +145,24 @@ const ModelsPageClient: NextPage = () => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [navigateProvider]);
 
-  const columns: ColumnDef<ModelsListOutput["models"][number]>[] = useMemo(
+  const columns: ColumnDef<ModelsAdminListOutput["models"][number]>[] = useMemo(
     () => [
-      { accessorKey: "id", header: "ID" },
       {
         accessorKey: "name",
         header: "Name",
-        cell: ({ row }) => row.original.name,
+        cell: ({ row }) => (
+          <div
+            className={cn(
+              "flex flex-col",
+              row.original.deletedAt ? "line-through" : ""
+            )}
+          >
+            {row.original.name}
+            <span className="text-xs text-muted-foreground">
+              {row.original.id}
+            </span>
+          </div>
+        ),
       },
       {
         accessorKey: "createdAt",
@@ -154,12 +170,34 @@ const ModelsPageClient: NextPage = () => {
         cell: ({ row }) => formatDate(row.original.createdAt),
       },
       {
+        accessorKey: "pricing.prompt",
+        header: "Prompt",
+        cell: ({ row }) => (
+          <div className="text-right">
+            {row.original.pricing.prompt === 0
+              ? "—"
+              : formatCurrency(row.original.pricing.prompt * 1_000_000)}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "pricing.completion",
+        header: "Completion",
+        cell: ({ row }) => (
+          <div className="text-right">
+            {row.original.pricing.completion === 0
+              ? "—"
+              : formatCurrency(row.original.pricing.completion * 1_000_000)}
+          </div>
+        ),
+      },
+      {
         id: "edit",
         header: "Edit",
         cell: ({ row }) => {
           const m = row.original;
           const setCacheFields = (patch: Partial<typeof m>) => {
-            utils.models.list.setData(listInput, (prev) => {
+            utils.models.adminList.setData(undefined, (prev) => {
               if (!prev) return prev;
               return {
                 ...prev,
@@ -204,15 +242,14 @@ const ModelsPageClient: NextPage = () => {
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
             >
-              <label className="flex items-center gap-1">
-                <input
-                  type="number"
-                  placeholder="Priority"
-                  className="w-16 h-8 rounded border bg-background px-2"
-                  value={m.priority ?? ""}
-                  onChange={(e) => onPriorityChange(e.target.value)}
-                />
-              </label>
+              <input
+                type="number"
+                placeholder="Priority"
+                className="w-16 h-8 rounded border bg-background px-2"
+                value={m.priority ?? ""}
+                onChange={(e) => onPriorityChange(e.target.value)}
+                disabled={!!m.deletedAt}
+              />
 
               <Button
                 type="button"
@@ -221,6 +258,7 @@ const ModelsPageClient: NextPage = () => {
                 aria-pressed={!!m.isSuggested}
                 title="Suggested"
                 onClick={() => onToggle("isSuggested", !m.isSuggested)}
+                disabled={!!m.deletedAt}
               >
                 <ThumbsUp className="h-4 w-4" />
               </Button>
@@ -237,6 +275,7 @@ const ModelsPageClient: NextPage = () => {
                 aria-pressed={!!m.isPremium}
                 title="Premium"
                 onClick={() => onToggle("isPremium", !m.isPremium)}
+                disabled={!!m.deletedAt}
               >
                 <Crown className="h-4 w-4" />
               </Button>
@@ -253,6 +292,7 @@ const ModelsPageClient: NextPage = () => {
                 aria-pressed={!!m.isIncluded}
                 title="Included"
                 onClick={() => onToggle("isIncluded", !m.isIncluded)}
+                disabled={!!m.deletedAt}
               >
                 <BadgeCheck className="h-4 w-4" />
               </Button>
@@ -291,7 +331,7 @@ const ModelsPageClient: NextPage = () => {
         },
       },
     ],
-    [utils.models.list, updateMutation, deleteMutation, listInput]
+    [utils.models.adminList, updateMutation, deleteMutation]
   );
 
   const providerCounts = useMemo(() => {
@@ -317,18 +357,22 @@ const ModelsPageClient: NextPage = () => {
     return byQuery.filter((m) => {
       if (priorityOnly && (m.priority === null || m.priority === undefined))
         return false;
+      if (deletedOnly === !m.deletedAt) return false;
       if (tierFilter !== "all") {
         const provider = providers?.find((p) => p.id === m.providerId);
-        if (provider) {
-          if (tierFilter === "leaders" && provider.tier !== "leaders")
-            return false;
-          if (tierFilter === "others" && provider.tier === "leaders")
-            return false;
-        }
+        return provider?.tier === tierFilter;
       }
       return true;
     });
-  }, [models, providerFilter, textFilter, priorityOnly, tierFilter, providers]);
+  }, [
+    providerFilter,
+    models,
+    textFilter,
+    priorityOnly,
+    deletedOnly,
+    tierFilter,
+    providers,
+  ]);
 
   return (
     <div>
@@ -407,14 +451,14 @@ const ModelsPageClient: NextPage = () => {
               </SelectContent>
             </Select>
             <div className="ml-2 flex items-center gap-2">
-              <button
+              <Button
                 type="button"
-                className={
-                  "inline-flex items-center gap-1 rounded px-2 py-1 border transition-colors text-sm " +
-                  (priorityOnly
+                variant="ghost"
+                className={cn(
+                  priorityOnly
                     ? "bg-green-500/10 border-green-500/30 text-green-600"
-                    : "border-transparent text-muted-foreground hover:bg-accent")
-                }
+                    : "border-transparent text-muted-foreground hover:bg-accent"
+                )}
                 aria-pressed={priorityOnly}
                 title="Filter: Priority"
                 onClick={() => {
@@ -425,11 +469,32 @@ const ModelsPageClient: NextPage = () => {
               >
                 <Hash className="h-4 w-4" />
                 <span className="hidden sm:inline">Priority</span>
-              </button>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className={cn(
+                  deletedOnly
+                    ? "bg-green-500/10 border-green-500/30 text-green-600"
+                    : "border-transparent text-muted-foreground hover:bg-accent"
+                )}
+                aria-pressed={deletedOnly}
+                title="Filter: Deleted"
+                onClick={() => {
+                  const next = !deletedOnly;
+                  setDeletedOnly(next);
+                  setStorageItem(storageKeys.manageDeleted, next);
+                }}
+              >
+                <XSquareIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Deleted</span>
+              </Button>
             </div>
           </div>
         </div>
+
         <QueryAlert error={listError || syncMutation.error} />
+
         <div className="rounded-md border">
           {isLoading ? (
             <Skeleton className="h-[300px]" />
@@ -454,16 +519,6 @@ const ModelsPageClient: NextPage = () => {
 };
 
 export default ModelsPageClient;
-
-function formatDate(value?: string | Date | null) {
-  if (!value) return "";
-  const d = typeof value === "string" ? new Date(value) : value;
-  return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  }).format(d);
-}
 
 function MathMinMax(num: number, min: number, max: number) {
   return Math.max(min, Math.min(max, num));

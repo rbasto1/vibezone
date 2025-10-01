@@ -1,359 +1,72 @@
-import { relations } from "drizzle-orm";
-import {
-  boolean,
-  index,
-  integer,
-  jsonb,
-  numeric,
-  pgEnum,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
-
-const timestampTz = (name: string) =>
-  timestamp(name, { withTimezone: true, mode: "date" });
-const timestampTzNow = (name: string) =>
-  timestampTz(name).defaultNow().notNull();
-const timestampTzNowUpdated = (name: string) =>
-  timestampTz(name)
-    .defaultNow()
-    .notNull()
-    .$onUpdate(() => /* @__PURE__ */ new Date());
+import { providerTiers } from "@/db/enums";
 
 import { account, session, user, verification } from "@/db/auth-schema";
-export { account, session, user, verification };
 
-export const providerTiers = pgEnum("provider_tier", [
-  "leaders",
-  "challengers",
-  "specialists",
-]);
+import {
+  chatRelations,
+  localesRelations,
+  messagesRelations,
+  modelsRelations,
+  modelSupportedParametersRelations,
+  modelTranslationsRelations,
+  providersRelations,
+  sessionRelations,
+  suggestionGroupsRelations,
+  suggestionGroupTranslationsRelations,
+  supportedParametersRelations,
+  threadsRelations,
+  usageRelations,
+  userRelations,
+} from "@/db/relations";
 
-export const providers = pgTable("providers", {
-  id: text("id").primaryKey(), // openai, anthropic, gemini, etc.
-  name: text("name").notNull(),
-  tier: providerTiers().notNull().default("specialists"),
-  order: integer("order"), // custom ordering for display
-  dataRetention: boolean("data_retention").notNull().default(false),
-  privacyPolicyUrl: text("privacy_policy_url"),
-  createdAt: timestampTzNow("created_at"),
-  updatedAt: timestampTzNowUpdated("updated_at"),
-  deletedAt: timestampTz("deleted_at"),
-});
-
-export const models = pgTable(
-  "models",
-  {
-    // OpenRouter id, e.g. "openai/gpt-4o-mini"
-    id: text("id").primaryKey(),
-    // provider prefix, e.g. "openai", "anthropic", "qwen"
-    providerId: text("provider_id")
-      .notNull()
-      .references(() => providers.id),
-    // human name from OpenRouter
-    name: text("name").notNull(),
-    canonicalSlug: text("canonical_slug"),
-    huggingFaceId: text("hugging_face_id"),
-    description: text("description"),
-    // flattened architecture fields
-    architectureModality: text("architecture_modality"),
-    architectureInputModalities: text("architecture_input_modalities").array(),
-    architectureOutputModalities: text(
-      "architecture_output_modalities"
-    ).array(),
-    architectureTokenizer: text("architecture_tokenizer"),
-    architectureInstructType: text("architecture_instruct_type"),
-    // keep pricing and top_provider as JSONB
-    pricing: jsonb("pricing"),
-    topProvider: jsonb("top_provider"),
-    perRequestLimits: jsonb("per_request_limits"),
-    // capabilityEffortControl: boolean("capability_effort_control"),
-    // created from API (epoch seconds) -> timestamptz
-    createdAt: timestampTzNow("created_at"),
-
-    // VIBEZONE specific fields
-    // UI selection priority for default panels
-    isChat: boolean("is_chat").notNull(), // we only show isChat models
-
-    priority: integer("priority"), // the first 3 models that are loaded by default
-
-    isSuggested: boolean("is_suggested").notNull().default(false), // if false, appears under "see more..."
-
-    isExperimental: boolean("is_experimental"),
-    isPremium: boolean("is_premium"),
-    isNew: boolean("is_new"),
-    isIncluded: boolean("is_included"),
-    isFree: boolean("is_free").notNull().default(false),
-
-    updatedAt: timestampTzNowUpdated("updated_at"),
-    deletedAt: timestampTz("deleted_at"),
-  },
-  (table) => [
-    index("models_is_chat_deleted_at_idx").on(table.isChat, table.deletedAt),
-  ]
-);
-
-export const locales = pgTable("locales", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  available: boolean("available").notNull().default(false),
-  createdAt: timestampTzNow("created_at"),
-  updatedAt: timestampTzNowUpdated("updated_at"),
-});
-
-export const modelTranslations = pgTable(
-  "model_translations",
-  {
-    modelId: text("model_id")
-      .notNull()
-      .references(() => models.id),
-    localeId: text("locale_id")
-      .notNull()
-      .references(() => locales.id),
-    description: text("description"),
-    createdAt: timestampTzNow("created_at"),
-    updatedAt: timestampTzNowUpdated("updated_at"),
-  },
-  (table) => [primaryKey({ columns: [table.modelId, table.localeId] })]
-);
-
-export const supportedParameters = pgTable("supported_parameters", {
-  // same as OpenRouter parameter id, e.g. "reasoning", "seed"
-  id: text("supported_parameter_id").primaryKey(),
-  label: text("label").notNull(),
-  iconUrl: text("icon_url"),
-  color: text("color"),
-  createdAt: timestampTzNow("created_at"),
-});
-
-export const suggestionGroups = pgTable("suggestion_groups", {
-  id: text("id").primaryKey(), // flagship, coder, roleplay, fast
-  icon: text("icon").notNull(), // lucide icon name
-  title: text("title").notNull(), // "Flagship Models", "Best Coders", etc.
-  label: text("label").notNull(), // description text
-  promoted: boolean("promoted").notNull().default(false), // whether to show prominently
-  models: text("models").array().notNull(), // array of model IDs
-  createdAt: timestampTzNow("created_at"),
-  updatedAt: timestampTzNowUpdated("updated_at"),
-});
-
-export const suggestionGroupTranslations = pgTable(
-  "suggestion_group_translations",
-  {
-    suggestionGroupId: text("suggestion_group_id")
-      .notNull()
-      .references(() => suggestionGroups.id),
-    localeId: text("locale_id")
-      .notNull()
-      .references(() => locales.id),
-    title: text("title").notNull(),
-    label: text("label").notNull(),
-    createdAt: timestampTzNow("created_at"),
-    updatedAt: timestampTzNowUpdated("updated_at"),
-  },
-  (table) => [
-    primaryKey({ columns: [table.suggestionGroupId, table.localeId] }),
-  ]
-);
-
-export const modelSupportedParameters = pgTable("model_supported_parameters", {
-  modelId: text("model_id")
-    .notNull()
-    .references(() => models.id),
-  supportedParameterId: text("supported_parameter_id")
-    .notNull()
-    .references(() => supportedParameters.id),
-});
-
-export const modelsRelations = relations(models, ({ one, many }) => ({
-  provider: one(providers, {
-    fields: [models.providerId],
-    references: [providers.id],
-  }),
-  supportedParameters: many(modelSupportedParameters),
-  translations: many(modelTranslations),
-}));
-
-export const providersRelations = relations(providers, ({ many }) => ({
-  models: many(models),
-}));
-
-export const supportedParametersRelations = relations(
-  supportedParameters,
-  ({ many }) => ({
-    modelSupportedParameters: many(modelSupportedParameters),
-  })
-);
-
-export const modelSupportedParametersRelations = relations(
+import {
+  chats,
+  locales,
+  messages,
+  models,
   modelSupportedParameters,
-  ({ one }) => ({
-    model: one(models, {
-      fields: [modelSupportedParameters.modelId],
-      references: [models.id],
-    }),
-    supportedParameter: one(supportedParameters, {
-      fields: [modelSupportedParameters.supportedParameterId],
-      references: [supportedParameters.id],
-    }),
-  })
-);
-
-export const chats = pgTable("chats", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id),
-  title: text("title").notNull(),
-  isArchived: boolean("is_archived").notNull().default(false),
-  lastMessageAt: timestampTz("last_message_at").notNull(),
-  createdAt: timestampTzNow("created_at"),
-  updatedAt: timestampTzNowUpdated("updated_at"),
-  deletedAt: timestampTz("deleted_at"),
-});
-
-export const chatRelations = relations(chats, ({ one, many }) => ({
-  user: one(user, {
-    fields: [chats.userId],
-    references: [user.id],
-  }),
-  threads: many(threads),
-}));
-
-export const threads = pgTable("threads", {
-  id: text("id").primaryKey(),
-  chatId: text("chat_id")
-    .notNull()
-    .references(() => chats.id),
-  lastModelId: text("last_model_id")
-    .notNull()
-    .references(() => models.id),
-  lastMessageAt: timestampTz("last_message_at").notNull(),
-  createdAt: timestampTzNow("created_at"),
-  updatedAt: timestampTzNowUpdated("updated_at"),
-  closedAt: timestampTz("closed_at"),
-});
-
-export const threadsRelations = relations(threads, ({ one, many }) => ({
-  chat: one(chats, {
-    fields: [threads.chatId],
-    references: [chats.id],
-  }),
-  lastModel: one(models, {
-    fields: [threads.lastModelId],
-    references: [models.id],
-  }),
-  messages: many(messages),
-}));
-
-export const messages = pgTable("messages", {
-  id: text("id").primaryKey(),
-  threadId: text("thread_id")
-    .notNull()
-    .references(() => threads.id),
-  modelId: text("last_model_id")
-    .notNull()
-    .references(() => models.id),
-  role: text("role").notNull(), // "user" | "assistant"
-  content: jsonb("content").notNull(), // Store the full content array
-  attachments: jsonb("attachments"), // Store attachments array
-  metadata: jsonb("metadata"), // Store metadata object
-  status: jsonb("status"), // Store status object (for assistant messages)
-  createdAt: timestampTz("created_at").notNull(),
-  updatedAt: timestampTzNowUpdated("updated_at"),
-  deletedAt: timestampTz("deleted_at"),
-});
-
-export const messagesRelations = relations(messages, ({ one }) => ({
-  thread: one(threads, {
-    fields: [messages.threadId],
-    references: [threads.id],
-  }),
-  model: one(models, {
-    fields: [messages.modelId],
-    references: [models.id],
-  }),
-}));
-
-export const usage = pgTable(
-  "usage",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id").references(() => user.id),
-    userKey: text("user_key"),
-    ip: text("ip"),
-    userAgent: text("user_agent"),
-    cfRay: text("cf_ray"),
-    geo: jsonb("geo"),
-    modelId: text("model_id").references(() => models.id),
-    providerMetadata: jsonb("provider_metadata"),
-    tokensPrompt: integer("tokens_prompt"),
-    tokensCompletion: integer("tokens_completion"),
-    costPrompt: numeric("cost_prompt"),
-    costCompletion: numeric("cost_completion"),
-    responseStatus: text("response_status"),
-    createdAt: timestampTzNow("created_at"),
-  },
-  (table) => [
-    index("usage_user_id_idx").on(table.userId),
-    index("usage_user_key_idx").on(table.userKey),
-    index("usage_model_id_idx").on(table.modelId),
-  ]
-);
-
-export const usageRelations = relations(usage, ({ one }) => ({
-  user: one(user, {
-    fields: [usage.userId],
-    references: [user.id],
-  }),
-  model: one(models, {
-    fields: [usage.modelId],
-    references: [models.id],
-  }),
-}));
-
-export const localesRelations = relations(locales, ({ many }) => ({
-  modelTranslations: many(modelTranslations),
-  suggestionGroupTranslations: many(suggestionGroupTranslations),
-}));
-
-export const modelTranslationsRelations = relations(
   modelTranslations,
-  ({ one }) => ({
-    model: one(models, {
-      fields: [modelTranslations.modelId],
-      references: [models.id],
-    }),
-    locale: one(locales, {
-      fields: [modelTranslations.localeId],
-      references: [locales.id],
-    }),
-  })
-);
-
-export const suggestionGroupsRelations = relations(
+  providers,
   suggestionGroups,
-  ({ many }) => ({
-    translations: many(suggestionGroupTranslations),
-  })
-);
-
-export const suggestionGroupTranslationsRelations = relations(
   suggestionGroupTranslations,
-  ({ one }) => ({
-    suggestionGroup: one(suggestionGroups, {
-      fields: [suggestionGroupTranslations.suggestionGroupId],
-      references: [suggestionGroups.id],
-    }),
-    locale: one(locales, {
-      fields: [suggestionGroupTranslations.localeId],
-      references: [locales.id],
-    }),
-  })
-);
+  supportedParameters,
+  threads,
+  usage,
+} from "@/db/tables";
+
+export {
+  account,
+  chatRelations,
+  chats,
+  locales,
+  localesRelations,
+  messages,
+  messagesRelations,
+  models,
+  modelsRelations,
+  modelSupportedParameters,
+  modelSupportedParametersRelations,
+  modelTranslations,
+  modelTranslationsRelations,
+  providers,
+  providersRelations,
+  providerTiers,
+  session,
+  sessionRelations,
+  suggestionGroups,
+  suggestionGroupsRelations,
+  suggestionGroupTranslations,
+  suggestionGroupTranslationsRelations,
+  supportedParameters,
+  supportedParametersRelations,
+  threads,
+  threadsRelations,
+  usage,
+  usageRelations,
+  user,
+  userRelations,
+  verification,
+};
 
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
 

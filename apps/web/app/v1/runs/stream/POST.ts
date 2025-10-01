@@ -1,34 +1,12 @@
-import { getRequestBody } from "@/app/api/request";
-import type { NewMessage } from "@/db";
-import { db, messages, threads } from "@/db";
-import { auth } from "@/lib/auth";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-const ContentSchema = z.object({
-  type: z.string(),
-  text: z.string().optional(),
-});
-
-const MessageSchema = z.object({
-  id: z.string(),
-  createdAt: z.string(),
-  role: z.enum(["user", "assistant"]),
-  content: z.array(ContentSchema),
-  attachments: z.array(z.any()).optional(),
-  metadata: z
-    .object({
-      custom: z.record(z.string(), z.unknown()).optional(),
-    })
-    .optional(),
-  status: z
-    .object({
-      type: z.string(),
-      reason: z.string().optional(),
-    })
-    .optional(),
-});
+import { getRequestBody } from "@/app/api/request";
+import type { NewMessage } from "@/db";
+import { db, messages, threads } from "@/db";
+import { auth } from "@/lib/auth";
+import { MessageSchema } from "@/lib/trpc/messages";
 
 const RunsStreamSchema = z.object({
   thread_id: z.string(),
@@ -75,9 +53,12 @@ export async function POST(request: Request) {
         role: message.role,
         content: message.content,
         attachments: message.attachments || [],
-        metadata: message.metadata || {},
-        status: message.status || null,
-        createdAt: new Date(message.createdAt),
+        metadata: message.metadata || { custom: {} },
+        status: message.status || {},
+        createdAt:
+          typeof message.createdAt === "string"
+            ? new Date(message.createdAt)
+            : (message.createdAt ?? new Date()),
         modelId: "",
       })
     );
@@ -89,7 +70,12 @@ export async function POST(request: Request) {
     if (lastMessage) {
       await db
         .update(threads)
-        .set({ lastMessageAt: new Date(lastMessage.createdAt) })
+        .set({
+          lastMessageAt:
+            typeof lastMessage.createdAt === "string"
+              ? new Date(lastMessage.createdAt)
+              : (lastMessage.createdAt ?? new Date()),
+        })
         .where(eq(threads.id, body.thread_id));
     }
 

@@ -70,7 +70,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       role: body.content.role,
       content: contentParts,
       attachments: [],
-      metadata: {},
+      metadata: { custom: {} },
       status: null,
       createdAt: new Date(),
     });

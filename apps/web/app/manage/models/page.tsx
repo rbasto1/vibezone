@@ -7,9 +7,7 @@ import ModelsPageClient from "./page-client";
 
 const ModelsPage: NextPage<PageProps<"/manage/models">> = async () => {
   const caller = await getServerCaller();
-  const state = await prefetch(caller, [
-    caller.models.list.prefetch({ showDeleted: true }),
-  ]);
+  const state = await prefetch(caller, [caller.models.adminList.prefetch()]);
 
   return (
     <HydrationBoundary state={state}>

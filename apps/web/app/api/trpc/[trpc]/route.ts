@@ -10,6 +10,9 @@ const handler = (req: Request) =>
     req,
     router: appRouter,
     createContext,
+    onError({ error, path, type }) {
+      console.error(`Error in module ${path} (${type}):`, error);
+    },
   });
 
 export { handler as GET, handler as POST };
