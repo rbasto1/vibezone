@@ -8,6 +8,7 @@ export const storageKeys = {
   manageQuery: "manage:q",
   manageSort: "manage:sort",
   managePriority: "manage:priority",
+  manageDeleted: "manage:deleted",
   manageTier: "manage:tier",
 } as const;
 

@@ -1,14 +1,15 @@
 import { and, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db";
+import type { Provider } from "@/db/schema";
 import {
-  models,
-  providers,
+  models as modelsTable,
+  providers as providersTable,
   suggestionGroups,
   suggestionGroupTranslations,
 } from "@/db/schema";
 
-export async function listModels(showDeleted = false) {
+export async function listModels() {
   const result = await db.query.models.findMany({
     columns: {
       pricing: false,
@@ -19,15 +20,15 @@ export async function listModels(showDeleted = false) {
       architectureInstructType: false,
     },
     where: and(
-      showDeleted ? undefined : isNull(models.deletedAt),
-      showDeleted ? undefined : isNull(providers.deletedAt),
-      eq(models.isChat, true)
+      isNull(modelsTable.deletedAt),
+      isNull(providersTable.deletedAt),
+      eq(modelsTable.isChat, true)
     ),
     with: {
       provider: true,
       supportedParameters: true,
     },
-    orderBy: [models.id],
+    orderBy: [modelsTable.id],
   });
   const groups = await db.query.suggestionGroups.findMany({
     columns: {
@@ -49,24 +50,7 @@ export async function listModels(showDeleted = false) {
     orderBy: [suggestionGroups.id],
   });
 
-  const uniqueProviders = result
-    .map((item) => item.provider)
-    .reduce(
-      (acc, provider) => {
-        if (!acc.some((p) => p.id === provider.id)) {
-          acc.push(provider);
-        }
-        return acc;
-      },
-      [] as (typeof result)[0]["provider"][]
-    )
-    .sort((a, b) => {
-      // Sort by order first, then by name as fallback
-      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
-      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
-      if (orderA !== orderB) return orderA - orderB;
-      return a.name.localeCompare(b.name);
-    });
+  const uniqueProviders = getUniqueProviders(result);
 
   return {
     models: result.map((model) => {
@@ -112,4 +96,65 @@ export async function listModels(showDeleted = false) {
     })),
     groups,
   };
+}
+
+export async function listModelsAdmin() {
+  const rows = await db.query.models.findMany({
+    columns: {
+      topProvider: false,
+      perRequestLimits: false,
+      architectureModality: false,
+      architectureTokenizer: false,
+      architectureInstructType: false,
+    },
+    with: {
+      provider: true,
+    },
+    orderBy: [modelsTable.id],
+  });
+
+  const providers = getUniqueProviders(rows);
+
+  return {
+    models: rows.map((row) => {
+      const { provider, ...model } = row;
+      return {
+        ...model,
+        pricing: {
+          prompt: Number(model.pricing.prompt),
+          completion: Number(model.pricing.completion),
+          request: numberOrNull(model.pricing.request),
+          image: numberOrNull(model.pricing.image),
+          webSearch: numberOrNull(model.pricing.web_search),
+          internalReasoning: numberOrNull(model.pricing.internal_reasoning),
+        },
+      };
+    }),
+    providers,
+  };
+}
+
+function numberOrNull(value: string | null | undefined) {
+  return value ? Number(value) : null;
+}
+
+function getUniqueProviders(result: { provider: Provider }[]) {
+  return result
+    .map((item) => item.provider)
+    .reduce(
+      (acc, provider) => {
+        if (!acc.some((p) => p.id === provider.id)) {
+          acc.push(provider);
+        }
+        return acc;
+      },
+      [] as (typeof result)[0]["provider"][]
+    )
+    .sort((a, b) => {
+      // Sort by order first, then by name as fallback
+      const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.name.localeCompare(b.name);
+    });
 }

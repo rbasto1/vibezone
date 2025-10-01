@@ -8,6 +8,7 @@ import { QueryAlert } from "@/components/ui/query-alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/components/ui/utils";
 import type { Provider, ProviderTier } from "@/db";
+import { formatDate } from "@/lib/format";
 import { trpc } from "@/lib/trpc/client";
 import type { ProvidersListOutput } from "@/lib/trpc/server/server";
 import type { ColumnDef, Row, SortingState } from "@tanstack/react-table";
@@ -395,16 +396,6 @@ const ProviderManagePageClient: NextPage = () => {
 };
 
 export default ProviderManagePageClient;
-
-function formatDate(value?: string | Date | null) {
-  if (!value) return "";
-  const d = typeof value === "string" ? new Date(value) : value;
-  return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  }).format(d);
-}
 
 const tierPriority: Record<ProviderTier, number> = {
   leaders: 1,

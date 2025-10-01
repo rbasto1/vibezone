@@ -5,19 +5,9 @@ import {
   providers,
   supportedParameters,
 } from "@/db/schema";
+import { formatDate } from "@/lib/format";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
-
-function formatDate(value?: Date | null) {
-  if (!value) return "";
-  return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(value);
-}
 
 export default async function ModelDetailsPage({
   params: paramsPromise,
@@ -154,7 +144,9 @@ function BackLink({
   if (typeof provider === "string") q.set("provider", provider);
   if (typeof txt === "string") q.set("q", txt);
   if (typeof sort === "string") q.set("sort", sort);
-  const href = q.toString() ? `/manage?${q.toString()}` : "/manage";
+  const href = q.toString()
+    ? `/manage/models?${q.toString()}`
+    : "/manage/models";
   return (
     <Link href={href} className="text-sm text-primary hover:underline">
       ← Back to models

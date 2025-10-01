@@ -38,21 +38,32 @@ const log = (
 
 const main = async () => {
   const token = process.env.VERCEL_TOKEN;
-  const teamId = process.env.VERCEL_TEAM_ID;
-  const project = process.env.VERCEL_PROJECT_ID;
-  const targetsInput = process.env.VERCEL_TARGETS;
-  const publicPlainEnv = process.env.VERCEL_PUBLIC_PLAIN;
 
   if (!token) {
     log("error", "Missing VERCEL_TOKEN env");
     process.exitCode = 1;
     return;
   }
-  if (!project) {
-    log("error", "Missing VERCEL_PROJECT env (name or id)");
+
+  const projects = process.env.VERCEL_PROJECT_IDS?.split(",");
+  if (!projects?.length) {
+    log(
+      "error",
+      "Missing VERCEL_PROJECT_IDS env (list of ids separated by commas)"
+    );
     process.exitCode = 1;
     return;
   }
+
+  for (const project of projects) {
+    await setEnvForProject(project, token);
+  }
+};
+
+async function setEnvForProject(project: string, token: string) {
+  const teamId = process.env.VERCEL_TEAM_ID;
+  const targetsInput = process.env.VERCEL_TARGETS;
+  const publicPlainEnv = process.env.VERCEL_PUBLIC_PLAIN;
 
   const targets = (targetsInput || "development,preview,production")
     .split(",")
@@ -116,7 +127,7 @@ const main = async () => {
 
     log("info", `Set ${key} (${type}) for targets: ${targets.join(",")}`);
   }
-};
+}
 
 main().catch((err) => {
   log("error", "Unexpected error", err);

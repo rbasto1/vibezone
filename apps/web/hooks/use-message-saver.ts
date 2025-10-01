@@ -1,3 +1,4 @@
+import type { MessageMetadata } from "@/db/json-columns-types";
 import { useSession } from "@/hooks/use-session";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
@@ -132,8 +133,8 @@ export const useMessageSaver = (panel: PanelConfig) => {
               role: msg.role,
               content: msg.content,
               attachments: msg.attachments || [],
-              metadata: msg.metadata || {},
-              status: msg.status || {},
+              metadata: msg.metadata as MessageMetadata,
+              status: msg.status,
               createdAt: msg.createdAt,
             })),
           },

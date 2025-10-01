@@ -7,13 +7,40 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { authenticatedProcedure, t } from "./server/initialize";
 
-const messageSchema = z.object({
+export const MessageMetadataSchema = z.object({
+  custom: z.record(z.string(), z.unknown()),
+  steps: z.array(z.unknown()).optional(),
+  unstable_data: z.array(z.unknown()).optional(),
+  unstable_state: z.null().optional(),
+  unstable_annotations: z.array(z.unknown()).optional(),
+});
+
+export const MessageStatusSchema = z.object({
+  type: z
+    .enum(["running", "requires-action", "complete", "incomplete"])
+    .optional(),
+  reason: z
+    .enum([
+      "tool-calls",
+      "stop",
+      "unknown",
+      "cancelled",
+      "length",
+      "content-filter",
+      "other",
+      "error",
+    ])
+    .optional(),
+  error: z.unknown().optional(),
+});
+
+export const MessageSchema = z.object({
   id: z.string(),
   role: z.enum(["user", "assistant", "system"]),
   content: z.unknown(),
   attachments: z.array(z.any()).optional().readonly(),
-  metadata: z.record(z.string(), z.any()).optional(),
-  status: z.record(z.string(), z.any()).optional(),
+  metadata: MessageMetadataSchema.optional(),
+  status: MessageStatusSchema.optional(),
   createdAt: z.date().optional(),
 });
 
@@ -24,7 +51,7 @@ export const messagesRouter = t.router({
         chatId: z.string(),
         threadId: z.string(), // This is the panelId
         modelId: z.string(),
-        messages: z.array(messageSchema),
+        messages: z.array(MessageSchema),
       })
     )
     .mutation(async ({ input, ctx }) => {

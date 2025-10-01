@@ -24,21 +24,13 @@ import {
   t,
 } from "@/lib/trpc/server/initialize";
 import { deepl, localeToTargetLanguageCode } from "../deepl/deepl";
-import { listModels } from "./models-list";
-
-// Shared server function to list models for SSR and tRPC
-const ModelsListInputSchema = z
-  .object({
-    showDeleted: z.boolean().optional(),
-  })
-  .optional();
+import { listModels, listModelsAdmin } from "./models-list";
 
 export type GetModelsListReturn = Awaited<ReturnType<typeof listModels>>;
 
 export const modelsRouter = t.router({
-  list: publicProcedure
-    .input(ModelsListInputSchema)
-    .query(({ input }) => listModels(input?.showDeleted)),
+  list: publicProcedure.query(listModels),
+  adminList: adminProcedure.query(listModelsAdmin),
 
   update: adminProcedure
     .input(

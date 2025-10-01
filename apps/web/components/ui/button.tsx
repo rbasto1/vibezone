@@ -92,7 +92,7 @@ function Button({
       {...restProps}
     >
       {spinner}
-      {children}
+      {(!loading || size !== "icon") && children}
     </Comp>
   );
 }

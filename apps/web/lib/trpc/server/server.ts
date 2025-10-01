@@ -2,10 +2,10 @@ import "server-only";
 
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { chatsRouter } from "../chats";
+import { localesRouter } from "../locales";
 import { messagesRouter } from "../messages";
 import { modelsRouter } from "../models";
 import { providersRouter } from "../providers";
-import { localesRouter } from "../locales";
 import { suggestionGroupsRouter } from "../suggestion-groups";
 import { usersRouter } from "../users";
 import { t } from "./initialize";
@@ -26,6 +26,7 @@ export type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 // models
 export type ModelsListOutput = RouterOutputs["models"]["list"];
+export type ModelsAdminListOutput = RouterOutputs["models"]["adminList"];
 export type ModelsSyncFromOpenRouterOutput =
   RouterOutputs["models"]["syncFromOpenRouter"];
 // providers
@@ -35,3 +36,5 @@ export type SuggestionGroupsListOutput =
   RouterOutputs["suggestionGroups"]["list"];
 // locales
 export type LocalesListOutput = RouterOutputs["locales"]["list"];
+// users
+export type UsersManageListOutput = RouterOutputs["users"]["manageList"];

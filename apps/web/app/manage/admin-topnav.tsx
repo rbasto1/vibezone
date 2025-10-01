@@ -20,6 +20,7 @@ interface AdminTopNavProps {
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/manage", label: "Dashboard" },
+  { href: "/manage/users", label: "Users" },
   { href: "/manage/models", label: "Models" },
   { href: "/manage/providers", label: "Providers" },
   { href: "/manage/groups", label: "Groups" },

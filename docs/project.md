@@ -33,17 +33,20 @@
 - [x] Warn about discarding a panel
 - [x] Translate to Brazilian Portuguese
 - [x] Assign .br domains
+- [ ] Explore bot protection (Vercel BotID? Arcjet? hCaptcha?)
 - [ ] Add Brazilian models
+- [x] Language-specific chat titles
+- [ ] Paginate chat history
+- [ ] Search chats (backend search of all messages)
+- [ ] Add Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [ ] Add user preferences (auto-scroll, language, hidden providers, pre-prompt)
 - [x] Keep composer text in SessionStorage
 - [ ] Thumb up/down (or stars?)
-- [ ] Paginate chat history
 - [x] Limit usage for free users (400)
 - [x] Show deleted providers and models in the admin
 - [ ] Limit usage for paid users
 - [ ] Import chats from OpenAI format
-- [ ] Add Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add analytics (Posthog?)
 - [ ] Improve error handling (sonner)
 - [ ] Refactor vz-open-login event to use jotai state
@@ -52,5 +55,3 @@
 - [ ] Backend processing of messages: save the AI response without the need for a frontend
 - [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
 - [ ] Projects (group threads) - paying only
-- [ ] Search chats (backend search of all messages)
-- [ ] Explore bot protection (Vercel BotID? Arcjet? hCaptcha?)
