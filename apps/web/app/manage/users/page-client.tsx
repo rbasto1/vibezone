@@ -37,9 +37,9 @@ const ManageUsersPageClient: NextPage = () => {
         header: "Location",
         cell: ({ row }) => (
           <>
-            {row.original.countries.join(", ")}
+            {row.original.countries?.join(", ")}
             <br />
-            {row.original.continents.join(", ")}
+            {row.original.continents?.join(", ")}
           </>
         ),
       },

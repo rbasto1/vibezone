@@ -26,10 +26,10 @@ export const usersRouter = t.router({
       .select({
         userId: usage.userId,
         continents: sql<
-          string[]
+          string[] | null
         >`array_agg(distinct ${usage.geo}->>'continent')`.as("continents"),
         countries: sql<
-          string[]
+          string[] | null
         >`array_agg(distinct ${usage.geo}->>'country')`.as("countries"),
         totalCost30:
           sql<number>`coalesce(sum(${usage.costPrompt} + ${usage.costCompletion}), 0)::numeric`.as(

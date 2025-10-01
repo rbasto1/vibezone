@@ -5,7 +5,7 @@ import {
   providers,
   supportedParameters,
 } from "@/db/schema";
-import { formatDate } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 
@@ -63,46 +63,139 @@ export default async function ModelDetailsPage({
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-md border p-4 space-y-2">
           <h2 className="font-semibold">General</h2>
-          <div className="text-sm">Provider: {model.provider.name}</div>
-          <div className="text-sm">
-            Canonical Slug: {m.canonicalSlug || "—"}
-          </div>
-          <div className="text-sm">HuggingFace: {m.huggingFaceId || "—"}</div>
-          <div className="text-sm">Created: {formatDate(m.createdAt)}</div>
-          <div className="text-sm">Deleted: {formatDate(m.deletedAt)}</div>
+          <table className="w-full">
+            <tbody>
+              <tr>
+                <td>Provider</td>
+                <td>{model.provider.name}</td>
+              </tr>
+              <tr>
+                <td>Canonical Slug</td>
+                <td>{m.canonicalSlug || "—"}</td>
+              </tr>
+              <tr>
+                <td>HuggingFace</td>
+                <td>{m.huggingFaceId || "—"}</td>
+              </tr>
+              {m.topProvider.is_moderated && (
+                <tr>
+                  <td>Moderated</td>
+                  <td>🔴</td>
+                </tr>
+              )}
+              <tr>
+                <td>Created</td>
+                <td>{formatDate(m.createdAt)}</td>
+              </tr>
+              <tr>
+                <td>Deleted</td>
+                <td>{formatDate(m.deletedAt)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div className="rounded-md border p-4 space-y-2">
           <h2 className="font-semibold">Architecture</h2>
-          <div className="text-sm">
-            Modality: {m.architectureModality || "—"}
-          </div>
-          <div className="text-sm">
-            Input: {(m.architectureInputModalities || []).join(", ") || "—"}
-          </div>
-          <div className="text-sm">
-            Output: {(m.architectureOutputModalities || []).join(", ") || "—"}
-          </div>
-          <div className="text-sm">
-            Tokenizer: {m.architectureTokenizer || "—"}
-          </div>
-          <div className="text-sm">
-            Instruct type: {m.architectureInstructType || "—"}
-          </div>
+          <table className="w-full">
+            <tbody>
+              <tr>
+                <td>Modality</td>
+                <td>{m.architectureModality || "—"}</td>
+              </tr>
+              <tr>
+                <td>Input</td>
+                <td>
+                  {(m.architectureInputModalities || []).join(", ") || "—"}
+                </td>
+              </tr>
+              <tr>
+                <td>Output</td>
+                <td>
+                  {(m.architectureOutputModalities || []).join(", ") || "—"}
+                </td>
+              </tr>
+              <tr>
+                <td>Tokenizer</td>
+                <td>{m.architectureTokenizer || "—"}</td>
+              </tr>
+              <tr>
+                <td>Instruct type</td>
+                <td>{m.architectureInstructType || "—"}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-md border p-4">
-          <h2 className="font-semibold mb-2">Pricing</h2>
-          <pre className="rounded bg-muted/40 p-2 text-xs overflow-auto">
-            {JSON.stringify(m.pricing, null, 2)}
-          </pre>
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="text-left">Driver</th>
+                <th className="text-left">Price (per million)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Prompt</td>
+                <td>{priceFormat(m.pricing.prompt)}</td>
+              </tr>
+              <tr>
+                <td>Completion</td>
+                <td>{priceFormat(m.pricing.completion)}</td>
+              </tr>
+              <tr>
+                <td>Image</td>
+                <td>{priceFormat(m.pricing.image)}</td>
+              </tr>
+              <tr>
+                <td>Request</td>
+                <td>{priceFormat(m.pricing.request)}</td>
+              </tr>
+              <tr>
+                <td>Web Search</td>
+                <td>{priceFormat(m.pricing.web_search)}</td>
+              </tr>
+              <tr>
+                <td>Internal Reasoning</td>
+                <td>{priceFormat(m.pricing.internal_reasoning)}</td>
+              </tr>
+              <tr>
+                <td>Input Cache Read</td>
+                <td>{priceFormat(m.pricing.input_cache_read)}</td>
+              </tr>
+              <tr>
+                <td>Input Cache Write</td>
+                <td>{priceFormat(m.pricing.input_cache_write)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div className="rounded-md border p-4">
-          <h2 className="font-semibold mb-2">Top Provider</h2>
-          <pre className="rounded bg-muted/40 p-2 text-xs overflow-auto">
-            {JSON.stringify(m.topProvider, null, 2)}
-          </pre>
+          <h2 className="font-semibold mb-2">Limits</h2>
+          <table className="w-full">
+            <tbody>
+              <tr>
+                <td>Context Length</td>
+                <td className="text-right">
+                  {m.topProvider.context_length
+                    ? Intl.NumberFormat().format(m.topProvider.context_length)
+                    : "—"}
+                </td>
+              </tr>
+              <tr>
+                <td>Max Completion Tokens</td>
+                <td className="text-right">
+                  {m.topProvider.max_completion_tokens
+                    ? Intl.NumberFormat().format(
+                        m.topProvider.max_completion_tokens
+                      )
+                    : "—"}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -152,4 +245,12 @@ function BackLink({
       ← Back to models
     </Link>
   );
+}
+
+function priceFormat(price: string | null | undefined) {
+  return price === null || price === undefined
+    ? "—"
+    : Number(price) === 0
+      ? "🆓"
+      : formatCurrency(Number(price) * 1_000_000);
 }

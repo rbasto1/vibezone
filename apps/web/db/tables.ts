@@ -149,14 +149,20 @@ export const suggestionGroupTranslations = pgTable(
   ]
 );
 
-export const modelSupportedParameters = pgTable("model_supported_parameters", {
-  modelId: text("model_id")
-    .notNull()
-    .references(() => models.id),
-  supportedParameterId: text("supported_parameter_id")
-    .notNull()
-    .references(() => supportedParameters.id),
-});
+export const modelSupportedParameters = pgTable(
+  "model_supported_parameters",
+  {
+    modelId: text("model_id")
+      .notNull()
+      .references(() => models.id),
+    supportedParameterId: text("supported_parameter_id")
+      .notNull()
+      .references(() => supportedParameters.id),
+  },
+  (table) => [
+    primaryKey({ columns: [table.modelId, table.supportedParameterId] }),
+  ]
+);
 
 export const chats = pgTable("chats", {
   id: text("id").primaryKey(),
