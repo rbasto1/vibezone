@@ -6,7 +6,7 @@ export function cors(env: Env, request: Request) {
 
   const allowed = [
     "https://www.vibezone.ai",
-    "https://multipla.ia.br",
+    "https://www.multipla.ia.br",
     "http://localhost:3022",
     /https:\/\/\S+-rbasto-team\.vercel\.app/,
   ];
