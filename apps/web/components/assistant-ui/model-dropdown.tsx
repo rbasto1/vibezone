@@ -5,7 +5,7 @@ import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { ChevronDown, ShieldAlertIcon } from "lucide-react";
-import { useState, type FC } from "react";
+import { useMemo, useState, type FC } from "react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -29,7 +29,8 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
   panelId,
   className,
 }) => {
-  const { providers, models } = useModelsValue();
+  const includeModels = useMemo(() => [modelId], [modelId]);
+  const { providers, models } = useModelsValue({ includeModels });
   const model = models.find((m) => m.id === modelId) ?? {
     id: modelId,
     name: modelId,

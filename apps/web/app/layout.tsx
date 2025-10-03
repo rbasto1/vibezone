@@ -116,7 +116,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         className={cn(geistSans.variable, geistMono.variable, "antialiased")}
       >
         <TRPCProvider>
-          <SessionProvider serverAuthData={authData?.user ? authData : null}>
+          <SessionProvider serverAuthData={authData}>
             <NextIntlClientProvider locale={locale} messages={messages}>
               <ThemeProvider
                 attribute="class"

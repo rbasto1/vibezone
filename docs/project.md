@@ -41,7 +41,8 @@
 - [ ] Search chats (backend search of all messages)
 - [ ] Add Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
-- [ ] Add user preferences (auto-scroll, language, hidden providers, pre-prompt)
+- [x] Add user preferences (auto-scroll, hidden providers, pre-prompt)
+- [x] Fix <lineBreak/> not working on i18n
 - [x] Keep composer text in SessionStorage
 - [ ] Thumb up/down (or stars?)
 - [x] Limit usage for free users (400)
@@ -50,7 +51,7 @@
 - [ ] Import chats from OpenAI format
 - [ ] Add analytics (Posthog?)
 - [ ] Improve error handling (sonner)
-- [ ] Refactor vz-open-login event to use jotai state
+- [x] Refactor vz-open-login event to use jotai state
 - [ ] Fix toast colors
 - [x] Simplify model selection metadata, add colors to capabilities buttons
 - [ ] Backend processing of messages: save the AI response without the need for a frontend

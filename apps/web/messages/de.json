@@ -1,4 +1,7 @@
 {
+  "Prompts": {
+    "system": "Sie sind ein hilfreicher Assistent. Der Benutzer spricht Deutsch."
+  },
   "AnonQuota": {
     "mobileChip": "{remaining} von {limit}",
     "mobileBanner": "{remaining} von {limit} kostenlose Nachrichten übrig",
@@ -92,7 +95,7 @@
     "showMore": "Mehr anzeigen",
     "otherModels": "Weitere Modelle",
     "retentionIconAria": "Dieses Modell könnte deine Daten speichern",
-    "retentionTooltip": "Dieses Modell kann deine Nachrichten und Anhänge speichern, um neue Versionen zu trainieren.<lineBreak/>Teile in deinen Chats keine sensiblen Informationen."
+    "retentionTooltip": "Dieses Modell kann deine Nachrichten und Anhänge speichern, um neue Versionen zu trainieren.<lineBreak></lineBreak>Teile in deinen Chats keine sensiblen Informationen."
   },
   "ModelDropdownSearch": {
     "focusedPlaceholder": "Modelle durchsuchen...",
@@ -200,6 +203,46 @@
     "profileLabel": "Profil",
     "profileMenu": "Profilmenü öffnen",
     "fallbackName": "Benutzer",
+    "preferences": "Einstellungen",
     "signOut": "Abmelden"
+  },
+  "UserPreferences": {
+    "title": "Einstellungen",
+    "description": "Passe an, wie sich Vibezone für dich verhält.",
+    "autoScroll": {
+      "label": "Automatisches Scrollen",
+      "description": "Hält den Chat automatisch bei der neuesten Antwort."
+    },
+    "webSearch": {
+      "label": "Websuche",
+      "description": "Erlaube der KI, das Web zu durchsuchen, wenn das ausgewählte Modell das unterstützt."
+    },
+    "hiddenProviders": {
+      "label": "Versteckte Anbieter",
+      "description": "Blende Anbieter in den Modelldropdowns aus. In bestehenden Panels bleiben sie sichtbar.",
+      "summary": "{count, plural, one {# Anbieter ausgeblendet} other {# Anbieter ausgeblendet}}",
+      "clear": "Alle anzeigen",
+      "placeholder": "Typ hier, um die Liste zu filtern",
+      "suggestions": "Vorschläge",
+      "matches": "Treffer",
+      "noResults": "Keine Anbieter entsprechen \"{query}\".",
+      "empty": "Es sind keine Anbieter ausgeblendet.",
+      "any": "alle Anbieter"
+    },
+    "systemPrompt": {
+      "label": "Standardanweisungen",
+      "description": "Diese Anweisungen werden zu Beginn jeder Unterhaltung gesendet.",
+      "placeholder": "Füge Kontext oder Vorgaben hinzu, die die KI standardmäßig beachten soll."
+    },
+    "actions": {
+      "cancel": "Abbrechen",
+      "save": "Änderungen speichern",
+      "saving": "Speichere..."
+    },
+    "toast": {
+      "success": "Einstellungen aktualisiert.",
+      "error": "Einstellungen konnten nicht gespeichert werden: {message}"
+    },
+    "authRequired": "Bitte melde dich an, um deine Einstellungen zu verwalten."
   }
 }

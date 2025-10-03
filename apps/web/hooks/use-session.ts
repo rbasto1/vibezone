@@ -1,9 +1,11 @@
-import type { Session, User } from "better-auth";
+import type { AuthUser } from "@/lib/auth-client";
+import type { Session, SessionQueryParams } from "better-auth";
 import { createContext, useContext } from "react";
 
 export interface SessionContextValue {
   session: Session;
-  user: User;
+  user: AuthUser;
+  refetch?: (queryParams?: { query?: SessionQueryParams }) => void;
 }
 
 export const SessionContext = createContext<SessionContextValue | null>(null);

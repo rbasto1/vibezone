@@ -1,5 +1,8 @@
 "use client";
 
+import { Provider as JotaiProvider, getDefaultStore } from "jotai";
+import { useMemo, type PropsWithChildren } from "react";
+
 import { INITIAL_PANEL_COUNT } from "@/lib/constants";
 import { generateChatId } from "@/lib/id";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
@@ -11,18 +14,18 @@ import {
   panelStateAtom,
   type PanelConfig,
 } from "@/store/panels";
-
-import { Provider as JotaiProvider, getDefaultStore } from "jotai";
-import { useMemo, type PropsWithChildren } from "react";
+import { preferencesAtom, type PreferencesAtom } from "@/store/preferences";
 
 type ModelsProviderProps = PropsWithChildren<{
   modelsInitialValue: GetModelsListReturn;
   panelsInitialValue: PanelConfig[];
+  preferencesInitialValue: PreferencesAtom;
 }>;
 
 export function StoreProvider({
   modelsInitialValue,
   panelsInitialValue,
+  preferencesInitialValue,
   children,
 }: ModelsProviderProps) {
   const store = useMemo(() => {
@@ -39,6 +42,7 @@ export function StoreProvider({
         {} as Record<string, PanelState>
       )
     );
+    s.set(preferencesAtom, preferencesInitialValue);
 
     // Initialize chat atom with a new chat ID
     s.set(currentChatAtom, {
@@ -49,7 +53,7 @@ export function StoreProvider({
     });
 
     return s;
-  }, [modelsInitialValue, panelsInitialValue]);
+  }, [modelsInitialValue, panelsInitialValue, preferencesInitialValue]);
 
   return <JotaiProvider store={store}>{children}</JotaiProvider>;
 }

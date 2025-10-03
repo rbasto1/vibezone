@@ -51,13 +51,11 @@ const ModelsPageClient: NextPage = () => {
   } = trpc.models.adminList.useQuery();
   const utils = trpc.useUtils();
   const updateMutation = trpc.models.update.useMutation();
-  const deleteMutation = trpc.models.delete.useMutation({
-    onSuccess: async () => {
-      await utils.models.adminList.invalidate().catch(() => {
+  const hideMutation = trpc.models.hide.useMutation({
+    onSuccess: () =>
+      utils.models.adminList.invalidate().catch(() => {
         toast.warning("Failed to invalidate models list");
-      });
-      toast.success("Model deleted successfully");
-    },
+      }),
   });
   const syncMutation = trpc.models.syncFromOpenRouter.useMutation({
     onSuccess: async (res) => {
@@ -65,7 +63,17 @@ const ModelsPageClient: NextPage = () => {
         toast.warning("Failed to invalidate models list");
       });
       toast.success(
-        `Sync complete: providers ${res.providersUpserted}, models ${res.modelsUpserted}, soft-deleted ${res.softDeleted}.`
+        <div>
+          Sync complete:
+          <ul>
+            <li>+{res.addedProvidersCount} providers</li>
+            <li>+{res.addedModelsCount} models</li>
+            <li>={res.updatedModelsCount} models updated</li>
+            <li>-{res.deletedModelsCount} models</li>
+            <li>+{res.undeletedModelsCount} models undeleted</li>
+            <li>#{res.translatedModelsCount} translated</li>
+          </ul>
+        </div>
       );
     },
   });
@@ -82,8 +90,8 @@ const ModelsPageClient: NextPage = () => {
   const [priorityOnly, setPriorityOnly] = useState(
     () => getStorageItem(storageKeys.managePriority, z.boolean()) ?? false
   );
-  const [deletedOnly, setDeletedOnly] = useState(
-    () => getStorageItem(storageKeys.manageDeleted, z.boolean()) ?? false
+  const [hiddenOnly, setHiddenOnly] = useState(
+    () => getStorageItem(storageKeys.manageHidden, z.boolean()) ?? false
   );
   const [tierFilter, setTierFilter] = useState(
     getStorageItem(storageKeys.manageTier) ?? "all"
@@ -154,7 +162,7 @@ const ModelsPageClient: NextPage = () => {
           <div
             className={cn(
               "flex flex-col",
-              row.original.deletedAt ? "line-through" : ""
+              row.original.hiddenAt ? "line-through" : ""
             )}
           >
             {row.original.name}
@@ -248,7 +256,7 @@ const ModelsPageClient: NextPage = () => {
                 className="w-16 h-8 rounded border bg-background px-2"
                 value={m.priority ?? ""}
                 onChange={(e) => onPriorityChange(e.target.value)}
-                disabled={!!m.deletedAt}
+                disabled={!!m.hiddenAt}
               />
 
               <Button
@@ -258,7 +266,7 @@ const ModelsPageClient: NextPage = () => {
                 aria-pressed={!!m.isSuggested}
                 title="Suggested"
                 onClick={() => onToggle("isSuggested", !m.isSuggested)}
-                disabled={!!m.deletedAt}
+                disabled={!!m.hiddenAt}
               >
                 <ThumbsUp className="h-4 w-4" />
               </Button>
@@ -275,7 +283,7 @@ const ModelsPageClient: NextPage = () => {
                 aria-pressed={!!m.isPremium}
                 title="Premium"
                 onClick={() => onToggle("isPremium", !m.isPremium)}
-                disabled={!!m.deletedAt}
+                disabled={!!m.hiddenAt}
               >
                 <Crown className="h-4 w-4" />
               </Button>
@@ -292,7 +300,7 @@ const ModelsPageClient: NextPage = () => {
                 aria-pressed={!!m.isIncluded}
                 title="Included"
                 onClick={() => onToggle("isIncluded", !m.isIncluded)}
-                disabled={!!m.deletedAt}
+                disabled={!!m.hiddenAt}
               >
                 <BadgeCheck className="h-4 w-4" />
               </Button>
@@ -302,28 +310,39 @@ const ModelsPageClient: NextPage = () => {
 
               {/* Delete button */}
               <DeleteIconButton
-                isDeleted={!!m.deletedAt}
+                isHide
+                isDeleted={!!m.hiddenAt}
                 onDelete={() => {
-                  if (m.deletedAt) {
-                    const previousDeletedAt = m.deletedAt;
-                    setCacheFields({ deletedAt: null });
-                    updateMutation
-                      .mutateAsync({ id: m.id, deletedAt: null })
-                      .then(() => {
-                        toast.success(`Model "${m.name}" restored`);
-                      })
-                      .catch((err) => {
-                        setCacheFields({ deletedAt: previousDeletedAt });
-                        const message =
-                          err instanceof Error ? err.message : String(err);
-                        toast.error(`Failed to restore model: ${message}`);
-                      });
+                  if (m.hiddenAt) {
+                    const previousHiddenAt = m.hiddenAt;
+                    setCacheFields({ hiddenAt: null });
+                    updateMutation.mutateAsync(
+                      { id: m.id, hiddenAt: null },
+                      {
+                        onError: (error) => {
+                          setCacheFields({ hiddenAt: previousHiddenAt });
+                          const message =
+                            error instanceof Error
+                              ? error.message
+                              : JSON.stringify(error);
+                          toast.error(`Failed to restore model: ${message}`);
+                        },
+                      }
+                    );
                     return;
                   }
-                  deleteMutation.mutateAsync({ id: m.id }).catch((e) => {
-                    const message = e instanceof Error ? e.message : String(e);
-                    toast.error(`Failed to delete model: ${message}`);
-                  });
+                  hideMutation.mutateAsync(
+                    { id: m.id },
+                    {
+                      onError: (error) => {
+                        const message =
+                          error instanceof Error
+                            ? error.message
+                            : JSON.stringify(error);
+                        toast.error(`Failed to hide model: ${message}`);
+                      },
+                    }
+                  );
                 }}
               />
             </div>
@@ -331,7 +350,7 @@ const ModelsPageClient: NextPage = () => {
         },
       },
     ],
-    [utils.models.adminList, updateMutation, deleteMutation]
+    [utils.models.adminList, updateMutation, hideMutation]
   );
 
   const providerCounts = useMemo(() => {
@@ -357,7 +376,7 @@ const ModelsPageClient: NextPage = () => {
     return byQuery.filter((m) => {
       if (priorityOnly && (m.priority === null || m.priority === undefined))
         return false;
-      if (deletedOnly === !m.deletedAt) return false;
+      if (hiddenOnly === !m.hiddenAt) return false;
       if (tierFilter !== "all") {
         const provider = providers?.find((p) => p.id === m.providerId);
         return provider?.tier === tierFilter;
@@ -369,7 +388,7 @@ const ModelsPageClient: NextPage = () => {
     models,
     textFilter,
     priorityOnly,
-    deletedOnly,
+    hiddenOnly,
     tierFilter,
     providers,
   ]);
@@ -474,20 +493,20 @@ const ModelsPageClient: NextPage = () => {
                 type="button"
                 variant="ghost"
                 className={cn(
-                  deletedOnly
+                  hiddenOnly
                     ? "bg-green-500/10 border-green-500/30 text-green-600"
                     : "border-transparent text-muted-foreground hover:bg-accent"
                 )}
-                aria-pressed={deletedOnly}
-                title="Filter: Deleted"
+                aria-pressed={hiddenOnly}
+                title="Filter: Hidden"
                 onClick={() => {
-                  const next = !deletedOnly;
-                  setDeletedOnly(next);
-                  setStorageItem(storageKeys.manageDeleted, next);
+                  const next = !hiddenOnly;
+                  setHiddenOnly(next);
+                  setStorageItem(storageKeys.manageHidden, next);
                 }}
               >
                 <XSquareIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Deleted</span>
+                <span className="hidden sm:inline">Hidden</span>
               </Button>
             </div>
           </div>

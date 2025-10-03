@@ -1,6 +1,8 @@
 "use client";
 
+import { generateId } from "ai";
 import { PlusIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { FC } from "react";
 import { useState } from "react";
 
@@ -13,13 +15,13 @@ import {
   usePanelsStateSetter,
 } from "@/hooks/use-panels";
 import { useRuntimes } from "@/hooks/use-response-registration";
-import { useSession } from "@/hooks/use-session";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
+import { useUser } from "@/lib/auth-client";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import { CustomThreadListItem } from "./custom-thread-list-item";
-import { useTranslations } from "next-intl";
 
 export const ThreadList: FC = () => {
   return (
@@ -31,12 +33,17 @@ export const ThreadList: FC = () => {
 };
 
 const ThreadListNew: FC = () => {
-  const t = useTranslations("ThreadList");
+  const t = useTranslations();
   const getRuntimes = useRuntimes();
   const setPanelsState = usePanelsStateSetter();
   const setPanelsConfig = usePanelsConfigSetter();
   const setUIState = useUIStateSetter();
   const createNewChat = useNewChat();
+  const preferences = useUserPreferencesValue();
+
+  const systemPrompt = preferences.changedPrompt
+    ? preferences.systemPrompt
+    : t("Prompts.system");
 
   const handleNewChat = () => {
     // Generate new chat ID
@@ -56,7 +63,20 @@ const ThreadListNew: FC = () => {
             id: generateThreadId(order),
             provider: c.provider,
             model: c.model,
-            initialMessages: [],
+            initialMessages: systemPrompt
+              ? [
+                  {
+                    id: generateId(),
+                    role: "system",
+                    parts: [
+                      {
+                        type: "text",
+                        text: systemPrompt,
+                      },
+                    ],
+                  },
+                ]
+              : [],
           }) satisfies PanelConfig
       )
     );
@@ -70,7 +90,7 @@ const ThreadListNew: FC = () => {
       onClick={handleNewChat}
     >
       <PlusIcon />
-      {t("newChat")}
+      {t("ThreadList.newChat")}
     </Button>
   );
 };
@@ -82,9 +102,9 @@ const ThreadListItems: FC = () => {
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
   const setUIState = useUIStateSetter();
 
-  const session = useSession();
+  const { user } = useUser();
   const { data: chats, error } = trpc.chats.listChats.useQuery(undefined, {
-    enabled: !!session?.user,
+    enabled: !!user,
     refetchInterval: 60 * 1000,
     refetchOnWindowFocus: true,
   });
@@ -154,7 +174,7 @@ const ThreadListItems: FC = () => {
   const handleRenameChat = (chatId: string, newTitle: string) =>
     renameChatMutation.mutateAsync({ chatId, title: newTitle });
 
-  if (!session?.user) {
+  if (!user) {
     return (
       <div className="text-sm text-muted-foreground p-2">
         {t("loginRequired")}
@@ -168,9 +188,7 @@ const ThreadListItems: FC = () => {
 
   if (!chats) {
     return (
-      <div className="text-sm text-muted-foreground p-2">
-        {t("loading")}
-      </div>
+      <div className="text-sm text-muted-foreground p-2">{t("loading")}</div>
     );
   }
 

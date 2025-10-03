@@ -1,4 +1,7 @@
 {
+  "Prompts": {
+    "system": "You are a helpful assistant. The user speaks English."
+  },
   "AnonQuota": {
     "mobileChip": "{remaining} of {limit}",
     "mobileBanner": "{remaining} of {limit} free messages remaining",
@@ -92,7 +95,7 @@
     "showMore": "Show more",
     "otherModels": "Other models",
     "retentionIconAria": "This model may retain your data",
-    "retentionTooltip": "This model may retain your messages and attachments to train new versions.<lineBreak/>Do not share sensitive information in your chats."
+    "retentionTooltip": "This model may retain your messages and attachments to train new versions.<lineBreak></lineBreak>Do not share sensitive information in your chats."
   },
   "ModelDropdownSearch": {
     "focusedPlaceholder": "Search models...",
@@ -200,6 +203,46 @@
     "profileLabel": "Profile",
     "profileMenu": "Open profile menu",
     "fallbackName": "User",
+    "preferences": "Preferences",
     "signOut": "Sign out"
+  },
+  "UserPreferences": {
+    "title": "Preferences",
+    "description": "Customize how Vibezone behaves for you.",
+    "autoScroll": {
+      "label": "Auto-scroll",
+      "description": "Automatically keep the conversation at the latest reply."
+    },
+    "webSearch": {
+      "label": "Web browsing",
+      "description": "Allow the AI to browse the web when the selected model supports it."
+    },
+    "hiddenProviders": {
+      "label": "Hidden providers",
+      "description": "Hide providers from model menus. You can still see providers used in existing panels.",
+      "summary": "{count, plural, one {# provider hidden} other {# providers hidden}}",
+      "clear": "Show all",
+      "placeholder": "Type here to filter the list",
+      "suggestions": "Suggestions",
+      "matches": "Matches",
+      "noResults": "No providers match \"{query}\".",
+      "empty": "No providers are hidden yet.",
+      "any": "all providers"
+    },
+    "systemPrompt": {
+      "label": "Default instructions",
+      "description": "These instructions are sent at the start of every conversation.",
+      "placeholder": "Add any context or instructions you want the AI to follow by default."
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving..."
+    },
+    "toast": {
+      "success": "Preferences updated.",
+      "error": "Could not save preferences: {message}"
+    },
+    "authRequired": "Please sign in to manage your preferences."
   }
 }

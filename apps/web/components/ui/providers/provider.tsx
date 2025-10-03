@@ -1,19 +1,23 @@
 // Provider icons reused from the existing ModelSelector component
-import AI21Icon from "@/components/ui/providers/ai21";
-import AnthropicIcon from "@/components/ui/providers/anthropic";
-import BaiduIcon from "@/components/ui/providers/baidu";
-import CohereIcon from "@/components/ui/providers/cohere";
-import DeepSeekIcon from "@/components/ui/providers/deepseek";
-import GeminiIcon from "@/components/ui/providers/gemini";
-import GoogleIcon from "@/components/ui/providers/google";
-import MetaIcon from "@/components/ui/providers/meta";
-import MistralIcon from "@/components/ui/providers/mistral";
-import OpenAIIcon from "@/components/ui/providers/openai";
-import QwenIcon from "@/components/ui/providers/qwen";
-import TencentIcon from "@/components/ui/providers/tencent";
-import XAIIcon from "@/components/ui/providers/xai";
 import { cn } from "@/components/ui/utils";
 import type { FC } from "react";
+
+import AI21Icon from "./ai21";
+import AionLabsIcon from "./aionlabs";
+import AnthropicIcon from "./anthropic";
+import BaiduIcon from "./baidu";
+import CohereIcon from "./cohere";
+import DeepSeekIcon from "./deepseek";
+import GeminiIcon from "./gemini";
+import GoogleIcon from "./google";
+import MetaIcon from "./meta";
+import MicrosoftIcon from "./microsoft";
+import MistralIcon from "./mistral";
+import MoonshotIcon from "./moonshot";
+import OpenAIIcon from "./openai";
+import QwenIcon from "./qwen";
+import TencentIcon from "./tencent";
+import XAIIcon from "./xai";
 import ZAIIcon from "./z-ai";
 
 interface ProviderIconProps {
@@ -31,11 +35,14 @@ const providerIcons: Record<string, React.FC<React.ComponentProps<"svg">>> = {
   baidu: BaiduIcon,
   cohere: CohereIcon,
   "meta-llama": MetaIcon,
+  microsoft: MicrosoftIcon,
   mistralai: MistralIcon,
+  moonshotai: MoonshotIcon,
   qwen: QwenIcon,
   tencent: TencentIcon,
   "x-ai": XAIIcon,
   "z-ai": ZAIIcon,
+  "aion-labs": AionLabsIcon,
 };
 
 export const ProviderIcon: FC<ProviderIconProps> = ({

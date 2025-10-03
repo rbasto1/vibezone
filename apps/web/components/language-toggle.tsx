@@ -69,7 +69,7 @@ export const LanguageToggle: FC = () => {
             key={locale}
             onClick={() => handleSelectLocale(locale)}
           >
-            <span>{labels[locale]}</span>
+            <span className="mr-2">{labels[locale]}</span>
             {locale === normalizedCurrentLocale && (
               <Check className="ml-auto h-4 w-4" />
             )}

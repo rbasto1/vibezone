@@ -6,7 +6,8 @@ import { ProviderIcon } from "@/components/ui/providers/provider";
 import { cn } from "@/components/ui/utils";
 import type { ProviderTier } from "@/db";
 import { useModelsValue } from "@/hooks/use-models";
-import { useSession } from "@/hooks/use-session";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUser } from "@/lib/auth-client";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { capabilityOptions, tierOptions } from "./model-dropdown-constants";
@@ -28,9 +29,19 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   variant = "dropdown",
 }) => {
   const t = useTranslations("ModelDropdown");
-  const { models, providers } = useModelsValue();
-  const { groups: suggestionGroups } = useModelsValue();
-  const session = useSession();
+  const setUIState = useUIStateSetter();
+  const includeModels = useMemo(
+    () => (currentModelId ? [currentModelId] : []),
+    [currentModelId]
+  );
+  const {
+    models,
+    providers,
+    groups: suggestionGroups,
+  } = useModelsValue({
+    includeModels,
+  });
+  const { user } = useUser();
 
   // Exclusive selection between tiers and suggestion groups
   const [selectedTier, setSelectedTier] = useState<ProviderTier | null>(
@@ -417,21 +428,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                       <>
                         {suggested.map((m) => {
                           const restricted =
-                            !session?.user &&
+                            !user &&
                             (Boolean(m.isPremium) || Boolean(m.isIncluded));
                           const titleText = restricted
                             ? t("signInToUse")
                             : undefined;
                           const onSelect = restricted
-                            ? () => {
-                                try {
-                                  window.dispatchEvent(
-                                    new Event("vz:open-login")
-                                  );
-                                } catch {
-                                  /*ignore*/
-                                }
-                              }
+                            ? () => setUIState({ loginOpen: true })
                             : handleModelSelect;
                           return (
                             <ModelDropdownItem
@@ -469,21 +472,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                             </div>
                             {others.map((m) => {
                               const restricted =
-                                !session?.user &&
+                                !user &&
                                 (Boolean(m.isPremium) || Boolean(m.isIncluded));
                               const titleText = restricted
                                 ? t("signInToUse")
                                 : undefined;
                               const onSelect = restricted
-                                ? () => {
-                                    try {
-                                      window.dispatchEvent(
-                                        new Event("vz:open-login")
-                                      );
-                                    } catch {
-                                      /*ignore*/
-                                    }
-                                  }
+                                ? () => setUIState({ loginOpen: true })
                                 : handleModelSelect;
                               return (
                                 <ModelDropdownItem

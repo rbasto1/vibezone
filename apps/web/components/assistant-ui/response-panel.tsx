@@ -7,6 +7,7 @@ import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
 import { useSession } from "@/hooks/use-session";
+import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import { generateFingerprint } from "@/lib/limiting";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
@@ -15,10 +16,10 @@ import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import type { ChatOnFinishCallback, UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { useRef, type FC } from "react";
+import { useTranslations } from "next-intl";
+import { useEffect, useRef, type FC } from "react";
 import { toast } from "sonner";
 import { PanelHeader } from "./response-panel-header";
-import { useTranslations } from "next-intl";
 
 interface ResponsePanelProps {
   panel: PanelConfig;
@@ -49,6 +50,14 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   sessionToken.current = session?.session.token;
   const panelNotRegisteredMessage = t("panelNotRegistered");
   const transportErrorMessage = t("transportError");
+  const userPreferences = useUserPreferencesValue();
+  const plugins = useRef({ web: userPreferences.pluginWeb });
+
+  useEffect(() => {
+    plugins.current = {
+      web: userPreferences.pluginWeb,
+    };
+  }, [userPreferences]);
 
   const handleModelError = (error: Error) => {
     setPanelState((currentState) => ({
@@ -129,12 +138,14 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
           );
         }
         const { model } = panelGlobalContext[id];
+        const pluginWeb = plugins.current.web;
+        const modelSpecifier = pluginWeb ? `${model}#web` : model;
         return generateFingerprint(sessionToken.current).then((authorization) =>
           fetch(url, {
             ...init,
             headers: {
               ...init?.headers,
-              "x-vz-model-id": model,
+              "x-vz-model-id": modelSpecifier,
               authorization,
             },
           })

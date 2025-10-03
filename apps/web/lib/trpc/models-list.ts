@@ -21,6 +21,7 @@ export async function listModels() {
     },
     where: and(
       isNull(modelsTable.deletedAt),
+      isNull(modelsTable.hiddenAt),
       isNull(providersTable.deletedAt),
       eq(modelsTable.isChat, true)
     ),

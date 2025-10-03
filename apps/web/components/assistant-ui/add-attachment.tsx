@@ -16,7 +16,8 @@ import { cn } from "@/components/ui/utils";
 import { useAppendAttachments } from "@/hooks/use-attachments";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
-import { useSession } from "@/hooks/use-session";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUser } from "@/lib/auth-client";
 import { ComposerPrimitive } from "@assistant-ui/react";
 import { PlusIcon } from "lucide-react";
 import { Fragment, useCallback, useMemo, type FC } from "react";
@@ -54,10 +55,15 @@ const formatModelNames = (names: string[]) => {
 };
 
 export const ComposerAddAttachment: FC = () => {
+  const setUIState = useUIStateSetter();
   const panels = usePanelsConfigValue();
-  const { models } = useModelsValue();
-  const session = useSession();
-  const isLoggedIn = !!session?.user;
+  const panelModelIds = useMemo(
+    () => panels.map((panel) => panel.model),
+    [panels]
+  );
+  const { models } = useModelsValue({ includeModels: panelModelIds });
+  const { user } = useUser();
+  const isLoggedIn = !!user;
 
   const attachmentsCapabilities = useMemo(() => {
     const modelsMap = new Map(models.map((model) => [model.id, model]));
@@ -155,11 +161,7 @@ export const ComposerAddAttachment: FC = () => {
                 if (!isLoggedIn) {
                   event.preventDefault();
                   event.stopPropagation();
-                  try {
-                    window.dispatchEvent(new Event("vz:open-login"));
-                  } catch {
-                    /* ignore */
-                  }
+                  setUIState({ loginOpen: true });
                   return;
                 }
                 item.onSelect();
