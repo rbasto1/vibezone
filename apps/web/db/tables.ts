@@ -78,6 +78,7 @@ export const models = pgTable(
     isIncluded: boolean("is_included"),
     isFree: boolean("is_free").notNull().default(false),
 
+    hiddenAt: timestampTz("hidden_at"),
     updatedAt: timestampTzNowUpdated("updated_at"),
     deletedAt: timestampTz("deleted_at"),
   },

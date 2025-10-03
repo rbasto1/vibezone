@@ -17,8 +17,8 @@ import { cn } from "@/components/ui/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfig, usePanelsStateValue } from "@/hooks/use-panels";
-import { useSession } from "@/hooks/use-session";
 import { useUIState } from "@/hooks/use-ui-state";
+import { useUser } from "@/lib/auth-client";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
@@ -38,7 +38,7 @@ const AssistantContent: FC = () => {
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelsState = usePanelsStateValue();
   const [uiState, setUIState] = useUIState();
-  const session = useSession();
+  const { user } = useUser();
   const panelModelIds = useMemo(
     () => panelsConfig.map((panel) => panel.model),
     [panelsConfig]
@@ -71,7 +71,7 @@ const AssistantContent: FC = () => {
 
   const handleSelectModelsGroup = (modelIds: string[]) => {
     // If anonymous, filter out premium/included models
-    const allowedModelIds = session?.user
+    const allowedModelIds = user
       ? modelIds
       : modelIds.filter((id) => {
           const m = models.find((mm) => mm.id === id);
@@ -107,8 +107,7 @@ const AssistantContent: FC = () => {
     return entries;
   }, [models]);
   const showTabs = isMobile && panelsConfig.length > 1;
-  const hideAnonBanner =
-    !!session?.user || (isMobile && uiState.suggestionsUsed);
+  const hideAnonBanner = !!user || (isMobile && uiState.suggestionsUsed);
   const canToggleFocus = !isMobile && panelsConfig.length > 1;
 
   return (

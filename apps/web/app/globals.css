@@ -116,8 +116,6 @@ html.dark {
 
   /* Matrix theme colors */
   --matrix-green: #00ff41;
-  --matrix-green-glow: #00ff41;
-  --matrix-green-dim: #00ff41;
 
   /* Amber glow color (dark) */
   --anon-glow-rgb: 252 211 77; /* amber-300 */

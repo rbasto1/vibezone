@@ -21,9 +21,9 @@ import {
 } from "@/hooks/use-attachments";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelsStateSetter } from "@/hooks/use-panels";
-import { useSession } from "@/hooks/use-session";
 import { useStateSessionStorage } from "@/hooks/use-session-storage";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUser } from "@/lib/auth-client";
 import type { PanelState } from "@/store/panels";
 import { ComposerAddAttachment } from "./add-attachment";
 import { AttachmentChip } from "./attachment-chip";
@@ -44,7 +44,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
   const clearAttachments = useClearAttachments();
   const setPanelsState = usePanelsStateSetter();
   const setAnonUsage = useAnonQuotaSetter();
-  const session = useSession();
+  const { user } = useUser();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const anyPanelRunning = useMemo(
     () => Object.values(panelsState).some((p) => p.running),
@@ -89,7 +89,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
     if (!msg || !completeAttachments) return false;
 
     const runtimes = getRuntimes();
-    const isLoggedIn = !!session?.user;
+    const isLoggedIn = !!user;
     if (!isLoggedIn) {
       // Anonymous quota enforcement
       if (remaining !== null && remaining < runtimes.size) {

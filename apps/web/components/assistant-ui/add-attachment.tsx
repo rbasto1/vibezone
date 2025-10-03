@@ -16,8 +16,8 @@ import { cn } from "@/components/ui/utils";
 import { useAppendAttachments } from "@/hooks/use-attachments";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
-import { useSession } from "@/hooks/use-session";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUser } from "@/lib/auth-client";
 import { ComposerPrimitive } from "@assistant-ui/react";
 import { PlusIcon } from "lucide-react";
 import { Fragment, useCallback, useMemo, type FC } from "react";
@@ -62,8 +62,8 @@ export const ComposerAddAttachment: FC = () => {
     [panels]
   );
   const { models } = useModelsValue({ includeModels: panelModelIds });
-  const session = useSession();
-  const isLoggedIn = !!session?.user;
+  const { user } = useUser();
+  const isLoggedIn = !!user;
 
   const attachmentsCapabilities = useMemo(() => {
     const modelsMap = new Map(models.map((model) => [model.id, model]));

@@ -6,7 +6,7 @@ import {
   supportedParameters,
 } from "@/db/schema";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import Link from "next/link";
 
 export default async function ModelDetailsPage({
@@ -23,7 +23,7 @@ export default async function ModelDetailsPage({
     .select({ model: models, provider: providers })
     .from(models)
     .innerJoin(providers, eq(models.providerId, providers.id))
-    .where(eq(models.id, id));
+    .where(and(eq(models.id, id), isNull(models.deletedAt)));
 
   if (!model) {
     return (
@@ -88,8 +88,8 @@ export default async function ModelDetailsPage({
                 <td>{formatDate(m.createdAt)}</td>
               </tr>
               <tr>
-                <td>Deleted</td>
-                <td>{formatDate(m.deletedAt)}</td>
+                <td>Hidden</td>
+                <td>{formatDate(m.hiddenAt)}</td>
               </tr>
             </tbody>
           </table>

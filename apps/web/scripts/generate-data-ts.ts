@@ -80,6 +80,7 @@ async function generateModelsForLimiting() {
   );
 
   const models = await db.query.models.findMany({
+    where: and(isNull(modelsTable.deletedAt), isNull(modelsTable.hiddenAt)),
     columns: {
       id: true,
       isIncluded: true,
@@ -131,7 +132,8 @@ async function generateProvidersForPrivacyPolicy() {
           .where(
             and(
               eq(modelsTable.providerId, providersTable.id),
-              isNull(modelsTable.deletedAt)
+              isNull(modelsTable.deletedAt),
+              isNull(modelsTable.hiddenAt)
             )
           )
       )

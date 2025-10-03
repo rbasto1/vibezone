@@ -6,7 +6,7 @@ import { Suspense, type PropsWithChildren } from "react";
 import { StoreProvider } from "@/components/providers/store-provider";
 import { db } from "@/db";
 import type { Model } from "@/db/schema";
-import { models, user } from "@/db/schema";
+import { models, user as userTable } from "@/db/schema";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
@@ -23,7 +23,8 @@ import { PageLoader } from "./page-loader";
 export default async function RootLayout({ children }: PropsWithChildren) {
   const session = await auth.api.getSession({ headers: await headers() });
   const t = await getTranslations("Prompts");
-  const userId = session?.user?.id;
+  const user = session?.user;
+  const userId = user?.id;
 
   const caller = await getServerCaller();
   const state = await prefetch(caller, [caller.chats.listChats.prefetch()]);
@@ -36,11 +37,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       { lastModels: userLastModels, hiddenProviders: userHiddenProviders } = {},
     ] = await db
       .select({
-        lastModels: user.lastModels,
-        hiddenProviders: user.preferenceHiddenProviders,
+        lastModels: userTable.lastModels,
+        hiddenProviders: userTable.preferenceHiddenProviders,
       })
-      .from(user)
-      .where(eq(user.id, userId))
+      .from(userTable)
+      .where(eq(userTable.id, userId))
       .limit(1);
 
     lastModels = userLastModels ?? [];
@@ -49,18 +50,21 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     }
   }
 
+  const changedPrompt = !!user?.preferenceSystemPromptChangedAt;
   const preferencesInitialValue: PreferencesAtom = userId
     ? {
-        pluginWeb: session.user.preferenceWebSearch,
-        systemPrompt: session.user.preferenceSystemPromptChangedAt
-          ? (session.user.preferenceSystemPrompt ?? null)
+        pluginWeb: user?.preferenceWebSearch,
+        systemPrompt: changedPrompt
+          ? (user?.preferenceSystemPrompt ?? null)
           : t("system"),
-        autoScroll: session.user.preferenceAutoScroll,
-        hiddenProviders: session.user.preferenceHiddenProviders ?? [],
+        changedPrompt,
+        autoScroll: user?.preferenceAutoScroll,
+        hiddenProviders: user?.preferenceHiddenProviders ?? [],
       }
     : {
         pluginWeb: true,
         systemPrompt: t("system"),
+        changedPrompt: false,
         autoScroll: false,
         hiddenProviders: [],
       };
@@ -124,6 +128,7 @@ async function getUserPreferredModels(
       and(
         inArray(models.id, lastModels),
         isNull(models.deletedAt),
+        isNull(models.hiddenAt),
         eq(models.isChat, true)
       )
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -18,28 +18,35 @@ const PreferencesPage = () => {
   const [preferences, setPreferences] = useUserPreferences();
   const setUIState = useUIStateSetter();
 
-  const [autoScroll, setAutoScroll] = useState(preferences.autoScroll);
-  const [webSearch, setWebSearch] = useState(preferences.pluginWeb);
-  const [systemPrompt, setSystemPrompt] = useState(
-    preferences.systemPrompt ?? ""
-  );
   const [hiddenProviders, setHiddenProviders] = useState<Set<string>>(
     () => new Set(preferences.hiddenProviders ?? [])
   );
+  const currentHiddenProviders = Array.from(hiddenProviders).sort();
+  const initialHiddenProviders = preferences.hiddenProviders.sort();
+  const initialAutoScroll = preferences.autoScroll;
+  const initialWebSearch = preferences.pluginWeb;
+  const initialChangedPrompt = preferences.changedPrompt;
+  const initialSystemPrompt = initialChangedPrompt
+    ? (preferences.systemPrompt ?? "")
+    : "";
+
+  const [autoScroll, setAutoScroll] = useState(initialAutoScroll);
+  const [webSearch, setWebSearch] = useState(initialWebSearch);
+  const [systemPrompt, setSystemPrompt] = useState(initialSystemPrompt);
   const [hideProvidersEnabled, setHideProvidersEnabled] = useState(
-    () => (preferences.hiddenProviders?.length ?? 0) > 0
+    () => !!preferences.hiddenProviders.length
   );
   const [providerInput, setProviderInput] = useState("");
 
   useEffect(() => {
     setAutoScroll(preferences.autoScroll);
     setWebSearch(preferences.pluginWeb);
-    setSystemPrompt(preferences.systemPrompt ?? "");
+    setSystemPrompt(initialSystemPrompt);
     const initialHidden = new Set(preferences.hiddenProviders ?? []);
     setHiddenProviders(initialHidden);
     setHideProvidersEnabled(initialHidden.size > 0);
     setProviderInput("");
-  }, [preferences, setUIState, t]);
+  }, [preferences, setUIState, initialSystemPrompt]);
 
   const { providers: rawProviders } = useRawModelsValue();
   const providerOptions = useMemo(
@@ -50,31 +57,19 @@ const PreferencesPage = () => {
     [rawProviders]
   );
 
-  const availableProviders = useMemo(
-    () =>
-      providerOptions.filter((provider) => !hiddenProviders.has(provider.id)),
-    [providerOptions, hiddenProviders]
-  );
-
   const trimmedInput = providerInput.trim();
   const matchingProviders = useMemo(() => {
     if (!hideProvidersEnabled) return [];
     const query = trimmedInput.toLowerCase();
     const base = query
-      ? availableProviders.filter(
+      ? providerOptions.filter(
           (provider) =>
             provider.name.toLowerCase().includes(query) ||
             provider.id.toLowerCase().includes(query)
         )
-      : availableProviders;
+      : providerOptions;
     return query ? base.slice(0, 10) : base;
-  }, [availableProviders, hideProvidersEnabled, trimmedInput]);
-
-  const currentHiddenProviders = Array.from(hiddenProviders).sort();
-  const initialHiddenProviders = preferences.hiddenProviders.sort();
-  const initialAutoScroll = preferences.autoScroll;
-  const initialWebSearch = preferences.pluginWeb;
-  const initialSystemPrompt = preferences.systemPrompt ?? "";
+  }, [providerOptions, hideProvidersEnabled, trimmedInput]);
 
   const hasHiddenChanged =
     currentHiddenProviders.length !== initialHiddenProviders.length ||
@@ -120,31 +115,6 @@ const PreferencesPage = () => {
     setHideProvidersEnabled(true);
   };
 
-  const handleManualAdd = () => {
-    const query = trimmedInput;
-    if (!query) return;
-    const normalized = query.toLowerCase();
-    const match =
-      availableProviders.find(
-        (provider) =>
-          provider.id.toLowerCase() === normalized ||
-          provider.name.toLowerCase() === normalized
-      ) ??
-      availableProviders.find(
-        (provider) =>
-          provider.name.toLowerCase().includes(normalized) ||
-          provider.id.toLowerCase().includes(normalized)
-      );
-
-    if (!match) {
-      toast.error(t("hiddenProviders.noResults", { query }));
-      return;
-    }
-
-    handleAddProvider(match.id);
-    setProviderInput("");
-  };
-
   const updatePreferences = trpc.users.updatePreferences.useMutation({
     onError: (error: unknown) => {
       console.error("Error saving preferences:", error);
@@ -154,6 +124,7 @@ const PreferencesPage = () => {
       setPreferences({
         pluginWeb: initialWebSearch,
         systemPrompt: initialSystemPrompt,
+        changedPrompt: initialChangedPrompt,
         autoScroll: initialAutoScroll,
         hiddenProviders: initialHiddenProviders,
       });
@@ -177,14 +148,11 @@ const PreferencesPage = () => {
     setPreferences({
       pluginWeb: webSearch,
       systemPrompt,
+      changedPrompt:
+        initialChangedPrompt || systemPrompt !== initialSystemPrompt,
       autoScroll,
       hiddenProviders: hiddenList,
     });
-  };
-
-  const renderProviderLabel = (providerId: string) => {
-    const provider = providerOptions.find((item) => item.id === providerId);
-    return provider?.name ?? providerId;
   };
 
   return (
@@ -196,7 +164,7 @@ const PreferencesPage = () => {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={() => setUIState({ preferencesOpen: false })}
           >
             {t("actions.cancel")}
@@ -250,23 +218,13 @@ const PreferencesPage = () => {
         </div>
 
         {hideProvidersEnabled && (
-          <div className="space-y-3">
+          <div className="space-y-1">
             <div className="rounded-md border">
               <Input
                 className="rounded-t-md rounded-b-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                 value={providerInput}
                 onChange={(event) => setProviderInput(event.target.value)}
                 placeholder={t("hiddenProviders.placeholder")}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === "Tab") {
-                    if (!trimmedInput.length) return;
-                    event.preventDefault();
-                    handleManualAdd();
-                  }
-                  if (event.key === "Escape") {
-                    setProviderInput("");
-                  }
-                }}
               />
               <div className="max-h-56 overflow-y-auto border-t">
                 {matchingProviders.length ? (
@@ -276,16 +234,25 @@ const PreferencesPage = () => {
                         key={provider.id}
                         type="button"
                         onClick={() => {
-                          handleAddProvider(provider.id);
-                          setProviderInput("");
+                          if (hiddenProviders.has(provider.id)) {
+                            handleRemoveProvider(provider.id);
+                          } else {
+                            handleAddProvider(provider.id);
+                          }
                         }}
-                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-muted/60"
+                        className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-muted/60 truncate font-medium cursor-pointer"
                       >
-                        <span className="truncate font-medium">
+                        {hiddenProviders.has(provider.id) ? (
+                          <EyeOffIcon className="h-4 w-4" />
+                        ) : (
+                          <EyeIcon className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <span
+                          className={cn(
+                            hiddenProviders.has(provider.id) && "line-through"
+                          )}
+                        >
                           {provider.name}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {provider.id}
                         </span>
                       </button>
                     ))}
@@ -304,30 +271,6 @@ const PreferencesPage = () => {
               {t("hiddenProviders.summary", {
                 count: currentHiddenProviders.length,
               })}
-            </div>
-
-            <div className="max-h-40 overflow-y-auto rounded-md border bg-muted/40 p-3">
-              {currentHiddenProviders.length ? (
-                <div className="flex flex-wrap gap-2">
-                  {currentHiddenProviders.map((providerId) => (
-                    <button
-                      key={providerId}
-                      type="button"
-                      onClick={() => handleRemoveProvider(providerId)}
-                      className="group flex cursor-pointer items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium transition hover:border-border/80 hover:bg-background/80"
-                    >
-                      <span className="truncate max-w-[12rem]">
-                        {renderProviderLabel(providerId)}
-                      </span>
-                      <X className="h-3 w-3 text-muted-foreground group-hover:text-foreground" />
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  {t("hiddenProviders.empty")}
-                </p>
-              )}
             </div>
           </div>
         )}
@@ -348,18 +291,6 @@ const PreferencesPage = () => {
           maxLength={4000}
         />
       </section>
-
-      <footer className="flex items-center justify-end gap-2 pt-4">
-        <Button
-          variant="ghost"
-          onClick={() => setUIState({ preferencesOpen: false })}
-        >
-          {t("actions.cancel")}
-        </Button>
-        <Button onClick={handleSave} disabled={!hasChanges}>
-          {t("actions.save")}
-        </Button>
-      </footer>
     </div>
   );
 };

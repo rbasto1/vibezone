@@ -1,5 +1,10 @@
 "use client";
 
+import { inferAdditionalFields } from "better-auth/client/plugins";
+import { createAuthClient } from "better-auth/react";
+import type { auth } from "./auth";
+import { baseUrl } from "./base-url";
+
 // Client-side auth facade using better-auth/react.
 
 export interface AuthUser {
@@ -10,8 +15,8 @@ export interface AuthUser {
   isAdmin: boolean;
   preferenceAutoScroll: boolean;
   preferenceHiddenProviders: string[];
-  preferenceSystemPrompt: string | null;
-  preferenceSystemPromptChangedAt: Date | null;
+  preferenceSystemPrompt?: string | null;
+  preferenceSystemPromptChangedAt?: Date | null;
   preferenceWebSearch: boolean;
 }
 
@@ -20,10 +25,10 @@ export interface UseUserResult {
   user?: AuthUser;
 }
 
-import { createAuthClient } from "better-auth/react";
-import { baseUrl } from "./base-url";
-
-export const authClient = createAuthClient({ baseURL: baseUrl });
+export const authClient = createAuthClient({
+  baseURL: baseUrl,
+  plugins: [inferAdditionalFields<typeof auth>()],
+});
 
 export const useUser = (): UseUserResult => {
   const { data, isPending } = authClient.useSession();

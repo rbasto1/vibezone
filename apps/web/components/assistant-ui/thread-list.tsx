@@ -15,8 +15,8 @@ import {
   usePanelsStateSetter,
 } from "@/hooks/use-panels";
 import { useRuntimes } from "@/hooks/use-response-registration";
-import { useSession } from "@/hooks/use-session";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import { useUser } from "@/lib/auth-client";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
@@ -39,10 +39,10 @@ const ThreadListNew: FC = () => {
   const setPanelsConfig = usePanelsConfigSetter();
   const setUIState = useUIStateSetter();
   const createNewChat = useNewChat();
-  const user = useUser();
+  const preferences = useUserPreferencesValue();
 
-  const systemPrompt = user.user?.preferenceSystemPromptChangedAt
-    ? user.user?.preferenceSystemPrompt
+  const systemPrompt = preferences.changedPrompt
+    ? preferences.systemPrompt
     : t("Prompts.system");
 
   const handleNewChat = () => {
@@ -102,9 +102,9 @@ const ThreadListItems: FC = () => {
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
   const setUIState = useUIStateSetter();
 
-  const session = useSession();
+  const { user } = useUser();
   const { data: chats, error } = trpc.chats.listChats.useQuery(undefined, {
-    enabled: !!session?.user,
+    enabled: !!user,
     refetchInterval: 60 * 1000,
     refetchOnWindowFocus: true,
   });
@@ -174,7 +174,7 @@ const ThreadListItems: FC = () => {
   const handleRenameChat = (chatId: string, newTitle: string) =>
     renameChatMutation.mutateAsync({ chatId, title: newTitle });
 
-  if (!session?.user) {
+  if (!user) {
     return (
       <div className="text-sm text-muted-foreground p-2">
         {t("loginRequired")}

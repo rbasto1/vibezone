@@ -1,5 +1,5 @@
 import type { MessageMetadata } from "@/db/json-columns-types";
-import { useSession } from "@/hooks/use-session";
+import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import type { ThreadMessage } from "@assistant-ui/react";
@@ -22,7 +22,7 @@ export const useMessageSaver = (panel: PanelConfig) => {
   const [currentChat, setCurrentChat] = useCurrentChat();
   const thread = useThread();
   const utils = trpc.useUtils();
-  const session = useSession();
+  const { user } = useUser();
   const panelState = usePanelStateValue(id);
 
   // Local states
@@ -45,7 +45,7 @@ export const useMessageSaver = (panel: PanelConfig) => {
   const savedMessageIds = useRef(
     new Set<string>(initialMessages?.map((msg) => msg.id))
   );
-  const userId = session?.user?.id;
+  const userId = user?.id;
   const messages = thread.messages;
   const isDirty = panelState.dirty;
   const chatId = currentChat.id;

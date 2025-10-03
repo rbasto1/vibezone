@@ -22,10 +22,11 @@ import {
   usePanelsStateSetter,
 } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
-import { useSession } from "@/hooks/use-session";
+import { useUser } from "@/lib/auth-client";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
+import { BotIcon } from "lucide-react";
 import { AnonMobileQuotaLabel } from "./anon-mobile-quota-label";
 import { ModelDropdownContents } from "./model-dropdown-contents";
 
@@ -39,14 +40,14 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
   suggestionsUsed,
 }) => {
   const t = useTranslations("AssistantHeader");
-  const authData = useSession();
+  const { user } = useUser();
   const setLastModels = trpc.users.setLastModels.useMutation();
   const setPanelsConfig = usePanelsConfigSetter();
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
   const isMobile = useIsMobile();
   const [chooseModelOpen, setChooseModelOpen] = useState(false);
-  const showMobileQuotaChip = !authData?.user && suggestionsUsed;
+  const showMobileQuotaChip = !user && suggestionsUsed;
   const canAddMore = panelCount < MAX_PANELS;
   const addButtonTitle = canAddMore
     ? t("addAnotherTooltip")
@@ -70,7 +71,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
     });
     setPanelsConfig((prev) => {
       const newPanels = [...prev, newPanel];
-      if (authData?.user) {
+      if (user) {
         // if we have a user, we save the last models to their profile
         const modelIds = newPanels.map((p) => p.model).slice(0, MAX_PANELS);
         setLastModels.mutate({ modelIds });
@@ -92,12 +93,14 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
             <Button
               variant="outline"
               className={cn(
+                "hover:border-green-500",
                 canAddMore ? "hover:bg-accent" : "opacity-60 cursor-not-allowed"
               )}
               disabled={!canAddMore}
               title={addButtonTitle}
               aria-label={addButtonAriaLabel}
             >
+              <BotIcon className="mr-1 h-4 w-4 stroke-[var(--matrix-green)]" />
               {addButtonLabel}
             </Button>
           </DropdownMenuTrigger>
@@ -117,6 +120,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
                       title={addButtonTitle}
                       aria-label={addButtonAriaLabel}
                     >
+                      <BotIcon className="mr-2 h-4 w-4 stroke-[var(--matrix-green)]" />
                       {addButtonLabel}
                     </Button>
                   </SheetTrigger>

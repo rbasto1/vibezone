@@ -222,7 +222,7 @@
       "description": "Blende Anbieter in den Modelldropdowns aus. In bestehenden Panels bleiben sie sichtbar.",
       "summary": "{count, plural, one {# Anbieter ausgeblendet} other {# Anbieter ausgeblendet}}",
       "clear": "Alle anzeigen",
-      "placeholder": "Anbieternamen eingeben und Enter drücken",
+      "placeholder": "Typ hier, um die Liste zu filtern",
       "suggestions": "Vorschläge",
       "matches": "Treffer",
       "noResults": "Keine Anbieter entsprechen \"{query}\".",

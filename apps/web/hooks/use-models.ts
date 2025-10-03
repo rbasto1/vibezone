@@ -3,8 +3,7 @@ import { useMemo } from "react";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { modelsAtom } from "@/store/models";
 import { useAtomValue } from "jotai";
-
-import { useSession } from "./use-session";
+import { useUserPreferencesValue } from "./use-user-preferences";
 
 interface UseModelsOptions {
   includeProviders?: string[];
@@ -15,14 +14,16 @@ export function useRawModelsValue(): GetModelsListReturn {
   return useAtomValue(modelsAtom);
 }
 
-export function useModelsValue(options?: UseModelsOptions): GetModelsListReturn {
+export function useModelsValue(
+  options?: UseModelsOptions
+): GetModelsListReturn {
   const raw = useAtomValue(modelsAtom);
-  const session = useSession();
+  const preferences = useUserPreferencesValue();
   const includeProvidersOption = options?.includeProviders;
   const includeModelsOption = options?.includeModels;
 
   return useMemo(() => {
-    const hiddenProviders = session?.user?.preferenceHiddenProviders ?? [];
+    const hiddenProviders = preferences?.hiddenProviders ?? [];
     const includeProviders = includeProvidersOption ?? [];
     const includeModels = includeModelsOption ?? [];
 
@@ -49,7 +50,9 @@ export function useModelsValue(options?: UseModelsOptions): GetModelsListReturn 
       return !hiddenSet.has(provider.id);
     });
 
-    const allowedProviderIds = new Set(providers.map((provider) => provider.id));
+    const allowedProviderIds = new Set(
+      providers.map((provider) => provider.id)
+    );
 
     const models = raw.models.filter((model) => {
       if (allowedProviderIds.has(model.providerId)) {
@@ -80,9 +83,9 @@ export function useModelsValue(options?: UseModelsOptions): GetModelsListReturn 
       groups,
     } satisfies GetModelsListReturn;
   }, [
-    raw,
-    session?.user?.preferenceHiddenProviders,
+    preferences?.hiddenProviders,
     includeProvidersOption,
     includeModelsOption,
+    raw,
   ]);
 }

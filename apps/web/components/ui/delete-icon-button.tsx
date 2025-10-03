@@ -1,5 +1,7 @@
+import { EyeOffIcon, Trash2 } from "lucide-react";
+
 import { cn } from "@/components/ui/utils";
-import { Trash2 } from "lucide-react";
+import { Button } from "./button";
 
 interface DeleteIconButtonProps {
   isDeleted: boolean;
@@ -8,6 +10,7 @@ interface DeleteIconButtonProps {
   size?: "sm" | "md" | "lg";
   title?: string;
   disabled?: boolean;
+  isHide?: boolean;
 }
 
 export function DeleteIconButton({
@@ -17,6 +20,7 @@ export function DeleteIconButton({
   size = "md",
   title,
   disabled = false,
+  isHide = false,
 }: DeleteIconButtonProps) {
   const sizeClasses = {
     sm: "h-3 w-3",
@@ -25,26 +29,42 @@ export function DeleteIconButton({
   };
 
   return (
-    <button
+    <Button
       type="button"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
         onDelete();
       }}
-      className={cn(
-        "transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer",
-        className
-      )}
-      title={title || (isDeleted ? "Restore" : "Delete")}
+      variant="outline"
+      className={className}
+      title={
+        title ||
+        (isHide
+          ? isDeleted
+            ? "Show"
+            : "Hide"
+          : isDeleted
+            ? "Restore"
+            : "Delete")
+      }
       disabled={disabled}
     >
-      <Trash2
-        className={cn(
-          sizeClasses[size],
-          isDeleted ? "text-emerald-600" : "text-red-600"
-        )}
-      />
-    </button>
+      {isHide ? (
+        <EyeOffIcon
+          className={cn(
+            sizeClasses[size],
+            isHide ? null : isDeleted ? "text-emerald-600" : "text-red-600"
+          )}
+        />
+      ) : (
+        <Trash2
+          className={cn(
+            sizeClasses[size],
+            isHide ? null : isDeleted ? "text-emerald-600" : "text-red-600"
+          )}
+        />
+      )}
+    </Button>
   );
 }

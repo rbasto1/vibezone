@@ -6,8 +6,8 @@ import { ProviderIcon } from "@/components/ui/providers/provider";
 import { cn } from "@/components/ui/utils";
 import type { ProviderTier } from "@/db";
 import { useModelsValue } from "@/hooks/use-models";
-import { useSession } from "@/hooks/use-session";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUser } from "@/lib/auth-client";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { capabilityOptions, tierOptions } from "./model-dropdown-constants";
@@ -41,7 +41,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   } = useModelsValue({
     includeModels,
   });
-  const session = useSession();
+  const { user } = useUser();
 
   // Exclusive selection between tiers and suggestion groups
   const [selectedTier, setSelectedTier] = useState<ProviderTier | null>(
@@ -428,7 +428,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                       <>
                         {suggested.map((m) => {
                           const restricted =
-                            !session?.user &&
+                            !user &&
                             (Boolean(m.isPremium) || Boolean(m.isIncluded));
                           const titleText = restricted
                             ? t("signInToUse")
@@ -472,7 +472,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                             </div>
                             {others.map((m) => {
                               const restricted =
-                                !session?.user &&
+                                !user &&
                                 (Boolean(m.isPremium) || Boolean(m.isIncluded));
                               const titleText = restricted
                                 ? t("signInToUse")

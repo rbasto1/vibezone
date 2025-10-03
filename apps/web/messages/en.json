@@ -222,7 +222,7 @@
       "description": "Hide providers from model menus. You can still see providers used in existing panels.",
       "summary": "{count, plural, one {# provider hidden} other {# providers hidden}}",
       "clear": "Show all",
-      "placeholder": "Type a provider name and press Enter",
+      "placeholder": "Type here to filter the list",
       "suggestions": "Suggestions",
       "matches": "Matches",
       "noResults": "No providers match \"{query}\".",

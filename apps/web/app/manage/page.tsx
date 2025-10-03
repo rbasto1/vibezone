@@ -1,13 +1,11 @@
 import "server-only";
 
-import { db } from "@/db/connection";
-import { chats, models, providers, usage, user } from "@/db/schema";
-import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 import type { LucideIcon } from "lucide-react";
 import {
   Building2,
   Crown,
   DollarSign,
+  HashIcon,
   Layers,
   Medal,
   MessageCircle,
@@ -22,8 +20,19 @@ interface KpiCard {
   icon: LucideIcon;
   title: string;
   value: string;
-  subtitle: string;
+  subtitle?: string;
 }
+
+import { db } from "@/db/connection";
+import {
+  chats,
+  models as modelstable,
+  providers,
+  usage,
+  user,
+} from "@/db/schema";
+import { models } from "@/generated/models";
+import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 
 const numberFormatter = new Intl.NumberFormat();
 
@@ -61,9 +70,11 @@ const ManagePage: NextPage<PageProps<"/manage">> = async () => {
     .where(gte(usage.createdAt, lastSevenDays));
 
   const uniqueProvidersPromise = db
-    .select({ value: sql<number>`count(distinct ${models.providerId})::int` })
+    .select({
+      value: sql<number>`count(distinct ${modelstable.providerId})::int`,
+    })
     .from(usage)
-    .innerJoin(models, eq(models.id, usage.modelId))
+    .innerJoin(modelstable, eq(modelstable.id, usage.modelId))
     .where(gte(usage.createdAt, lastSevenDays));
 
   const chatsModifiedPromise = db
@@ -75,13 +86,13 @@ const ManagePage: NextPage<PageProps<"/manage">> = async () => {
   const topModelPromise = db
     .select({
       modelId: usage.modelId,
-      modelName: models.name,
+      modelName: modelstable.name,
       total: topModelCount,
     })
     .from(usage)
-    .innerJoin(models, eq(models.id, usage.modelId))
+    .innerJoin(modelstable, eq(modelstable.id, usage.modelId))
     .where(and(gte(usage.createdAt, lastSevenDays), isNotNull(usage.modelId)))
-    .groupBy(usage.modelId, models.name)
+    .groupBy(usage.modelId, modelstable.name)
     .orderBy(desc(topModelCount))
     .limit(1);
 
@@ -93,8 +104,8 @@ const ManagePage: NextPage<PageProps<"/manage">> = async () => {
       total: topProviderCount,
     })
     .from(usage)
-    .innerJoin(models, eq(models.id, usage.modelId))
-    .innerJoin(providers, eq(providers.id, models.providerId))
+    .innerJoin(modelstable, eq(modelstable.id, usage.modelId))
+    .innerJoin(providers, eq(providers.id, modelstable.providerId))
     .where(gte(usage.createdAt, lastSevenDays))
     .groupBy(providers.id, providers.name)
     .orderBy(desc(topProviderCount))
@@ -210,6 +221,16 @@ const ManagePage: NextPage<PageProps<"/manage">> = async () => {
       subtitle: topProvider
         ? `${formatNumber(topProvider.count)} uses in the last 7 days`
         : "No usage in the last 7 days",
+    },
+    {
+      icon: HashIcon,
+      title: "Providers",
+      value: formatNumber(models.providers.length),
+    },
+    {
+      icon: HashIcon,
+      title: "Models",
+      value: formatNumber(models.models.length),
     },
   ];
 
