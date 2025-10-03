@@ -42,7 +42,7 @@
 - [ ] Add Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [x] Add user preferences (auto-scroll, hidden providers, pre-prompt)
-- [ ] Fix <lineBreak/> not working on i18n
+- [x] Fix <lineBreak/> not working on i18n
 - [x] Keep composer text in SessionStorage
 - [ ] Thumb up/down (or stars?)
 - [x] Limit usage for free users (400)

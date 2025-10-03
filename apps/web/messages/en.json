@@ -95,7 +95,7 @@
     "showMore": "Show more",
     "otherModels": "Other models",
     "retentionIconAria": "This model may retain your data",
-    "retentionTooltip": "This model may retain your messages and attachments to train new versions.<lineBreak/>Do not share sensitive information in your chats."
+    "retentionTooltip": "This model may retain your messages and attachments to train new versions.<lineBreak></lineBreak>Do not share sensitive information in your chats."
   },
   "ModelDropdownSearch": {
     "focusedPlaceholder": "Search models...",

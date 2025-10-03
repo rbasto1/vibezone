@@ -95,7 +95,7 @@
     "showMore": "Mostrar mais",
     "otherModels": "Outros modelos",
     "retentionIconAria": "Este modelo pode reter seus dados",
-    "retentionTooltip": "Este modelo pode reter suas mensagens e anexos para treinar novas versões.<lineBreak/>Não compartilhe informações sensíveis em seus chats."
+    "retentionTooltip": "Este modelo pode reter suas mensagens e anexos para treinar novas versões.<lineBreak></lineBreak>Não compartilhe informações sensíveis em suas conversas."
   },
   "ModelDropdownSearch": {
     "focusedPlaceholder": "Pesquisar modelos...",

@@ -95,7 +95,7 @@
     "showMore": "Mehr anzeigen",
     "otherModels": "Weitere Modelle",
     "retentionIconAria": "Dieses Modell könnte deine Daten speichern",
-    "retentionTooltip": "Dieses Modell kann deine Nachrichten und Anhänge speichern, um neue Versionen zu trainieren.<lineBreak/>Teile in deinen Chats keine sensiblen Informationen."
+    "retentionTooltip": "Dieses Modell kann deine Nachrichten und Anhänge speichern, um neue Versionen zu trainieren.<lineBreak></lineBreak>Teile in deinen Chats keine sensiblen Informationen."
   },
   "ModelDropdownSearch": {
     "focusedPlaceholder": "Modelle durchsuchen...",
