@@ -39,7 +39,11 @@ const AssistantContent: FC = () => {
   const panelsState = usePanelsStateValue();
   const [uiState, setUIState] = useUIState();
   const session = useSession();
-  const { models } = useModelsValue();
+  const panelModelIds = useMemo(
+    () => panelsConfig.map((panel) => panel.model),
+    [panelsConfig]
+  );
+  const { models } = useModelsValue({ includeModels: panelModelIds });
   const isMobile = useIsMobile();
   const [focusPanelId, setFocusPanelId] = useState<string>();
 

@@ -42,7 +42,9 @@ export async function checkUsage(
   }
 
   const { env, completionRequest } = vzContext;
-  const modelId = completionRequest.config.modelId;
+  const modelKey = completionRequest.config.modelId;
+  const [modelId] = modelKey.split("#");
+  if (!modelId) throw new Error("Assert: split returns a string");
   const model = models[modelId];
 
   if (!model) {

@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { User as DbUser } from "@/db";
 import { db } from "@/db";
 import { chats, models, session, usage, user } from "@/db/schema";
 import {
@@ -126,5 +127,75 @@ export const usersRouter = t.router({
         .where(eq(user.id, authUser.id));
 
       return { ok: true as const, lastModels: ordered };
+    }),
+
+  updatePreferences: authenticatedProcedure
+    .input(
+      z.object({
+        autoScroll: z.boolean(),
+        hiddenProviders: z.array(z.string()),
+        systemPrompt: z.string().max(4000).nullable(),
+        webSearch: z.boolean(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const authUser = ctx.user;
+
+      const sanitizedHiddenProviders = Array.from(
+        new Set(
+          input.hiddenProviders
+            .map((id) => id.trim())
+            .filter((id) => id.length > 0)
+        )
+      ).sort((a, b) => a.localeCompare(b));
+
+      const hiddenSet = new Set(sanitizedHiddenProviders);
+
+      const [current] = await db
+        .select({ lastModels: user.lastModels })
+        .from(user)
+        .where(eq(user.id, authUser.id))
+        .limit(1);
+
+      const currentLastModels = current?.lastModels ?? [];
+      const filteredLastModels = !hiddenSet.size
+        ? currentLastModels
+        : currentLastModels.filter((modelId) => {
+            const providerId = modelId.split("/")[0];
+            return providerId && !hiddenSet.has(providerId);
+          });
+
+      const updatePayload: Partial<DbUser> = {
+        preferenceAutoScroll: input.autoScroll,
+        preferenceHiddenProviders: sanitizedHiddenProviders,
+        preferenceSystemPrompt: input.systemPrompt,
+        preferenceSystemPromptChangedAt: input.systemPrompt
+          ? new Date()
+          : undefined,
+        preferenceWebSearch: input.webSearch,
+      };
+
+      if (
+        hiddenSet.size &&
+        filteredLastModels.length !== currentLastModels.length
+      ) {
+        Object.assign(updatePayload, { lastModels: filteredLastModels });
+      }
+
+      await db.update(user).set(updatePayload).where(eq(user.id, authUser.id));
+
+      return {
+        ok: true as const,
+        preferences: {
+          autoScroll: input.autoScroll,
+          hiddenProviders: sanitizedHiddenProviders,
+          systemPrompt: input.systemPrompt,
+          webSearch: input.webSearch,
+          lastModels:
+            "lastModels" in updatePayload
+              ? filteredLastModels
+              : currentLastModels,
+        },
+      };
     }),
 });

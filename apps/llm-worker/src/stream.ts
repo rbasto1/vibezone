@@ -10,17 +10,26 @@ export async function handleProviderStream(
   vzContext: VibezoneContext
 ): Promise<Response> {
   const { env, completionRequest } = vzContext;
-  const { modelId, maxTokens } = completionRequest.config;
+  const { modelId, maxTokens, plugins } = completionRequest.config;
   const messages = completionRequest.messages;
+  const pluginWeb = plugins.includes("web");
 
   const adapter = getOpenRouter(env);
 
-  console.info(
-    `Starting stream (modelId=${modelId} messages=${messages.length})`
-  );
+  const firstPart = messages[0]?.parts[0];
+  const systemPrompt = firstPart?.type === "text" ? firstPart.text : null;
+  console.info({
+    message: "Starting stream",
+    model: modelId,
+    pluginWeb,
+    messageCount: messages.length,
+    systemPrompt,
+  });
+
+  const modelSpecifier = pluginWeb ? `${modelId}:online` : modelId;
 
   const result = streamText({
-    model: adapter(`${modelId}:online`),
+    model: adapter(modelSpecifier),
     messages: convertToModelMessages(messages),
     maxOutputTokens: maxTokens,
     onError: (error) => {

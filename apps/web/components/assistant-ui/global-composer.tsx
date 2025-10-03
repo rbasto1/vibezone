@@ -1,9 +1,9 @@
 "use client";
 import { ArrowUpIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { FC, MouseEvent } from "react";
 import { useContext, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
 
 import { GlobalComposerContext } from "@/components/providers/composer-provider";
 import { Button } from "@/components/ui/button";
@@ -144,15 +144,17 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
       )
     );
 
-    // After successfully enqueuing messages, consume credits for guests
-    if (!isLoggedIn && runningPanels.length) {
-      setAnonUsage((prev) => ({
-        date: prev.date,
-        count: (prev.count ?? 0) + runningPanels.length,
-      }));
-    }
+    if (runningPanels.length) {
+      if (!isLoggedIn) {
+        // After successfully enqueuing messages, consume credits for guests
+        setAnonUsage((prev) => ({
+          date: prev.date,
+          count: (prev.count ?? 0) + runningPanels.length,
+        }));
+      }
 
-    clearAttachments();
+      clearAttachments();
+    }
     return true;
   };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useState } from "react";
 
 import { GoogleSignInButton } from "@/components/auth/google-signin-button";
@@ -186,6 +187,10 @@ export const UserMenu = ({ className }: UserMenuProps) => {
             )}
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/preferences">{t("preferences")}</Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>
           {t("signOut")}

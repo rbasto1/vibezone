@@ -8,26 +8,27 @@ export async function handleProviderComplete(
 ): Promise<Response> {
   const { env, completionRequest } = vzContext;
   const { modelId, maxTokens } = completionRequest.config;
-  const messages = completionRequest.messages;
+  const requestMessages = completionRequest.messages;
 
   const adapter = getOpenRouter(env);
 
+  const messages = convertToModelMessages(requestMessages);
   console.info({
-    message: "Starting complete",
-    modelId,
-    messagesLength: messages.length,
+    message: "Starting completion",
+    model: modelId,
+    input: messages[0]?.content,
   });
 
   try {
     const result = await generateText({
       model: adapter(modelId),
-      messages: convertToModelMessages(messages),
+      messages,
       maxOutputTokens: maxTokens,
       temperature: 0.1,
     });
     console.info({
-      message: "Complete finished",
-      result: result.text,
+      message: "Completion finished",
+      text: result.text,
     });
 
     return Response.json(

@@ -1,4 +1,7 @@
 {
+  "Prompts": {
+    "system": "Você é um assistente prestativo. O usuário fala português do Brasil."
+  },
   "AnonQuota": {
     "mobileChip": "{remaining} de {limit}",
     "mobileBanner": "{remaining} de {limit} mensagens grátis restantes",
@@ -200,6 +203,46 @@
     "profileLabel": "Perfil",
     "profileMenu": "Abrir menu do perfil",
     "fallbackName": "Usuário",
+    "preferences": "Preferências",
     "signOut": "Sair"
+  },
+  "UserPreferences": {
+    "title": "Preferências",
+    "description": "Personalize como o Vibezone se comporta para você.",
+    "autoScroll": {
+      "label": "Rolagem automática",
+      "description": "Mantenha a conversa automaticamente na resposta mais recente."
+    },
+    "webSearch": {
+      "label": "Navegação na web",
+      "description": "Permita que a IA pesquise na web quando o modelo selecionado oferecer esse recurso."
+    },
+    "hiddenProviders": {
+      "label": "Ocultar provedores",
+      "description": "Esconda provedores dos menus de modelos. Você ainda verá os usados nos painéis atuais.",
+      "summary": "{count, plural, one {# provedor oculto} other {# provedores ocultos}}",
+      "clear": "Mostrar todos",
+      "placeholder": "Digite o nome do provedor e aperte Enter",
+      "suggestions": "Sugestões",
+      "matches": "Resultados",
+      "noResults": "Nenhum provedor corresponde a \"{query}\".",
+      "empty": "Nenhum provedor está oculto.",
+      "any": "todos os provedores"
+    },
+    "systemPrompt": {
+      "label": "Instruções padrão",
+      "description": "Essas instruções são enviadas no início de cada conversa.",
+      "placeholder": "Adicione o contexto ou as orientações que a IA deve seguir por padrão."
+    },
+    "actions": {
+      "cancel": "Cancelar",
+      "save": "Salvar alterações",
+      "saving": "Salvando..."
+    },
+    "toast": {
+      "success": "Preferências atualizadas.",
+      "error": "Não foi possível salvar as preferências: {message}"
+    },
+    "authRequired": "Faça login para gerenciar suas preferências."
   }
 }

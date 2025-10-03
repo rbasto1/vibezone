@@ -221,6 +221,13 @@ export default async function ModelDetailsPage({
           </ul>
         )}
       </section>
+
+      <section className="rounded-md border p-4">
+        <h2 className="font-semibold mb-2">Description</h2>
+        <span className="text-sm text-muted-foreground">
+          {model.model.description}
+        </span>
+      </section>
     </div>
   );
 }

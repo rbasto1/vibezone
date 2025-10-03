@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { DeleteIconButton } from "@/components/ui/delete-icon-button";
 import { Input } from "@/components/ui/input";
+import { ProviderIcon } from "@/components/ui/providers/provider";
 import { QueryAlert } from "@/components/ui/query-alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/components/ui/utils";
@@ -33,7 +34,16 @@ const ProviderManagePageClient: NextPage = () => {
 
   const columns: ColumnDef<ProvidersListOutput[number]>[] = useMemo(
     (): ColumnDef<ProvidersListOutput[number]>[] => [
-      { accessorKey: "id", header: "ID" },
+      {
+        accessorKey: "id",
+        header: "ID",
+        cell: ({ row }) => (
+          <div>
+            <ProviderIcon providerId={row.original.id} />
+            {row.original.id}
+          </div>
+        ),
+      },
       {
         accessorKey: "name",
         header: "Name",

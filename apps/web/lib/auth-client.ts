@@ -8,6 +8,11 @@ export interface AuthUser {
   email: string;
   image?: string | null | undefined;
   isAdmin: boolean;
+  preferenceAutoScroll: boolean;
+  preferenceHiddenProviders: string[];
+  preferenceSystemPrompt: string | null;
+  preferenceSystemPromptChangedAt: Date | null;
+  preferenceWebSearch: boolean;
 }
 
 export interface UseUserResult {

@@ -28,8 +28,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   variant = "dropdown",
 }) => {
   const t = useTranslations("ModelDropdown");
-  const { models, providers } = useModelsValue();
-  const { groups: suggestionGroups } = useModelsValue();
+  const includeModels = useMemo(
+    () => (currentModelId ? [currentModelId] : []),
+    [currentModelId]
+  );
+  const { models, providers, groups: suggestionGroups } = useModelsValue({
+    includeModels,
+  });
   const session = useSession();
 
   // Exclusive selection between tiers and suggestion groups

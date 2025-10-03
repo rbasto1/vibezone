@@ -13,16 +13,22 @@ export function SessionProvider({
   children,
   serverAuthData,
 }: SessionProviderProps) {
-  const { data, isPending } = authClient.useSession();
+  const { data, isPending, refetch } = authClient.useSession();
   const firstPending = useRef(isPending);
   if (!isPending && firstPending.current) {
     firstPending.current = false;
   }
 
+  const hydratedSession = !firstPending.current ? data : serverAuthData;
+  const contextValue = hydratedSession
+    ? {
+        ...hydratedSession,
+        refetch: !firstPending.current ? refetch : undefined,
+      }
+    : null;
+
   return (
-    <SessionContext.Provider
-      value={!firstPending.current ? data : serverAuthData}
-    >
+    <SessionContext.Provider value={contextValue}>
       {children}
     </SessionContext.Provider>
   );

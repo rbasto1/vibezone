@@ -95,6 +95,26 @@ export const auth = betterAuth({
         type: "boolean",
         defaultValue: false,
       },
+      preferenceAutoScroll: {
+        type: "boolean",
+        defaultValue: false,
+      },
+      preferenceHiddenProviders: {
+        type: "string[]",
+        defaultValue: [],
+      },
+      preferenceSystemPrompt: {
+        type: "string",
+        required: false,
+      },
+      preferenceSystemPromptChangedAt: {
+        type: "date",
+        required: false,
+      },
+      preferenceWebSearch: {
+        type: "boolean",
+        defaultValue: true,
+      },
     },
   },
 });

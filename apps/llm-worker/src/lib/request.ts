@@ -10,6 +10,7 @@ export interface GetConfigResponseSuccess {
   config: {
     modelId: string;
     maxTokens: number | undefined;
+    plugins: string[];
   };
   messages: ChatMessage[];
   error: null;
@@ -38,16 +39,21 @@ export function getConfigFromRequest(
     };
   }
 
-  const modelId = request.headers.get("x-vz-model-id");
-  if (!modelId) {
+  const modelKey = request.headers.get("x-vz-model-id");
+  if (!modelKey) {
     console.error({ message: "Missing model id header" });
     return { type: "error", error: "Missing model id" };
   }
+
+  console.log("model key", modelKey);
+  const [modelId, plugins] = modelKey.split("#");
+  if (!modelId) throw new Error("Assert: split returns a string");
 
   return {
     type: "success",
     config: {
       modelId,
+      plugins: plugins?.split(",") ?? [],
       maxTokens: bodyParse.data.maxTokens,
     },
     messages: bodyParse.data.messages,

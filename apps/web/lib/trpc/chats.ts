@@ -181,11 +181,11 @@ async function getChatName(chatId: string, firstUserMessage?: string) {
               {
                 type: "text",
                 text: [
-                  "Looking at the following text, which is the first thing spoken in a conversation, generate a short title for the conversation (max 5 words, no more than 30 characters). It should be something that helps the user remember what their intention was when they started chatting. Do not include words like 'Inquiry' or 'Query', and just respond with the title, no need to preface it. Output plain text, no markdown. Keep the same language: if the user wrote in German, create a title in German, if the user wrote in Portuguese, create a title in Portuguese, etc.",
+                  "Looking at the following text, which is the first thing spoken in a conversation, generate a short title for the conversation (max 5 words, no more than 30 characters). It should be something that helps the user remember what their intention was when they started chatting. Do not include words like 'Inquiry' or 'Query', and just respond with the title, no need to preface it. Output plain text, no markdown. Write it in the same language the user used.",
                   "",
-                  "```",
+                  "<userQuery>",
                   userQuery,
-                  "```",
+                  "</userQuery>",
                 ].join("\n"),
               },
             ],

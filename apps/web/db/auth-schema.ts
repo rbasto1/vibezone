@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -11,6 +12,18 @@ export const user = pgTable("user", {
   // User preferences
   lastModels: text("last_models").array(),
   favoriteModels: text("favorite_models").array(),
+  preferenceAutoScroll: boolean("preference_auto_scroll")
+    .default(false)
+    .notNull(),
+  preferenceHiddenProviders: text("preference_hidden_providers")
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  preferenceSystemPrompt: text("preference_system_prompt"),
+  preferenceSystemPromptChangedAt: timestamp(
+    "preference_system_prompt_changed_at"
+  ),
+  preferenceWebSearch: boolean("preference_web_search").default(true).notNull(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")

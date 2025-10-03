@@ -55,7 +55,11 @@ const formatModelNames = (names: string[]) => {
 
 export const ComposerAddAttachment: FC = () => {
   const panels = usePanelsConfigValue();
-  const { models } = useModelsValue();
+  const panelModelIds = useMemo(
+    () => panels.map((panel) => panel.model),
+    [panels]
+  );
+  const { models } = useModelsValue({ includeModels: panelModelIds });
   const session = useSession();
   const isLoggedIn = !!session?.user;
 

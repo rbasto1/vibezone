@@ -41,7 +41,8 @@
 - [ ] Search chats (backend search of all messages)
 - [ ] Add Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
-- [ ] Add user preferences (auto-scroll, language, hidden providers, pre-prompt)
+- [x] Add user preferences (auto-scroll, hidden providers, pre-prompt)
+- [ ] Fix <lineBreak/> not working on i18n
 - [x] Keep composer text in SessionStorage
 - [ ] Thumb up/down (or stars?)
 - [x] Limit usage for free users (400)
