@@ -312,7 +312,6 @@ export const models: Record<string, { isIncluded?: true; isPremium?: true }> = {
   "x-ai/grok-3-mini-beta": {},
   "x-ai/grok-4": {"isPremium":true},
   "x-ai/grok-4-fast": {"isIncluded":true},
-  "x-ai/grok-4-fast:free": {},
   "x-ai/grok-code-fast-1": {},
   "z-ai/glm-4-32b": {},
   "z-ai/glm-4.5": {},
