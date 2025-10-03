@@ -4,7 +4,7 @@ import { type FC, type PropsWithChildren } from "react";
 
 import { cn } from "@/components/ui/utils";
 import { useMessageSaver } from "@/hooks/use-message-saver";
-import { useSession } from "@/hooks/use-session";
+import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantMessage } from "./assistant-message";
 import { ThreadError } from "./thread-error";
@@ -20,8 +20,8 @@ interface ThreadProps extends PropsWithChildren {
 export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
   const thread = useThread();
   const isActive = thread.isRunning;
-  const session = useSession();
-  const autoScroll = session?.user?.preferenceAutoScroll ?? false;
+  const preferences = useUserPreferencesValue();
+  const autoScroll = preferences.autoScroll;
 
   // Use the message saver hook to automatically save messages
   useMessageSaver(panel);

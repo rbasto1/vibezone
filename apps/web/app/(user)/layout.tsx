@@ -15,6 +15,7 @@ import { Toaster } from "@/components/providers/toast-provider";
 import { models as modelsList } from "@/generated/models";
 import { auth } from "@/lib/auth";
 import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
+import type { PreferencesAtom } from "@/store/preferences";
 import { generateId } from "ai";
 import { getTranslations } from "next-intl/server";
 import { PageLoader } from "./page-loader";
@@ -48,16 +49,20 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     }
   }
 
-  const preferencesInitialValue = userId
+  const preferencesInitialValue: PreferencesAtom = userId
     ? {
         pluginWeb: session.user.preferenceWebSearch,
         systemPrompt: session.user.preferenceSystemPromptChangedAt
           ? (session.user.preferenceSystemPrompt ?? null)
           : t("system"),
+        autoScroll: session.user.preferenceAutoScroll,
+        hiddenProviders: session.user.preferenceHiddenProviders ?? [],
       }
     : {
         pluginWeb: true,
         systemPrompt: t("system"),
+        autoScroll: false,
+        hiddenProviders: [],
       };
 
   // Load all the state we will pass to the client side store

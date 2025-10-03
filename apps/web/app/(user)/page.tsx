@@ -4,7 +4,6 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 
 import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
@@ -24,6 +23,7 @@ import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
 import { AppSidebarLoader } from "./app-sidebar-loader";
+import PreferencesPage from "./preferences";
 
 const Assistant: FC = () => {
   return (
@@ -79,11 +79,7 @@ const AssistantContent: FC = () => {
         });
 
     if (!allowedModelIds.length) {
-      try {
-        window.dispatchEvent(new Event("vz:open-login"));
-      } catch {
-        toast.error(t("signinWarning"));
-      }
+      setUIState({ loginOpen: true });
       return;
     }
 
@@ -124,7 +120,13 @@ const AssistantContent: FC = () => {
             panelCount={panelsConfig.length}
             suggestionsUsed={uiState.suggestionsUsed}
           />
-          <div className="flex-1 overflow-hidden p-3 flex flex-col gap-3">
+          {uiState.preferencesOpen && <PreferencesPage />}
+          <div
+            className={cn(
+              "flex-1 overflow-hidden p-3 flex flex-col gap-3",
+              uiState.preferencesOpen && "hidden"
+            )}
+          >
             <div className="flex flex-col gap-3 flex-1 min-h-0">
               {showTabs && (
                 <div className="-mx-1 px-1">

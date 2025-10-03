@@ -2,8 +2,6 @@
 
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -11,50 +9,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/components/ui/utils";
 import { useRawModelsValue } from "@/hooks/use-models";
-import { useSession } from "@/hooks/use-session";
-import { useUserPreferencesSetter } from "@/hooks/use-user-preferences";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { trpc } from "@/lib/trpc/client";
 
 const PreferencesPage = () => {
   const t = useTranslations("UserPreferences");
-  const session = useSession();
-  const router = useRouter();
-  const setPreferences = useUserPreferencesSetter();
-  const updatePreferences = trpc.users.updatePreferences.useMutation();
-  const refetchSession = session?.refetch;
+  const [preferences, setPreferences] = useUserPreferences();
+  const setUIState = useUIStateSetter();
 
-  const [autoScroll, setAutoScroll] = useState(
-    session?.user?.preferenceAutoScroll ?? false
-  );
-  const [webSearch, setWebSearch] = useState(
-    session?.user?.preferenceWebSearch ?? true
-  );
+  const [autoScroll, setAutoScroll] = useState(preferences.autoScroll);
+  const [webSearch, setWebSearch] = useState(preferences.pluginWeb);
   const [systemPrompt, setSystemPrompt] = useState(
-    session?.user?.preferenceSystemPrompt ?? ""
+    preferences.systemPrompt ?? ""
   );
   const [hiddenProviders, setHiddenProviders] = useState<Set<string>>(
-    () => new Set(session?.user?.preferenceHiddenProviders ?? [])
+    () => new Set(preferences.hiddenProviders ?? [])
   );
   const [hideProvidersEnabled, setHideProvidersEnabled] = useState(
-    () => (session?.user?.preferenceHiddenProviders?.length ?? 0) > 0
+    () => (preferences.hiddenProviders?.length ?? 0) > 0
   );
   const [providerInput, setProviderInput] = useState("");
 
   useEffect(() => {
-    if (!session?.user) {
-      toast.error(t("authRequired"));
-      router.replace("/");
-      return;
-    }
-    setAutoScroll(session.user.preferenceAutoScroll ?? false);
-    setWebSearch(session.user.preferenceWebSearch ?? true);
-    setSystemPrompt(session.user.preferenceSystemPrompt ?? "");
-    const initialHidden = new Set(session.user.preferenceHiddenProviders ?? []);
+    setAutoScroll(preferences.autoScroll);
+    setWebSearch(preferences.pluginWeb);
+    setSystemPrompt(preferences.systemPrompt ?? "");
+    const initialHidden = new Set(preferences.hiddenProviders ?? []);
     setHiddenProviders(initialHidden);
     setHideProvidersEnabled(initialHidden.size > 0);
     setProviderInput("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user]);
+  }, [preferences, setUIState, t]);
 
   const { providers: rawProviders } = useRawModelsValue();
   const providerOptions = useMemo(
@@ -86,12 +71,10 @@ const PreferencesPage = () => {
   }, [availableProviders, hideProvidersEnabled, trimmedInput]);
 
   const currentHiddenProviders = Array.from(hiddenProviders).sort();
-  const initialHiddenProviders = [
-    ...(session?.user?.preferenceHiddenProviders ?? []),
-  ].sort();
-  const initialAutoScroll = session?.user?.preferenceAutoScroll ?? false;
-  const initialWebSearch = session?.user?.preferenceWebSearch ?? true;
-  const initialSystemPrompt = session?.user?.preferenceSystemPrompt ?? "";
+  const initialHiddenProviders = preferences.hiddenProviders.sort();
+  const initialAutoScroll = preferences.autoScroll;
+  const initialWebSearch = preferences.pluginWeb;
+  const initialSystemPrompt = preferences.systemPrompt ?? "";
 
   const hasHiddenChanged =
     currentHiddenProviders.length !== initialHiddenProviders.length ||
@@ -162,53 +145,47 @@ const PreferencesPage = () => {
     setProviderInput("");
   };
 
-  const isSaving = updatePreferences.isPending;
+  const updatePreferences = trpc.users.updatePreferences.useMutation({
+    onError: (error: unknown) => {
+      console.error("Error saving preferences:", error);
+      const message =
+        error instanceof Error ? error.message : JSON.stringify(error);
+      toast.error(t("toast.error", { message }));
+      setPreferences({
+        pluginWeb: initialWebSearch,
+        systemPrompt: initialSystemPrompt,
+        autoScroll: initialAutoScroll,
+        hiddenProviders: initialHiddenProviders,
+      });
+    },
+  });
 
   const handleSave = () => {
-    if (!session?.user) return;
     const targetHidden = hideProvidersEnabled
       ? Array.from(hiddenProviders).sort()
       : ([] as string[]);
     const hiddenList = targetHidden;
 
-    void updatePreferences.mutateAsync(
-      {
-        autoScroll,
-        webSearch,
-        hiddenProviders: hiddenList,
-        systemPrompt: systemPrompt.length ? systemPrompt : null,
-      },
-      {
-        onSuccess: () => {
-          toast.success(t("toast.success"));
-          refetchSession?.();
-          setPreferences({
-            pluginWeb: webSearch,
-            systemPrompt,
-          });
-          router.push("/");
-        },
-        onError: (error: unknown) => {
-          const message =
-            error instanceof Error ? error.message : String(error);
-          toast.error(
-            t("toast.error", {
-              message,
-            })
-          );
-        },
-      }
-    );
+    setUIState({ preferencesOpen: false });
+
+    updatePreferences.mutate({
+      autoScroll,
+      webSearch,
+      hiddenProviders: hiddenList,
+      systemPrompt,
+    });
+    setPreferences({
+      pluginWeb: webSearch,
+      systemPrompt,
+      autoScroll,
+      hiddenProviders: hiddenList,
+    });
   };
 
   const renderProviderLabel = (providerId: string) => {
     const provider = providerOptions.find((item) => item.id === providerId);
     return provider?.name ?? providerId;
   };
-
-  if (!session?.user) {
-    return null;
-  }
 
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:px-8">
@@ -218,11 +195,14 @@ const PreferencesPage = () => {
           <p className="text-muted-foreground text-sm">{t("description")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" asChild>
-            <Link href="/">{t("actions.cancel")}</Link>
+          <Button
+            variant="ghost"
+            onClick={() => setUIState({ preferencesOpen: false })}
+          >
+            {t("actions.cancel")}
           </Button>
-          <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
-            {isSaving ? t("actions.saving") : t("actions.save")}
+          <Button onClick={handleSave} disabled={!hasChanges}>
+            {t("actions.save")}
           </Button>
         </div>
       </header>
@@ -370,11 +350,14 @@ const PreferencesPage = () => {
       </section>
 
       <footer className="flex items-center justify-end gap-2 pt-4">
-        <Button variant="ghost" asChild>
-          <Link href="/">{t("actions.cancel")}</Link>
+        <Button
+          variant="ghost"
+          onClick={() => setUIState({ preferencesOpen: false })}
+        >
+          {t("actions.cancel")}
         </Button>
-        <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
-          {isSaving ? t("actions.saving") : t("actions.save")}
+        <Button onClick={handleSave} disabled={!hasChanges}>
+          {t("actions.save")}
         </Button>
       </footer>
     </div>

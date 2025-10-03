@@ -1,13 +1,11 @@
 "use client";
 
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useTranslations } from "next-intl";
+import type { FC } from "react";
+import { useState } from "react";
 
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { UserMenu } from "@/components/user-menu";
-
-import { MAX_PANELS } from "@/lib/constants";
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,7 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
+import { UserMenu } from "@/components/user-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   usePanelsConfigSetter,
@@ -23,18 +23,17 @@ import {
 } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useSession } from "@/hooks/use-session";
+import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
-import type { FC } from "react";
-import { useState } from "react";
 import { AnonMobileQuotaLabel } from "./anon-mobile-quota-label";
 import { ModelDropdownContents } from "./model-dropdown-contents";
-import { useTranslations } from "next-intl";
 
 interface AssistantHeaderProps {
   panelCount: number;
   suggestionsUsed: boolean;
 }
+
 export const AssistantHeader: FC<AssistantHeaderProps> = ({
   panelCount,
   suggestionsUsed,

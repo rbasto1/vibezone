@@ -3,11 +3,12 @@
 import { CircleXIcon } from "@/components/ui/icons/circle-x-icon";
 import { useSetDepleted } from "@/hooks/use-anon-quota";
 import { useSession } from "@/hooks/use-session";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { AlertCircleIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { FC } from "react";
 import { Button } from "../ui/button";
 import { cn } from "../ui/utils";
-import { useTranslations } from "next-intl";
 
 interface ThreadErrorProps {
   error: Error;
@@ -17,6 +18,7 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
   const session = useSession();
   const setDepleted = useSetDepleted();
   const t = useTranslations("ThreadError");
+  const setUIState = useUIStateSetter();
 
   if (error.message === "Out of credits") {
     const isLoggedIn = !!session?.user;
@@ -60,13 +62,7 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
                 </h3>
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    try {
-                      window.dispatchEvent(new Event("vz:open-login"));
-                    } catch {
-                      /* ignore */
-                    }
-                  }}
+                  onClick={() => setUIState({ loginOpen: true })}
                 >
                   {t("signInButton")}
                 </Button>

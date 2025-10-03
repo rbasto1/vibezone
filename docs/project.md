@@ -51,7 +51,7 @@
 - [ ] Import chats from OpenAI format
 - [ ] Add analytics (Posthog?)
 - [ ] Improve error handling (sonner)
-- [ ] Refactor vz-open-login event to use jotai state
+- [x] Refactor vz-open-login event to use jotai state
 - [ ] Fix toast colors
 - [x] Simplify model selection metadata, add colors to capabilities buttons
 - [ ] Backend processing of messages: save the AI response without the need for a frontend

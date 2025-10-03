@@ -7,6 +7,7 @@ import { cn } from "@/components/ui/utils";
 import type { ProviderTier } from "@/db";
 import { useModelsValue } from "@/hooks/use-models";
 import { useSession } from "@/hooks/use-session";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { capabilityOptions, tierOptions } from "./model-dropdown-constants";
@@ -28,11 +29,16 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   variant = "dropdown",
 }) => {
   const t = useTranslations("ModelDropdown");
+  const setUIState = useUIStateSetter();
   const includeModels = useMemo(
     () => (currentModelId ? [currentModelId] : []),
     [currentModelId]
   );
-  const { models, providers, groups: suggestionGroups } = useModelsValue({
+  const {
+    models,
+    providers,
+    groups: suggestionGroups,
+  } = useModelsValue({
     includeModels,
   });
   const session = useSession();
@@ -428,15 +434,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                             ? t("signInToUse")
                             : undefined;
                           const onSelect = restricted
-                            ? () => {
-                                try {
-                                  window.dispatchEvent(
-                                    new Event("vz:open-login")
-                                  );
-                                } catch {
-                                  /*ignore*/
-                                }
-                              }
+                            ? () => setUIState({ loginOpen: true })
                             : handleModelSelect;
                           return (
                             <ModelDropdownItem
@@ -480,15 +478,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                 ? t("signInToUse")
                                 : undefined;
                               const onSelect = restricted
-                                ? () => {
-                                    try {
-                                      window.dispatchEvent(
-                                        new Event("vz:open-login")
-                                      );
-                                    } catch {
-                                      /*ignore*/
-                                    }
-                                  }
+                                ? () => setUIState({ loginOpen: true })
                                 : handleModelSelect;
                               return (
                                 <ModelDropdownItem
