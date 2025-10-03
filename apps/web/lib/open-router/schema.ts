@@ -14,8 +14,21 @@ export const OpenRouterModelSchema = z.object({
     tokenizer: z.string(),
     instruct_type: z.string().nullable().optional(),
   }),
-  pricing: z.any(),
-  top_provider: z.any(),
+  pricing: z.object({
+    prompt: z.string(),
+    completion: z.string(),
+    image: z.string().optional(),
+    request: z.string().optional(),
+    web_search: z.string().optional(),
+    internal_reasoning: z.string().optional(),
+    input_cache_read: z.string().optional(),
+    input_cache_write: z.string().optional(),
+  }),
+  top_provider: z.object({
+    context_length: z.number().nullable(),
+    is_moderated: z.boolean(),
+    max_completion_tokens: z.number().nullable(),
+  }),
   per_request_limits: z.any().nullable().optional(),
   supported_parameters: z.array(z.string()),
 });

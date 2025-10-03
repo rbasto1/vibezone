@@ -54,11 +54,11 @@ export async function syncFromOpenRouter() {
     (p) => !existingSupportedParametersSet.has(p)
   );
 
-  const addedProvidersCountPromise = insertProviders(
+  const insertProvidersPromise = insertProviders(
     Array.from(newProviders).map((p) => ({ id: p, name: p }))
   );
 
-  const addedSupportedParametersCountPromise = insertSupportedParameters(
+  const insertSupportedParametersPromise = insertSupportedParameters(
     Array.from(newSupportedParameters).map((p) => ({ id: p, label: p }))
   );
 
@@ -97,7 +97,7 @@ export async function syncFromOpenRouter() {
       isFree,
     } satisfies NewModel;
   });
-  const addedModelsCountPromise = insertModels(values);
+  const insertModelsPromise = insertModels(values);
 
   await db
     .insert(modelSupportedParameters)
@@ -112,49 +112,53 @@ export async function syncFromOpenRouter() {
     .onConflictDoNothing();
 
   // Soft-delete models not present anymore
-  const toSoftDelete = existingModelsList
+  const deletedModels = existingModelsList
     .filter((m) => !apiModelIdSet.has(m.id) && !m.deletedAt)
     .map((m) => m.id);
-  const softDeletedCountPromise = toSoftDelete.length
+  const softDeletePromise = deletedModels.length
     ? db
         .update(modelsTable)
         .set({ deletedAt: sql`current_timestamp` })
         .where(
           and(
-            inArray(modelsTable.id, toSoftDelete),
+            inArray(modelsTable.id, deletedModels),
             isNull(modelsTable.deletedAt)
           )
         )
-        .then(() => toSoftDelete.length)
+        .then(() => deletedModels.length)
     : 0;
 
   // Undelete but hide models that are deleted but appeared in the list
-  const toUndelete = existingModelsList
+  const undeletedModels = existingModelsList
     .filter((m) => apiModelIdSet.has(m.id) && !!m.deletedAt)
     .map((m) => m.id);
-  const modelsUndeletedPromise = toUndelete.length
+  const undeleteModelsPromise = undeletedModels.length
     ? db
         .update(modelsTable)
         .set({ deletedAt: null, hiddenAt: sql`current_timestamp` })
         .where(
-          and(inArray(modelsTable.id, toUndelete), isNull(modelsTable.hiddenAt))
+          and(
+            inArray(modelsTable.id, undeletedModels),
+            isNull(modelsTable.hiddenAt)
+          )
         )
-        .then(() => toUndelete.length)
+        .then(() => undeletedModels.length)
     : 0;
 
   const toUpdateDescription: Pick<NewModel, "id" | "description">[] = [];
-  const toUpdate = existingModelsList.filter((m) => {
-    const received = apiModels.find((d) => d.id === m.id);
-    if (!received) return false;
-    if (m.description !== received.description) {
+  const toUpdate = apiModels.filter((m) => {
+    const existing = existingModelsList.find((d) => d.id === m.id);
+    if (!existing) return false;
+    if (m.description !== existing.description) {
       toUpdateDescription.push({
         id: m.id,
-        description: received.description,
+        description: existing.description,
       });
     }
-    const { pricing, top_provider: topProvider } = received;
+    const { pricing, topProvider } = existing;
     return (
-      m.description !== received.description ||
+      m.description !== existing.description ||
+      m.pricing.prompt !== pricing.prompt ||
       m.pricing.completion !== pricing.completion ||
       m.pricing.image !== pricing.image ||
       m.pricing.request !== pricing.request ||
@@ -162,9 +166,9 @@ export async function syncFromOpenRouter() {
       m.pricing.internal_reasoning !== pricing.internal_reasoning ||
       m.pricing.input_cache_read !== pricing.input_cache_read ||
       m.pricing.input_cache_write !== pricing.input_cache_write ||
-      m.topProvider.context_length !== topProvider.context_length ||
-      m.topProvider.is_moderated !== topProvider.is_moderated ||
-      m.topProvider.max_completion_tokens !== topProvider.max_completion_tokens
+      m.top_provider.context_length !== topProvider.context_length ||
+      m.top_provider.is_moderated !== topProvider.is_moderated ||
+      m.top_provider.max_completion_tokens !== topProvider.max_completion_tokens
     );
   });
 
@@ -179,7 +183,7 @@ export async function syncFromOpenRouter() {
     modelsUpdatedDescription
   );
 
-  const modelsUpdatedPromise = toUpdate.length
+  const updateModelsPromise = toUpdate.length
     ? db
         .insert(modelsTable)
         .values(
@@ -188,7 +192,7 @@ export async function syncFromOpenRouter() {
               id: m.id,
               description: m.description,
               pricing: m.pricing,
-              topProvider: m.topProvider,
+              topProvider: m.top_provider,
               // The insert will fail because it's a duplicate ID, we only care about the onConflictDoUpdate
               name: "",
               providerId: "",
@@ -214,32 +218,32 @@ export async function syncFromOpenRouter() {
         .then(() => toUpdate.length)
     : 0;
 
-  const [
-    addedProvidersCount,
-    addedModelsCount,
-    addedSupportedParametersCount,
-    deletedModelsCount,
-    undeletedModelsCount,
-    updatedModelsCount,
-    translatedModelsCount,
-  ] = await Promise.all([
-    addedProvidersCountPromise,
-    addedModelsCountPromise,
-    addedSupportedParametersCountPromise,
-    softDeletedCountPromise,
-    modelsUndeletedPromise,
-    modelsUpdatedPromise,
+  await Promise.all([
+    insertProvidersPromise,
+    insertModelsPromise,
+    insertSupportedParametersPromise,
+    softDeletePromise,
+    undeleteModelsPromise,
+    updateModelsPromise,
     translatedModelsPromise,
   ]);
 
+  const addedProviders = Array.from(newProviders);
+  const addedSupportedParameters = Array.from(newSupportedParameters);
+  const addedModels = values.map((m) => m.id);
+  const updatedModels = toUpdate.map((m) => m.id);
+  const translatedModels = Array.from(
+    new Set(modelsUpdatedDescription.map((m) => m.id))
+  );
+
   return {
-    addedProvidersCount,
-    addedModelsCount,
-    addedSupportedParametersCount,
-    deletedModelsCount,
-    undeletedModelsCount,
-    updatedModelsCount,
-    translatedModelsCount,
+    addedProviders,
+    addedModels,
+    addedSupportedParameters,
+    deletedModels,
+    undeletedModels,
+    updatedModels,
+    translatedModels,
   };
 }
 
@@ -327,6 +331,7 @@ async function getApiData() {
   });
   const parsed = OpenRouterModelsResponse.safeParse(json);
   if (!parsed.success) {
+    console.error(parsed.error);
     throw new Error(parsed.error.issues[0]?.message ?? "Parse error");
   }
 

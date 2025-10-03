@@ -21,13 +21,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/components/ui/utils";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { trpc } from "@/lib/trpc/client";
-import type { ModelsAdminListOutput } from "@/lib/trpc/server/server";
+import type {
+  ModelsAdminListOutput,
+  ModelsSyncFromOpenRouterOutput,
+} from "@/lib/trpc/server/server";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   getStorageItem,
   setStorageItem,
   storageKeys,
 } from "../session-storage";
+import SyncResultModal from "./sync-result-modal";
 
 const stableEmpty: never[] = [];
 
@@ -57,24 +61,14 @@ const ModelsPageClient: NextPage = () => {
         toast.warning("Failed to invalidate models list");
       }),
   });
+  const [syncResult, setSyncResult] =
+    useState<ModelsSyncFromOpenRouterOutput>();
   const syncMutation = trpc.models.syncFromOpenRouter.useMutation({
     onSuccess: async (res) => {
       await utils.models.adminList.invalidate().catch(() => {
         toast.warning("Failed to invalidate models list");
       });
-      toast.success(
-        <div>
-          Sync complete:
-          <ul>
-            <li>+{res.addedProvidersCount} providers</li>
-            <li>+{res.addedModelsCount} models</li>
-            <li>={res.updatedModelsCount} models updated</li>
-            <li>-{res.deletedModelsCount} models</li>
-            <li>+{res.undeletedModelsCount} models undeleted</li>
-            <li>#{res.translatedModelsCount} translated</li>
-          </ul>
-        </div>
-      );
+      setSyncResult(res);
     },
   });
 
@@ -533,6 +527,13 @@ const ModelsPageClient: NextPage = () => {
           )}
         </div>
       </div>
+      {syncResult && (
+        <SyncResultModal
+          result={syncResult}
+          onClose={() => setSyncResult(undefined)}
+          onSelectModel={setTextFilter}
+        />
+      )}
     </div>
   );
 };
