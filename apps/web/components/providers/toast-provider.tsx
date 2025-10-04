@@ -11,7 +11,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
     throw new Error(`Invalid theme ${theme}`);
   }
 
-  return <Sonner theme={theme} {...props} />;
+  return <Sonner theme={theme} richColors {...props} />;
 };
 
 export { Toaster };
