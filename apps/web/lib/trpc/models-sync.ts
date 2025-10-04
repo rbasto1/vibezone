@@ -632,7 +632,7 @@ function apiModelToDbModel(m: OpenRouterModel) {
     name,
     canonicalSlug: m.canonical_slug,
     huggingFaceId: m.hugging_face_id,
-    description: m.description,
+    description: cleanup(m.description),
     architectureModality: m.architecture.modality,
     architectureInputModalities: m.architecture.input_modalities,
     architectureOutputModalities: m.architecture.output_modalities,
@@ -653,4 +653,13 @@ function unique(
   self: Array<{ id: string }>
 ) {
   return self.findIndex((v) => v.id === value.id) === index;
+}
+
+function cleanup(description: string): string {
+  return description
+    .replace(/\s?\[Learn more in our docs\]\(https:\/\/\S+\)/g, "")
+    .replace(/([^\]])\(https:\/\/openrouter.ai\/\S+\)/g, (_, p) =>
+      p === " " ? "" : p
+    )
+    .replace(/\[([^\]]+)\]\(\/[^)]+\)/g, (_, p) => p);
 }
