@@ -62,10 +62,6 @@ export async function handleProviderStream(
   return result.toUIMessageStreamResponse({
     headers,
     onFinish: (e) => {
-      console.debug({
-        message: "Stream event finished:",
-        id: e.responseMessage.id,
-      });
       waitUntil(
         persistUsage({
           request,

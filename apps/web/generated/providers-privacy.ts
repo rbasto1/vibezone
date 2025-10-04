@@ -23,6 +23,7 @@ export const providersPrivacy: ProviderPrivacyInfo[] = [
 {"id":"google","name":"Google","privacyPolicyUrl":"https://cloud.google.com/terms/"},
 {"id":"inception","name":"Inception","privacyPolicyUrl":"https://www.inceptionlabs.ai/terms"},
 {"id":"liquid","name":"Liquid","privacyPolicyUrl":"https://www.liquid.ai/terms-conditions"},
+{"id":"maritacaai","name":"Maritaca AI","privacyPolicyUrl":"https://www.maritaca.ai/politica-de-privacidade"},
 {"id":"meituan","name":"Meituan","privacyPolicyUrl":null},
 {"id":"meta-llama","name":"Meta","privacyPolicyUrl":"https://llama.developer.meta.com/legal/terms-of-service"},
 {"id":"microsoft","name":"Microsoft","privacyPolicyUrl":"https://www.microsoft.com/en-us/legal/terms-of-use?oneroute=true"},

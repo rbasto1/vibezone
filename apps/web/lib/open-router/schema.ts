@@ -36,3 +36,15 @@ export const OpenRouterModelSchema = z.object({
 export const OpenRouterModelsResponse = z.object({
   data: z.array(OpenRouterModelSchema),
 });
+
+export const MaritacaAIModelSchema = z.object({
+  id: z.string(),
+  object: z.literal("model"),
+  created: z.number(),
+  owned_by: z.string(),
+});
+
+export const MaritacaAIModelsResponse = z.object({
+  object: z.literal("list"),
+  data: z.array(MaritacaAIModelSchema),
+});

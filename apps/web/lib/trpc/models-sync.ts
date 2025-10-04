@@ -16,7 +16,10 @@ import {
   providers as providersTable,
   supportedParameters as supportedParametersTable,
 } from "@/db/schema";
-import { OpenRouterModelsResponse } from "@/lib/open-router/schema";
+import {
+  MaritacaAIModelsResponse,
+  OpenRouterModelsResponse,
+} from "@/lib/open-router/schema";
 import { deepl, localeToTargetLanguageCode } from "../deepl/deepl";
 
 export async function syncFromOpenRouter() {
@@ -311,6 +314,122 @@ async function translateModelDescriptions(
 }
 
 async function getApiData() {
+  const openRouterDataPromise = getApiDataOpenRouter();
+  const maritacaAIModelsPromise = getApiDataMaritacaAI();
+
+  const [openRouterData, maritacaAIModels] = await Promise.all([
+    openRouterDataPromise,
+    maritacaAIModelsPromise,
+  ]);
+
+  const usdToBrl = 5.3;
+
+  const getPromptPriceMaritacaAI = (modelId: string) => {
+    switch (modelId) {
+      case "sabia-3.1":
+        return 5 / 1_000_000 / usdToBrl;
+      case "sabia-3":
+        return 5 / 1_000_000 / usdToBrl;
+      case "sabiazinho-3":
+        return 1 / 1_000_000 / usdToBrl;
+      default:
+        return -1;
+    }
+  };
+
+  const getCompletionPriceMaritacaAI = (modelId: string) => {
+    switch (modelId) {
+      case "sabia-3.1":
+        return 10 / 1_000_000 / usdToBrl;
+      case "sabia-3":
+        return 10 / 1_000_000 / usdToBrl;
+      case "sabiazinho-3":
+        return 3 / 1_000_000 / usdToBrl;
+      default:
+        return -1;
+    }
+  };
+
+  const getSupportedParametersMaritacaAI = () => {
+    return [
+      "frequency_penalty",
+      "max_tokens",
+      "presence_penalty",
+      "stop",
+      "temperature",
+      "tool_choice",
+      "tools",
+      "top_p",
+    ];
+  };
+
+  return openRouterData.concat(
+    maritacaAIModels.map((m): (typeof openRouterData)[0] => ({
+      id: `maritacaai/${m.id}`,
+      name: m.id,
+      canonical_slug: `maritacaai/${m.id}`,
+      architecture: {
+        modality: "text->text",
+        input_modalities: ["text"],
+        output_modalities: ["text"],
+        tokenizer: "GPT",
+        instruct_type: null,
+      },
+      created: m.created,
+      description: m.id,
+      pricing: {
+        prompt: getPromptPriceMaritacaAI(m.id).toString(),
+        completion: getCompletionPriceMaritacaAI(m.id).toString(),
+      },
+      supported_parameters: getSupportedParametersMaritacaAI(),
+      top_provider: {
+        context_length: m.id === "sabiazinho-3" ? 32000 : 128000,
+        is_moderated: false,
+        max_completion_tokens: null,
+      },
+    }))
+  );
+}
+
+async function getApiDataMaritacaAI() {
+  const apiKey = process.env.MARITACAAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("MARITACAAI_API_KEY is not set");
+  }
+
+  // curl https://chat.maritaca.ai/api/models -H 'Authorization: Bearer 115734807544368241363_e437f29c65e01e82'
+  const rest = await fetch("https://chat.maritaca.ai/api/models", {
+    headers: { Authorization: `Bearer ${apiKey}` },
+    cache: "no-store",
+  }).catch((error) => {
+    console.error("MaritacaAI: Fetch error", error);
+    return null;
+  });
+
+  if (!rest) {
+    return [];
+  }
+
+  if (!rest.ok) {
+    const body = await rest.text().catch(() => "");
+    console.error(`MaritacaAI: Status ${rest.status}: ${body}`);
+    return [];
+  }
+
+  const json = await rest.json().catch((e) => {
+    console.error(`MaritacaAI: Failed to parse models json: ${String(e)}`);
+    return [];
+  });
+  const parsed = MaritacaAIModelsResponse.safeParse(json);
+  if (!parsed.success) {
+    console.error("MaritacaAI: Parse error", parsed.error);
+    return [];
+  }
+
+  return parsed.data.data;
+}
+
+async function getApiDataOpenRouter() {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error("OPENROUTER_API_KEY is not set");

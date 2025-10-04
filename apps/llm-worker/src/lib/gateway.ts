@@ -54,6 +54,7 @@ function ensureGateway(env: Env, key: GatewayAdapterKey) {
     headers: config.headers,
     baseURL: config.baseURL,
   });
+
   adapters.set(key, adapter);
   return adapter;
 }
