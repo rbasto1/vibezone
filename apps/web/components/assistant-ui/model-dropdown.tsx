@@ -22,12 +22,14 @@ interface ModelDropdownProps {
   panelId: string;
   modelId: string;
   className?: string;
+  onInfoOpen?: (modelId: string) => void;
 }
 
 export const ModelDropdown: FC<ModelDropdownProps> = ({
   modelId,
   panelId,
   className,
+  onInfoOpen,
 }) => {
   const includeModels = useMemo(() => [modelId], [modelId]);
   const { providers, models } = useModelsValue({ includeModels });
@@ -76,6 +78,7 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
             currentModelId={modelId}
             onClose={() => setIsOpen(false)}
             variant="sheet"
+            onInfoClick={onInfoOpen}
           />
         </SheetContent>
       </Sheet>
@@ -109,6 +112,7 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
             onSelect={handleChangePanelModel}
             currentModelId={modelId}
             onClose={() => setIsOpen(false)}
+            onInfoClick={onInfoOpen}
           />
         )}
       </DropdownMenuPortal>

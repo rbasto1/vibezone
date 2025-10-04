@@ -20,6 +20,7 @@ interface ModelDropdownContentsProps {
   currentModelId?: string;
   onClose?: () => void;
   variant?: "dropdown" | "sheet";
+  onInfoClick?: (modelId: string) => void;
 }
 
 export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
@@ -27,6 +28,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   currentModelId,
   onClose,
   variant = "dropdown",
+  onInfoClick,
 }) => {
   const t = useTranslations("ModelDropdown");
   const setUIState = useUIStateSetter();
@@ -448,6 +450,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                               showRetentionWarning={
                                 providerRetainsData || !!m.isFree
                               }
+                              onInfoClick={onInfoClick}
                             />
                           );
                         })}
@@ -492,6 +495,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                   showRetentionWarning={
                                     providerRetainsData || Boolean(m.isFree)
                                   }
+                                  onInfoClick={onInfoClick}
                                 />
                               );
                             })}

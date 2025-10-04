@@ -39,6 +39,7 @@
     "experimental": "Experimental",
     "free": "Grátis",
     "included": "Incluído",
+    "includedTooltip": "Este modelo está incluído na versão paga",
     "new": "Novo",
     "premium": "Premium"
   },
@@ -95,7 +96,22 @@
     "showMore": "Mostrar mais",
     "otherModels": "Outros modelos",
     "retentionIconAria": "Este modelo pode reter seus dados",
-    "retentionTooltip": "Este modelo pode reter suas mensagens e anexos para treinar novas versões.<lineBreak></lineBreak>Não compartilhe informações sensíveis em suas conversas."
+    "retentionTooltip": "Este modelo pode reter suas mensagens e anexos para treinar novas versões.<lineBreak></lineBreak>Não compartilhe informações sensíveis em suas conversas.",
+    "info": {
+      "openDetails": "Ver detalhes do modelo",
+      "tokensSuffix": "tokens",
+      "contextUnknown": "Indisponível",
+      "subtitle": "Fornecido por {provider}",
+      "createdAt": "Disponível desde {createdAt}",
+      "descriptionHeading": "Descrição",
+      "descriptionFallback": "Não foi possível carregar a descrição deste modelo.",
+      "contextLengthHeading": "Janela de contexto",
+      "maxCompletionHeading": "Tokens de resposta (máx)",
+      "capabilitiesHeading": "Recursos",
+      "noCapabilities": "Nenhum recurso adicional",
+      "tagsHeading": "Etiquetas",
+      "noTags": "Nenhuma etiqueta para este modelo"
+    }
   },
   "ModelDropdownSearch": {
     "focusedPlaceholder": "Pesquisar modelos...",
@@ -122,7 +138,8 @@
     "stopLabel": "Parar a resposta desta IA",
     "closeAria": "Fechar painel",
     "closeTooltip": "Fechar painel",
-    "closeDisabledTooltip": "Ao menos um painel deve permanecer"
+    "closeDisabledTooltip": "Ao menos um painel deve permanecer",
+    "infoShowDetails": "Mostrar detalhes"
   },
   "SocialImage": {
     "subtitle": "Compare modelos de IA",

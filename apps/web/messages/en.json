@@ -39,6 +39,7 @@
     "experimental": "Experimental",
     "free": "Free",
     "included": "Included",
+    "includedTooltip": "This model is included in the paid plan",
     "new": "New",
     "premium": "Premium"
   },
@@ -95,7 +96,22 @@
     "showMore": "Show more",
     "otherModels": "Other models",
     "retentionIconAria": "This model may retain your data",
-    "retentionTooltip": "This model may retain your messages and attachments to train new versions.<lineBreak></lineBreak>Do not share sensitive information in your chats."
+    "retentionTooltip": "This model may retain your messages and attachments to train new versions.<lineBreak></lineBreak>Do not share sensitive information in your chats.",
+    "info": {
+      "openDetails": "Open model details",
+      "tokensSuffix": "tokens",
+      "contextUnknown": "Not available",
+      "subtitle": "Provided by {provider}",
+      "createdAt": "Available since {createdAt}",
+      "descriptionHeading": "Description",
+      "descriptionFallback": "We could not load a description for this model.",
+      "contextLengthHeading": "Context window",
+      "maxCompletionHeading": "Max completion tokens",
+      "capabilitiesHeading": "Capabilities",
+      "noCapabilities": "No additional capabilities",
+      "tagsHeading": "Tags",
+      "noTags": "No tags for this model"
+    }
   },
   "ModelDropdownSearch": {
     "focusedPlaceholder": "Search models...",
@@ -122,7 +138,8 @@
     "stopLabel": "Stop streaming this AI response",
     "closeAria": "Close panel",
     "closeTooltip": "Close panel",
-    "closeDisabledTooltip": "At least one panel must remain"
+    "closeDisabledTooltip": "At least one panel must remain",
+    "infoShowDetails": "Show details"
   },
   "SocialImage": {
     "subtitle": "Compare AI Models",

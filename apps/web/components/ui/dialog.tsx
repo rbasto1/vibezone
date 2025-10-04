@@ -1,10 +1,12 @@
 "use client";
 
+import { cn } from "@/components/ui/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
-import { cn } from "@/components/ui/utils";
 
-function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+function Dialog({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
@@ -47,7 +49,7 @@ function DialogContent({
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute right-4 top-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+        <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute right-4 top-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none cursor-pointer">
           <XIcon className="size-4" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
@@ -70,7 +72,10 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-2", className)}
+      className={cn(
+        "flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-2",
+        className
+      )}
       {...props}
     />
   );
@@ -111,4 +116,3 @@ export {
   DialogPortal,
   DialogTitle,
 };
-

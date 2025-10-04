@@ -16,6 +16,7 @@ export const IncludedTag: React.FC<IncludedTagProps> = ({ className }) => {
         "text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
         className
       )}
+      title={t("includedTooltip")}
     >
       {t("included")}
     </span>

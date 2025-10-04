@@ -7,7 +7,6 @@ import { INITIAL_PANEL_COUNT } from "@/lib/constants";
 import { generateChatId } from "@/lib/id";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { currentChatAtom } from "@/store/chat";
-import { modelsAtom } from "@/store/models";
 import type { PanelState } from "@/store/panels";
 import {
   panelConfigAtom,
@@ -23,14 +22,12 @@ type ModelsProviderProps = PropsWithChildren<{
 }>;
 
 export function StoreProvider({
-  modelsInitialValue,
   panelsInitialValue,
   preferencesInitialValue,
   children,
 }: ModelsProviderProps) {
   const store = useMemo(() => {
     const s = getDefaultStore();
-    s.set(modelsAtom, modelsInitialValue);
     s.set(panelConfigAtom, panelsInitialValue);
     s.set(
       panelStateAtom,
@@ -53,7 +50,7 @@ export function StoreProvider({
     });
 
     return s;
-  }, [modelsInitialValue, panelsInitialValue, preferencesInitialValue]);
+  }, [panelsInitialValue, preferencesInitialValue]);
 
   return <JotaiProvider store={store}>{children}</JotaiProvider>;
 }

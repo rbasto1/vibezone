@@ -1,9 +1,11 @@
 "use client";
 
-import { XIcon } from "lucide-react";
+import { InfoIcon, XIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { FC } from "react";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { StopButton } from "@/components/ui/stop-button";
 import { cn } from "@/components/ui/utils";
 import {
@@ -15,7 +17,7 @@ import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import type { PanelConfig } from "@/store/panels";
 import { ConfirmCloseModal } from "./confirm-close-modal";
 import { ModelDropdown } from "./model-dropdown";
-import { useTranslations } from "next-intl";
+import { ModelInfoModal } from "./model-info-modal";
 
 export interface PanelHeaderProps {
   panel: PanelConfig;
@@ -32,6 +34,9 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const panelState = usePanelStateValue(panelId);
 
   const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+
+  const infoLabel = t("infoShowDetails");
 
   const handleRemoveClick = () => {
     if (panelState.hasMessages) {
@@ -67,6 +72,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           panelId={panelId}
           modelId={modelId}
           className="h-8 text-sm"
+          onInfoOpen={() => setShowInfoModal(true)}
         />
       </div>
       <div className="flex items-center gap-1">
@@ -77,6 +83,17 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
             title={stopLabel}
           />
         )}
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="w-8 h-8"
+          onClick={() => setShowInfoModal(true)}
+          title={infoLabel}
+          aria-label={infoLabel}
+        >
+          <InfoIcon className="h-4 w-4" />
+        </Button>
         <button
           className={cn(
             "p-1 rounded hover:bg-muted cursor-pointer",
@@ -90,6 +107,9 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           <XIcon className="h-4 w-4" />
         </button>
       </div>
+      {showInfoModal && (
+        <ModelInfoModal modelId={modelId} onOpenChange={setShowInfoModal} />
+      )}
       {showConfirmClose && (
         <ConfirmCloseModal
           onOpenChange={setShowConfirmClose}

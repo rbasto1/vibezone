@@ -39,6 +39,7 @@
     "experimental": "Experimentell",
     "free": "Kostenlos",
     "included": "Inbegriffen",
+    "includedTooltip": "Dieses Modell ist in der bezahlten Version enthalten",
     "new": "Neu",
     "premium": "Premium"
   },
@@ -95,7 +96,22 @@
     "showMore": "Mehr anzeigen",
     "otherModels": "Weitere Modelle",
     "retentionIconAria": "Dieses Modell könnte deine Daten speichern",
-    "retentionTooltip": "Dieses Modell kann deine Nachrichten und Anhänge speichern, um neue Versionen zu trainieren.<lineBreak></lineBreak>Teile in deinen Chats keine sensiblen Informationen."
+    "retentionTooltip": "Dieses Modell kann deine Nachrichten und Anhänge speichern, um neue Versionen zu trainieren.<lineBreak></lineBreak>Teile in deinen Chats keine sensiblen Informationen.",
+    "info": {
+      "openDetails": "Modelldetails öffnen",
+      "tokensSuffix": "Token",
+      "contextUnknown": "Nicht verfügbar",
+      "subtitle": "Bereitgestellt von {provider}",
+      "createdAt": "Verfügbar seit {createdAt}",
+      "descriptionHeading": "Beschreibung",
+      "descriptionFallback": "Die Beschreibung für dieses Modell konnte nicht geladen werden.",
+      "contextLengthHeading": "Kontextfenster",
+      "maxCompletionHeading": "Maximale Antwort-Token",
+      "capabilitiesHeading": "Fähigkeiten",
+      "noCapabilities": "Keine zusätzlichen Fähigkeiten",
+      "tagsHeading": "Tags",
+      "noTags": "Keine Tags für dieses Modell"
+    }
   },
   "ModelDropdownSearch": {
     "focusedPlaceholder": "Modelle durchsuchen...",
@@ -122,7 +138,8 @@
     "stopLabel": "Diese KI-Antwort stoppen",
     "closeAria": "Panel schließen",
     "closeTooltip": "Panel schließen",
-    "closeDisabledTooltip": "Mindestens ein Panel muss bestehen bleiben"
+    "closeDisabledTooltip": "Mindestens ein Panel muss bestehen bleiben",
+    "infoShowDetails": "Modelldetails anzeigen"
   },
   "SocialImage": {
     "subtitle": "KI-Modelle vergleichen",

@@ -1,10 +1,11 @@
 import "server-only";
 
-import { eq, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { models } from "@/db/schema";
+import { models, providers } from "@/db/schema";
 import {
   adminProcedure,
   publicProcedure,
@@ -18,6 +19,63 @@ export type GetModelsListReturn = Awaited<ReturnType<typeof listModels>>;
 export const modelsRouter = t.router({
   list: publicProcedure.query(listModels),
   adminList: adminProcedure.query(listModelsAdmin),
+
+  details: publicProcedure
+    .input(
+      z.object({
+        modelId: z.string().min(1),
+        localeId: z.string().min(1),
+      })
+    )
+    .query(async ({ input }) => {
+      const model = await db.query.models.findFirst({
+        columns: {
+          id: true,
+          description: true,
+          topProvider: true,
+          createdAt: true,
+        },
+        where: and(
+          eq(models.id, input.modelId),
+          isNull(models.deletedAt),
+          isNull(models.hiddenAt),
+          isNull(providers.deletedAt)
+        ),
+        with: {
+          provider: {
+            columns: {
+              privacyPolicyUrl: true,
+            },
+          },
+          translations: {
+            columns: {
+              localeId: true,
+              description: true,
+            },
+          },
+        },
+      });
+
+      if (!model) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Model not found",
+        });
+      }
+
+      const translation =
+        model.translations.find((t) => t.localeId === input.localeId) ??
+        model.translations.find((t) => t.localeId === "en");
+
+      return {
+        id: model.id,
+        description: translation?.description ?? model.description,
+        contextLength: model.topProvider?.context_length ?? null,
+        maxCompletionTokens: model.topProvider?.max_completion_tokens ?? null,
+        privacyPolicyUrl: model.provider.privacyPolicyUrl,
+        createdAt: model.createdAt,
+      };
+    }),
 
   update: adminProcedure
     .input(
