@@ -72,7 +72,6 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           panelId={panelId}
           modelId={modelId}
           className="h-8 text-sm"
-          onInfoOpen={() => setShowInfoModal(true)}
         />
       </div>
       <div className="flex items-center gap-1">

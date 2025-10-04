@@ -61,3 +61,4 @@
 - [ ] Add a "do not show again" option to the warning about discarding a panel
 - [ ] Add Python project to calculate usage of non-OpenRouter models
 - [ ] Syntax highlighting: auto-detect language (switch to highlight.js?)
+- [ ] Add `api_created_at` to models and use our import date for created_at
