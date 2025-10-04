@@ -53,7 +53,7 @@
 - [ ] Add analytics (Posthog?)
 - [ ] Improve error handling (sonner)
 - [x] Refactor vz-open-login event to use jotai state
-- [ ] Fix toast colors
+- [x] Fix toast colors
 - [x] Simplify model selection metadata, add colors to capabilities buttons
 - [ ] Backend processing of messages: save the AI response without the need for a frontend
 - [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
