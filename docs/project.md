@@ -34,8 +34,8 @@
 - [x] Translate to Brazilian Portuguese
 - [x] Assign .br domains
 - [ ] Explore bot protection (Vercel BotID? Arcjet? hCaptcha?)
-- [ ] Add Brazilian models
-- [ ] Add model descriptions to <i> icon
+- [x] Add Maritaca AI models
+- [ ] Add model descriptions to (i) icon
 - [x] Language-specific chat titles
 - [ ] Paginate chat history
 - [ ] Add reasoning effort slider
@@ -58,3 +58,6 @@
 - [ ] Backend processing of messages: save the AI response without the need for a frontend
 - [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
 - [ ] Projects (group threads) - paying only
+- [ ] Add a "do not show again" option to the warning about discarding a panel
+- [ ] Add Python project to calculate usage of non-OpenRouter models
+- [ ] Syntax highlighting: auto-detect language (switch to highlight.js?)

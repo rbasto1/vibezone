@@ -9,6 +9,8 @@ export interface GetConfigResponseSuccess {
   type: "success";
   config: {
     modelId: string;
+    providerId: string;
+    adapterModelId: string;
     maxTokens: number | undefined;
     plugins: string[];
   };
@@ -45,18 +47,42 @@ export function getConfigFromRequest(
     return { type: "error", error: "Missing model id" };
   }
 
-  console.log("model key", modelKey);
   const [modelId, plugins] = modelKey.split("#");
   if (!modelId) throw new Error("Assert: split returns a string");
+
+  const providerId = modelId.split("/")[0] ?? modelId;
+  const pluginList = plugins
+    ? plugins.split(",").filter((plugin) => !!plugin)
+    : [];
 
   return {
     type: "success",
     config: {
       modelId,
-      plugins: plugins?.split(",") ?? [],
+      providerId,
+      adapterModelId: getAdapterModelId(modelId),
+      plugins: getValidPlugins(providerId, pluginList),
       maxTokens: bodyParse.data.maxTokens,
     },
     messages: bodyParse.data.messages,
     error: null,
   };
+}
+
+function getAdapterModelId(modelId: string) {
+  switch (modelId.split("/")[0]) {
+    case "maritacaai":
+      return modelId.split("/")[1]!;
+    default:
+      return modelId;
+  }
+}
+
+function getValidPlugins(providerId: string, plugins: string[]) {
+  switch (providerId) {
+    case "maritacaai":
+      return [];
+    default:
+      return plugins.filter((plugin) => plugin === "web");
+  }
 }

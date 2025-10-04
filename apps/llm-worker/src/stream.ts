@@ -1,6 +1,6 @@
 import { convertToModelMessages, streamText } from "ai";
 import { waitUntil } from "cloudflare:workers";
-import { getOpenRouter } from "./lib/gateway";
+import { getAdapterForProvider } from "./lib/gateway";
 import { persistUsage } from "./lib/usage";
 import type { VibezoneContext } from "./worker";
 
@@ -10,11 +10,13 @@ export async function handleProviderStream(
   vzContext: VibezoneContext
 ): Promise<Response> {
   const { env, completionRequest } = vzContext;
-  const { modelId, maxTokens, plugins } = completionRequest.config;
+  const { modelId, providerId, adapterModelId, maxTokens, plugins } =
+    completionRequest.config;
   const messages = completionRequest.messages;
   const pluginWeb = plugins.includes("web");
 
-  const adapter = getOpenRouter(env);
+  const isMaritacaModel = providerId === "maritacaai";
+  const adapter = getAdapterForProvider(env, providerId);
 
   const firstPart = messages[0]?.parts[0];
   const systemPrompt = firstPart?.type === "text" ? firstPart.text : null;
@@ -26,7 +28,15 @@ export async function handleProviderStream(
     systemPrompt,
   });
 
-  const modelSpecifier = pluginWeb ? `${modelId}:online` : modelId;
+  if (pluginWeb && isMaritacaModel) {
+    console.warn({
+      message: "Web plugin requested for Maritaca model, ignoring",
+      model: modelId,
+    });
+  }
+
+  const modelSpecifier =
+    pluginWeb && !isMaritacaModel ? `${adapterModelId}:online` : adapterModelId;
 
   const result = streamText({
     model: adapter(modelSpecifier),
@@ -52,10 +62,6 @@ export async function handleProviderStream(
   return result.toUIMessageStreamResponse({
     headers,
     onFinish: (e) => {
-      console.debug({
-        message: "Stream event finished:",
-        id: e.responseMessage.id,
-      });
       waitUntil(
         persistUsage({
           request,
