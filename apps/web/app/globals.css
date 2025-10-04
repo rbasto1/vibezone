@@ -78,6 +78,9 @@ html {
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
+
+  /* Matrix theme colors */
+  --matrix-green: #00ff41;
 }
 
 html.dark {
@@ -113,9 +116,6 @@ html.dark {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
-
-  /* Matrix theme colors */
-  --matrix-green: #00ff41;
 
   /* Amber glow color (dark) */
   --anon-glow-rgb: 252 211 77; /* amber-300 */

@@ -16,20 +16,27 @@ import {
   providers as providersTable,
   supportedParameters as supportedParametersTable,
 } from "@/db/schema";
+import type { OpenRouterModel } from "@/lib/open-router/schema";
 import {
   MaritacaAIModelsResponse,
   OpenRouterModelsResponse,
 } from "@/lib/open-router/schema";
-import { deepl, localeToTargetLanguageCode } from "../deepl/deepl";
+import type { TextResult } from "deepl-node";
+import {
+  deepl,
+  localeToSourceLanguageCode,
+  localeToTargetLanguageCode,
+} from "../deepl/deepl";
 
 export async function syncFromOpenRouter() {
-  const apiModels = await getApiData();
+  const apiModelsRaw = await getApiData();
+  const apiModels = apiModelsRaw.map(apiModelToDbModel);
 
   const apiProviderIds = Array.from(
     new Set(apiModels.map((m) => getProviderIdFromModelId(m.id)))
   );
   const apiParams = Array.from(
-    new Set(apiModels.flatMap((m) => m.supported_parameters))
+    new Set(apiModelsRaw.flatMap((m) => m.supported_parameters))
   );
   const apiModelIdSet = new Set(apiModels.map((m) => m.id));
 
@@ -37,6 +44,7 @@ export async function syncFromOpenRouter() {
     existingModelsList,
     existingProvidersList,
     existingSupportedParametersList,
+    existingLocales,
   } = await getExistingData();
 
   const existingModelsSet: Set<string> = new Set(
@@ -65,47 +73,12 @@ export async function syncFromOpenRouter() {
     Array.from(newSupportedParameters).map((p) => ({ id: p, label: p }))
   );
 
-  console.info(
-    `New models: ${newModels.length}`,
-    newModels.map((m) => m.id)
-  );
-
-  const values = newModels.map((m) => {
-    const providerId = getProviderIdFromModelId(m.id);
-    const isFree = m.name.endsWith(" (free)");
-
-    // Remove the " (free)" suffix from the name if present
-    const name = (m.name.split(": ")[1] ?? m.name).replace(/\s*\(free\)$/, "");
-
-    const isChat =
-      !!m.architecture.input_modalities?.includes("text") &&
-      !!m.architecture.output_modalities?.includes("text");
-    return {
-      id: m.id,
-      providerId,
-      name,
-      canonicalSlug: m.canonical_slug,
-      huggingFaceId: m.hugging_face_id,
-      description: m.description,
-      architectureModality: m.architecture.modality,
-      architectureInputModalities: m.architecture.input_modalities,
-      architectureOutputModalities: m.architecture.output_modalities,
-      architectureTokenizer: m.architecture.tokenizer,
-      architectureInstructType: m.architecture.instruct_type,
-      pricing: m.pricing,
-      topProvider: m.top_provider,
-      perRequestLimits: m.per_request_limits,
-      createdAt: new Date(m.created * 1000),
-      isChat,
-      isFree,
-    } satisfies NewModel;
-  });
-  const insertModelsPromise = insertModels(values);
+  const insertModelsPromise = insertModels(newModels);
 
   await db
     .insert(modelSupportedParameters)
     .values(
-      apiModels.flatMap((m) =>
+      apiModelsRaw.flatMap((m) =>
         m.supported_parameters.map((p) => ({
           modelId: m.id,
           supportedParameterId: p,
@@ -151,7 +124,9 @@ export async function syncFromOpenRouter() {
   const toUpdateDescription: Pick<NewModel, "id" | "description">[] = [];
   const toUpdate = apiModels.filter((m) => {
     const existing = existingModelsList.find((d) => d.id === m.id);
-    if (!existing) return false;
+    if (!existing) {
+      return false;
+    }
     if (m.description !== existing.description) {
       toUpdateDescription.push({
         id: m.id,
@@ -160,6 +135,7 @@ export async function syncFromOpenRouter() {
     }
     const { pricing, topProvider } = existing;
     return (
+      m.name !== existing.name ||
       m.description !== existing.description ||
       m.pricing.prompt !== pricing.prompt ||
       m.pricing.completion !== pricing.completion ||
@@ -169,18 +145,25 @@ export async function syncFromOpenRouter() {
       m.pricing.internal_reasoning !== pricing.internal_reasoning ||
       m.pricing.input_cache_read !== pricing.input_cache_read ||
       m.pricing.input_cache_write !== pricing.input_cache_write ||
-      m.top_provider.context_length !== topProvider.context_length ||
-      m.top_provider.is_moderated !== topProvider.is_moderated ||
-      m.top_provider.max_completion_tokens !== topProvider.max_completion_tokens
+      m.topProvider.context_length !== topProvider.context_length ||
+      m.topProvider.is_moderated !== topProvider.is_moderated ||
+      m.topProvider.max_completion_tokens !== topProvider.max_completion_tokens
     );
   });
 
-  const modelsUpdatedDescription = toUpdateDescription.concat(
-    values.map((m) => ({
-      id: m.id,
-      description: m.description,
-    }))
-  );
+  const modelsUpdatedDescription = toUpdateDescription
+    .concat(
+      newModels.map((m) => ({
+        id: m.id,
+        description: m.description,
+      }))
+    )
+    .concat(
+      existingModelsList.filter(
+        (m) => m.translations.length < existingLocales.length
+      )
+    )
+    .filter(unique);
 
   const translatedModelsPromise = translateModelDescriptions(
     modelsUpdatedDescription
@@ -193,11 +176,11 @@ export async function syncFromOpenRouter() {
           toUpdate.map(
             (m): NewModel => ({
               id: m.id,
+              name: m.name,
               description: m.description,
               pricing: m.pricing,
-              topProvider: m.top_provider,
+              topProvider: m.topProvider,
               // The insert will fail because it's a duplicate ID, we only care about the onConflictDoUpdate
-              name: "",
               providerId: "",
               canonicalSlug: "",
               huggingFaceId: "",
@@ -213,6 +196,7 @@ export async function syncFromOpenRouter() {
         .onConflictDoUpdate({
           target: modelsTable.id,
           set: {
+            name: sql`EXCLUDED.name`,
             description: sql`EXCLUDED.description`,
             pricing: sql`EXCLUDED.pricing`,
             topProvider: sql`EXCLUDED.top_provider`,
@@ -233,12 +217,19 @@ export async function syncFromOpenRouter() {
 
   const addedProviders = Array.from(newProviders);
   const addedSupportedParameters = Array.from(newSupportedParameters);
-  const addedModels = values.map((m) => m.id);
+  const addedModels = newModels.map((m) => m.id);
   const updatedModels = toUpdate.map((m) => m.id);
-  const translatedModels = Array.from(
-    new Set(modelsUpdatedDescription.map((m) => m.id))
-  );
+  const translatedModels = Array.from(new Set(await translatedModelsPromise));
 
+  console.info({
+    addedProviders,
+    addedModels,
+    addedSupportedParameters,
+    deletedModels,
+    undeletedModels,
+    updatedModels,
+    translatedModels,
+  });
   return {
     addedProviders,
     addedModels,
@@ -253,64 +244,116 @@ export async function syncFromOpenRouter() {
 async function translateModelDescriptions(
   models: Pick<NewModel, "id" | "description">[]
 ) {
-  if (!models.length) return;
+  if (!models.length) return [];
 
-  const locales = await db.query.locales.findMany();
+  const locales = await db.query.locales.findMany({
+    columns: { id: true },
+  });
+  let translatedModelIds: string[] = [];
 
-  const records: NewModelTranslation[] = [];
+  const localeModels = models.reduce(
+    (acc, model) => {
+      const originalLocaleId = model.id.startsWith("maritacaai/")
+        ? "pt-BR"
+        : "en";
+      acc[originalLocaleId] ??= [];
+      acc[originalLocaleId].push(model);
+      return acc;
+    },
+    {} as Record<string, Pick<NewModel, "id" | "description">[]>
+  );
 
-  for (const { id: localeId } of locales) {
-    const texts: string[] = [];
-    for (const model of models) {
-      const { description } = model;
+  for (const originalLocaleId of Object.keys(localeModels)) {
+    const models = localeModels[originalLocaleId];
+    if (!models) {
+      throw new Error(
+        "Assert: models has to be defined since we push the first when we add the key"
+      );
+    }
 
-      if (localeId === "en") {
-        records.push({
-          modelId: model.id,
-          localeId,
-          description,
-        });
-      } else {
-        texts.push(description ?? "");
+    for (const { id: targetLocaleId } of locales) {
+      const records = await translateFromLanguage(
+        originalLocaleId,
+        targetLocaleId,
+        models
+      );
+
+      while (records.length) {
+        const batch = records.splice(0, 100);
+        translatedModelIds = translatedModelIds.concat(
+          batch.map((r) => r.modelId)
+        );
+        await db
+          .insert(modelTranslations)
+          .values(batch)
+          .onConflictDoUpdate({
+            target: [modelTranslations.modelId, modelTranslations.localeId],
+            set: {
+              description: sql.raw("EXCLUDED.description"),
+            },
+          });
       }
     }
+  }
 
-    if (localeId === "en") {
-      continue;
-    }
+  return translatedModelIds;
+}
 
-    const targetLanguageCode = localeToTargetLanguageCode(localeId);
-    const translation = await deepl.translateText(
-      texts,
-      "en",
-      targetLanguageCode
-    );
+async function translateFromLanguage(
+  originalLocaleId: string,
+  targetLocaleId: string,
+  models: Pick<NewModel, "id" | "description">[]
+) {
+  let apiError = false;
+  const records: NewModelTranslation[] = [];
+  const sourceLanguageCode = localeToSourceLanguageCode(originalLocaleId);
 
-    for (let i = 0; i < translation.length; i++) {
-      const item = translation[i];
-      const model = models[i];
-      if (!item || !model?.description) continue;
-
+  const texts: string[] = [];
+  for (const model of models) {
+    const { description } = model;
+    if (targetLocaleId === originalLocaleId) {
       records.push({
         modelId: model.id,
-        localeId,
-        description: item.text,
+        localeId: targetLocaleId,
+        description,
       });
+    } else {
+      texts.push(description ?? "");
     }
   }
 
-  if (records.length) {
-    await db
-      .insert(modelTranslations)
-      .values(records)
-      .onConflictDoUpdate({
-        target: [modelTranslations.modelId, modelTranslations.localeId],
-        set: {
-          description: sql`EXCLUDED.description`,
-        },
-      });
+  if (targetLocaleId === originalLocaleId) {
+    return records;
   }
-  return records.length;
+
+  let translation: TextResult[] = [];
+  while (texts.length && !apiError) {
+    const batch = texts.splice(0, 50);
+    const targetLanguageCode = localeToTargetLanguageCode(targetLocaleId);
+    const batchTranslations = await deepl
+      .translateText(batch, sourceLanguageCode, targetLanguageCode)
+      .catch((error) => {
+        console.error("Error translating model descriptions:", error);
+        apiError = true;
+        return [];
+      });
+
+    translation = translation.concat(batchTranslations);
+  }
+
+  for (let i = 0; i < translation.length; i++) {
+    const item = translation[i];
+    const model = models[i];
+    if (!item || !model?.description) continue;
+
+    records.push({
+      modelId: model.id,
+      localeId: targetLocaleId,
+      description: item.text,
+    });
+  }
+
+  return records;
 }
 
 async function getApiData() {
@@ -323,6 +366,34 @@ async function getApiData() {
   ]);
 
   const usdToBrl = 5.3;
+
+  const getNameMaritacaAI = (modelId: string) => {
+    switch (modelId) {
+      case "sabia-3.1":
+        return "Sabiá 3.1";
+      case "sabia-3":
+        return "Sabiá 3";
+      case "sabiazinho-3":
+        return "Sabiazinho 3";
+      default:
+        return "";
+    }
+  };
+
+  const getDescriptionMaritacaAI = (modelId: string) => {
+    const maritacaAICompanyDescription =
+      "Maritaca AI é uma empresa brasileira que desenvolve inteligências artificiais especializadas em domínios e idiomas, garantindo que reflitam o conhecimento único de diversas regiões do planeta e segmentos de mercado.";
+    switch (modelId) {
+      case "sabia-3.1":
+        return `Modelo mais avançado e atualizado da Maritaca AI, incorporando dados de até agosto de 2024. Oferece desempenho superior em raciocínio matemático, geração/refatoração de código e qualquer tarefa que exija conhecimento mais atualizado.\nExemplos de uso: Refatoração e otimização de código legado em múltiplas linguagens, síntese de relatórios de pesquisa clínica e assistente jurídico para revisão de contratos complexos.\n\n${maritacaAICompanyDescription}`;
+      case "sabia-3":
+        return `Modelo bom para a maioria das tarefas e ideal para tarefas complexas que exigem maior assertividade.\nExemplos de uso: Escrever artigos de pesquisa complexos, criar documentos técnicos detalhados, chatbots, gerar código.\n\n${maritacaAICompanyDescription}`;
+      case "sabiazinho-3":
+        return `Modelo mais econômico da Maritaca AI, projetado para tarefas mais simples. Ideal para aplicações que priorizam velocidade e custo.\nExemplos de uso: Tradução de textos, gerar descrições de produtos, resumos de artigos, criação de respostas para FAQs, ideias de conteúdo para blogs.\n\n${maritacaAICompanyDescription}`;
+      default:
+        return "";
+    }
+  };
 
   const getPromptPriceMaritacaAI = (modelId: string) => {
     switch (modelId) {
@@ -366,7 +437,7 @@ async function getApiData() {
   return openRouterData.concat(
     maritacaAIModels.map((m): (typeof openRouterData)[0] => ({
       id: `maritacaai/${m.id}`,
-      name: m.id,
+      name: getNameMaritacaAI(m.id),
       canonical_slug: `maritacaai/${m.id}`,
       architecture: {
         modality: "text->text",
@@ -376,7 +447,7 @@ async function getApiData() {
         instruct_type: null,
       },
       created: m.created,
-      description: m.id,
+      description: getDescriptionMaritacaAI(m.id),
       pricing: {
         prompt: getPromptPriceMaritacaAI(m.id).toString(),
         completion: getCompletionPriceMaritacaAI(m.id).toString(),
@@ -463,35 +534,51 @@ async function getExistingData() {
       id: providersTable.id,
     })
     .from(providersTable);
-  const existingModelsListPromise = db
-    .select({
-      id: modelsTable.id,
-      description: modelsTable.description,
-      pricing: modelsTable.pricing,
-      topProvider: modelsTable.topProvider,
-      deletedAt: modelsTable.deletedAt,
-    })
-    .from(modelsTable);
+  const existingModelsListPromise = db.query.models.findMany({
+    columns: {
+      id: true,
+      name: true,
+      description: true,
+      pricing: true,
+      topProvider: true,
+      deletedAt: true,
+    },
+    with: {
+      translations: {
+        columns: {
+          localeId: true,
+        },
+      },
+    },
+  });
   const existingSupportedParametersListPromise = db
     .select({
       id: supportedParametersTable.id,
     })
     .from(supportedParametersTable);
+  const existingLocalesPromise = db.query.locales.findMany({
+    columns: {
+      id: true,
+    },
+  });
 
   const [
     existingModelsList,
     existingProvidersList,
     existingSupportedParametersList,
+    existingLocales,
   ] = await Promise.all([
     existingModelsListPromise,
     existingProvidersListPromise,
     existingSupportedParametersListPromise,
+    existingLocalesPromise,
   ]);
 
   return {
     existingModelsList,
     existingProvidersList,
     existingSupportedParametersList,
+    existingLocales,
   };
 }
 
@@ -527,4 +614,52 @@ function getProviderIdFromModelId(modelId: string): string {
   const id = modelId.split("/")[0];
   if (!id) throw new Error("Assert: Missing provider ID");
   return id;
+}
+
+function apiModelToDbModel(m: OpenRouterModel) {
+  const providerId = getProviderIdFromModelId(m.id);
+  const isFree = m.name.endsWith(" (free)");
+
+  // Remove the " (free)" suffix from the name if present
+  const name = (m.name.split(": ")[1] ?? m.name).replace(/\s*\(free\)$/, "");
+
+  const isChat =
+    !!m.architecture.input_modalities?.includes("text") &&
+    !!m.architecture.output_modalities?.includes("text");
+  return {
+    id: m.id,
+    providerId,
+    name,
+    canonicalSlug: m.canonical_slug,
+    huggingFaceId: m.hugging_face_id,
+    description: cleanup(m.description),
+    architectureModality: m.architecture.modality,
+    architectureInputModalities: m.architecture.input_modalities,
+    architectureOutputModalities: m.architecture.output_modalities,
+    architectureTokenizer: m.architecture.tokenizer,
+    architectureInstructType: m.architecture.instruct_type,
+    pricing: m.pricing,
+    topProvider: m.top_provider,
+    perRequestLimits: m.per_request_limits,
+    createdAt: new Date(m.created * 1000),
+    isChat,
+    isFree,
+  } satisfies NewModel;
+}
+
+function unique(
+  value: { id: string },
+  index: number,
+  self: Array<{ id: string }>
+) {
+  return self.findIndex((v) => v.id === value.id) === index;
+}
+
+function cleanup(description: string): string {
+  return description
+    .replace(/\s?\[Learn more in our docs\]\(https:\/\/\S+\)/g, "")
+    .replace(/([^\]])\(https:\/\/openrouter.ai\/\S+\)/g, (_, p) =>
+      p === " " ? "" : p
+    )
+    .replace(/\[([^\]]+)\]\(\/[^)]+\)/g, (_, p) => p);
 }

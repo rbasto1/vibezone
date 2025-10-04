@@ -397,7 +397,7 @@ const ModelsPageClient: NextPage = () => {
             loading={syncMutation.isPending}
             size="sm"
           >
-            Sync with OpenRouter
+            Sync with API
           </Button>
           <div className="flex items-center gap-3">
             <input

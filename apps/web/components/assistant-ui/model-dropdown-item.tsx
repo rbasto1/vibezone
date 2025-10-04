@@ -7,8 +7,12 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
-import { ShieldAlertIcon } from "lucide-react";
+import { InfoIcon, ShieldAlertIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+
 import { capabilityOptions } from "./model-dropdown-constants";
+import { ModelInfoModal } from "./model-info-modal";
 import {
   ExperimentalTag,
   FreeTag,
@@ -16,7 +20,6 @@ import {
   NewTag,
   PremiumTag,
 } from "./tags";
-import { useTranslations } from "next-intl";
 
 interface ModelDropdownItemProps {
   model: GetModelsListReturn["models"][number];
@@ -40,10 +43,12 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
   showRetentionWarning = false,
 }) => {
   const t = useTranslations("ModelDropdown");
+  const infoLabel = t("info.openDetails");
+  const [showInfoModal, setShowInfoModal] = useState(false);
   return (
     <div
       className={cn(
-        "cursor-pointer select-none rounded-sm px-2 py-1.5 text-sm outline-none",
+        "cursor-pointer select-none rounded-sm px-1 py-1.5 text-sm outline-none",
         "hover:bg-accent hover:text-accent-foreground",
         selected ? "bg-accent/50 font-semibold" : "font-medium",
         muted && "opacity-50",
@@ -55,7 +60,7 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
       }}
       title={titleText}
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
         <span className="flex-1 min-w-0">
           <div className="truncate">{model.name}</div>
           <div className="mt-0.5 flex items-center gap-1">
@@ -87,8 +92,22 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
           {model.isPremium && <PremiumTag />}
           {model.isNew && <NewTag />}
           {model.isExperimental && <ExperimentalTag />}
+          <div title={infoLabel}>
+            <InfoIcon
+              className="text-muted-foreground transition-colors hover:text-foreground h-4 w-4 -mr-0.5"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setShowInfoModal(true);
+              }}
+              aria-label={infoLabel}
+            />
+          </div>
         </span>
       </div>
+      {showInfoModal && (
+        <ModelInfoModal modelId={model.id} onOpenChange={setShowInfoModal} />
+      )}
     </div>
   );
 };

@@ -64,7 +64,7 @@ async function seed() {
   }
 
   console.info(
-    "🌱 Seeding complete. Use the /manage endpoint to sync with OpenRouter for models."
+    "🌱 Seeding complete. Use the /manage endpoint to sync with the APIs for models."
   );
   process.exit(0);
 }

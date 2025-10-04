@@ -1,37 +1,28 @@
 import { useMemo } from "react";
 
+import { models as raw } from "@/generated/models";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
-import { modelsAtom } from "@/store/models";
-import { useAtomValue } from "jotai";
 import { useUserPreferencesValue } from "./use-user-preferences";
 
 interface UseModelsOptions {
-  includeProviders?: string[];
   includeModels?: string[];
-}
-
-export function useRawModelsValue(): GetModelsListReturn {
-  return useAtomValue(modelsAtom);
 }
 
 export function useModelsValue(
   options?: UseModelsOptions
 ): GetModelsListReturn {
-  const raw = useAtomValue(modelsAtom);
   const preferences = useUserPreferencesValue();
-  const includeProvidersOption = options?.includeProviders;
   const includeModelsOption = options?.includeModels;
 
   return useMemo(() => {
     const hiddenProviders = preferences?.hiddenProviders ?? [];
-    const includeProviders = includeProvidersOption ?? [];
     const includeModels = includeModelsOption ?? [];
 
     if (!hiddenProviders.length) {
       return raw;
     }
 
-    const includeProviderSet = new Set(includeProviders);
+    const includeProviderSet = new Set();
     const includeModelSet = new Set(includeModels);
 
     for (const modelId of includeModels) {
@@ -82,10 +73,5 @@ export function useModelsValue(
       models,
       groups,
     } satisfies GetModelsListReturn;
-  }, [
-    preferences?.hiddenProviders,
-    includeProvidersOption,
-    includeModelsOption,
-    raw,
-  ]);
+  }, [preferences?.hiddenProviders, includeModelsOption]);
 }

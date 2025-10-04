@@ -33,6 +33,8 @@ export const OpenRouterModelSchema = z.object({
   supported_parameters: z.array(z.string()),
 });
 
+export type OpenRouterModel = z.infer<typeof OpenRouterModelSchema>;
+
 export const OpenRouterModelsResponse = z.object({
   data: z.array(OpenRouterModelSchema),
 });

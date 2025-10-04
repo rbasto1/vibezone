@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/components/ui/utils";
-import { useRawModelsValue } from "@/hooks/use-models";
+import { models as rawModels } from "@/generated/models";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { trpc } from "@/lib/trpc/client";
@@ -48,13 +48,12 @@ const PreferencesPage = () => {
     setProviderInput("");
   }, [preferences, setUIState, initialSystemPrompt]);
 
-  const { providers: rawProviders } = useRawModelsValue();
   const providerOptions = useMemo(
     () =>
-      [...rawProviders].sort((a, b) =>
+      [...rawModels.providers].sort((a, b) =>
         a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
       ),
-    [rawProviders]
+    []
   );
 
   const trimmedInput = providerInput.trim();

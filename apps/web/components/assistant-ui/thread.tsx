@@ -8,6 +8,7 @@ import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantMessage } from "./assistant-message";
 import { ThreadError } from "./thread-error";
+import { ThreadIfEmpty } from "./thread-if-empty";
 import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
 import { ThreadWelcome } from "./thread-welcome";
 import { UserMessage } from "./user-message";
@@ -43,9 +44,9 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
         className="relative flex min-w-0 flex-1 flex-col gap-6 overflow-y-scroll"
         autoScroll={autoScroll}
       >
-        <ThreadPrimitive.If empty>
+        <ThreadIfEmpty empty>
           <ThreadWelcome />
-        </ThreadPrimitive.If>
+        </ThreadIfEmpty>
 
         <ThreadPrimitive.Messages
           components={{
@@ -57,10 +58,10 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
         {/* Show error message if there's an error */}
         {error && <ThreadError error={error} />}
 
-        <ThreadPrimitive.If empty={false}>
+        <ThreadIfEmpty empty={false}>
           {/* aui-thread-viewport-spacer */}
           <motion.div className="min-h-6 min-w-6 shrink-0" />
-        </ThreadPrimitive.If>
+        </ThreadIfEmpty>
 
         <ThreadScrollToBottom />
       </ThreadPrimitive.Viewport>

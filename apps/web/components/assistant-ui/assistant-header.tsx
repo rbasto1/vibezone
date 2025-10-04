@@ -93,7 +93,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
             <Button
               variant="outline"
               className={cn(
-                "hover:border-green-500",
+                "hover:border-[var(--matrix-green)]",
                 canAddMore ? "hover:bg-accent" : "opacity-60 cursor-not-allowed"
               )}
               disabled={!canAddMore}
