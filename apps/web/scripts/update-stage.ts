@@ -41,6 +41,7 @@ async function main() {
   await copySuggestionGroups(sourceDb, targetDb);
   await updateProviders(sourceDb, targetDb);
   await updateModels(sourceDb, targetDb);
+  await copyModelTranslations(sourceDb, targetDb);
 }
 
 async function copyLocales(sourceDb: Client, targetDb: Client) {
@@ -222,6 +223,37 @@ async function updateModels(sourceDb: Client, targetDb: Client) {
   }
   const count = rows.length;
   console.info(`✅ Models updated successfully: ${updatedCount}/${count} rows`);
+}
+
+async function copyModelTranslations(sourceDb: Client, targetDb: Client) {
+  const rows = await sourceDb.select().from(schema.modelTranslations);
+  if (!rows.length) {
+    console.error("No rows found in source table");
+    process.exit(7);
+  }
+
+  const existingRows = await targetDb
+    .select({
+      modelId: schema.modelTranslations.modelId,
+      localeId: schema.modelTranslations.localeId,
+    })
+    .from(schema.modelTranslations);
+  const existingModels = await targetDb
+    .select({
+      id: schema.models.id,
+    })
+    .from(schema.models);
+
+  const missingRows = rows.filter(
+    (row) =>
+      !existingRows.some(
+        (r) => r.modelId === row.modelId && r.localeId === row.localeId
+      ) && existingModels.some((m) => m.id === row.modelId)
+  );
+
+  await targetDb.insert(schema.modelTranslations).values(missingRows);
+  const count = missingRows.length;
+  console.info(`✅ Model translations copied successfully: ${count} rows`);
 }
 
 main();

@@ -129,7 +129,8 @@
     "OPENROUTER_API_KEY",
     "RESEND_API_KEY",
     "RESEND_FROM",
-    "DEEPL_API_KEY"
+    "DEEPL_API_KEY",
+    "MARITACAAI_API_KEY"
   ],
   "concurrency": "2"
 }
