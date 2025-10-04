@@ -1,5 +1,8 @@
 "use client";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 import {
   Dialog,
   DialogContent,
@@ -7,13 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+import { ProviderIcon } from "@/components/ui/providers/provider";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/components/ui/utils";
 import { models as generatedModels } from "@/generated/models";
 import { trpc } from "@/lib/trpc/client";
 import { ShieldAlertIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { ProviderIcon } from "../ui/providers/provider";
-import { Skeleton } from "../ui/skeleton";
 import { capabilityOptions } from "./model-dropdown-constants";
 import {
   ExperimentalTag,
@@ -131,8 +135,10 @@ export const ModelInfoModal: React.FC<ModelInfoModalProps> = ({
               {isLoading ? (
                 <Skeleton className="w-full h-40" />
               ) : (
-                <div className="h-40 overflow-y-auto rounded-sm border border-muted/40 bg-muted/20 p-3 text-sm leading-relaxed text-muted-foreground">
-                  {description ?? t("info.descriptionFallback")}
+                <div className="h-40 overflow-y-auto rounded-sm border border-muted/40 bg-muted/20 p-3 text-sm leading-relaxed text-muted-foreground [&_a]:underline">
+                  <ReactMarkdown skipHtml remarkPlugins={[remarkGfm]}>
+                    {description ?? t("info.descriptionFallback")}
+                  </ReactMarkdown>
                 </div>
               )}
             </section>
