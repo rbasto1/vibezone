@@ -60,10 +60,7 @@
     "sendFailed": "Senden an ein Panel fehlgeschlagen: {message}",
     "placeholder": "Frag alle KI...",
     "stopAllLabel": "Alle KI-Antworten stoppen",
-    "sendLabel": "An alle KI senden",
-    "reasoningEffort": {
-      "title": "Denkaufwand"
-    }
+    "sendLabel": "An alle KI senden"
   },
   "LanguageSwitcher": {
     "trigger": "Sprache wechseln",

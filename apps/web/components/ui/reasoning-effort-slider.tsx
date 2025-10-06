@@ -5,7 +5,7 @@ import { models } from "@/generated/models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
 import { BrainIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface ReasoningEffortSliderProps {
   reasoningEffort: "none" | "low" | "medium" | "high";
@@ -17,6 +17,7 @@ export const ReasoningEffortSlider: React.FC<ReasoningEffortSliderProps> = ({
   onReasoningEffortChange,
 }) => {
   const [showReasoningSlider, setShowReasoningSlider] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const panelsConfig = usePanelsConfigValue();
   const hasReasoningModels = useMemo(() => {
     return Object.values(panelsConfig).some((panel) => {
@@ -24,25 +25,44 @@ export const ReasoningEffortSlider: React.FC<ReasoningEffortSliderProps> = ({
       return model?.capReason;
     });
   }, [panelsConfig]);
-  const t = useTranslations("GlobalComposer");
+  const t = useTranslations("UserPreferences.reasoningEffort");
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setShowReasoningSlider(false);
+      }
+    };
+
+    if (showReasoningSlider) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showReasoningSlider]);
 
   return (
-    <>
+    <div ref={containerRef} className="relative">
       <Button
         type="button"
         variant="ghost"
         size="icon"
         onClick={() => setShowReasoningSlider(!showReasoningSlider)}
         disabled={!hasReasoningModels}
-        title={t("reasoningEffort.title")}
+        title={t("label")}
         className="h-8 w-8"
       >
         <BrainIcon className="h-4 w-4" />
       </Button>
       {showReasoningSlider && (
-        <div className="absolute bottom-12 left-8 bg-background border rounded p-2 shadow-lg">
+        <div className="absolute bottom-8 -left-[50%] bg-background border rounded p-2 shadow-lg">
           <div className="flex flex-col items-center gap-2">
-            <span className="text-xs">High</span>
+            <span className="text-xs">{t("high")}</span>
             <input
               type="range"
               min="0"
@@ -57,7 +77,7 @@ export const ReasoningEffortSlider: React.FC<ReasoningEffortSliderProps> = ({
                       : 3
               }
               onChange={(e) => {
-                const value = parseInt(e.target.value);
+                const value = Number(e.target.value);
                 const effort =
                   value === 0
                     ? "none"
@@ -70,10 +90,10 @@ export const ReasoningEffortSlider: React.FC<ReasoningEffortSliderProps> = ({
               }}
               className="w-12 h-12 -rotate-90"
             />
-            <span className="text-xs">None</span>
+            <span className="text-xs">{t("none")}</span>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };

@@ -60,10 +60,7 @@
     "sendFailed": "Falha ao enviar para um painel: {message}",
     "placeholder": "Pergunte a todas as IAs...",
     "stopAllLabel": "Parar todas as respostas de IA",
-    "sendLabel": "Enviar para todas as IAs",
-    "reasoningEffort": {
-      "title": "Esforço de raciocínio"
-    }
+    "sendLabel": "Enviar para todas as IAs"
   },
   "LanguageSwitcher": {
     "trigger": "Alterar idioma",

@@ -60,10 +60,7 @@
     "sendFailed": "Send failed for a panel: {message}",
     "placeholder": "Ask all of the AIs...",
     "stopAllLabel": "Stop all AI responses",
-    "sendLabel": "Send to all AIs",
-    "reasoningEffort": {
-      "title": "Reasoning effort"
-    }
+    "sendLabel": "Send to all AIs"
   },
   "LanguageSwitcher": {
     "trigger": "Change language",
@@ -240,7 +237,7 @@
     "reasoningEffort": {
       "label": "Reasoning effort",
       "description": "Control how much reasoning effort the AI uses when the selected model supports it.",
-      "none": "None",
+      "none": "Off",
       "low": "Low",
       "medium": "Medium",
       "high": "High"
