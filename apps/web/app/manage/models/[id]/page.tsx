@@ -1,3 +1,7 @@
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db } from "@/db";
 import {
   models,
@@ -6,6 +10,7 @@ import {
   supportedParameters,
 } from "@/db/schema";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { getServerCaller } from "@/lib/trpc/server/ssr";
 import { and, eq, isNull } from "drizzle-orm";
 import Link from "next/link";
 
@@ -36,17 +41,26 @@ export default async function ModelDetailsPage({
     );
   }
 
-  const paramsRows = await db
-    .select({ sp: supportedParameters })
-    .from(modelSupportedParameters)
-    .innerJoin(
-      supportedParameters,
-      eq(modelSupportedParameters.supportedParameterId, supportedParameters.id)
-    )
-    .where(eq(modelSupportedParameters.modelId, id));
+  const caller = await getServerCaller();
+
+  const [paramsRows, adminDescriptions] = await Promise.all([
+    db
+      .select({ sp: supportedParameters })
+      .from(modelSupportedParameters)
+      .innerJoin(
+        supportedParameters,
+        eq(
+          modelSupportedParameters.supportedParameterId,
+          supportedParameters.id
+        )
+      )
+      .where(eq(modelSupportedParameters.modelId, id)),
+    caller.models.adminDescriptions.fetch({ modelId: id }),
+  ]);
 
   const spList = paramsRows.map((r) => r.sp);
   const m = model.model;
+  const localeDescriptions = adminDescriptions.translations;
 
   return (
     <div className="mx-auto max-w-4xl p-6 space-y-6">
@@ -222,11 +236,53 @@ export default async function ModelDetailsPage({
         )}
       </section>
 
-      <section className="rounded-md border p-4">
-        <h2 className="font-semibold mb-2">Description</h2>
-        <span className="text-sm text-muted-foreground">
-          {model.model.description}
-        </span>
+      <section className="rounded-md border p-4 space-y-3">
+        <h2 className="font-semibold">Description</h2>
+        <div className="rounded-sm border border-muted/40 bg-muted/20 p-3 text-sm leading-relaxed text-muted-foreground [&_a]:underline">
+          <ReactMarkdown skipHtml remarkPlugins={[remarkGfm]}>
+            {adminDescriptions.description}
+          </ReactMarkdown>
+        </div>
+
+        {localeDescriptions.length ? (
+          <Tabs
+            defaultValue={localeDescriptions[0]?.localeId}
+            className="space-y-3"
+          >
+            <TabsList className="w-full">
+              {localeDescriptions.map((translation) => (
+                <TabsTrigger
+                  key={translation.localeId}
+                  value={translation.localeId}
+                >
+                  {translation.localeName}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {localeDescriptions.map((translation) => (
+              <TabsContent
+                key={translation.localeId}
+                value={translation.localeId}
+              >
+                {translation.description ? (
+                  <div className="rounded-sm border border-muted/40 bg-muted/20 p-3 text-sm leading-relaxed text-muted-foreground [&_a]:underline">
+                    <ReactMarkdown skipHtml remarkPlugins={[remarkGfm]}>
+                      {translation.description}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <div className="rounded-sm border border-dashed border-muted/60 bg-muted/10 p-3 text-sm text-muted-foreground">
+                    No description provided for this locale.
+                  </div>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+        ) : (
+          <div className="text-sm text-muted-foreground">
+            No locale translations available.
+          </div>
+        )}
       </section>
     </div>
   );

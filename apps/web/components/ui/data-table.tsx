@@ -114,6 +114,22 @@ export function DataTable<TData, TValue>({
             </tr>
           )}
         </tbody>
+        <tfoot>
+          {table.getFooterGroups().map((footerGroup) => (
+            <tr key={footerGroup.id} className="border-t bg-muted/30">
+              {footerGroup.headers.map((footer) => (
+                <td key={footer.id} className="px-3 py-2">
+                  {footer.isPlaceholder
+                    ? null
+                    : flexRender(
+                        footer.column.columnDef.footer,
+                        footer.getContext()
+                      )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tfoot>
       </table>
     </div>
   );

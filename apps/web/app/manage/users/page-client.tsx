@@ -15,6 +15,42 @@ const ManageUsersPageClient: NextPage = () => {
   const { data, error, isLoading, isFetching, refetch } =
     trpc.users.manageList.useQuery();
 
+  const totals = useMemo(
+    () => {
+      if (!data?.length) {
+        return {
+          users: 0,
+          loginsLast7: 0,
+          chatsLast7: 0,
+          completionsLast7: 0,
+          cost7: 0,
+          cost30: 0,
+        };
+      }
+
+      return data.reduce(
+        (acc, user) => {
+          acc.users += 1;
+          acc.loginsLast7 += user.sessionsLast7 ?? 0;
+          acc.chatsLast7 += user.chatsCount ?? 0;
+          acc.completionsLast7 += user.completionsCount ?? 0;
+          acc.cost7 += Number(user.costLast7 ?? 0);
+          acc.cost30 += Number(user.costLast30 ?? 0);
+          return acc;
+        },
+        {
+          users: 0,
+          loginsLast7: 0,
+          chatsLast7: 0,
+          completionsLast7: 0,
+          cost7: 0,
+          cost30: 0,
+        }
+      );
+    },
+    [data]
+  );
+
   const columns: ColumnDef<UsersManageListOutput[number]>[] = useMemo(
     () => [
       {
@@ -31,6 +67,7 @@ const ManageUsersPageClient: NextPage = () => {
             </div>
           );
         },
+        footer: () => <span className="font-medium">Total</span>,
       },
       {
         accessorKey: "countries",
@@ -58,6 +95,13 @@ const ManageUsersPageClient: NextPage = () => {
             7d: {row.original.activeDaysCount}
           </span>
         ),
+        footer: () => (
+          <span className="block text-right tabular-nums">
+            users: {totals.users}
+            <br />
+            logins: {totals.loginsLast7}
+          </span>
+        ),
       },
       {
         accessorKey: "chatsCount",
@@ -67,6 +111,13 @@ const ManageUsersPageClient: NextPage = () => {
             chats: {row.original.chatsCount}
             <br />
             completions: {row.original.completionsCount}
+          </span>
+        ),
+        footer: () => (
+          <span className="block text-right tabular-nums">
+            chats: {totals.chatsLast7}
+            <br />
+            completions: {totals.completionsLast7}
           </span>
         ),
       },
@@ -80,9 +131,16 @@ const ManageUsersPageClient: NextPage = () => {
             30d: {formatCurrency(row.original.costLast30)}
           </span>
         ),
+        footer: () => (
+          <span className="block text-right tabular-nums">
+            7d: {formatCurrency(totals.cost7)}
+            <br />
+            30d: {formatCurrency(totals.cost30)}
+          </span>
+        ),
       },
     ],
-    []
+    [totals]
   );
 
   if (isLoading) {

@@ -1,11 +1,11 @@
 import "server-only";
 
 import { TRPCError } from "@trpc/server";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { models, providers } from "@/db/schema";
+import { locales, modelTranslations, models, providers } from "@/db/schema";
 import {
   adminProcedure,
   publicProcedure,
@@ -15,6 +15,12 @@ import { listModels, listModelsAdmin } from "./models-list";
 import { syncFromOpenRouter } from "./models-sync";
 
 export type GetModelsListReturn = Awaited<ReturnType<typeof listModels>>;
+
+interface ModelDescriptionTranslation {
+  localeId: string;
+  localeName: string;
+  description: string | null;
+}
 
 export const modelsRouter = t.router({
   list: publicProcedure.query(listModels),
@@ -74,6 +80,49 @@ export const modelsRouter = t.router({
         maxCompletionTokens: model.topProvider?.max_completion_tokens ?? null,
         privacyPolicyUrl: model.provider.privacyPolicyUrl,
         createdAt: model.createdAt,
+      };
+    }),
+
+  adminDescriptions: adminProcedure
+    .input(z.object({ modelId: z.string().min(1) }))
+    .query(async ({ input }) => {
+      const rows = await db
+        .select({
+          modelId: models.id,
+          localeId: locales.id,
+          modelDescription: models.description,
+          localeName: locales.name,
+          translatedDescription: modelTranslations.description,
+        })
+        .from(models)
+        .innerJoin(locales, sql`true`)
+        .leftJoin(
+          modelTranslations,
+          and(
+            eq(modelTranslations.modelId, models.id),
+            eq(modelTranslations.localeId, locales.id)
+          )
+        )
+        .where(and(eq(models.id, input.modelId), isNull(models.deletedAt)))
+        .orderBy(asc(locales.id));
+
+      const row = rows[0];
+      if (!row) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Model not found",
+        });
+      }
+      const { modelId, modelDescription } = row;
+
+      return {
+        id: modelId,
+        description: modelDescription,
+        translations: rows.map<ModelDescriptionTranslation>((row) => ({
+          localeId: row.localeId,
+          localeName: row.localeName,
+          description: row.translatedDescription,
+        })),
       };
     }),
 
