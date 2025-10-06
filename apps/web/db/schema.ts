@@ -1,4 +1,4 @@
-import { providerTiers } from "@/db/enums";
+import { providerTiers, reasoningEffort } from "@/db/enums";
 
 import { account, session, user, verification } from "@/db/auth-schema";
 
@@ -51,6 +51,7 @@ export {
   providers,
   providersRelations,
   providerTiers,
+  reasoningEffort,
   session,
   sessionRelations,
   suggestionGroups,

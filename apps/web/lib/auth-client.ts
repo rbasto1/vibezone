@@ -1,5 +1,6 @@
 "use client";
 
+import type { reasoningEffort } from "@/db/enums";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import type { auth } from "./auth";
@@ -18,6 +19,7 @@ export interface AuthUser {
   preferenceSystemPrompt?: string | null;
   preferenceSystemPromptChangedAt?: Date | null;
   preferenceWebSearch: boolean;
+  preferenceReasoningEffort: (typeof reasoningEffort.enumValues)[number];
 }
 
 export interface UseUserResult {

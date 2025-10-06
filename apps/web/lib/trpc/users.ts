@@ -2,6 +2,7 @@ import "server-only";
 
 import type { User as DbUser } from "@/db";
 import { db } from "@/db";
+import { reasoningEffort } from "@/db/enums";
 import { chats, models, session, usage, user } from "@/db/schema";
 import {
   and,
@@ -136,6 +137,7 @@ export const usersRouter = t.router({
         hiddenProviders: z.array(z.string()),
         systemPrompt: z.string().max(4000).nullable(),
         webSearch: z.boolean(),
+        reasoningEffort: z.enum(reasoningEffort.enumValues),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -173,6 +175,7 @@ export const usersRouter = t.router({
           ? new Date()
           : undefined,
         preferenceWebSearch: input.webSearch,
+        preferenceReasoningEffort: input.reasoningEffort,
       };
 
       if (
@@ -191,6 +194,7 @@ export const usersRouter = t.router({
           hiddenProviders: sanitizedHiddenProviders,
           systemPrompt: input.systemPrompt,
           webSearch: input.webSearch,
+          reasoningEffort: input.reasoningEffort,
           lastModels:
             "lastModels" in updatePayload
               ? filteredLastModels

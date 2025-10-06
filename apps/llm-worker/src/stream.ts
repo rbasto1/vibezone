@@ -10,38 +10,43 @@ export async function handleProviderStream(
   vzContext: VibezoneContext
 ): Promise<Response> {
   const { env, completionRequest } = vzContext;
-  const { modelId, providerId, adapterModelId, maxTokens, plugins } =
-    completionRequest.config;
+  const {
+    modelId,
+    providerId,
+    adapterModelId,
+    maxTokens,
+    plugins: configPlugins,
+  } = completionRequest.config;
   const messages = completionRequest.messages;
+
+  // Parse modelId for plugins
+  const parsedPlugins = getPlugins(modelId);
+
+  const plugins = [...configPlugins, ...parsedPlugins];
   const pluginWeb = plugins.includes("web");
+  const reasonPlugin = plugins.find((p) => p.startsWith("reason-"));
+  const reasoningEffort = reasonPlugin
+    ? reasonPlugin.replace("reason-", "")
+    : null;
 
   const isMaritacaModel = providerId === "maritacaai";
   const adapter = getAdapterForProvider(env, providerId);
 
-  const firstPart = messages[0]?.parts[0];
-  const systemPrompt = firstPart?.type === "text" ? firstPart.text : null;
+  const modelSpecifier =
+    pluginWeb && !isMaritacaModel ? `${adapterModelId}:online` : adapterModelId;
+
   console.info({
     message: "Starting stream",
     model: modelId,
     pluginWeb,
-    messageCount: messages.length,
-    systemPrompt,
+    reasoningEffort,
   });
-
-  if (pluginWeb && isMaritacaModel) {
-    console.warn({
-      message: "Web plugin requested for Maritaca model, ignoring",
-      model: modelId,
-    });
-  }
-
-  const modelSpecifier =
-    pluginWeb && !isMaritacaModel ? `${adapterModelId}:online` : adapterModelId;
 
   const result = streamText({
     model: adapter(modelSpecifier),
     messages: convertToModelMessages(messages),
     maxOutputTokens: maxTokens,
+    ...(reasoningEffort && { effort: reasoningEffort }),
     onError: (error) => {
       console.error({
         message: "Caught an error creating stream text:",
@@ -72,4 +77,18 @@ export async function handleProviderStream(
       );
     },
   });
+}
+
+function getPlugins(modelId: string) {
+  if (!modelId.includes("#")) {
+    return [];
+  }
+
+  const parts = modelId.split("#");
+  const pluginsStr = parts[1];
+  if (pluginsStr) {
+    return pluginsStr.split(",");
+  } else {
+    return [];
+  }
 }

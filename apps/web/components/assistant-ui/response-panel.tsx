@@ -51,11 +51,15 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const panelNotRegisteredMessage = t("panelNotRegistered");
   const transportErrorMessage = t("transportError");
   const userPreferences = useUserPreferencesValue();
-  const plugins = useRef({ web: userPreferences.pluginWeb });
+  const plugins = useRef({
+    web: userPreferences.pluginWeb,
+    reason: userPreferences.reasoningEffort,
+  });
 
   useEffect(() => {
     plugins.current = {
       web: userPreferences.pluginWeb,
+      reason: userPreferences.reasoningEffort,
     };
   }, [userPreferences]);
 
@@ -139,7 +143,13 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
         }
         const { model } = panelGlobalContext[id];
         const pluginWeb = plugins.current.web;
-        const modelSpecifier = pluginWeb ? `${model}#web` : model;
+        const pluginReason = plugins.current.reason;
+        const pluginsStr = [];
+        if (pluginWeb) pluginsStr.push("web");
+        pluginsStr.push(`reason-${pluginReason}`);
+        const modelSpecifier = pluginsStr.length
+          ? `${model}#${pluginsStr.join(",")}`
+          : model;
         return generateFingerprint(sessionToken.current).then((authorization) =>
           fetch(url, {
             ...init,

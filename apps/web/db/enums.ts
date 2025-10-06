@@ -5,3 +5,10 @@ export const providerTiers = pgEnum("provider_tier", [
   "challengers",
   "specialists",
 ]);
+
+export const reasoningEffort = pgEnum("reasoning_effort", [
+  "none",
+  "low",
+  "medium",
+  "high",
+]);

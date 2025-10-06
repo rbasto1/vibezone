@@ -7,7 +7,15 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/components/ui/utils";
+import type { reasoningEffort as reasoningEffortEnum } from "@/db/enums";
 import { models as rawModels } from "@/generated/models";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
@@ -25,6 +33,7 @@ const PreferencesPage = () => {
   const initialHiddenProviders = preferences.hiddenProviders.sort();
   const initialAutoScroll = preferences.autoScroll;
   const initialWebSearch = preferences.pluginWeb;
+  const initialReasoningEffort = preferences.reasoningEffort;
   const initialChangedPrompt = preferences.changedPrompt;
   const initialSystemPrompt = initialChangedPrompt
     ? (preferences.systemPrompt ?? "")
@@ -32,6 +41,9 @@ const PreferencesPage = () => {
 
   const [autoScroll, setAutoScroll] = useState(initialAutoScroll);
   const [webSearch, setWebSearch] = useState(initialWebSearch);
+  const [reasoningEffort, setReasoningEffort] = useState(
+    initialReasoningEffort
+  );
   const [systemPrompt, setSystemPrompt] = useState(initialSystemPrompt);
   const [hideProvidersEnabled, setHideProvidersEnabled] = useState(
     () => !!preferences.hiddenProviders.length
@@ -41,6 +53,7 @@ const PreferencesPage = () => {
   useEffect(() => {
     setAutoScroll(preferences.autoScroll);
     setWebSearch(preferences.pluginWeb);
+    setReasoningEffort(preferences.reasoningEffort);
     setSystemPrompt(initialSystemPrompt);
     const initialHidden = new Set(preferences.hiddenProviders ?? []);
     setHiddenProviders(initialHidden);
@@ -79,6 +92,7 @@ const PreferencesPage = () => {
   const hasChanges =
     autoScroll !== initialAutoScroll ||
     webSearch !== initialWebSearch ||
+    reasoningEffort !== initialReasoningEffort ||
     systemPrompt !== initialSystemPrompt ||
     hasHiddenChanged;
 
@@ -122,6 +136,7 @@ const PreferencesPage = () => {
       toast.error(t("toast.error", { message }));
       setPreferences({
         pluginWeb: initialWebSearch,
+        reasoningEffort: initialReasoningEffort,
         systemPrompt: initialSystemPrompt,
         changedPrompt: initialChangedPrompt,
         autoScroll: initialAutoScroll,
@@ -141,11 +156,13 @@ const PreferencesPage = () => {
     updatePreferences.mutate({
       autoScroll,
       webSearch,
+      reasoningEffort,
       hiddenProviders: hiddenList,
       systemPrompt,
     });
     setPreferences({
       pluginWeb: webSearch,
+      reasoningEffort,
       systemPrompt,
       changedPrompt:
         initialChangedPrompt || systemPrompt !== initialSystemPrompt,
@@ -190,6 +207,37 @@ const PreferencesPage = () => {
           checked={webSearch}
           onToggle={setWebSearch}
         />
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          <div className="space-y-1">
+            <span className="text-sm font-medium">
+              {t("reasoningEffort.label")}
+            </span>
+            <p className="text-muted-foreground text-sm">
+              {t("reasoningEffort.description")}
+            </p>
+          </div>
+          <Select
+            value={reasoningEffort}
+            onValueChange={(v) =>
+              setReasoningEffort(
+                v as (typeof reasoningEffortEnum.enumValues)[number]
+              )
+            }
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{t("reasoningEffort.none")}</SelectItem>
+              <SelectItem value="low">{t("reasoningEffort.low")}</SelectItem>
+              <SelectItem value="medium">
+                {t("reasoningEffort.medium")}
+              </SelectItem>
+              <SelectItem value="high">{t("reasoningEffort.high")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </section>
 
       <section className="space-y-3">
