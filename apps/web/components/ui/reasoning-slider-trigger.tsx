@@ -6,12 +6,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { reasoningEffort as reasoningEffortEnum } from "@/db/enums";
 import { models } from "@/generated/models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
+import { trpc } from "@/lib/trpc/client";
 import { BrainIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { ReasoningSlider } from "./reasoning-slider";
 
 const formatModelNames = (
   names: string[],
@@ -21,11 +25,34 @@ const formatModelNames = (
   return names.map((name) => `• ${name}`).join("\n");
 };
 
-export const ReasoningEffortSlider = () => {
+type ReasoningEffortEnumValue = (typeof reasoningEffortEnum.enumValues)[number];
+type ReasoningEffortValue = Exclude<ReasoningEffortEnumValue, "none">;
+
+const normalizeReasoningEffort = (
+  effort: ReasoningEffortEnumValue
+): ReasoningEffortValue => (effort === "none" ? "low" : effort);
+
+export const ReasoningSliderTrigger = () => {
   const [preferences, setPreferences] = useUserPreferences();
   const [showReasoningSlider, setShowReasoningSlider] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelsConfig = usePanelsConfigValue();
+  const t = useTranslations("UserPreferences.reasoningEffort");
+  const utils = trpc.useUtils();
+
+  const handleSave = useCallback(
+    (sliderValue: number) => {
+      const reasoningEffort: ReasoningEffortValue =
+        sliderValue <= 1 ? "low" : sliderValue === 2 ? "medium" : "high";
+      utils.client.users.updatePreferences
+        .mutate({ reasoningEffort })
+        .catch((error) => {
+          toast.error(error.message || "Failed to update preferences");
+        });
+    },
+    [utils]
+  );
+
   const { allModelsHaveReasoning, blockingReasoningModelNames } =
     useMemo(() => {
       const blockingNames = new Set<string>();
@@ -45,9 +72,10 @@ export const ReasoningEffortSlider = () => {
         ),
       };
     }, [panelsConfig]);
-  const t = useTranslations("UserPreferences.reasoningEffort");
 
   useEffect(() => {
+    if (!showReasoningSlider) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       if (
         containerRef.current &&
@@ -57,9 +85,7 @@ export const ReasoningEffortSlider = () => {
       }
     };
 
-    if (showReasoningSlider) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -75,17 +101,14 @@ export const ReasoningEffortSlider = () => {
       )}\n${formatModelNames(blockingReasoningModelNames, t)}`;
 
   const reasoningEffort = preferences.reasoningEffort;
-  const normalizedReasoningEffort =
-    reasoningEffort === "none" ? "low" : reasoningEffort;
+  const normalizedReasoningEffort = normalizeReasoningEffort(reasoningEffort);
   const sliderValue =
     normalizedReasoningEffort === "low"
       ? 1
       : normalizedReasoningEffort === "medium"
         ? 2
         : 3;
-  const onReasoningEffortChange = (
-    effort: Exclude<typeof reasoningEffort, "none">
-  ) => {
+  const onReasoningEffortChange = (effort: ReasoningEffortValue) => {
     setPreferences((prev) => ({ ...prev, reasoningEffort: effort }));
   };
 
@@ -97,7 +120,7 @@ export const ReasoningEffortSlider = () => {
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => setShowReasoningSlider(!showReasoningSlider)}
+            onClick={() => setShowReasoningSlider((prev) => !prev)}
             disabled={!allModelsHaveReasoning}
             aria-label={t("label")}
             className="size-[34px] rounded-full p-1 hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30"
@@ -114,25 +137,11 @@ export const ReasoningEffortSlider = () => {
         </TooltipContent>
       </Tooltip>
       {showReasoningSlider && (
-        <div className="absolute bottom-8 -left-[50%] bg-background border rounded p-2 shadow-lg">
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-xs">{t("high")}</span>
-            <input
-              type="range"
-              min="1"
-              max="3"
-              value={sliderValue}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                const effort =
-                  value <= 1 ? "low" : value === 2 ? "medium" : "high";
-                onReasoningEffortChange(effort);
-              }}
-              className="w-12 h-12 -rotate-90"
-            />
-            <span className="text-xs">{t("low")}</span>
-          </div>
-        </div>
+        <ReasoningSlider
+          onReasoningEffortChange={onReasoningEffortChange}
+          sliderValue={sliderValue}
+          onSave={handleSave}
+        />
       )}
     </div>
   );

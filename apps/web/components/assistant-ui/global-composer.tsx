@@ -25,7 +25,7 @@ import { useStateSessionStorage } from "@/hooks/use-session-storage";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
 import type { PanelState } from "@/store/panels";
-import { ReasoningEffortSlider } from "../ui/reasoning-effort-slider";
+import { ReasoningSliderTrigger } from "../ui/reasoning-slider-trigger";
 import { ComposerAddAttachment } from "./add-attachment";
 import { AttachmentChip } from "./attachment-chip";
 
@@ -210,7 +210,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
       {/* Footer with attach and send, styled like thread composer */}
       <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-start justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
         <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-2">
-          <ReasoningEffortSlider />
+          <ReasoningSliderTrigger />
           <ComposerAddAttachment />
           {attachments.map((a) => (
             <AttachmentChip
