@@ -27,6 +27,7 @@ import {
   localeToSourceLanguageCode,
   localeToTargetLanguageCode,
 } from "../deepl/deepl";
+import { getModelOriginalLocale } from "../locale";
 
 export async function syncFromOpenRouter() {
   const apiModelsRaw = await getApiData();
@@ -265,9 +266,7 @@ async function translateModelDescriptions(
 
   const localeModels = models.reduce(
     (acc, model) => {
-      const originalLocaleId = model.id.startsWith("maritacaai/")
-        ? "pt-BR"
-        : "en";
+      const originalLocaleId = getModelOriginalLocale(model.id);
       acc[originalLocaleId] ??= [];
       acc[originalLocaleId].push(model);
       return acc;
@@ -330,14 +329,15 @@ async function translateFromLanguage(
   const texts: string[] = [];
   for (const model of models) {
     const { description } = model;
+    const cleaned = cleanup(description);
     if (targetLocaleId === originalLocaleId) {
       records.push({
         modelId: model.id,
         localeId: targetLocaleId,
-        description,
+        description: cleaned,
       });
     } else {
-      texts.push(description ?? "");
+      texts.push(cleaned);
     }
   }
 
@@ -651,7 +651,7 @@ function apiModelToDbModel(m: OpenRouterModel) {
     name,
     canonicalSlug: m.canonical_slug,
     huggingFaceId: m.hugging_face_id,
-    description: cleanup(m.description),
+    description: m.description,
     architectureModality: m.architecture.modality,
     architectureInputModalities: m.architecture.input_modalities,
     architectureOutputModalities: m.architecture.output_modalities,

@@ -2,31 +2,52 @@
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getModelOriginalLocale } from "@/lib/locale";
 import { trpc } from "@/lib/trpc/client";
+import type { AdminDescriptionsOutput } from "@/lib/trpc/server/server";
+import { CloudAlertIcon, EraserIcon, PencilLineIcon } from "lucide-react";
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
-interface Translation {
-  localeId: string;
-  localeName: string;
-  description: string | null;
-}
-
 interface EditableTranslationsProps {
   modelId: string;
-  translations: Translation[];
+  modelUpdatedAt: Date;
+  translations: AdminDescriptionsOutput["translations"];
+  originalDescription: string;
 }
 
 export default function EditableTranslations({
   modelId,
+  modelUpdatedAt,
   translations,
+  originalDescription,
 }: EditableTranslationsProps) {
   const [editing, setEditing] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
 
-  const saveMutation = trpc.models.saveTranslation.useMutation();
+  const utils = trpc.useUtils();
+  const saveMutation = trpc.models.saveTranslation.useMutation({
+    onSuccess: (data, variables) => {
+      utils.models.adminDescriptions.setData(
+        { modelId: variables.modelId },
+        (prev) =>
+          !prev
+            ? undefined
+            : {
+                ...prev,
+                translations: prev?.translations.map((t) =>
+                  t.localeId === variables.localeId ? { ...t, ...data.item } : t
+                ),
+              }
+      );
+    },
+    onError: (error) => {
+      console.error("Failed to save translation:", error);
+      toast.error(`Failed to save translation: ${error.message}`);
+    },
+  });
 
   const handleEdit = (localeId: string, description: string | null) => {
     setEditing(localeId);
@@ -63,12 +84,33 @@ export default function EditableTranslations({
     );
   }
 
+  const originalLocale = getModelOriginalLocale(modelId);
+  const defaultLocale = translations.some((t) => t.localeId === originalLocale)
+    ? originalLocale
+    : translations[0]?.localeId;
+  const sortedTranslations = translations.toSorted((a, b) =>
+    a.localeId === originalLocale ? -1 : a.localeId.localeCompare(b.localeId)
+  );
+
   return (
-    <Tabs defaultValue={translations[0]?.localeId} className="space-y-3">
-      <TabsList className="w-full">
-        {translations.map((translation) => (
+    <Tabs defaultValue={defaultLocale} className="space-y-3">
+      <TabsList className="gap-2">
+        {sortedTranslations.map((translation) => (
           <TabsTrigger key={translation.localeId} value={translation.localeId}>
             {translation.localeName}
+            {translation.manuallyEditedAt ? (
+              <>
+                <PencilLineIcon className="h-4 w-4 text-orange-500" />
+                {translation.manuallyEditedAt < modelUpdatedAt && (
+                  <CloudAlertIcon className="h-4 w-4 text-red-500" />
+                )}
+              </>
+            ) : (
+              originalLocale === translation.localeId &&
+              translation.description !== originalDescription && (
+                <EraserIcon className="h-4 w-4 text-blue-500" />
+              )
+            )}
           </TabsTrigger>
         ))}
       </TabsList>
@@ -100,7 +142,12 @@ export default function EditableTranslations({
           ) : (
             <div className="space-y-3">
               {translation.description ? (
-                <div className="rounded-sm border border-muted/40 bg-muted/20 p-3 text-sm leading-relaxed text-muted-foreground [&_a]:underline">
+                <div
+                  className="rounded-sm border border-muted/40 bg-muted/20 p-3 text-sm leading-relaxed text-muted-foreground [&_a]:underline cursor-pointer"
+                  onClick={() =>
+                    handleEdit(translation.localeId, translation.description)
+                  }
+                >
                   <ReactMarkdown skipHtml remarkPlugins={[remarkGfm]}>
                     {translation.description}
                   </ReactMarkdown>

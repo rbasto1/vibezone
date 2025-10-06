@@ -16,12 +16,6 @@ import { syncFromOpenRouter } from "./models-sync";
 
 export type GetModelsListReturn = Awaited<ReturnType<typeof listModels>>;
 
-interface ModelDescriptionTranslation {
-  localeId: string;
-  localeName: string;
-  description: string | null;
-}
-
 export const modelsRouter = t.router({
   list: publicProcedure.query(listModels),
   adminList: adminProcedure.query(listModelsAdmin),
@@ -91,11 +85,14 @@ export const modelsRouter = t.router({
           modelId: models.id,
           localeId: locales.id,
           modelDescription: models.description,
+          updatedAt: models.updatedAt,
           localeName: locales.name,
           translatedDescription: modelTranslations.description,
+          translationManuallyEditedAt: modelTranslations.manuallyEditedAt,
+          translationUpdatedAt: modelTranslations.updatedAt,
         })
         .from(models)
-        .innerJoin(locales, sql`true`)
+        .crossJoin(locales)
         .leftJoin(
           modelTranslations,
           and(
@@ -118,10 +115,13 @@ export const modelsRouter = t.router({
       return {
         id: modelId,
         description: modelDescription,
-        translations: rows.map<ModelDescriptionTranslation>((row) => ({
+        updatedAt: row.updatedAt,
+        translations: rows.map((row) => ({
           localeId: row.localeId,
           localeName: row.localeName,
           description: row.translatedDescription,
+          manuallyEditedAt: row.translationManuallyEditedAt,
+          updatedAt: row.translationUpdatedAt,
         })),
       };
     }),
@@ -166,7 +166,7 @@ export const modelsRouter = t.router({
       })
     )
     .mutation(async ({ input }) => {
-      await db
+      const rows = await db
         .insert(modelTranslations)
         .values({
           modelId: input.modelId,
@@ -180,7 +180,15 @@ export const modelsRouter = t.router({
             description: input.description,
             manuallyEditedAt: sql`current_timestamp`,
           },
+        })
+        .returning();
+      const item = rows[0];
+      if (!item) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to save translation",
         });
-      return { ok: true } as const;
+      }
+      return { ok: true, item } as const;
     }),
 });
