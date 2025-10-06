@@ -156,4 +156,31 @@ export const modelsRouter = t.router({
     }),
 
   syncFromOpenRouter: adminProcedure.mutation(syncFromOpenRouter),
+
+  saveTranslation: adminProcedure
+    .input(
+      z.object({
+        modelId: z.string().min(1),
+        localeId: z.string().min(1),
+        description: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      await db
+        .insert(modelTranslations)
+        .values({
+          modelId: input.modelId,
+          localeId: input.localeId,
+          description: input.description,
+          manuallyEditedAt: sql`current_timestamp`,
+        })
+        .onConflictDoUpdate({
+          target: [modelTranslations.modelId, modelTranslations.localeId],
+          set: {
+            description: input.description,
+            manuallyEditedAt: sql`current_timestamp`,
+          },
+        });
+      return { ok: true } as const;
+    }),
 });

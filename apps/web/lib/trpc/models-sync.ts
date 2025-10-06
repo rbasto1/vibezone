@@ -251,6 +251,18 @@ async function translateModelDescriptions(
   });
   let translatedModelIds: string[] = [];
 
+  // Load manually edited translations to skip them
+  const manuallyEdited = await db
+    .select({
+      modelId: modelTranslations.modelId,
+      localeId: modelTranslations.localeId,
+    })
+    .from(modelTranslations)
+    .where(sql`${modelTranslations.manuallyEditedAt} IS NOT NULL`);
+  const manuallyEditedSet = new Set(
+    manuallyEdited.map((m) => `${m.modelId}:${m.localeId}`)
+  );
+
   const localeModels = models.reduce(
     (acc, model) => {
       const originalLocaleId = model.id.startsWith("maritacaai/")
@@ -272,10 +284,17 @@ async function translateModelDescriptions(
     }
 
     for (const { id: targetLocaleId } of locales) {
+      // Filter models that don't have manually edited translations for this locale
+      const modelsToTranslate = models.filter(
+        (model) => !manuallyEditedSet.has(`${model.id}:${targetLocaleId}`)
+      );
+
+      if (!modelsToTranslate.length) continue;
+
       const records = await translateFromLanguage(
         originalLocaleId,
         targetLocaleId,
-        models
+        modelsToTranslate
       );
 
       while (records.length) {

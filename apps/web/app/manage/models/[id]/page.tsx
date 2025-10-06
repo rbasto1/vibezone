@@ -1,7 +1,8 @@
+import { and, eq, isNull } from "drizzle-orm";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db } from "@/db";
 import {
   models,
@@ -11,8 +12,7 @@ import {
 } from "@/db/schema";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getServerCaller } from "@/lib/trpc/server/ssr";
-import { and, eq, isNull } from "drizzle-orm";
-import Link from "next/link";
+import EditableTranslations from "./EditableTranslations";
 
 export default async function ModelDetailsPage({
   params: paramsPromise,
@@ -244,45 +244,7 @@ export default async function ModelDetailsPage({
           </ReactMarkdown>
         </div>
 
-        {localeDescriptions.length ? (
-          <Tabs
-            defaultValue={localeDescriptions[0]?.localeId}
-            className="space-y-3"
-          >
-            <TabsList className="w-full">
-              {localeDescriptions.map((translation) => (
-                <TabsTrigger
-                  key={translation.localeId}
-                  value={translation.localeId}
-                >
-                  {translation.localeName}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            {localeDescriptions.map((translation) => (
-              <TabsContent
-                key={translation.localeId}
-                value={translation.localeId}
-              >
-                {translation.description ? (
-                  <div className="rounded-sm border border-muted/40 bg-muted/20 p-3 text-sm leading-relaxed text-muted-foreground [&_a]:underline">
-                    <ReactMarkdown skipHtml remarkPlugins={[remarkGfm]}>
-                      {translation.description}
-                    </ReactMarkdown>
-                  </div>
-                ) : (
-                  <div className="rounded-sm border border-dashed border-muted/60 bg-muted/10 p-3 text-sm text-muted-foreground">
-                    No description provided for this locale.
-                  </div>
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
-        ) : (
-          <div className="text-sm text-muted-foreground">
-            No locale translations available.
-          </div>
-        )}
+        <EditableTranslations modelId={id} translations={localeDescriptions} />
       </section>
     </div>
   );
