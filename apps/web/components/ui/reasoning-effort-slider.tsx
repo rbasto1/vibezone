@@ -1,6 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { models } from "@/generated/models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
 import { BrainIcon } from "lucide-react";
@@ -19,8 +24,8 @@ export const ReasoningEffortSlider: React.FC<ReasoningEffortSliderProps> = ({
   const [showReasoningSlider, setShowReasoningSlider] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelsConfig = usePanelsConfigValue();
-  const hasReasoningModels = useMemo(() => {
-    return Object.values(panelsConfig).some((panel) => {
+  const allModelsHaveReasoning = useMemo(() => {
+    return Object.values(panelsConfig).every((panel) => {
       const model = models.models.find((m) => m.id === panel.model);
       return model?.capReason;
     });
@@ -48,17 +53,23 @@ export const ReasoningEffortSlider: React.FC<ReasoningEffortSliderProps> = ({
 
   return (
     <div ref={containerRef} className="relative">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={() => setShowReasoningSlider(!showReasoningSlider)}
-        disabled={!hasReasoningModels}
-        title={t("label")}
-        className="h-8 w-8"
-      >
-        <BrainIcon className="h-4 w-4" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowReasoningSlider(!showReasoningSlider)}
+            disabled={!allModelsHaveReasoning}
+            className="h-8 w-8"
+          >
+            <BrainIcon className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          {allModelsHaveReasoning ? t("label") : t("disabledTooltip")}
+        </TooltipContent>
+      </Tooltip>
       {showReasoningSlider && (
         <div className="absolute bottom-8 -left-[50%] bg-background border rounded p-2 shadow-lg">
           <div className="flex flex-col items-center gap-2">

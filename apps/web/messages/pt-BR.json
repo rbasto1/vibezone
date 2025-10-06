@@ -237,6 +237,7 @@
     "reasoningEffort": {
       "label": "Esforço de raciocínio",
       "description": "Controle quanto esforço de raciocínio a IA usa quando o modelo selecionado oferece suporte.",
+      "disabledTooltip": "Disponível apenas quando todos os modelos selecionados oferecem suporte ao raciocínio",
       "none": "Nenhum",
       "low": "Baixo",
       "medium": "Médio",
@@ -269,5 +270,15 @@
       "error": "Não foi possível salvar as preferências: {message}"
     },
     "authRequired": "Faça login para gerenciar suas preferências."
+  },
+  "ComposerAddAttachment": {
+    "attachTextDocument": "Anexar documento de texto",
+    "attachImage": "Anexar imagem",
+    "attachPdf": "Anexar PDF",
+    "imageCapabilitySingle": "O seguinte modelo não é capaz de interpretar imagens:",
+    "imageCapabilityPlural": "Os seguintes modelos não são capazes de interpretar imagens:",
+    "pdfCapabilitySingle": "O seguinte modelo não é capaz de ler arquivos PDF:",
+    "pdfCapabilityPlural": "Os seguintes modelos não são capazes de ler arquivos PDF:",
+    "selectedModels": "Modelos selecionados"
   }
 }
