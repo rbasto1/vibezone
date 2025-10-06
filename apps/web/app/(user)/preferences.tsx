@@ -21,6 +21,13 @@ import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { trpc } from "@/lib/trpc/client";
 
+type ReasoningEffortEnumValue = (typeof reasoningEffortEnum.enumValues)[number];
+type ReasoningEffortValue = Exclude<ReasoningEffortEnumValue, "none">;
+
+const normalizeReasoningEffort = (
+  effort: ReasoningEffortEnumValue
+): ReasoningEffortValue => (effort === "none" ? "low" : effort);
+
 const PreferencesPage = () => {
   const t = useTranslations("UserPreferences");
   const [preferences, setPreferences] = useUserPreferences();
@@ -33,7 +40,9 @@ const PreferencesPage = () => {
   const initialHiddenProviders = preferences.hiddenProviders.sort();
   const initialAutoScroll = preferences.autoScroll;
   const initialWebSearch = preferences.pluginWeb;
-  const initialReasoningEffort = preferences.reasoningEffort;
+  const initialReasoningEffort = normalizeReasoningEffort(
+    preferences.reasoningEffort
+  );
   const initialChangedPrompt = preferences.changedPrompt;
   const initialSystemPrompt = initialChangedPrompt
     ? (preferences.systemPrompt ?? "")
@@ -41,7 +50,7 @@ const PreferencesPage = () => {
 
   const [autoScroll, setAutoScroll] = useState(initialAutoScroll);
   const [webSearch, setWebSearch] = useState(initialWebSearch);
-  const [reasoningEffort, setReasoningEffort] = useState(
+  const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffortValue>(
     initialReasoningEffort
   );
   const [systemPrompt, setSystemPrompt] = useState(initialSystemPrompt);
@@ -53,7 +62,7 @@ const PreferencesPage = () => {
   useEffect(() => {
     setAutoScroll(preferences.autoScroll);
     setWebSearch(preferences.pluginWeb);
-    setReasoningEffort(preferences.reasoningEffort);
+    setReasoningEffort(normalizeReasoningEffort(preferences.reasoningEffort));
     setSystemPrompt(initialSystemPrompt);
     const initialHidden = new Set(preferences.hiddenProviders ?? []);
     setHiddenProviders(initialHidden);
@@ -219,17 +228,14 @@ const PreferencesPage = () => {
           </div>
           <Select
             value={reasoningEffort}
-            onValueChange={(v) =>
-              setReasoningEffort(
-                v as (typeof reasoningEffortEnum.enumValues)[number]
-              )
+            onValueChange={(value) =>
+              setReasoningEffort(value as ReasoningEffortValue)
             }
           >
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">{t("reasoningEffort.none")}</SelectItem>
               <SelectItem value="low">{t("reasoningEffort.low")}</SelectItem>
               <SelectItem value="medium">
                 {t("reasoningEffort.medium")}

@@ -75,7 +75,17 @@ export const ReasoningEffortSlider = () => {
       )}\n${formatModelNames(blockingReasoningModelNames, t)}`;
 
   const reasoningEffort = preferences.reasoningEffort;
-  const onReasoningEffortChange = (effort: typeof reasoningEffort) => {
+  const normalizedReasoningEffort =
+    reasoningEffort === "none" ? "low" : reasoningEffort;
+  const sliderValue =
+    normalizedReasoningEffort === "low"
+      ? 1
+      : normalizedReasoningEffort === "medium"
+        ? 2
+        : 3;
+  const onReasoningEffortChange = (
+    effort: Exclude<typeof reasoningEffort, "none">
+  ) => {
     setPreferences((prev) => ({ ...prev, reasoningEffort: effort }));
   };
 
@@ -109,32 +119,18 @@ export const ReasoningEffortSlider = () => {
             <span className="text-xs">{t("high")}</span>
             <input
               type="range"
-              min="0"
+              min="1"
               max="3"
-              value={
-                reasoningEffort === "none"
-                  ? 0
-                  : reasoningEffort === "low"
-                    ? 1
-                    : reasoningEffort === "medium"
-                      ? 2
-                      : 3
-              }
+              value={sliderValue}
               onChange={(e) => {
                 const value = Number(e.target.value);
                 const effort =
-                  value === 0
-                    ? "none"
-                    : value === 1
-                      ? "low"
-                      : value === 2
-                        ? "medium"
-                        : "high";
+                  value <= 1 ? "low" : value === 2 ? "medium" : "high";
                 onReasoningEffortChange(effort);
               }}
               className="w-12 h-12 -rotate-90"
             />
-            <span className="text-xs">{t("none")}</span>
+            <span className="text-xs">{t("low")}</span>
           </div>
         </div>
       )}
