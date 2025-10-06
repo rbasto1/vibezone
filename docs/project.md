@@ -35,7 +35,7 @@
 - [x] Assign .br domains
 - [ ] Explore bot protection (Vercel BotID? Arcjet? hCaptcha?)
 - [x] Add Maritaca AI models
-- [ ] Add model descriptions to (i) icon
+- [x] Add model descriptions to (i) icon
 - [x] Language-specific chat titles
 - [ ] Paginate chat history
 - [ ] Add reasoning effort slider

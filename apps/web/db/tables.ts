@@ -114,7 +114,7 @@ export const modelTranslations = pgTable(
 
 export const supportedParameters = pgTable("supported_parameters", {
   // same as OpenRouter parameter id, e.g. "reasoning", "seed"
-  id: text("supported_parameter_id").primaryKey(),
+  id: text("id").primaryKey(),
   label: text("label").notNull(),
   iconUrl: text("icon_url"),
   color: text("color"),
