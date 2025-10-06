@@ -85,6 +85,8 @@ function getValidPlugins(providerId: string, plugins: string[]) {
     case "maritacaai":
       return [];
     default:
-      return plugins.filter((plugin) => plugin === "web");
+      return plugins.filter(
+        (plugin) => plugin === "web" || plugin.startsWith("reason-")
+      );
   }
 }

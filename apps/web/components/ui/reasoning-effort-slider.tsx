@@ -8,28 +8,43 @@ import {
 } from "@/components/ui/tooltip";
 import { models } from "@/generated/models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
+import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { BrainIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-interface ReasoningEffortSliderProps {
-  reasoningEffort: "none" | "low" | "medium" | "high";
-  onReasoningEffortChange: (effort: "none" | "low" | "medium" | "high") => void;
-}
+const formatModelNames = (
+  names: string[],
+  t: ReturnType<typeof useTranslations>
+) => {
+  if (!names.length) return t("selectedModels");
+  return names.map((name) => `• ${name}`).join("\n");
+};
 
-export const ReasoningEffortSlider: React.FC<ReasoningEffortSliderProps> = ({
-  reasoningEffort,
-  onReasoningEffortChange,
-}) => {
+export const ReasoningEffortSlider = () => {
+  const [preferences, setPreferences] = useUserPreferences();
   const [showReasoningSlider, setShowReasoningSlider] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelsConfig = usePanelsConfigValue();
-  const allModelsHaveReasoning = useMemo(() => {
-    return Object.values(panelsConfig).every((panel) => {
-      const model = models.models.find((m) => m.id === panel.model);
-      return model?.capReason;
-    });
-  }, [panelsConfig]);
+  const { allModelsHaveReasoning, blockingReasoningModelNames } =
+    useMemo(() => {
+      const blockingNames = new Set<string>();
+
+      panelsConfig.forEach((panel) => {
+        const model = models.models.find((m) => m.id === panel.model);
+        const modelName = model?.name ?? panel.model;
+        if (!model?.capReason) {
+          blockingNames.add(modelName);
+        }
+      });
+
+      return {
+        allModelsHaveReasoning: blockingNames.size === 0,
+        blockingReasoningModelNames: Array.from(blockingNames).sort((a, b) =>
+          a.localeCompare(b)
+        ),
+      };
+    }, [panelsConfig]);
   const t = useTranslations("UserPreferences.reasoningEffort");
 
   useEffect(() => {
@@ -51,9 +66,22 @@ export const ReasoningEffortSlider: React.FC<ReasoningEffortSliderProps> = ({
     };
   }, [showReasoningSlider]);
 
+  const disabledTooltipMessage = allModelsHaveReasoning
+    ? undefined
+    : `${t(
+        blockingReasoningModelNames.length === 1
+          ? "disabledTooltipSingle"
+          : "disabledTooltipPlural"
+      )}\n${formatModelNames(blockingReasoningModelNames, t)}`;
+
+  const reasoningEffort = preferences.reasoningEffort;
+  const onReasoningEffortChange = (effort: typeof reasoningEffort) => {
+    setPreferences((prev) => ({ ...prev, reasoningEffort: effort }));
+  };
+
   return (
     <div ref={containerRef} className="relative">
-      <Tooltip>
+      <Tooltip delayDuration={100}>
         <TooltipTrigger>
           <Button
             type="button"
@@ -61,13 +89,18 @@ export const ReasoningEffortSlider: React.FC<ReasoningEffortSliderProps> = ({
             size="icon"
             onClick={() => setShowReasoningSlider(!showReasoningSlider)}
             disabled={!allModelsHaveReasoning}
-            className="h-8 w-8"
+            aria-label={t("label")}
+            className="size-[34px] rounded-full p-1 hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30"
           >
-            <BrainIcon className="h-4 w-4" />
+            <BrainIcon className="size-5" />
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {allModelsHaveReasoning ? t("label") : t("disabledTooltip")}
+          {allModelsHaveReasoning
+            ? t("label")
+            : (disabledTooltipMessage ?? t("disabledTooltip"))
+                .split("\n")
+                .map((line, idx) => <p key={idx}>{line}</p>)}
         </TooltipContent>
       </Tooltip>
       {showReasoningSlider && (

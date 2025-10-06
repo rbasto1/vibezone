@@ -23,7 +23,6 @@ import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelsStateSetter } from "@/hooks/use-panels";
 import { useStateSessionStorage } from "@/hooks/use-session-storage";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { useUser } from "@/lib/auth-client";
 import type { PanelState } from "@/store/panels";
 import { ReasoningEffortSlider } from "../ui/reasoning-effort-slider";
@@ -48,7 +47,6 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
   const setAnonUsage = useAnonQuotaSetter();
   const { user } = useUser();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [preferences, setPreferences] = useUserPreferences();
   const anyPanelRunning = useMemo(
     () => Object.values(panelsState).some((p) => p.running),
     [panelsState]
@@ -212,13 +210,8 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
       {/* Footer with attach and send, styled like thread composer */}
       <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-start justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
         <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-2">
+          <ReasoningEffortSlider />
           <ComposerAddAttachment />
-          <ReasoningEffortSlider
-            reasoningEffort={preferences.reasoningEffort}
-            onReasoningEffortChange={(effort) =>
-              setPreferences((prev) => ({ ...prev, reasoningEffort: effort }))
-            }
-          />
           {attachments.map((a) => (
             <AttachmentChip
               key={`${a.id}`}
