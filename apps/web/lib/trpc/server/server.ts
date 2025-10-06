@@ -38,3 +38,7 @@ export type SuggestionGroupsListOutput =
 export type LocalesListOutput = RouterOutputs["locales"]["list"];
 // users
 export type UsersManageListOutput = RouterOutputs["users"]["manageList"];
+// model translations
+export type ModelTranslationDetailsOutput = RouterOutputs["models"]["details"];
+export type AdminDescriptionsOutput =
+  RouterOutputs["models"]["adminDescriptions"];

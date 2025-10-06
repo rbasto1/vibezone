@@ -251,6 +251,11 @@ async function copyModelTranslations(sourceDb: Client, targetDb: Client) {
       ) && existingModels.some((m) => m.id === row.modelId)
   );
 
+  if (!missingRows.length) {
+    console.info("🔵 No missing model translations found");
+    return;
+  }
+
   await targetDb.insert(schema.modelTranslations).values(missingRows);
   const count = missingRows.length;
   console.info(`✅ Model translations copied successfully: ${count} rows`);

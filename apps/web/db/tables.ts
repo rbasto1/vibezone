@@ -107,6 +107,7 @@ export const modelTranslations = pgTable(
     description: text("description"),
     createdAt: timestampTzNow("created_at"),
     updatedAt: timestampTzNowUpdated("updated_at"),
+    manuallyEditedAt: timestampTz("manually_edited_at"),
   },
   (table) => [primaryKey({ columns: [table.modelId, table.localeId] })]
 );

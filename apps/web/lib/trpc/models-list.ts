@@ -108,6 +108,7 @@ export async function listModelsAdmin() {
       architectureTokenizer: false,
       architectureInstructType: false,
     },
+    where: and(isNull(modelsTable.deletedAt), isNull(providersTable.deletedAt)),
     with: {
       provider: true,
     },

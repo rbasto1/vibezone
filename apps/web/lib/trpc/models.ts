@@ -1,11 +1,11 @@
 import "server-only";
 
 import { TRPCError } from "@trpc/server";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { models, providers } from "@/db/schema";
+import { locales, modelTranslations, models, providers } from "@/db/schema";
 import {
   adminProcedure,
   publicProcedure,
@@ -77,6 +77,55 @@ export const modelsRouter = t.router({
       };
     }),
 
+  adminDescriptions: adminProcedure
+    .input(z.object({ modelId: z.string().min(1) }))
+    .query(async ({ input }) => {
+      const rows = await db
+        .select({
+          modelId: models.id,
+          localeId: locales.id,
+          modelDescription: models.description,
+          updatedAt: models.updatedAt,
+          localeName: locales.name,
+          translatedDescription: modelTranslations.description,
+          translationManuallyEditedAt: modelTranslations.manuallyEditedAt,
+          translationUpdatedAt: modelTranslations.updatedAt,
+        })
+        .from(models)
+        .crossJoin(locales)
+        .leftJoin(
+          modelTranslations,
+          and(
+            eq(modelTranslations.modelId, models.id),
+            eq(modelTranslations.localeId, locales.id)
+          )
+        )
+        .where(and(eq(models.id, input.modelId), isNull(models.deletedAt)))
+        .orderBy(asc(locales.id));
+
+      const row = rows[0];
+      if (!row) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Model not found",
+        });
+      }
+      const { modelId, modelDescription } = row;
+
+      return {
+        id: modelId,
+        description: modelDescription,
+        updatedAt: row.updatedAt,
+        translations: rows.map((row) => ({
+          localeId: row.localeId,
+          localeName: row.localeName,
+          description: row.translatedDescription,
+          manuallyEditedAt: row.translationManuallyEditedAt,
+          updatedAt: row.translationUpdatedAt,
+        })),
+      };
+    }),
+
   update: adminProcedure
     .input(
       z.object({
@@ -107,4 +156,39 @@ export const modelsRouter = t.router({
     }),
 
   syncFromOpenRouter: adminProcedure.mutation(syncFromOpenRouter),
+
+  saveTranslation: adminProcedure
+    .input(
+      z.object({
+        modelId: z.string().min(1),
+        localeId: z.string().min(1),
+        description: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const rows = await db
+        .insert(modelTranslations)
+        .values({
+          modelId: input.modelId,
+          localeId: input.localeId,
+          description: input.description,
+          manuallyEditedAt: sql`current_timestamp`,
+        })
+        .onConflictDoUpdate({
+          target: [modelTranslations.modelId, modelTranslations.localeId],
+          set: {
+            description: input.description,
+            manuallyEditedAt: sql`current_timestamp`,
+          },
+        })
+        .returning();
+      const item = rows[0];
+      if (!item) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to save translation",
+        });
+      }
+      return { ok: true, item } as const;
+    }),
 });
