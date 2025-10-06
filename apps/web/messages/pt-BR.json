@@ -60,7 +60,10 @@
     "sendFailed": "Falha ao enviar para um painel: {message}",
     "placeholder": "Pergunte a todas as IAs...",
     "stopAllLabel": "Parar todas as respostas de IA",
-    "sendLabel": "Enviar para todas as IAs"
+    "sendLabel": "Enviar para todas as IAs",
+    "reasoningEffort": {
+      "title": "Esforço de raciocínio"
+    }
   },
   "LanguageSwitcher": {
     "trigger": "Alterar idioma",
@@ -233,6 +236,14 @@
     "webSearch": {
       "label": "Navegação na web",
       "description": "Permita que a IA pesquise na web quando o modelo selecionado oferecer esse recurso."
+    },
+    "reasoningEffort": {
+      "label": "Esforço de raciocínio",
+      "description": "Controle quanto esforço de raciocínio a IA usa quando o modelo selecionado oferece suporte.",
+      "none": "Nenhum",
+      "low": "Baixo",
+      "medium": "Médio",
+      "high": "Alto"
     },
     "hiddenProviders": {
       "label": "Ocultar provedores",

@@ -60,7 +60,10 @@
     "sendFailed": "Send failed for a panel: {message}",
     "placeholder": "Ask all of the AIs...",
     "stopAllLabel": "Stop all AI responses",
-    "sendLabel": "Send to all AIs"
+    "sendLabel": "Send to all AIs",
+    "reasoningEffort": {
+      "title": "Reasoning effort"
+    }
   },
   "LanguageSwitcher": {
     "trigger": "Change language",
@@ -233,6 +236,14 @@
     "webSearch": {
       "label": "Web browsing",
       "description": "Allow the AI to browse the web when the selected model supports it."
+    },
+    "reasoningEffort": {
+      "label": "Reasoning effort",
+      "description": "Control how much reasoning effort the AI uses when the selected model supports it.",
+      "none": "None",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
     },
     "hiddenProviders": {
       "label": "Hidden providers",
