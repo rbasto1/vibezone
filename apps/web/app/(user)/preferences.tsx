@@ -159,7 +159,7 @@ const PreferencesPage = () => {
       : ([] as string[]);
     const hiddenList = targetHidden;
 
-    setUIState({ preferencesOpen: false });
+    setUIState({ panelOpen: null });
 
     updatePreferences.mutate({
       autoScroll,
@@ -189,7 +189,7 @@ const PreferencesPage = () => {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={() => setUIState({ preferencesOpen: false })}
+            onClick={() => setUIState({ panelOpen: null })}
           >
             {t("actions.cancel")}
           </Button>

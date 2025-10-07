@@ -19,10 +19,7 @@ export const ReasoningSlider: React.FC<ReasoningSliderProps> = ({
   const t = useTranslations("UserPreferences.reasoningEffort");
   const initialValue = useRef(sliderValue);
   const currentValue = useRef(sliderValue);
-
-  useEffect(() => {
-    currentValue.current = sliderValue;
-  }, [sliderValue]);
+  currentValue.current = sliderValue;
 
   useEffect(() => {
     return () => {

@@ -9,6 +9,7 @@ import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ResponsePanel } from "@/components/assistant-ui/response-panel";
+import { SearchPanel } from "@/components/assistant-ui/search-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
 import { GlobalComposerProvider } from "@/components/providers/global-composer-provider";
 import { ClientOnly } from "@/components/ui/client-only";
@@ -114,11 +115,12 @@ const AssistantContent: FC = () => {
             panelCount={panelsConfig.length}
             suggestionsUsed={uiState.suggestionsUsed}
           />
-          {uiState.preferencesOpen && <PreferencesPage />}
+          {uiState.panelOpen === "preferences" && <PreferencesPage />}
+          {uiState.panelOpen === "search" && <SearchPanel />}
           <div
             className={cn(
               "flex-1 overflow-hidden p-3 flex flex-col gap-3",
-              uiState.preferencesOpen && "hidden"
+              !!uiState.panelOpen && "hidden"
             )}
           >
             <div className="flex flex-col gap-3 flex-1 min-h-0">

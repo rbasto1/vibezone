@@ -12,7 +12,7 @@ export interface PanelConfig {
 export interface UIState {
   suggestionsUsed: boolean;
   loginOpen: boolean;
-  preferencesOpen: boolean;
+  panelOpen: "preferences" | "search" | null;
 }
 
 export const panelConfigAtom = atom<PanelConfig[]>([]);
@@ -31,5 +31,5 @@ export const panelStateAtom = atom<Record<string, PanelState>>({});
 export const uiStateAtom = atom<UIState>({
   suggestionsUsed: false,
   loginOpen: false,
-  preferencesOpen: false,
+  panelOpen: null,
 });
