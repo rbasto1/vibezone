@@ -32,7 +32,9 @@ export const createContext = async () => {
       headers: await headers(),
     });
 
-    return session;
+    return {
+      user: session.user,
+    };
   } catch {
     return {
       user: undefined,

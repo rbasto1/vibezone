@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { GlobalComposerContext } from "@/components/providers/composer-provider";
 import { Button } from "@/components/ui/button";
+import { ReasoningSliderTrigger } from "@/components/ui/reasoning-slider-trigger";
 import { StopButton } from "@/components/ui/stop-button";
 import {
   ANON_DAILY_LIMIT,
@@ -21,18 +22,20 @@ import {
 } from "@/hooks/use-attachments";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelsState } from "@/hooks/use-panels";
-import { useStateSessionStorage } from "@/hooks/use-session-storage";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
-import { ReasoningSliderTrigger } from "../ui/reasoning-slider-trigger";
 import { ComposerAddAttachment } from "./add-attachment";
 import { AttachmentChip } from "./attachment-chip";
+import type { GlobalComposerTextareaHandle } from "./global-composer-textarea";
+import { GlobalComposerTextarea } from "./global-composer-textarea";
 
 export const GlobalComposer: FC = () => {
   const t = useTranslations("GlobalComposer");
-  const [prompt, setPrompt] = useStateSessionStorage("prompt");
   const removeAttachment = useRemoveAttachment();
   const attachments = useAttachmentsValue();
+  const pendingAttachments = attachments.some(
+    (a) => a.status.type !== "complete"
+  );
   const completeAttachments = useCompleteAttachmentsValue();
   const setCurrentChat = useCurrentChatSetter();
   const setUIState = useUIStateSetter();
@@ -41,7 +44,7 @@ export const GlobalComposer: FC = () => {
   const [panelsState, setPanelsState] = usePanelsState();
   const setAnonUsage = useAnonQuotaSetter();
   const { user } = useUser();
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const textareaRef = useRef<GlobalComposerTextareaHandle | null>(null);
   const anyPanelRunning = useMemo(
     () => Object.values(panelsState).some((p) => p.running),
     [panelsState]
@@ -154,10 +157,12 @@ export const GlobalComposer: FC = () => {
     return true;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (prompt: string): boolean => {
+    if (pendingAttachments) return false;
+
     const success = send(prompt);
-    if (!success) return;
-    setPrompt("");
+    if (!success) return false;
+
     setUIState({ suggestionsUsed: true });
     setCurrentChat((currentChat) =>
       currentChat.firstUserMessage
@@ -167,11 +172,9 @@ export const GlobalComposer: FC = () => {
             firstUserMessage: prompt,
           }
     );
-  };
 
-  const pendingAttachments = attachments.some(
-    (a) => a.status.type !== "complete"
-  );
+    return true;
+  };
 
   const stopAllLabel = t("stopAllLabel");
   const sendLabel = t("sendLabel");
@@ -182,25 +185,10 @@ export const GlobalComposer: FC = () => {
       onClick={handleContainerClick}
     >
       {/* Input box (top section) */}
-      <textarea
-        placeholder={t("placeholder")}
-        name="global-composer"
-        autoFocus
-        className="bg-muted border-border dark:border-muted-foreground/15 focus:outline-primary placeholder:text-muted-foreground max-h-[calc(50dvh)] min-h-16 w-full resize-none rounded-t-2xl border-x border-t px-4 pt-2 pb-3 text-base outline-none"
-        rows={1}
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-            if (pendingAttachments) {
-              return;
-            }
-            e.preventDefault();
-            handleSubmit();
-          }
-          // Shift/Ctrl/Cmd+Enter falls through to add newline
-        }}
+      <GlobalComposerTextarea
         ref={textareaRef}
+        placeholder={t("placeholder")}
+        onSubmit={handleSubmit}
       />
       {/* Footer with attach and send, styled like thread composer */}
       <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-start justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
@@ -226,7 +214,7 @@ export const GlobalComposer: FC = () => {
         ) : (
           <Button
             size="icon"
-            onClick={handleSubmit}
+            onClick={() => textareaRef.current?.submit()}
             aria-label={sendLabel}
             title={sendLabel}
             className="self-start"

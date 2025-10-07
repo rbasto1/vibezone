@@ -8,5 +8,5 @@ export function canReason(id: string) {
 export function useAllCanReason() {
   const panelsConfig = usePanelsConfigValue();
 
-  return !panelsConfig.some((panel) => !modelMap.get(panel.model)?.capReason);
+  return !panelsConfig.some((panel) => canReason(panel.model));
 }
