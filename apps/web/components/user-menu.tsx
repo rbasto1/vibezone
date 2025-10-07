@@ -77,7 +77,9 @@ export const UserMenu = ({ className }: UserMenuProps) => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => setUIState({ preferencesOpen: true })}>
+        <DropdownMenuItem
+          onClick={() => setUIState({ panelOpen: "preferences" })}
+        >
           {t("preferences")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />

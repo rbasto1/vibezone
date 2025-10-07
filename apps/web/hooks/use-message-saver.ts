@@ -31,15 +31,8 @@ export const useMessageSaver = (panel: PanelConfig) => {
     lastSavedAt: Date.now(),
   });
   const saveMessagesMutation = trpc.messages.saveMessages.useMutation({
-    onSuccess: (res) => {
-      utils.chats.listChats.setData(undefined, (prev) => {
-        const existing = prev ?? [];
-        const has = existing.some((c) => c.id === res.chat.id);
-        return has
-          ? existing.map((c) => (c.id === res.chat.id ? res.chat : c))
-          : [res.chat, ...existing];
-      });
-      // utils.chats.listChats.invalidate();
+    onSuccess: () => {
+      void utils.chats.listChats.invalidate();
     },
   });
   const savedMessageIds = useRef(
@@ -101,21 +94,7 @@ export const useMessageSaver = (panel: PanelConfig) => {
         setCurrentChat((currentChat) => {
           if (currentChat.addedToList) return currentChat;
 
-          void utils.chats.listChats.setData(undefined, (prev) => {
-            const existing = prev ?? [];
-            if (existing.some((c) => c.id === chatId)) return existing;
-            const now = new Date();
-            return [
-              {
-                id: chatId,
-                userId,
-                title: "New Chat",
-                lastMessageAt: now,
-                createdAt: now,
-                updatedAt: now,
-              } as (typeof existing)[number],
-            ].concat(existing);
-          });
+          void utils.chats.listChats.invalidate();
 
           return {
             ...currentChat,

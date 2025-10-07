@@ -152,8 +152,24 @@
     "signInButton": "Sign in",
     "genericTitle": "Something went wrong"
   },
+  "SearchPanel": {
+    "title": "Search chats",
+    "description": "Find conversations quickly by searching titles and messages.",
+    "placeholder": "Search chats…",
+    "clear": "Clear",
+    "close": "Cancel",
+    "startTyping": "Start typing to search your chats.",
+    "minQuery": "Enter at least {count} characters to search.",
+    "loading": "Loading results…",
+    "loadingMore": "Loading more…",
+    "empty": "No chats matched your search.",
+    "error": "Unable to search right now. Try again later.",
+    "retry": "Retry",
+    "loadError": "We couldn’t load this chat. Please try again."
+  },
   "ThreadList": {
     "newChat": "New Chat",
+    "searchChats": "Search chats",
     "loginRequired": "Please sign up or log in to save and load your chats",
     "loading": "Loading chats...",
     "empty": "No chats yet"

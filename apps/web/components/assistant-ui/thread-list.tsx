@@ -1,10 +1,10 @@
 "use client";
 
 import { generateId } from "ai";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useCurrentChat, useNewChat } from "@/hooks/use-chat";
@@ -26,9 +26,30 @@ import { CustomThreadListItem } from "./custom-thread-list-item";
 export const ThreadList: FC = () => {
   return (
     <div className="flex flex-col items-stretch gap-1.5">
+      <ThreadListSearch />
       <ThreadListNew />
       <ThreadListItems />
     </div>
+  );
+};
+
+const ThreadListSearch: FC = () => {
+  const t = useTranslations("ThreadList");
+  const setUIState = useUIStateSetter();
+
+  const handleOpenSearch = () => {
+    setUIState({ panelOpen: "search" });
+  };
+
+  return (
+    <Button
+      className="data-active:bg-muted hover:bg-muted justify-start"
+      variant="ghost"
+      onClick={handleOpenSearch}
+    >
+      <SearchIcon />
+      {t("searchChats")}
+    </Button>
   );
 };
 
@@ -80,7 +101,7 @@ const ThreadListNew: FC = () => {
           }) satisfies PanelConfig
       )
     );
-    setUIState({ suggestionsUsed: false });
+    setUIState({ panelOpen: null, suggestionsUsed: false });
   };
 
   return (
@@ -103,36 +124,79 @@ const ThreadListItems: FC = () => {
   const setUIState = useUIStateSetter();
 
   const user = useUser();
-  const { data: chats, error } = trpc.chats.listChats.useQuery(undefined, {
+  const listInput = useMemo(() => ({}), []);
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = trpc.chats.listChats.useInfiniteQuery(listInput, {
     enabled: !!user,
+    getNextPageParam: (lastPage) => lastPage.next ?? undefined,
     refetchInterval: 60 * 1000,
     refetchOnWindowFocus: true,
   });
+  const chats = useMemo(
+    () => data?.pages.flatMap((page) => page.chats) ?? [],
+    [data]
+  );
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          void fetchNextPage();
+        }
+      },
+      { root: null, rootMargin: "200px", threshold: 0 }
+    );
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
   const utils = trpc.useUtils();
   const archiveChatMutation = trpc.chats.archiveChat.useMutation({
-    onSuccess: () => {
-      // Optimistically update the chat list
-      utils.chats.listChats.setData(undefined, (prev) => {
-        return (
-          prev?.filter((c) => c.id !== archiveChatMutation.variables?.chatId) ??
-          []
-        );
+    onSuccess: (_data, variables) => {
+      utils.chats.listChats.setInfiniteData(listInput, (prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          pages: prev.pages.map((page) => ({
+            ...page,
+            chats: page.chats.filter((c) => c.id !== variables.chatId),
+          })),
+        };
       });
-      // Refetch the chat list after archiving
       utils.chats.listChats.invalidate();
     },
   });
 
   const renameChatMutation = trpc.chats.renameChat.useMutation({
-    onSuccess: (value) => {
-      utils.chats.listChats.setData(undefined, (prev) => {
-        if (!value.success || !prev) return prev;
+    onSuccess: (value, variables) => {
+      if (!value.success) return;
 
-        return prev.map((c) =>
-          c.id === renameChatMutation.variables?.chatId
-            ? { ...c, title: value.title }
-            : c
-        );
+      utils.chats.listChats.setInfiniteData(listInput, (prev) => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          pages: prev.pages.map((page) => ({
+            ...page,
+            chats: page.chats.map((c) =>
+              c.id === variables.chatId ? { ...c, title: value.title } : c
+            ),
+          })),
+        };
       });
       utils.chats.listChats.invalidate();
     },
@@ -186,7 +250,7 @@ const ThreadListItems: FC = () => {
     return <div className="text-sm p-2 text-destructive">{error.message}</div>;
   }
 
-  if (!chats) {
+  if (isLoading && !data) {
     return (
       <div className="text-sm text-muted-foreground p-2">{t("loading")}</div>
     );
@@ -213,6 +277,13 @@ const ThreadListItems: FC = () => {
           onRename={handleRenameChat}
         />
       ))}
+      {!isFetchingNextPage ? (
+        <div ref={sentinelRef} className="h-20" aria-hidden />
+      ) : (
+        <div className="text-sm text-muted-foreground p-2 panel-button-glow">
+          {t("loading")}
+        </div>
+      )}
     </div>
   );
 };

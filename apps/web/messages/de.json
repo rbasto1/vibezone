@@ -152,8 +152,24 @@
     "signInButton": "Anmelden",
     "genericTitle": "Etwas ist schiefgelaufen"
   },
+  "SearchPanel": {
+    "title": "Chats durchsuchen",
+    "description": "Finde Unterhaltungen schnell, indem du Titel und Nachrichten durchsucht.",
+    "placeholder": "Chats durchsuchen…",
+    "clear": "Löschen",
+    "close": "Abbrechen",
+    "startTyping": "Beginne zu tippen, um deine Chats zu durchsuchen.",
+    "minQuery": "Gib mindestens {count} Zeichen ein, um zu suchen.",
+    "loading": "Lade Ergebnisse…",
+    "loadingMore": "Lade weitere…",
+    "empty": "Keine Chats entsprechen deiner Suche.",
+    "error": "Suche derzeit nicht möglich. Versuche es später erneut.",
+    "retry": "Erneut versuchen",
+    "loadError": "Dieser Chat konnte nicht geladen werden. Bitte versuche es erneut."
+  },
   "ThreadList": {
     "newChat": "Neuer Chat",
+    "searchChats": "Chats durchsuchen",
     "loginRequired": "Melde dich an oder registriere dich, um Chats zu speichern und zu laden",
     "loading": "Lade Chats...",
     "empty": "Noch keine Chats"

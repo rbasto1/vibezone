@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
 import type { UseChatActionsResult } from "@/hooks/use-chat-actions";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
 import {
   Loader2Icon,
   MoreVerticalIcon,
@@ -44,9 +45,11 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   const [isArchiving, setIsArchiving] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [error, setError] = useState<string>();
+  const setUiState = useUIStateSetter();
 
   const handleSelect = async () => {
     setError(undefined);
+    setUiState({ panelOpen: null });
     if (isLoading) return;
     const result = await onSelect(chatId);
     if (result?.error) {
@@ -92,11 +95,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
               error && "text-destructive"
             )}
           >
-            {isLoading
-              ? t("loading")
-              : error
-                ? error
-                : title || t("untitled")}
+            {isLoading ? t("loading") : error ? error : title || t("untitled")}
           </p>
           {!error && (
             <p className="text-xs text-muted-foreground">

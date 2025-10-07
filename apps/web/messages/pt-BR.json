@@ -152,8 +152,24 @@
     "signInButton": "Fazer login",
     "genericTitle": "Algo deu errado"
   },
+  "SearchPanel": {
+    "title": "Pesquisar chats",
+    "description": "Encontre conversas rapidamente pesquisando títulos e mensagens.",
+    "placeholder": "Pesquisar chats…",
+    "clear": "Limpar",
+    "close": "Cancelar",
+    "startTyping": "Comece a digitar para pesquisar seus chats.",
+    "minQuery": "Digite pelo menos {count} caracteres para pesquisar.",
+    "loading": "Carregando resultados…",
+    "loadingMore": "Carregando mais…",
+    "empty": "Nenhum chat correspondeu à sua pesquisa.",
+    "error": "Não foi possível pesquisar agora. Tente novamente mais tarde.",
+    "retry": "Tentar novamente",
+    "loadError": "Não foi possível carregar este chat. Tente novamente."
+  },
   "ThreadList": {
     "newChat": "Novo chat",
+    "searchChats": "Pesquisar chats",
     "loginRequired": "Cadastre-se ou faça login para salvar e carregar seus chats",
     "loading": "Carregando chats...",
     "empty": "Nenhum chat ainda"

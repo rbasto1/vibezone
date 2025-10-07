@@ -1,14 +1,42 @@
 import { chats, db, messages, threads } from "@/db";
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, gt, isNull, lt, or } from "drizzle-orm";
 import { z } from "zod";
-import { INTERNAL_SECRET } from "../constants";
+import { CHAT_LIST_PAGE_SIZE, INTERNAL_SECRET } from "../constants";
+import { searchChats } from "./chats-search";
 import { authenticatedProcedure, t } from "./server/initialize";
 
 export const chatsRouter = t.router({
-  listChats: authenticatedProcedure.query(async ({ ctx }) => {
-    return listChats({ userId: ctx.user.id });
-  }),
+  listChats: authenticatedProcedure
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+        limit: z.number().min(1).max(100).default(CHAT_LIST_PAGE_SIZE),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      return listChats({
+        userId: ctx.user.id,
+        cursor: input.cursor,
+        limit: input.limit,
+      });
+    }),
+  searchChats: authenticatedProcedure
+    .input(
+      z.object({
+        query: z.string().min(2),
+        cursor: z.string().optional(),
+        limit: z.number().min(1).max(50).default(CHAT_LIST_PAGE_SIZE),
+      })
+    )
+    .query(({ ctx, input }) =>
+      searchChats({
+        userId: ctx.user.id,
+        query: input.query,
+        cursor: input.cursor,
+        limit: input.limit,
+      })
+    ),
 
   renameChat: authenticatedProcedure
     .input(
@@ -124,23 +152,72 @@ export const chatsRouter = t.router({
 
 interface ListChatsInput {
   userId: string;
+  cursor?: string;
+  limit?: number;
 }
 
-export async function listChats({ userId }: ListChatsInput) {
+export async function listChats({
+  userId,
+  cursor,
+  limit = CHAT_LIST_PAGE_SIZE,
+}: ListChatsInput) {
+  let whereCondition = and(
+    eq(chats.userId, userId),
+    isNull(chats.deletedAt),
+    eq(chats.isArchived, false)
+  );
+
+  // Parse cursor if provided
+  if (cursor) {
+    const separatorIndex = cursor.lastIndexOf(":");
+    if (separatorIndex > 0) {
+      const timestampStr = cursor.slice(0, separatorIndex);
+      const id = cursor.slice(separatorIndex + 1);
+      const cursorDate =
+        timestampStr && !Number.isNaN(Date.parse(timestampStr))
+          ? new Date(timestampStr)
+          : null;
+
+      if (cursorDate) {
+        const baseCondition = lt(chats.lastMessageAt, cursorDate);
+        const cursorCondition =
+          id.length > 0
+            ? or(
+                baseCondition,
+                and(eq(chats.lastMessageAt, cursorDate), gt(chats.id, id))
+              )
+            : baseCondition;
+
+        whereCondition = and(whereCondition, cursorCondition);
+      }
+    }
+  }
+
   const result = await db.query.chats.findMany({
-    where: and(
-      eq(chats.userId, userId),
-      isNull(chats.deletedAt),
-      eq(chats.isArchived, false)
-    ),
-    orderBy: (chat, { desc }) => [desc(chat.lastMessageAt)],
+    where: whereCondition,
+    orderBy: (chat, { desc, asc }) => [desc(chat.lastMessageAt), asc(chat.id)],
+    limit: limit + 1, // Get one extra to check if there are more
   });
-  return result.map((chat) => ({
-    id: chat.id,
-    title: chat.title,
-    lastMessageAt: chat.lastMessageAt,
-    createdAt: chat.createdAt,
-  }));
+
+  const hasMore = result.length > limit;
+  const chatsData = hasMore ? result.slice(0, limit) : result;
+
+  // Create next cursor from the last item
+  let next: string | null = null;
+  if (hasMore && chatsData.length > 0) {
+    const lastChat = chatsData[chatsData.length - 1]!;
+    next = `${lastChat.lastMessageAt.toISOString()}:${lastChat.id}`;
+  }
+
+  return {
+    chats: chatsData.map((chat) => ({
+      id: chat.id,
+      title: chat.title,
+      lastMessageAt: chat.lastMessageAt,
+      createdAt: chat.createdAt,
+    })),
+    next,
+  };
 }
 
 const WorkerCompleteResponseSchema = z.object({

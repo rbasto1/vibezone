@@ -18,7 +18,7 @@ import type { ChatOnFinishCallback, UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, type FC } from "react";
+import { useRef, type FC } from "react";
 import { toast } from "sonner";
 import { PanelHeader } from "./response-panel-header";
 
@@ -58,12 +58,10 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   });
   const allCanReason = useAllCanReason();
 
-  useEffect(() => {
-    plugins.current = {
-      web: userPreferences.pluginWeb,
-      reason: allCanReason ? userPreferences.reasoningEffort : "low",
-    };
-  }, [userPreferences, allCanReason]);
+  plugins.current = {
+    web: userPreferences.pluginWeb,
+    reason: allCanReason ? userPreferences.reasoningEffort : "low",
+  };
 
   const handleModelError = (error: Error) => {
     setPanelState((currentState) => ({
