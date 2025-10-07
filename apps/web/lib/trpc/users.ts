@@ -2,7 +2,6 @@ import "server-only";
 
 import type { User as DbUser } from "@/db";
 import { db } from "@/db";
-import { reasoningEffort } from "@/db/enums";
 import { chats, models, session, usage, user } from "@/db/schema";
 import {
   and,
@@ -137,7 +136,7 @@ export const usersRouter = t.router({
         hiddenProviders: z.array(z.string()).optional(),
         systemPrompt: z.string().max(4000).nullable().optional(),
         webSearch: z.boolean().optional(),
-        reasoningEffort: z.enum(reasoningEffort.enumValues).optional(),
+        reasoningEffort: z.enum(["none", "low", "medium", "high"]).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

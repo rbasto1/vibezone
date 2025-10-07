@@ -15,17 +15,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/components/ui/utils";
-import type { reasoningEffort as reasoningEffortEnum } from "@/db/enums";
+import type { ReasoningEffort } from "@/db";
 import { models as rawModels } from "@/generated/models";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { trpc } from "@/lib/trpc/client";
 
-type ReasoningEffortEnumValue = (typeof reasoningEffortEnum.enumValues)[number];
-type ReasoningEffortValue = Exclude<ReasoningEffortEnumValue, "none">;
+type ReasoningEffortValue = Exclude<ReasoningEffort, "none">;
 
 const normalizeReasoningEffort = (
-  effort: ReasoningEffortEnumValue
+  effort: ReasoningEffort
 ): ReasoningEffortValue => (effort === "none" ? "low" : effort);
 
 const PreferencesPage = () => {

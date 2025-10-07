@@ -1,4 +1,4 @@
-import type { reasoningEffort } from "@/db/enums";
+import type { ReasoningEffort } from "@/db";
 import { atom } from "jotai";
 
 export interface PreferencesAtom {
@@ -7,7 +7,7 @@ export interface PreferencesAtom {
   changedPrompt: boolean;
   autoScroll: boolean;
   hiddenProviders: string[];
-  reasoningEffort: (typeof reasoningEffort.enumValues)[number];
+  reasoningEffort: ReasoningEffort;
 }
 
 export const preferencesAtom = atom<PreferencesAtom>({

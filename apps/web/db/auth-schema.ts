@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { reasoningEffort } from "./enums";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -25,7 +24,7 @@ export const user = pgTable("user", {
     "preference_system_prompt_changed_at"
   ),
   preferenceWebSearch: boolean("preference_web_search").default(true).notNull(),
-  preferenceReasoningEffort: reasoningEffort("preference_reasoning_effort")
+  preferenceReasoningEffort: text("preference_reasoning_effort")
     .default("low")
     .notNull(),
 

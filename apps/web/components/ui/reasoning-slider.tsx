@@ -1,10 +1,9 @@
+import type { ReasoningEffort } from "@/db";
 import { useTranslations } from "next-intl";
 
-import type { reasoningEffort as reasoningEffortEnum } from "@/db/enums";
 import { useEffect, useRef } from "react";
 
-type ReasoningEffortEnumValue = (typeof reasoningEffortEnum.enumValues)[number];
-type ReasoningEffortValue = Exclude<ReasoningEffortEnumValue, "none">;
+type ReasoningEffortValue = Exclude<ReasoningEffort, "none">;
 
 interface ReasoningSliderProps {
   onReasoningEffortChange: (effort: ReasoningEffortValue) => void;
@@ -27,6 +26,7 @@ export const ReasoningSlider: React.FC<ReasoningSliderProps> = ({
 
   useEffect(() => {
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       if (initialValue.current !== currentValue.current) {
         onSave(currentValue.current);
       }

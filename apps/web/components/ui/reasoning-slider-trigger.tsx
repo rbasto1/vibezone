@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { reasoningEffort as reasoningEffortEnum } from "@/db/enums";
+import type { ReasoningEffort } from "@/db";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { modelMap } from "@/lib/model-map";
@@ -25,11 +25,10 @@ const formatModelNames = (
   return names.map((name) => `• ${name}`).join("\n");
 };
 
-type ReasoningEffortEnumValue = (typeof reasoningEffortEnum.enumValues)[number];
-type ReasoningEffortValue = Exclude<ReasoningEffortEnumValue, "none">;
+type ReasoningEffortValue = Exclude<ReasoningEffort, "none">;
 
 const normalizeReasoningEffort = (
-  effort: ReasoningEffortEnumValue
+  effort: ReasoningEffort
 ): ReasoningEffortValue => (effort === "none" ? "low" : effort);
 
 export const ReasoningSliderTrigger = () => {

@@ -60,7 +60,6 @@ export const models = pgTable(
     pricing: jsonb("pricing").notNull().$type<ModelPricing>(),
     topProvider: jsonb("top_provider").notNull().$type<ModelTopProvider>(),
     perRequestLimits: jsonb("per_request_limits").$type<null>(),
-    // capabilityEffortControl: boolean("capability_effort_control"),
     // created from API (epoch seconds) -> timestamptz
     createdAt: timestampTzNow("created_at"),
 
