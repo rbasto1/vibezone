@@ -7,9 +7,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { reasoningEffort as reasoningEffortEnum } from "@/db/enums";
-import { models } from "@/generated/models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
+import { modelMap } from "@/lib/model-map";
 import { trpc } from "@/lib/trpc/client";
 import { BrainIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -58,9 +58,9 @@ export const ReasoningSliderTrigger = () => {
       const blockingNames = new Set<string>();
 
       panelsConfig.forEach((panel) => {
-        const model = models.models.find((m) => m.id === panel.model);
-        const modelName = model?.name ?? panel.model;
+        const model = modelMap.get(panel.model);
         if (!model?.capReason) {
+          const modelName = model?.name ?? panel.model;
           blockingNames.add(modelName);
         }
       });

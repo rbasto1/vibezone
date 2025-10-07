@@ -25,7 +25,7 @@ export async function handleProviderStream(
   console.info({
     message: "Starting stream",
     model: modelId,
-    pluginWeb,
+    plugins: plugins.join(", "),
   });
 
   const result = streamText({

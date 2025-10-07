@@ -40,13 +40,7 @@ function getGatewayConfig(env: Env, key: GatewayAdapterKey): GatewayConfig {
   };
 }
 
-const adapters = new Map<GatewayAdapterKey, OpenRouterProvider>();
-
 function ensureGateway(env: Env, key: GatewayAdapterKey, plugins: string[]) {
-  if (adapters.has(key)) {
-    return adapters.get(key)!;
-  }
-
   const reasonPlugin = plugins.find((p) => p.startsWith("reason-"));
   const effort = reasonPlugin?.substring("reason-".length) ?? "low";
   const reasoning = effort === "none" ? { enabled: false } : { effort };
@@ -60,7 +54,6 @@ function ensureGateway(env: Env, key: GatewayAdapterKey, plugins: string[]) {
     extraBody: { reasoning },
   });
 
-  adapters.set(key, adapter);
   return adapter;
 }
 

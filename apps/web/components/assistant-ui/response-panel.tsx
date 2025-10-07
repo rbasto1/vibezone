@@ -3,6 +3,7 @@
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAttachmentAdapter } from "@/hooks/use-attachments";
+import { useAllCanReason } from "@/hooks/use-capabilities";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
@@ -55,13 +56,14 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
     web: userPreferences.pluginWeb,
     reason: userPreferences.reasoningEffort,
   });
+  const allCanReason = useAllCanReason();
 
   useEffect(() => {
     plugins.current = {
       web: userPreferences.pluginWeb,
-      reason: userPreferences.reasoningEffort,
+      reason: allCanReason ? userPreferences.reasoningEffort : "low",
     };
-  }, [userPreferences]);
+  }, [userPreferences, allCanReason]);
 
   const handleModelError = (error: Error) => {
     setPanelState((currentState) => ({
@@ -141,15 +143,17 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
             })
           );
         }
+
         const { model } = panelGlobalContext[id];
-        const pluginWeb = plugins.current.web;
-        const pluginReason = plugins.current.reason;
-        const pluginsStr = [];
-        if (pluginWeb) pluginsStr.push("web");
-        pluginsStr.push(`reason-${pluginReason}`);
-        const modelSpecifier = pluginsStr.length
-          ? `${model}#${pluginsStr.join(",")}`
+        const { web, reason } = plugins.current;
+        const pluginList = [];
+        if (web) pluginList.push("web");
+        // Models that can't reason ignore this option
+        pluginList.push(`reason-${reason}`);
+        const modelSpecifier = pluginList.length
+          ? `${model}#${pluginList.join(",")}`
           : model;
+
         return generateFingerprint(sessionToken.current).then((authorization) =>
           fetch(url, {
             ...init,
