@@ -98,7 +98,7 @@ export const GlobalComposer: FC = () => {
 
     window.turnstile.render("#turnstile-container", {
       sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-      theme,
+      theme: ["light", "dark"].includes(theme ?? "") ? theme : "auto",
       execution: "execute",
       callback: (token) => {
         setCaptchaToken(token);
@@ -314,17 +314,25 @@ interface CaptchaExecution {
   reset: () => void;
 }
 function getCaptchaExecution(): CaptchaExecution {
-  const createPromise = () =>
-    new Promise<string>((resolve) => {
-      response.resolve = resolve;
-    });
+  let response: CaptchaExecution | null = null;
 
-  const response: CaptchaExecution = {
+  response = {
     promise: createPromise(),
     resolve: () => {},
     reset: () => {
-      response.promise = createPromise();
+      if (response) {
+        response.promise = createPromise();
+      }
     },
   };
+
+  function createPromise() {
+    return new Promise<string>((resolve) => {
+      if (response) {
+        response.resolve = resolve;
+      }
+    });
+  }
+
   return response;
 }
