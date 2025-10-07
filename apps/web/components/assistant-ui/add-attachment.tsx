@@ -1,5 +1,11 @@
 "use client";
 
+import { PlusIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Fragment, useCallback, useMemo, type FC } from "react";
+import { FaFileAlt, FaFileImage, FaFilePdf } from "react-icons/fa";
+import type { IconType } from "react-icons/lib";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,10 +25,6 @@ import { usePanelsConfigValue } from "@/hooks/use-panels";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
 import { ComposerPrimitive } from "@assistant-ui/react";
-import { PlusIcon } from "lucide-react";
-import { Fragment, useCallback, useMemo, type FC } from "react";
-import { FaFileAlt, FaFileImage, FaFilePdf } from "react-icons/fa";
-import type { IconType } from "react-icons/lib";
 import { AttachmentUI } from "./message-attachments";
 
 export const ComposerAttachments: FC = () => {
@@ -49,12 +51,16 @@ interface AttachmentMenuItemConfig {
   disabledReason?: string;
 }
 
-const formatModelNames = (names: string[]) => {
-  if (names.length === 0) return "Selected models";
+const formatModelNames = (
+  names: string[],
+  t: ReturnType<typeof useTranslations>
+) => {
+  if (!names.length) return t("selectedModels");
   return names.map((name) => `• ${name}`).join("\n");
 };
 
 export const ComposerAddAttachment: FC = () => {
+  const t = useTranslations("ComposerAddAttachment");
   const setUIState = useUIStateSetter();
   const panels = usePanelsConfigValue();
   const panelModelIds = useMemo(
@@ -101,25 +107,25 @@ export const ComposerAddAttachment: FC = () => {
 
   const disabledImageMessage = attachmentsCapabilities.image.allowed
     ? undefined
-    : `The following model${attachmentsCapabilities.image.blockingModels.length === 1 ? " is" : "s are"} not capable of interpreting images:
-    ${formatModelNames(attachmentsCapabilities.image.blockingModels)}`;
+    : `${t(attachmentsCapabilities.image.blockingModels.length === 1 ? "imageCapabilitySingle" : "imageCapabilityPlural")}
+${formatModelNames(attachmentsCapabilities.image.blockingModels, t)}`;
 
   const disabledPdfMessage = attachmentsCapabilities.pdf.allowed
     ? undefined
-    : `The following model${attachmentsCapabilities.pdf.blockingModels.length === 1 ? " is" : "s are"} not capable of reading PDF files:
-    ${formatModelNames(attachmentsCapabilities.pdf.blockingModels)}`;
+    : `${t(attachmentsCapabilities.pdf.blockingModels.length === 1 ? "pdfCapabilitySingle" : "pdfCapabilityPlural")}
+${formatModelNames(attachmentsCapabilities.pdf.blockingModels, t)}`;
 
   const menuItems: AttachmentMenuItemConfig[] = [
     {
       id: "text",
-      label: "Attach text document",
+      label: t("attachTextDocument"),
       icon: FaFileAlt,
       onSelect: openTextPicker,
       disabled: false,
     },
     {
       id: "image",
-      label: "Attach image",
+      label: t("attachImage"),
       icon: FaFileImage,
       onSelect: openImagePicker,
       disabled: !attachmentsCapabilities.image.allowed,
@@ -127,7 +133,7 @@ export const ComposerAddAttachment: FC = () => {
     },
     {
       id: "pdf",
-      label: "Attach PDF",
+      label: t("attachPdf"),
       icon: FaFilePdf,
       onSelect: openPdfPicker,
       disabled: !attachmentsCapabilities.pdf.allowed,

@@ -18,6 +18,7 @@ export interface AuthUser {
   preferenceSystemPrompt?: string | null;
   preferenceSystemPromptChangedAt?: Date | null;
   preferenceWebSearch: boolean;
+  preferenceReasoningEffort: string;
 }
 
 export interface UseUserResult {

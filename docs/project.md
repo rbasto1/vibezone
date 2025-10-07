@@ -38,7 +38,7 @@
 - [x] Add model descriptions to (i) icon
 - [x] Language-specific chat titles
 - [ ] Paginate chat history
-- [ ] Add reasoning effort slider
+- [x] Add reasoning effort slider
 - [ ] Search chats (backend search of all messages)
 - [ ] Add Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)

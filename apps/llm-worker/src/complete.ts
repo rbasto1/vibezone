@@ -10,7 +10,7 @@ export async function handleProviderComplete(
   const { modelId, maxTokens } = completionRequest.config;
   const requestMessages = completionRequest.messages;
 
-  const adapter = getOpenRouter(env);
+  const adapter = getOpenRouter(env, []);
 
   const messages = convertToModelMessages(requestMessages);
   console.info({

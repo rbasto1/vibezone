@@ -115,6 +115,10 @@ export const auth = betterAuth({
         type: "boolean",
         defaultValue: true,
       },
+      preferenceReasoningEffort: {
+        type: "string",
+        defaultValue: "low",
+      },
     },
   },
 });

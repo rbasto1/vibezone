@@ -13,30 +13,20 @@ export async function handleProviderStream(
   const { modelId, providerId, adapterModelId, maxTokens, plugins } =
     completionRequest.config;
   const messages = completionRequest.messages;
+
   const pluginWeb = plugins.includes("web");
 
-  const isMaritacaModel = providerId === "maritacaai";
-  const adapter = getAdapterForProvider(env, providerId);
+  const adapter = getAdapterForProvider(env, providerId, plugins);
 
-  const firstPart = messages[0]?.parts[0];
-  const systemPrompt = firstPart?.type === "text" ? firstPart.text : null;
+  const modelSpecifier = pluginWeb
+    ? `${adapterModelId}:online`
+    : adapterModelId;
+
   console.info({
     message: "Starting stream",
     model: modelId,
-    pluginWeb,
-    messageCount: messages.length,
-    systemPrompt,
+    plugins: plugins.join(", "),
   });
-
-  if (pluginWeb && isMaritacaModel) {
-    console.warn({
-      message: "Web plugin requested for Maritaca model, ignoring",
-      model: modelId,
-    });
-  }
-
-  const modelSpecifier =
-    pluginWeb && !isMaritacaModel ? `${adapterModelId}:online` : adapterModelId;
 
   const result = streamText({
     model: adapter(modelSpecifier),

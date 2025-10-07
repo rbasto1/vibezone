@@ -40,12 +40,10 @@ function getGatewayConfig(env: Env, key: GatewayAdapterKey): GatewayConfig {
   };
 }
 
-const adapters = new Map<GatewayAdapterKey, OpenRouterProvider>();
-
-function ensureGateway(env: Env, key: GatewayAdapterKey) {
-  if (adapters.has(key)) {
-    return adapters.get(key)!;
-  }
+function ensureGateway(env: Env, key: GatewayAdapterKey, plugins: string[]) {
+  const reasonPlugin = plugins.find((p) => p.startsWith("reason-"));
+  const effort = reasonPlugin?.substring("reason-".length) ?? "low";
+  const reasoning = effort === "none" ? { enabled: false } : { effort };
 
   const config = getGatewayConfig(env, key);
   const adapter = createOpenRouter({
@@ -53,22 +51,23 @@ function ensureGateway(env: Env, key: GatewayAdapterKey) {
     apiKey: config.apiKey,
     headers: config.headers,
     baseURL: config.baseURL,
+    extraBody: { reasoning },
   });
 
-  adapters.set(key, adapter);
   return adapter;
 }
 
 export function getAdapterForProvider(
   env: Env,
-  providerId: string
+  providerId: string,
+  plugins: string[]
 ): OpenRouterProvider {
   const gw = getGatewayForProvider(providerId);
-  return ensureGateway(env, gw);
+  return ensureGateway(env, gw, plugins);
 }
 
-export function getOpenRouter(env: Env): OpenRouterProvider {
-  return ensureGateway(env, "openrouter");
+export function getOpenRouter(env: Env, plugins: string[]): OpenRouterProvider {
+  return ensureGateway(env, "openrouter", plugins);
 }
 
 function getGatewayForProvider(providerId: string): GatewayAdapterKey {

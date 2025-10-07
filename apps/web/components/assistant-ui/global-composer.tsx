@@ -20,19 +20,15 @@ import {
   useRemoveAttachment,
 } from "@/hooks/use-attachments";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
-import { usePanelsStateSetter } from "@/hooks/use-panels";
+import { usePanelsState } from "@/hooks/use-panels";
 import { useStateSessionStorage } from "@/hooks/use-session-storage";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
-import type { PanelState } from "@/store/panels";
+import { ReasoningSliderTrigger } from "../ui/reasoning-slider-trigger";
 import { ComposerAddAttachment } from "./add-attachment";
 import { AttachmentChip } from "./attachment-chip";
 
-interface GlobalComposerProps {
-  panelsState: Record<string, PanelState>;
-}
-
-export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
+export const GlobalComposer: FC = () => {
   const t = useTranslations("GlobalComposer");
   const [prompt, setPrompt] = useStateSessionStorage("prompt");
   const removeAttachment = useRemoveAttachment();
@@ -42,7 +38,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
   const setUIState = useUIStateSetter();
   const remaining = useAnonRemaining();
   const clearAttachments = useClearAttachments();
-  const setPanelsState = usePanelsStateSetter();
+  const [panelsState, setPanelsState] = usePanelsState();
   const setAnonUsage = useAnonQuotaSetter();
   const { user } = useUser();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -209,6 +205,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ panelsState }) => {
       {/* Footer with attach and send, styled like thread composer */}
       <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-start justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
         <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-2">
+          <ReasoningSliderTrigger />
           <ComposerAddAttachment />
           {attachments.map((a) => (
             <AttachmentChip

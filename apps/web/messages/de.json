@@ -234,6 +234,18 @@
       "label": "Websuche",
       "description": "Erlaube der KI, das Web zu durchsuchen, wenn das ausgewählte Modell das unterstützt."
     },
+    "reasoningEffort": {
+      "label": "Denkaufwand",
+      "description": "Steuere, wie viel Denkaufwand die KI verwendet, wenn das ausgewählte Modell das unterstützt.",
+      "disabledTooltip": "Nur verfügbar, wenn alle ausgewählten Modelle Schlussfolgern unterstützen",
+      "disabledTooltipSingle": "Das folgende Modell ist nicht in der Lage, Schlussfolgerungen zu ziehen:",
+      "disabledTooltipPlural": "Die folgenden Modelle sind nicht in der Lage, Schlussfolgerungen zu ziehen:",
+      "selectedModels": "Ausgewählte Modelle",
+      "none": "Kein",
+      "low": "Niedrig",
+      "medium": "Mittel",
+      "high": "Hoch"
+    },
     "hiddenProviders": {
       "label": "Versteckte Anbieter",
       "description": "Blende Anbieter in den Modelldropdowns aus. In bestehenden Panels bleiben sie sichtbar.",
@@ -261,5 +273,15 @@
       "error": "Einstellungen konnten nicht gespeichert werden: {message}"
     },
     "authRequired": "Bitte melde dich an, um deine Einstellungen zu verwalten."
+  },
+  "ComposerAddAttachment": {
+    "attachTextDocument": "Textdokument anhängen",
+    "attachImage": "Bild anhängen",
+    "attachPdf": "PDF anhängen",
+    "imageCapabilitySingle": "Das folgende Modell ist nicht in der Lage, Bilder zu interpretieren:",
+    "imageCapabilityPlural": "Die folgenden Modelle sind nicht in der Lage, Bilder zu interpretieren:",
+    "pdfCapabilitySingle": "Das folgende Modell ist nicht in der Lage, PDF-Dateien zu lesen:",
+    "pdfCapabilityPlural": "Die folgenden Modelle sind nicht in der Lage, PDF-Dateien zu lesen:",
+    "selectedModels": "Ausgewählte Modelle"
   }
 }

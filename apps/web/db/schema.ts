@@ -69,6 +69,7 @@ export {
 };
 
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
+export type ReasoningEffort = "none" | "low" | "medium" | "high";
 
 export type Account = typeof account.$inferSelect;
 export type NewAccount = typeof account.$inferInsert;

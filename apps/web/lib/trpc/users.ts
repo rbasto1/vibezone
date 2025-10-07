@@ -132,38 +132,47 @@ export const usersRouter = t.router({
   updatePreferences: authenticatedProcedure
     .input(
       z.object({
-        autoScroll: z.boolean(),
-        hiddenProviders: z.array(z.string()),
-        systemPrompt: z.string().max(4000).nullable(),
-        webSearch: z.boolean(),
+        autoScroll: z.boolean().optional(),
+        hiddenProviders: z.array(z.string()).optional(),
+        systemPrompt: z.string().max(4000).nullable().optional(),
+        webSearch: z.boolean().optional(),
+        reasoningEffort: z.enum(["none", "low", "medium", "high"]).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const authUser = ctx.user;
 
-      const sanitizedHiddenProviders = Array.from(
-        new Set(
-          input.hiddenProviders
-            .map((id) => id.trim())
-            .filter((id) => id.length > 0)
-        )
-      ).sort((a, b) => a.localeCompare(b));
+      const sanitizedHiddenProviders = input.hiddenProviders
+        ? Array.from(
+            new Set(
+              input.hiddenProviders
+                .map((id) => id.trim())
+                .filter((id) => id.length > 0)
+            )
+          ).sort((a, b) => a.localeCompare(b))
+        : undefined;
 
-      const hiddenSet = new Set(sanitizedHiddenProviders);
+      const hiddenSet = sanitizedHiddenProviders
+        ? new Set(sanitizedHiddenProviders)
+        : undefined;
 
-      const [current] = await db
-        .select({ lastModels: user.lastModels })
-        .from(user)
-        .where(eq(user.id, authUser.id))
-        .limit(1);
+      const [current] = hiddenSet
+        ? await db
+            .select({ lastModels: user.lastModels })
+            .from(user)
+            .where(eq(user.id, authUser.id))
+            .limit(1)
+        : [];
 
       const currentLastModels = current?.lastModels ?? [];
-      const filteredLastModels = !hiddenSet.size
-        ? currentLastModels
-        : currentLastModels.filter((modelId) => {
-            const providerId = modelId.split("/")[0];
-            return providerId && !hiddenSet.has(providerId);
-          });
+      const filteredLastModels = hiddenSet
+        ? !hiddenSet.size
+          ? currentLastModels
+          : currentLastModels.filter((modelId) => {
+              const providerId = modelId.split("/")[0];
+              return providerId && !hiddenSet.has(providerId);
+            })
+        : undefined;
 
       const updatePayload: Partial<DbUser> = {
         preferenceAutoScroll: input.autoScroll,
@@ -173,10 +182,12 @@ export const usersRouter = t.router({
           ? new Date()
           : undefined,
         preferenceWebSearch: input.webSearch,
+        preferenceReasoningEffort: input.reasoningEffort,
       };
 
       if (
-        hiddenSet.size &&
+        filteredLastModels &&
+        hiddenSet?.size &&
         filteredLastModels.length !== currentLastModels.length
       ) {
         Object.assign(updatePayload, { lastModels: filteredLastModels });
@@ -191,6 +202,7 @@ export const usersRouter = t.router({
           hiddenProviders: sanitizedHiddenProviders,
           systemPrompt: input.systemPrompt,
           webSearch: input.webSearch,
+          reasoningEffort: input.reasoningEffort,
           lastModels:
             "lastModels" in updatePayload
               ? filteredLastModels

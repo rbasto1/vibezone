@@ -54,6 +54,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const preferencesInitialValue: PreferencesAtom = userId
     ? {
         pluginWeb: user?.preferenceWebSearch,
+        reasoningEffort: user?.preferenceReasoningEffort as
+          | "none"
+          | "low"
+          | "medium"
+          | "high",
         systemPrompt: changedPrompt
           ? (user?.preferenceSystemPrompt ?? null)
           : t("system"),
@@ -63,6 +68,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       }
     : {
         pluginWeb: true,
+        reasoningEffort: "low",
         systemPrompt: t("system"),
         changedPrompt: false,
         autoScroll: false,

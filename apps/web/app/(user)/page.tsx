@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import type { FC } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
@@ -15,12 +15,13 @@ import { ClientOnly } from "@/components/ui/client-only";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfig, usePanelsStateValue } from "@/hooks/use-panels";
 import { useUIState } from "@/hooks/use-ui-state";
+import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import { useUser } from "@/lib/auth-client";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
+import { modelMap } from "@/lib/model-map";
 import type { PanelConfig } from "@/store/panels";
 import { AppSidebarLoader } from "./app-sidebar-loader";
 import PreferencesPage from "./preferences";
@@ -37,13 +38,9 @@ const AssistantContent: FC = () => {
   const t = useTranslations("Assistant");
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelsState = usePanelsStateValue();
+  const { hiddenProviders } = useUserPreferencesValue();
   const [uiState, setUIState] = useUIState();
   const { user } = useUser();
-  const panelModelIds = useMemo(
-    () => panelsConfig.map((panel) => panel.model),
-    [panelsConfig]
-  );
-  const { models } = useModelsValue({ includeModels: panelModelIds });
   const isMobile = useIsMobile();
   const [focusPanelId, setFocusPanelId] = useState<string>();
 
@@ -74,8 +71,13 @@ const AssistantContent: FC = () => {
     const allowedModelIds = user
       ? modelIds
       : modelIds.filter((id) => {
-          const m = models.find((mm) => mm.id === id);
-          return m && !m.isPremium && !m.isIncluded;
+          const m = modelMap.get(id);
+          return (
+            m &&
+            !m.isPremium &&
+            !m.isIncluded &&
+            !hiddenProviders.some((providerId) => providerId === m.providerId)
+          );
         });
 
     if (!allowedModelIds.length) {
@@ -99,13 +101,6 @@ const AssistantContent: FC = () => {
   };
 
   const panelCount = Math.min(Math.max(panelsConfig.length, 1), MAX_PANELS);
-  const modelNamesById = useMemo(() => {
-    const entries = new Map<string, string>();
-    for (const model of models) {
-      entries.set(model.id, model.name);
-    }
-    return entries;
-  }, [models]);
   const showTabs = isMobile && panelsConfig.length > 1;
   const hideAnonBanner = !!user || (isMobile && uiState.suggestionsUsed);
   const canToggleFocus = !isMobile && panelsConfig.length > 1;
@@ -135,7 +130,7 @@ const AssistantContent: FC = () => {
                   >
                     {panelsConfig.map((panel, index) => {
                       const modelLabel =
-                        modelNamesById.get(panel.model) ?? panel.model;
+                        modelMap.get(panel.model)?.name ?? panel.model;
                       const label = t("panelTabLabel", {
                         index: index + 1,
                         modelName: modelLabel,
@@ -227,7 +222,7 @@ const AssistantContent: FC = () => {
                 <ThreadWelcomeSuggestions onSelect={handleSelectModelsGroup} />
               )}
               {/* Global composer below panels */}
-              <GlobalComposer panelsState={panelsState} />
+              <GlobalComposer />
             </div>
             <div className="flex justify-center text-xs gap-4 [&>a]:underline">
               <span>{t("aiDisclaimer")}</span>

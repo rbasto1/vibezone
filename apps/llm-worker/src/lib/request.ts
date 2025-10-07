@@ -70,7 +70,9 @@ export function getConfigFromRequest(
 }
 
 function getAdapterModelId(modelId: string) {
-  switch (modelId.split("/")[0]) {
+  const [prePlugins] = modelId.split("#");
+  if (!prePlugins) throw new Error("Assert: split returns a string");
+  switch (prePlugins.split("/")[0]) {
     case "maritacaai":
       return modelId.split("/")[1]!;
     default:
@@ -83,6 +85,8 @@ function getValidPlugins(providerId: string, plugins: string[]) {
     case "maritacaai":
       return [];
     default:
-      return plugins.filter((plugin) => plugin === "web");
+      return plugins.filter(
+        (plugin) => plugin === "web" || plugin.startsWith("reason-")
+      );
   }
 }

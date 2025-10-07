@@ -14,7 +14,7 @@ import {
 import { ProviderIcon } from "@/components/ui/providers/provider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/components/ui/utils";
-import { models as generatedModels } from "@/generated/models";
+import { modelMap, providerMap } from "@/lib/model-map";
 import { trpc } from "@/lib/trpc/client";
 import { ShieldAlertIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -49,11 +49,9 @@ export const ModelInfoModal: React.FC<ModelInfoModalProps> = ({
   const maxCompletionTokens = data?.maxCompletionTokens;
   const createdAt = data?.createdAt.toLocaleDateString(locale);
 
-  const modelEntry = generatedModels.models.find((item) => item.id === modelId);
+  const modelEntry = modelMap.get(modelId);
   const providerEntry = modelEntry
-    ? generatedModels.providers.find(
-        (provider) => provider.id === modelEntry.providerId
-      )
+    ? providerMap.get(modelEntry.providerId)
     : undefined;
 
   const capabilityFlags = {

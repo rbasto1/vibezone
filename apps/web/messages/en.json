@@ -234,6 +234,18 @@
       "label": "Web browsing",
       "description": "Allow the AI to browse the web when the selected model supports it."
     },
+    "reasoningEffort": {
+      "label": "Reasoning effort",
+      "description": "Control how much reasoning effort the AI uses when the selected model supports it.",
+      "disabledTooltip": "Only available when all selected models support reasoning",
+      "disabledTooltipSingle": "The following model does not support reasoning:",
+      "disabledTooltipPlural": "The following models do not support reasoning:",
+      "selectedModels": "Selected models",
+      "none": "Off",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
     "hiddenProviders": {
       "label": "Hidden providers",
       "description": "Hide providers from model menus. You can still see providers used in existing panels.",
@@ -261,5 +273,15 @@
       "error": "Could not save preferences: {message}"
     },
     "authRequired": "Please sign in to manage your preferences."
+  },
+  "ComposerAddAttachment": {
+    "attachTextDocument": "Attach text document",
+    "attachImage": "Attach image",
+    "attachPdf": "Attach PDF",
+    "imageCapabilitySingle": "The following model is not capable of interpreting images:",
+    "imageCapabilityPlural": "The following models are not capable of interpreting images:",
+    "pdfCapabilitySingle": "The following model is not capable of reading PDF files:",
+    "pdfCapabilityPlural": "The following models are not capable of reading PDF files:",
+    "selectedModels": "Selected models"
   }
 }
