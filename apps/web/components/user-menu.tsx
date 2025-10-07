@@ -14,19 +14,18 @@ import { useUIState } from "@/hooks/use-ui-state";
 import { signOut, useUser } from "@/lib/auth-client";
 import { useTranslations } from "next-intl";
 import { LoginModal } from "./login-model";
-import { InlineSpinner } from "./ui/inline-spinner";
 
 interface UserMenuProps {
   className?: string;
 }
 
 export const UserMenu = ({ className }: UserMenuProps) => {
-  const { user, status } = useUser();
+  const user = useUser();
   const t = useTranslations("UserMenu");
   const [uiState, setUIState] = useUIState();
   const open = uiState.loginOpen;
 
-  if (status === "unauthenticated") {
+  if (!user) {
     return (
       <>
         <Button
@@ -38,14 +37,6 @@ export const UserMenu = ({ className }: UserMenuProps) => {
         </Button>
         {open && <LoginModal />}
       </>
-    );
-  }
-
-  if (status === "loading") {
-    return (
-      <div className="mx-8">
-        <InlineSpinner style={{ borderColor: "var(--matrix-green)" }} />
-      </div>
     );
   }
 

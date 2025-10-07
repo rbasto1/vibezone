@@ -40,7 +40,7 @@ const AssistantContent: FC = () => {
   const panelsState = usePanelsStateValue();
   const { hiddenProviders } = useUserPreferencesValue();
   const [uiState, setUIState] = useUIState();
-  const { user } = useUser();
+  const user = useUser();
   const isMobile = useIsMobile();
   const [focusPanelId, setFocusPanelId] = useState<string>();
 

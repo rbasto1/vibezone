@@ -40,7 +40,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
   suggestionsUsed,
 }) => {
   const t = useTranslations("AssistantHeader");
-  const { user } = useUser();
+  const user = useUser();
   const setLastModels = trpc.users.setLastModels.useMutation();
   const setPanelsConfig = usePanelsConfigSetter();
   const setPanelsState = usePanelsStateSetter();

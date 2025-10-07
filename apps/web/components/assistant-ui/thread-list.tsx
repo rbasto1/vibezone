@@ -102,7 +102,7 @@ const ThreadListItems: FC = () => {
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
   const setUIState = useUIStateSetter();
 
-  const { user } = useUser();
+  const user = useUser();
   const { data: chats, error } = trpc.chats.listChats.useQuery(undefined, {
     enabled: !!user,
     refetchInterval: 60 * 1000,

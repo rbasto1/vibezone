@@ -15,7 +15,7 @@ interface ThreadErrorProps {
 }
 
 export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
-  const { user } = useUser();
+  const user = useUser();
   const setDepleted = useSetDepleted();
   const t = useTranslations("ThreadError");
   const setUIState = useUIStateSetter();

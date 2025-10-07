@@ -41,7 +41,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   } = useModelsValue({
     includeModels,
   });
-  const { user } = useUser();
+  const user = useUser();
 
   // Exclusive selection between tiers and suggestion groups
   const [selectedTier, setSelectedTier] = useState<ProviderTier | null>(

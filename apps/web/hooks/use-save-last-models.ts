@@ -5,7 +5,7 @@ import type { PanelConfig } from "@/store/panels";
 import { useCallback } from "react";
 
 export const useSaveLastModels = () => {
-  const { user } = useUser();
+  const user = useUser();
   const setLastModels = trpc.users.setLastModels.useMutation();
 
   const saveLastModels = useCallback(

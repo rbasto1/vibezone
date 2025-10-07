@@ -68,7 +68,7 @@ export const ComposerAddAttachment: FC = () => {
     [panels]
   );
   const { models } = useModelsValue({ includeModels: panelModelIds });
-  const { user } = useUser();
+  const user = useUser();
   const isLoggedIn = !!user;
 
   const attachmentsCapabilities = useMemo(() => {

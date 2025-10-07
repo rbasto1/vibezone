@@ -43,7 +43,7 @@ export const GlobalComposer: FC = () => {
   const clearAttachments = useClearAttachments();
   const [panelsState, setPanelsState] = usePanelsState();
   const setAnonUsage = useAnonQuotaSetter();
-  const { user } = useUser();
+  const user = useUser();
   const textareaRef = useRef<GlobalComposerTextareaHandle | null>(null);
   const anyPanelRunning = useMemo(
     () => Object.values(panelsState).some((p) => p.running),

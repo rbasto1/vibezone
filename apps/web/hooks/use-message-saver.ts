@@ -22,7 +22,7 @@ export const useMessageSaver = (panel: PanelConfig) => {
   const [currentChat, setCurrentChat] = useCurrentChat();
   const thread = useThread();
   const utils = trpc.useUtils();
-  const { user } = useUser();
+  const user = useUser();
   const panelState = usePanelStateValue(id);
 
   // Local states

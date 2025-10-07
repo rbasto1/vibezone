@@ -112,9 +112,9 @@ export const ReasoningSliderTrigger = () => {
   };
 
   return (
-    <div ref={containerRef} className="relative">
-      <Tooltip delayDuration={100}>
-        <TooltipTrigger>
+    <Tooltip delayDuration={100}>
+      <TooltipTrigger asChild>
+        <div ref={containerRef} className="relative">
           <Button
             type="button"
             variant="ghost"
@@ -126,22 +126,22 @@ export const ReasoningSliderTrigger = () => {
           >
             <BrainIcon className="size-5" />
           </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          {allModelsHaveReasoning
-            ? t("label")
-            : (disabledTooltipMessage ?? t("disabledTooltip"))
-                .split("\n")
-                .map((line, idx) => <p key={idx}>{line}</p>)}
-        </TooltipContent>
-      </Tooltip>
-      {showReasoningSlider && (
-        <ReasoningSlider
-          onReasoningEffortChange={onReasoningEffortChange}
-          sliderValue={sliderValue}
-          onSave={handleSave}
-        />
-      )}
-    </div>
+          {showReasoningSlider && (
+            <ReasoningSlider
+              onReasoningEffortChange={onReasoningEffortChange}
+              sliderValue={sliderValue}
+              onSave={handleSave}
+            />
+          )}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>
+        {allModelsHaveReasoning
+          ? t("label")
+          : (disabledTooltipMessage ?? t("disabledTooltip"))
+              .split("\n")
+              .map((line, idx) => <p key={idx}>{line}</p>)}
+      </TooltipContent>
+    </Tooltip>
   );
 };

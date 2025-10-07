@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "@/hooks/use-session";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import type { auth } from "./auth";
@@ -21,26 +22,14 @@ export interface AuthUser {
   preferenceReasoningEffort: string;
 }
 
-export interface UseUserResult {
-  status: "loading" | "authenticated" | "unauthenticated";
-  user?: AuthUser;
-}
-
 export const authClient = createAuthClient({
   baseURL: baseUrl,
   plugins: [inferAdditionalFields<typeof auth>()],
 });
 
-export const useUser = (): UseUserResult => {
-  const { data, isPending } = authClient.useSession();
-  return {
-    status: isPending
-      ? "loading"
-      : data?.user
-        ? "authenticated"
-        : "unauthenticated",
-    user: data?.user as AuthUser | undefined,
-  };
+export const useUser = (): AuthUser | undefined => {
+  const data = useSession();
+  return data?.user;
 };
 
 export const signInWithGoogle = (): void => {
