@@ -4,12 +4,12 @@ import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAttachmentAdapter } from "@/hooks/use-attachments";
 import { useAllCanReason } from "@/hooks/use-capabilities";
+import { captchaToken } from "@/hooks/use-captcha";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
 import { useSession } from "@/hooks/use-session";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
-import { generateFingerprint } from "@/lib/limiting";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
@@ -21,12 +21,6 @@ import { useTranslations } from "next-intl";
 import { useRef, type FC } from "react";
 import { toast } from "sonner";
 import { PanelHeader } from "./response-panel-header";
-
-declare global {
-  interface Window {
-    turnstileToken: string | null;
-  }
-}
 
 interface ResponsePanelProps {
   panel: PanelConfig;
@@ -172,19 +166,17 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
           ? `${model}#${pluginList.join(",")}`
           : model;
 
-        return generateFingerprint(sessionToken.current).then((authorization) =>
-          fetch(url, {
-            ...init,
-            headers: {
-              ...init?.headers,
-              "x-vz-model-id": modelSpecifier,
-              authorization,
-              ...(typeof window !== "undefined" && window.turnstileToken
-                ? { "cf-turnstile-response": window.turnstileToken }
-                : {}),
-            },
-          })
-        );
+        return fetch(url, {
+          ...init,
+          headers: {
+            ...init?.headers,
+            "x-vz-model-id": modelSpecifier,
+            ...(sessionToken.current
+              ? { authorization: `Bearer ${sessionToken.current}` }
+              : {}),
+            ...(captchaToken ? { "cf-turnstile-response": captchaToken } : {}),
+          },
+        });
       },
     }),
     onError: handleModelError,

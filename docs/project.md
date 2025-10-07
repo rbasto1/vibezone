@@ -48,6 +48,7 @@
 - [x] Keep composer text in SessionStorage
 - [ ] Thumb up/down (or stars?)
 - [ ] Allow user to pin favorite models
+- [ ] Show spinner when switching languages
 - [x] Limit usage for free users (400)
 - [x] Show deleted providers and models in the admin
 - [ ] Limit usage for paid users

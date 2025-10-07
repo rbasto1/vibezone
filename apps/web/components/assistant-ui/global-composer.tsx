@@ -9,6 +9,7 @@ import { GlobalComposerContext } from "@/components/providers/composer-provider"
 import { Button } from "@/components/ui/button";
 import { ReasoningSliderTrigger } from "@/components/ui/reasoning-slider-trigger";
 import { StopButton } from "@/components/ui/stop-button";
+import { cn } from "@/components/ui/utils";
 import {
   ANON_DAILY_LIMIT,
   useAnonQuotaSetter,
@@ -20,10 +21,12 @@ import {
   useCompleteAttachmentsValue,
   useRemoveAttachment,
 } from "@/hooks/use-attachments";
+import { useCaptchaState } from "@/hooks/use-captcha";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelsState } from "@/hooks/use-panels";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
+import { useTheme } from "next-themes";
 import { ComposerAddAttachment } from "./add-attachment";
 import { AttachmentChip } from "./attachment-chip";
 import type { GlobalComposerTextareaHandle } from "./global-composer-textarea";
@@ -33,16 +36,18 @@ declare global {
   interface Window {
     turnstile: {
       render: (
-        element: HTMLElement,
+        container: string,
         options: {
           sitekey: string;
+          execution?: "execute";
+          theme: string | undefined;
           callback: (token: string) => void;
-          "error-callback"?: () => void;
+          "error-callback"?: (errorCode: string) => void;
           "expired-callback"?: () => void;
         }
       ) => void;
+      execute: (container: string) => void;
     };
-    turnstileToken: string | null;
   }
 }
 
@@ -63,11 +68,14 @@ export const GlobalComposer: FC = () => {
   const user = useUser();
   const textareaRef = useRef<GlobalComposerTextareaHandle | null>(null);
   const turnstileRef = useRef<HTMLDivElement>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const anyPanelRunning = useMemo(
     () => Object.values(panelsState).some((p) => p.running),
     [panelsState]
   );
+  const { theme } = useTheme();
+  const [captchaState, setCaptchaToken] = useCaptchaState();
+  const captchaExecution = useMemo(getCaptchaExecution, []);
+  const [hideCaptcha, setHideCaptcha] = useState(true);
 
   const ctx = useContext(GlobalComposerContext);
   if (!ctx) throw new Error("GlobalComposerContext is not available");
@@ -88,28 +96,22 @@ export const GlobalComposer: FC = () => {
       return;
     }
 
-    window.turnstile.render(turnstileRef.current, {
+    window.turnstile.render("#turnstile-container", {
       sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+      theme,
+      execution: "execute",
       callback: (token) => {
-        setTurnstileToken(token);
-        window.turnstileToken = token;
+        setCaptchaToken(token);
+        captchaExecution.resolve(token);
       },
-      "error-callback": () => {
-        setTurnstileToken(null);
-        window.turnstileToken = null;
+      "error-callback": (code) => {
+        console.error("Captcha failed:", code);
       },
       "expired-callback": () => {
-        setTurnstileToken(null);
-        window.turnstileToken = null;
+        console.error("Captcha expired");
       },
     });
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.turnstileToken = turnstileToken;
-    }
-  }, [turnstileToken]);
+  }, [theme, setCaptchaToken, captchaExecution]);
 
   const handleContainerClick = (e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -142,12 +144,6 @@ export const GlobalComposer: FC = () => {
   const send = (text: string): boolean => {
     const msg = text.trim();
     if (!msg || !completeAttachments) return false;
-
-    // Check if captcha token is available
-    if (!turnstileToken) {
-      toast.error(t("captchaRequired"));
-      return false;
-    }
 
     const runtimes = getRuntimes();
     const isLoggedIn = !!user;
@@ -219,8 +215,20 @@ export const GlobalComposer: FC = () => {
     return true;
   };
 
-  const handleSubmit = (prompt: string): boolean => {
+  const handleSubmit = async (prompt: string): Promise<boolean> => {
     if (pendingAttachments) return false;
+
+    if ((captchaState.expiresAt ?? 0) < Date.now()) {
+      captchaExecution.reset();
+      setHideCaptcha(false);
+      window.turnstile.execute("#turnstile-container");
+      const token = await captchaExecution.promise;
+      setHideCaptcha(true);
+
+      // This will set the global variable captchaToken, which will be read by the "fetch" function
+      // in apps/web/components/assistant-ui/response-panel.tsx
+      setCaptchaToken(token);
+    }
 
     const success = send(prompt);
     if (!success) return false;
@@ -247,7 +255,15 @@ export const GlobalComposer: FC = () => {
       onClick={handleContainerClick}
     >
       {/* Hidden Turnstile widget */}
-      <div ref={turnstileRef} style={{ display: "none" }} />
+      <div
+        ref={turnstileRef}
+        id="turnstile-container"
+        aria-hidden={hideCaptcha ? "true" : "false"}
+        className={cn(
+          "fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-200",
+          hideCaptcha ? "pointer-events-none opacity-0" : "opacity-100"
+        )}
+      />
       {/* Input box (top section) */}
       <GlobalComposerTextarea
         ref={textareaRef}
@@ -291,3 +307,24 @@ export const GlobalComposer: FC = () => {
     </div>
   );
 };
+
+interface CaptchaExecution {
+  promise: Promise<string>;
+  resolve: (token: string) => void;
+  reset: () => void;
+}
+function getCaptchaExecution(): CaptchaExecution {
+  const createPromise = () =>
+    new Promise<string>((resolve) => {
+      response.resolve = resolve;
+    });
+
+  const response: CaptchaExecution = {
+    promise: createPromise(),
+    resolve: () => {},
+    reset: () => {
+      response.promise = createPromise();
+    },
+  };
+  return response;
+}

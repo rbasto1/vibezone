@@ -1,10 +1,12 @@
 import { eq } from "drizzle-orm";
 
 import { models } from "../generated/models";
-import type { UsageResponse } from "../objects/usage";
+import type { CheckResponse, UsageResponse } from "../objects/usage";
 import type { VibezoneContext } from "../worker";
+import { validateCaptchaToken } from "./captcha";
 import {
   MAX_ANON_REQUESTS_PER_DAY,
+  MAX_CAPTCHA_AGE_MS,
   MAX_USER_REQUESTS_PER_DAY,
 } from "./constants";
 import { schema } from "./db";
@@ -27,6 +29,7 @@ export async function checkUsage(
   vzContext: VibezoneContext,
   scheme: string,
   token: string,
+  captchaToken: string,
   headers: Headers
 ): Promise<Response | UsageContext> {
   const result = await getUserKey(scheme, token, vzContext);
@@ -70,7 +73,7 @@ export async function checkUsage(
   const id = ns.idFromName(context.userKey);
   const stub = ns.get(id);
 
-  const res = await stub.fetch("https://internal/check", { method: "POST" });
+  const res = await stub.fetch("https://internal/usage", { method: "POST" });
   if (!res.ok) {
     console.error({
       message: "Usage DO error",
@@ -83,10 +86,52 @@ export async function checkUsage(
   const body: UsageResponse = await res.json();
   console.debug({
     message: "Usage",
+    validatedAt: body.validatedAt,
     limit: context.limit,
     dayCount: body.dayCount,
     monthCount: body.monthCount,
   });
+
+  const pass = isValidated(body.validatedAt);
+  if (!pass) {
+    const captchaValidation = await validateCaptchaToken(
+      captchaToken,
+      vzContext.env
+    );
+
+    if (captchaValidation.success) {
+      await stub.fetch("https://internal/validate", { method: "POST" });
+    } else {
+      // We usually have multiple requests coming at the same time, and a race condition here
+      // where we validate the captcha in the first request and the second fails because the
+      // token is single-use, is common. So we have to retry the validation from our Durable
+      // Object after a few milliseconds.
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const res = await stub.fetch("https://internal/check", {
+        method: "POST",
+      });
+      if (!res.ok) {
+        console.error({
+          message: "Usage DO error",
+          status: res.status,
+          body: await res.text(),
+        });
+        return new Response("Too many requests", { status: 429, headers });
+      }
+
+      const body: CheckResponse = await res.json();
+      if (!isValidated(body.validatedAt)) {
+        console.warn({
+          message: "Captcha validation failed",
+          validatedAt: body.validatedAt,
+        });
+        return Response.json(
+          { message: "Invalid or expired captcha challenge" },
+          { status: 403, headers }
+        );
+      }
+    }
+  }
 
   if (body.dayCount <= context.limit) {
     return context;
@@ -127,14 +172,13 @@ async function getUserKey(
       };
     }
     case "Anon": {
-      const userKey = await getFingerprint(token, vzContext.requestHeaders);
       return {
         type: "success",
         context: {
           scheme: "Anon",
           userId: null,
           userPlan: null,
-          userKey,
+          userKey: token,
           limit: MAX_ANON_REQUESTS_PER_DAY,
         },
       };
@@ -178,24 +222,11 @@ async function getUserIdFromToken(token: string, vzContext: VibezoneContext) {
   return sessionRecord.userId;
 }
 
-async function getFingerprint(token: string, headers: Headers) {
-  const data = [
-    headers.get("CF-Connecting-IP"),
-    headers.get("X-Forwarded-For"),
-    headers.get("User-Agent"),
-    headers.get("Accept-Language"),
-    token,
-  ];
+function isValidated(validatedAt: number | undefined) {
+  if (!validatedAt) {
+    return false;
+  }
 
-  return await createHash(data);
-}
-
-async function createHash(data: unknown) {
-  const encoder = new TextEncoder();
-  const hashBuffer = await crypto.subtle.digest(
-    "SHA-256",
-    encoder.encode(JSON.stringify(data))
-  );
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return btoa(String.fromCharCode(...hashArray));
+  const expiration = validatedAt + MAX_CAPTCHA_AGE_MS;
+  return expiration > Date.now();
 }

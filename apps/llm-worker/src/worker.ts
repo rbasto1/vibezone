@@ -1,7 +1,6 @@
 import type { env } from "cloudflare:workers";
 import { handleProviderComplete } from "./complete";
 import { cors } from "./cors";
-import { validateCaptchaToken } from "./lib/captcha";
 import { getDb } from "./lib/db";
 import type { UsageContext } from "./lib/limiting";
 import { checkUsage } from "./lib/limiting";
@@ -18,6 +17,8 @@ export interface VibezoneContext {
   requestHeaders: Headers;
   completionRequest: GetConfigResponseSuccess;
   usageContext: UsageContext | null;
+  cf: CfProperties | undefined;
+  signal: Request["signal"];
 }
 
 export default {
@@ -50,8 +51,14 @@ export default {
       return new Response("Method not allowed", { status: 405, headers });
     }
 
-    const [scheme, authToken] =
-      request.headers.get("Authorization")?.split(" ") ?? [];
+    const captchaToken = request.headers.get("cf-turnstile-response");
+    if (!captchaToken) {
+      return new Response("Captcha token required", { status: 403, headers });
+    }
+
+    const [scheme, authToken] = request.headers
+      .get("Authorization")
+      ?.split(" ") ?? ["Anon", captchaToken];
     if (!scheme || !authToken) {
       return new Response("Unauthorized", { status: 401, headers });
     }
@@ -69,17 +76,6 @@ export default {
       return new Response(completionRequest.error, { status: 400, headers });
     }
 
-    // Validate Turnstile captcha token
-    const captchaToken = request.headers.get("cf-turnstile-response");
-    if (!captchaToken) {
-      return new Response("Captcha token required", { status: 403, headers });
-    }
-
-    const captchaValidation = await validateCaptchaToken(captchaToken, env);
-    if (!captchaValidation.success) {
-      return new Response("Invalid captcha", { status: 403, headers });
-    }
-
     const db = getDb(env);
     const vzContext: VibezoneContext = {
       env,
@@ -87,10 +83,18 @@ export default {
       requestHeaders: request.headers,
       completionRequest,
       usageContext: null,
+      cf: request.cf,
+      signal: request.signal,
     };
 
     // we have an anon user, let's keep track of their usage based on a fingerprint
-    const usageResult = await checkUsage(vzContext, scheme, authToken, headers);
+    const usageResult = await checkUsage(
+      vzContext,
+      scheme,
+      authToken,
+      captchaToken,
+      headers
+    );
     if (usageResult instanceof Response) {
       return usageResult;
     }
@@ -100,7 +104,7 @@ export default {
     switch (url.pathname) {
       case "/stream":
         // Handle LLM streaming endpoint
-        return handleProviderStream(request, headers, vzContext);
+        return handleProviderStream(vzContext, headers);
       case "/complete":
         // Handle LLM non-streaming completion endpoint
         return handleProviderComplete(vzContext, headers);
