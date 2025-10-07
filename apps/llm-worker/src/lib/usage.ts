@@ -4,7 +4,6 @@ import type { VibezoneContext } from "../worker";
 import { schema } from "./db";
 
 interface PersistUsageParams {
-  request: Request;
   vzContext: VibezoneContext;
   providerMetadata: Promise<ProviderMetadata | undefined>;
   isAborted: boolean;
@@ -22,9 +21,9 @@ const OpenRouterMetadataSchema = z.object({
 });
 
 export const persistUsage = async (params: PersistUsageParams) => {
-  const { request, isAborted, vzContext, providerMetadata } = params;
+  const { isAborted, vzContext, providerMetadata } = params;
   const modelId = vzContext.completionRequest.config.modelId;
-  const { db, usageContext } = vzContext;
+  const { db, usageContext, requestHeaders } = vzContext;
   if (!usageContext) {
     throw new Error("Usage context not found");
   }
@@ -33,7 +32,6 @@ export const persistUsage = async (params: PersistUsageParams) => {
   console.info({
     message: "Persisting usage",
     metadata: JSON.stringify(metadata),
-    isAborted,
   });
 
   const openrouterMetadata = OpenRouterMetadataSchema.safeParse(metadata).data;
@@ -41,17 +39,17 @@ export const persistUsage = async (params: PersistUsageParams) => {
 
   try {
     const ip =
-      request.headers.get("CF-Connecting-IP") ??
-      request.headers.get("X-Forwarded-For") ??
+      requestHeaders.get("CF-Connecting-IP") ??
+      requestHeaders.get("X-Forwarded-For") ??
       null;
 
     await db.insert(schema.usage).values({
       userId: usageContext.userId,
       userKey: usageContext.userKey,
       ip,
-      userAgent: request.headers.get("User-Agent"),
-      cfRay: request.headers.get("CF-Ray"),
-      geo: extractGeo(request),
+      userAgent: requestHeaders.get("User-Agent"),
+      cfRay: requestHeaders.get("CF-Ray"),
+      geo: extractGeo(vzContext.cf),
       modelId,
       providerMetadata: metadata,
       tokensPrompt: openrouterUsage?.promptTokens,
@@ -63,8 +61,7 @@ export const persistUsage = async (params: PersistUsageParams) => {
   }
 };
 
-function extractGeo(request: Request): Record<string, unknown> | null {
-  const cf = (request as Request & { cf?: unknown }).cf;
+function extractGeo(cf: VibezoneContext["cf"]): Record<string, unknown> | null {
   if (!cf) {
     return null;
   }

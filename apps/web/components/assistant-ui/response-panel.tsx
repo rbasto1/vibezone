@@ -4,6 +4,7 @@ import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAttachmentAdapter } from "@/hooks/use-attachments";
 import { useAllCanReason } from "@/hooks/use-capabilities";
+import { captchaToken } from "@/hooks/use-captcha";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
@@ -64,6 +65,10 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   };
 
   const handleModelError = (error: Error) => {
+    // TODO: We should credit back any usage that we are accounting on the frontend
+    // For now we only do that for anonymous users
+    console.warn("Model errored:", error);
+
     setPanelState((currentState) => ({
       ...currentState,
       error,
@@ -142,6 +147,16 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
           );
         }
 
+        if (!captchaToken) {
+          // Shouldn't happen, we don't allow the "send" command to run before captcha succeeds
+          toast.error("Captcha validation failed");
+          return Promise.resolve(
+            new Response(transportErrorMessage, {
+              status: 400,
+            })
+          );
+        }
+
         const { model } = panelGlobalContext[id];
         const { web, reason } = plugins.current;
         const pluginList = [];
@@ -151,6 +166,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
         const modelSpecifier = pluginList.length
           ? `${model}#${pluginList.join(",")}`
           : model;
+        const cfTurnstileResponse = captchaToken;
 
         return generateFingerprint(sessionToken.current).then((authorization) =>
           fetch(url, {
@@ -158,6 +174,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
             headers: {
               ...init?.headers,
               "x-vz-model-id": modelSpecifier,
+              "cf-turnstile-response": cfTurnstileResponse,
               authorization,
             },
           })

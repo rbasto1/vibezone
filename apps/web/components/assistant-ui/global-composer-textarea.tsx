@@ -7,12 +7,12 @@ import { useStateSessionStorage } from "@/hooks/use-session-storage";
 
 export type GlobalComposerTextareaHandle = {
   focus: () => void;
-  submit: () => boolean;
+  submit: () => Promise<boolean>;
 };
 
 type GlobalComposerTextareaProps = {
   placeholder: string;
-  onSubmit: (value: string) => boolean;
+  onSubmit: (value: string) => Promise<boolean>;
 };
 
 export const GlobalComposerTextarea = forwardRef<
@@ -22,8 +22,8 @@ export const GlobalComposerTextarea = forwardRef<
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [prompt, setPrompt] = useStateSessionStorage("prompt");
 
-  const handleSubmit = useCallback((): boolean => {
-    const success = onSubmit(prompt);
+  const handleSubmit = useCallback(async (): Promise<boolean> => {
+    const success = await onSubmit(prompt);
     if (success) {
       setPrompt("");
     }

@@ -6,8 +6,13 @@ interface UsageState {
 }
 
 export interface UsageResponse {
+  validatedAt: number | undefined;
   dayCount: number;
   monthCount: number;
+}
+
+export interface CheckResponse {
+  validatedAt: number | undefined;
 }
 
 // Durable Object to track usage by user id or fingerprint
@@ -17,6 +22,10 @@ export class Usage {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     switch (url.pathname) {
+      case "/usage":
+        return this.handleUsage();
+      case "/validate":
+        return this.handleValidate();
       case "/check":
         return this.handleCheck();
       default:
@@ -28,8 +37,14 @@ export class Usage {
     }
   }
 
-  private async handleCheck(): Promise<Response> {
-    const stored = await this.state.storage.get<UsageState>("usage");
+  private async handleUsage(): Promise<Response> {
+    const storedPromise = this.state.storage.get<UsageState>("usage");
+    const validatedAtPromise = this.state.storage.get<number>("validatedAt");
+
+    const [stored, validatedAt] = await Promise.all([
+      storedPromise,
+      validatedAtPromise,
+    ]);
 
     const incremented = this.incrementCounters(stored);
 
@@ -38,12 +53,13 @@ export class Usage {
     );
 
     return Response.json({
+      validatedAt,
       dayCount: incremented.dayCount,
       monthCount: incremented.monthCount,
     } satisfies UsageResponse);
   }
 
-  private incrementCounters(stored: UsageState | undefined) {
+  private incrementCounters(stored: UsageState | undefined): UsageState {
     const now = new Date();
     const day = now.toISOString().slice(0, 10); // UTC day: YYYY-MM-DD
     const month = day.slice(0, 7); // UTC month: YYYY-MM
@@ -57,5 +73,18 @@ export class Usage {
     const monthCount = existingMonth === month ? existingMonthCount + 1 : 1;
 
     return { day, dayCount, month, monthCount };
+  }
+
+  private async handleValidate(): Promise<Response> {
+    const now = Date.now();
+    this.state.waitUntil(this.state.storage.put("validatedAt", now));
+    return Response.json({ validatedAt: now });
+  }
+
+  private async handleCheck(): Promise<Response> {
+    const validatedAt = await this.state.storage.get<number>("validatedAt");
+    return Response.json({
+      validatedAt,
+    } satisfies CheckResponse);
   }
 }

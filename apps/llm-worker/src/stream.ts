@@ -5,9 +5,8 @@ import { persistUsage } from "./lib/usage";
 import type { VibezoneContext } from "./worker";
 
 export async function handleProviderStream(
-  request: Request,
-  headers: Headers,
-  vzContext: VibezoneContext
+  vzContext: VibezoneContext,
+  headers: Headers
 ): Promise<Response> {
   const { env, completionRequest } = vzContext;
   const { modelId, providerId, adapterModelId, maxTokens, plugins } =
@@ -38,7 +37,7 @@ export async function handleProviderStream(
         error,
       });
     },
-    abortSignal: request.signal,
+    abortSignal: vzContext.signal,
   });
 
   // Set headers for streaming
@@ -54,7 +53,6 @@ export async function handleProviderStream(
     onFinish: (e) => {
       waitUntil(
         persistUsage({
-          request,
           vzContext,
           providerMetadata: result.providerMetadata,
           isAborted: e.isAborted,

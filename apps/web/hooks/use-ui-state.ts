@@ -1,7 +1,19 @@
-import type { UIState } from "@/store/panels";
-import { uiStateAtom } from "@/store/panels";
-import { useAtomValue, useSetAtom } from "jotai";
+import { atom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback } from "react";
+
+export interface UIState {
+  suggestionsUsed: boolean;
+  loginOpen: boolean;
+  panelOpen: "preferences" | "search" | null;
+  detailsModelId?: string;
+}
+
+// Global UI state atom
+const uiStateAtom = atom<UIState>({
+  suggestionsUsed: false,
+  loginOpen: false,
+  panelOpen: null,
+});
 
 export const useUIStateValue = () => {
   return useAtomValue(uiStateAtom);

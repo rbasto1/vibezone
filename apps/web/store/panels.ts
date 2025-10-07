@@ -9,13 +9,6 @@ export interface PanelConfig {
   initialMessages?: UIMessage[];
 }
 
-export interface UIState {
-  suggestionsUsed: boolean;
-  loginOpen: boolean;
-  panelOpen: "preferences" | "search" | null;
-  detailsModelId?: string;
-}
-
 export const panelConfigAtom = atom<PanelConfig[]>([]);
 
 // Panel state atom
@@ -27,10 +20,3 @@ export interface PanelState {
 }
 
 export const panelStateAtom = atom<Record<string, PanelState>>({});
-
-// Global UI state atom
-export const uiStateAtom = atom<UIState>({
-  suggestionsUsed: false,
-  loginOpen: false,
-  panelOpen: null,
-});

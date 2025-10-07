@@ -17,6 +17,8 @@ export interface VibezoneContext {
   requestHeaders: Headers;
   completionRequest: GetConfigResponseSuccess;
   usageContext: UsageContext | null;
+  cf: CfProperties | undefined;
+  signal: Request["signal"];
 }
 
 export default {
@@ -49,6 +51,11 @@ export default {
       return new Response("Method not allowed", { status: 405, headers });
     }
 
+    const captchaToken = request.headers.get("cf-turnstile-response");
+    if (!captchaToken) {
+      return new Response("Captcha token required", { status: 403, headers });
+    }
+
     const [scheme, authToken] =
       request.headers.get("Authorization")?.split(" ") ?? [];
     if (!scheme || !authToken) {
@@ -75,10 +82,18 @@ export default {
       requestHeaders: request.headers,
       completionRequest,
       usageContext: null,
+      cf: request.cf,
+      signal: request.signal,
     };
 
     // we have an anon user, let's keep track of their usage based on a fingerprint
-    const usageResult = await checkUsage(vzContext, scheme, authToken, headers);
+    const usageResult = await checkUsage(
+      vzContext,
+      scheme,
+      authToken,
+      captchaToken,
+      headers
+    );
     if (usageResult instanceof Response) {
       return usageResult;
     }
@@ -88,7 +103,7 @@ export default {
     switch (url.pathname) {
       case "/stream":
         // Handle LLM streaming endpoint
-        return handleProviderStream(request, headers, vzContext);
+        return handleProviderStream(vzContext, headers);
       case "/complete":
         // Handle LLM non-streaming completion endpoint
         return handleProviderComplete(vzContext, headers);

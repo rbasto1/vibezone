@@ -12,6 +12,7 @@ import {
 import { cn } from "@/components/ui/utils";
 import { useUIState } from "@/hooks/use-ui-state";
 import { signOut, useUser } from "@/lib/auth-client";
+import { UserCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { LoginModal } from "./login-model";
 
@@ -56,7 +57,9 @@ export const UserMenu = ({ className }: UserMenuProps) => {
               referrerPolicy="no-referrer"
               rel="noreferrer noopener"
             />
-          ) : null}
+          ) : (
+            <UserCircle className="size-5" />
+          )}
           <span className="hidden sm:inline text-sm">
             {user?.name || user?.email || t("profileLabel")}
           </span>

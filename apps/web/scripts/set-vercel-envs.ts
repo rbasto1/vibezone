@@ -56,6 +56,7 @@ const main = async () => {
   }
 
   for (const project of projects) {
+    console.info(`Setting envs for project ${project}`);
     await setEnvForProject(project, token);
   }
 };
