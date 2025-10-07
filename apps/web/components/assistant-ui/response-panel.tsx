@@ -10,6 +10,7 @@ import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
 import { useSession } from "@/hooks/use-session";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
+import { generateFingerprint } from "@/lib/limiting";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
@@ -64,19 +65,9 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   };
 
   const handleModelError = (error: Error) => {
-    // Check if it's a captcha error and credit back usage
-    if (
-      error.message.includes("Invalid captcha") ||
-      error.message.includes("Captcha")
-    ) {
-      // Credit back usage for anonymous users
-      if (!session) {
-        // TODO: We need to decrement the anon usage
-        // But we don't have direct access to setAnonUsage here
-        // Perhaps emit an event or use a global callback
-        console.warn("Captcha validation failed, should credit back usage");
-      }
-    }
+    // TODO: We should credit back any usage that we are accounting on the frontend
+    // For now we only do that for anonymous users
+    console.warn("Model errored:", error);
 
     setPanelState((currentState) => ({
       ...currentState,
@@ -156,6 +147,16 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
           );
         }
 
+        if (!captchaToken) {
+          // Shouldn't happen, we don't allow the "send" command to run before captcha succeeds
+          toast.error("Captcha validation failed");
+          return Promise.resolve(
+            new Response(transportErrorMessage, {
+              status: 400,
+            })
+          );
+        }
+
         const { model } = panelGlobalContext[id];
         const { web, reason } = plugins.current;
         const pluginList = [];
@@ -165,18 +166,19 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
         const modelSpecifier = pluginList.length
           ? `${model}#${pluginList.join(",")}`
           : model;
+        const cfTurnstileResponse = captchaToken;
 
-        return fetch(url, {
-          ...init,
-          headers: {
-            ...init?.headers,
-            "x-vz-model-id": modelSpecifier,
-            ...(sessionToken.current
-              ? { authorization: `Bearer ${sessionToken.current}` }
-              : {}),
-            ...(captchaToken ? { "cf-turnstile-response": captchaToken } : {}),
-          },
-        });
+        return generateFingerprint(sessionToken.current).then((authorization) =>
+          fetch(url, {
+            ...init,
+            headers: {
+              ...init?.headers,
+              "x-vz-model-id": modelSpecifier,
+              "cf-turnstile-response": cfTurnstileResponse,
+              authorization,
+            },
+          })
+        );
       },
     }),
     onError: handleModelError,

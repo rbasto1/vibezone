@@ -9,7 +9,7 @@ export interface UIState {
 }
 
 // Global UI state atom
-export const uiStateAtom = atom<UIState>({
+const uiStateAtom = atom<UIState>({
   suggestionsUsed: false,
   loginOpen: false,
   panelOpen: null,

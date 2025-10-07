@@ -130,7 +130,8 @@
     "RESEND_API_KEY",
     "RESEND_FROM",
     "DEEPL_API_KEY",
-    "MARITACAAI_API_KEY"
+    "MARITACAAI_API_KEY",
+    "NEXT_PUBLIC_TURNSTILE_SITE_KEY"
   ],
   "concurrency": "2"
 }

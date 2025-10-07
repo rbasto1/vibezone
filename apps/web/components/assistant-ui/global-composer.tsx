@@ -223,7 +223,7 @@ export const GlobalComposer: FC = () => {
       setHideCaptcha(false);
       window.turnstile.execute("#turnstile-container");
       const token = await captchaExecution.promise;
-      setHideCaptcha(true);
+      setTimeout(() => setHideCaptcha(true), 1000);
 
       // This will set the global variable captchaToken, which will be read by the "fetch" function
       // in apps/web/components/assistant-ui/response-panel.tsx

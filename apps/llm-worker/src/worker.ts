@@ -56,9 +56,8 @@ export default {
       return new Response("Captcha token required", { status: 403, headers });
     }
 
-    const [scheme, authToken] = request.headers
-      .get("Authorization")
-      ?.split(" ") ?? ["Anon", captchaToken];
+    const [scheme, authToken] =
+      request.headers.get("Authorization")?.split(" ") ?? [];
     if (!scheme || !authToken) {
       return new Response("Unauthorized", { status: 401, headers });
     }

@@ -172,13 +172,14 @@ async function getUserKey(
       };
     }
     case "Anon": {
+      const userKey = await getFingerprint(token, vzContext.requestHeaders);
       return {
         type: "success",
         context: {
           scheme: "Anon",
           userId: null,
           userPlan: null,
-          userKey: token,
+          userKey,
           limit: MAX_ANON_REQUESTS_PER_DAY,
         },
       };
@@ -198,6 +199,28 @@ async function getUserKey(
     default:
       return { type: "error", error: "Invalid scheme" };
   }
+}
+
+async function getFingerprint(token: string, headers: Headers) {
+  const data = [
+    headers.get("CF-Connecting-IP"),
+    headers.get("X-Forwarded-For"),
+    headers.get("User-Agent"),
+    headers.get("Accept-Language"),
+    token,
+  ];
+
+  return await createHash(data);
+}
+
+async function createHash(data: unknown) {
+  const encoder = new TextEncoder();
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    encoder.encode(JSON.stringify(data))
+  );
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return btoa(String.fromCharCode(...hashArray));
 }
 
 async function getUserIdFromToken(token: string, vzContext: VibezoneContext) {

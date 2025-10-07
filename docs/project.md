@@ -33,7 +33,7 @@
 - [x] Warn about discarding a panel
 - [x] Translate to Brazilian Portuguese
 - [x] Assign .br domains
-- [-] Explore bot protection (Vercel BotID? Arcjet? hCaptcha?)
+- [x] Explore bot protection (Vercel BotID? Arcjet? hCaptcha?)
 - [x] Add Maritaca AI models
 - [x] Add model descriptions to (i) icon
 - [x] Language-specific chat titles
