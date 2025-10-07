@@ -106,9 +106,11 @@ export const GlobalComposer: FC = () => {
       },
       "error-callback": (code) => {
         console.error("Captcha failed:", code);
+        setTimeout(() => setHideCaptcha(true), 10000);
       },
       "expired-callback": () => {
         console.error("Captcha expired");
+        setTimeout(() => setHideCaptcha(true), 10000);
       },
     });
   }, [theme, setCaptchaToken, captchaExecution]);
