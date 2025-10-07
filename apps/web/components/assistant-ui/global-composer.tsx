@@ -47,6 +47,7 @@ declare global {
         }
       ) => void;
       execute: (container: string) => void;
+      reset: (container: string) => void;
     };
   }
 }
@@ -106,11 +107,17 @@ export const GlobalComposer: FC = () => {
       },
       "error-callback": (code) => {
         console.error("Captcha failed:", code);
-        setTimeout(() => setHideCaptcha(true), 10000);
+        setTimeout(() => {
+          window.turnstile.reset("turnstile-container");
+          setHideCaptcha(true);
+        }, 10000);
       },
       "expired-callback": () => {
         console.error("Captcha expired");
-        setTimeout(() => setHideCaptcha(true), 10000);
+        setTimeout(() => {
+          window.turnstile.reset("turnstile-container");
+          setHideCaptcha(true);
+        }, 10000);
       },
     });
   }, [theme, setCaptchaToken, captchaExecution]);
