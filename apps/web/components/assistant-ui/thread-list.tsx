@@ -18,7 +18,6 @@ import { useRuntimes } from "@/hooks/use-response-registration";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import { useUser } from "@/lib/auth-client";
-import { CHAT_LIST_PAGE_SIZE } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
@@ -125,7 +124,7 @@ const ThreadListItems: FC = () => {
   const setUIState = useUIStateSetter();
 
   const user = useUser();
-  const listInput = useMemo(() => ({ limit: CHAT_LIST_PAGE_SIZE }), []);
+  const listInput = useMemo(() => ({}), []);
   const {
     data,
     error,
