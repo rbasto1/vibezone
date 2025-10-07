@@ -4,11 +4,12 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { magicLink } from "better-auth/plugins";
 import { createTranslator } from "next-intl";
+import { cookies } from "next/headers";
 import deMessages from "../messages/de.json";
 import enMessages from "../messages/en.json";
 import ptBrMessages from "../messages/pt-BR.json";
 import { baseUrl } from "./base-url";
-import { readLocaleFromBaseUrl } from "./i18n/detect-locale";
+import { detectLocale } from "./i18n/detect-locale";
 
 const AUTH_EMAIL_LOCALES = ["en", "pt-BR", "de"] as const;
 type AuthEmailLocale = (typeof AUTH_EMAIL_LOCALES)[number];
@@ -75,8 +76,13 @@ export const auth = betterAuth({
   },
   plugins: [
     magicLink({
-      sendMagicLink: async ({ email, url }) => {
-        const locale = readLocaleFromBaseUrl(baseUrl);
+      sendMagicLink: async ({ email, url }, request) => {
+        const locale = detectLocale({
+          cookies: await cookies(),
+          baseUrl,
+          headers: request?.headers,
+          fallback: "en",
+        });
         const t = getAuthEmailTranslator(locale);
         const subject = t("subject");
         const linkText = t("linkText");

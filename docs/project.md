@@ -37,15 +37,16 @@
 - [x] Add Maritaca AI models
 - [x] Add model descriptions to (i) icon
 - [x] Language-specific chat titles
-- [ ] Paginate chat history
+- [x] Paginate chat history
 - [x] Add reasoning effort slider
-- [ ] Search chats (backend search of all messages)
+- [x] Search chats (backend search of all messages)
 - [ ] Add Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [x] Add user preferences (auto-scroll, hidden providers, pre-prompt)
 - [x] Fix <lineBreak/> not working on i18n
 - [x] Keep composer text in SessionStorage
 - [ ] Thumb up/down (or stars?)
+- [ ] Allow user to pin favorite models
 - [x] Limit usage for free users (400)
 - [x] Show deleted providers and models in the admin
 - [ ] Limit usage for paid users

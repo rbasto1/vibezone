@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
+import { ModelInfoModal } from "@/components/assistant-ui/model-info-modal";
 import { ResponsePanel } from "@/components/assistant-ui/response-panel";
 import { SearchPanel } from "@/components/assistant-ui/search-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
@@ -234,6 +235,16 @@ const AssistantContent: FC = () => {
           </div>
         </SidebarInset>
       </div>
+      {uiState.detailsModelId && (
+        <ModelInfoModal
+          modelId={uiState.detailsModelId}
+          onOpenChange={(open) => {
+            if (!open) {
+              setUIState({ detailsModelId: undefined });
+            }
+          }}
+        />
+      )}
     </SidebarProvider>
   );
 };

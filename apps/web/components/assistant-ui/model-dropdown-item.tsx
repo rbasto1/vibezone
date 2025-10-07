@@ -6,13 +6,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { InfoIcon, ShieldAlertIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 
 import { capabilityOptions } from "./model-dropdown-constants";
-import { ModelInfoModal } from "./model-info-modal";
 import {
   ExperimentalTag,
   FreeTag,
@@ -44,7 +43,8 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
 }) => {
   const t = useTranslations("ModelDropdown");
   const infoLabel = t("info.openDetails");
-  const [showInfoModal, setShowInfoModal] = useState(false);
+  const setUIState = useUIStateSetter();
+
   return (
     <div
       className={cn(
@@ -98,16 +98,13 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                setShowInfoModal(true);
+                setUIState({ detailsModelId: model.id });
               }}
               aria-label={infoLabel}
             />
           </div>
         </span>
       </div>
-      {showInfoModal && (
-        <ModelInfoModal modelId={model.id} onOpenChange={setShowInfoModal} />
-      )}
     </div>
   );
 };

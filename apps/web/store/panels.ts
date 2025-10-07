@@ -13,6 +13,7 @@ export interface UIState {
   suggestionsUsed: boolean;
   loginOpen: boolean;
   panelOpen: "preferences" | "search" | null;
+  detailsModelId?: string;
 }
 
 export const panelConfigAtom = atom<PanelConfig[]>([]);

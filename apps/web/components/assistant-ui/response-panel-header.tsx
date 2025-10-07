@@ -14,10 +14,10 @@ import {
   usePanelStateValue,
 } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
 import type { PanelConfig } from "@/store/panels";
 import { ConfirmCloseModal } from "./confirm-close-modal";
 import { ModelDropdown } from "./model-dropdown";
-import { ModelInfoModal } from "./model-info-modal";
 
 export interface PanelHeaderProps {
   panel: PanelConfig;
@@ -34,7 +34,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const panelState = usePanelStateValue(panelId);
 
   const [showConfirmClose, setShowConfirmClose] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
+  const setUIState = useUIStateSetter();
 
   const infoLabel = t("infoShowDetails");
 
@@ -87,7 +87,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           size="icon"
           variant="ghost"
           className="w-8 h-8"
-          onClick={() => setShowInfoModal(true)}
+          onClick={() => setUIState({ detailsModelId: modelId })}
           title={infoLabel}
           aria-label={infoLabel}
         >
@@ -106,9 +106,6 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           <XIcon className="h-4 w-4" />
         </button>
       </div>
-      {showInfoModal && (
-        <ModelInfoModal modelId={modelId} onOpenChange={setShowInfoModal} />
-      )}
       {showConfirmClose && (
         <ConfirmCloseModal
           onOpenChange={setShowConfirmClose}
