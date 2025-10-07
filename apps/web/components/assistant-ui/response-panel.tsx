@@ -22,6 +22,12 @@ import { useRef, type FC } from "react";
 import { toast } from "sonner";
 import { PanelHeader } from "./response-panel-header";
 
+declare global {
+  interface Window {
+    turnstileToken: string | null;
+  }
+}
+
 interface ResponsePanelProps {
   panel: PanelConfig;
   className?: string;
@@ -64,6 +70,20 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   };
 
   const handleModelError = (error: Error) => {
+    // Check if it's a captcha error and credit back usage
+    if (
+      error.message.includes("Invalid captcha") ||
+      error.message.includes("Captcha")
+    ) {
+      // Credit back usage for anonymous users
+      if (!session) {
+        // TODO: We need to decrement the anon usage
+        // But we don't have direct access to setAnonUsage here
+        // Perhaps emit an event or use a global callback
+        console.warn("Captcha validation failed, should credit back usage");
+      }
+    }
+
     setPanelState((currentState) => ({
       ...currentState,
       error,
@@ -159,6 +179,9 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
               ...init?.headers,
               "x-vz-model-id": modelSpecifier,
               authorization,
+              ...(typeof window !== "undefined" && window.turnstileToken
+                ? { "cf-turnstile-response": window.turnstileToken }
+                : {}),
             },
           })
         );

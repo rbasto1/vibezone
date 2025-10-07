@@ -111,6 +111,12 @@ export default async function RootLayout({ children }: PropsWithChildren) {
             }),
           }}
         />
+        {/* Cloudflare Turnstile */}
+        <script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          async
+          defer
+        />
       </head>
       <body
         className={cn(geistSans.variable, geistMono.variable, "antialiased")}

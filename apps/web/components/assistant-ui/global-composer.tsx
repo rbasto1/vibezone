@@ -2,7 +2,7 @@
 import { ArrowUpIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FC, MouseEvent } from "react";
-import { useContext, useMemo, useRef } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { GlobalComposerContext } from "@/components/providers/composer-provider";
@@ -29,6 +29,23 @@ import { AttachmentChip } from "./attachment-chip";
 import type { GlobalComposerTextareaHandle } from "./global-composer-textarea";
 import { GlobalComposerTextarea } from "./global-composer-textarea";
 
+declare global {
+  interface Window {
+    turnstile: {
+      render: (
+        element: HTMLElement,
+        options: {
+          sitekey: string;
+          callback: (token: string) => void;
+          "error-callback"?: () => void;
+          "expired-callback"?: () => void;
+        }
+      ) => void;
+    };
+    turnstileToken: string | null;
+  }
+}
+
 export const GlobalComposer: FC = () => {
   const t = useTranslations("GlobalComposer");
   const removeAttachment = useRemoveAttachment();
@@ -45,6 +62,8 @@ export const GlobalComposer: FC = () => {
   const setAnonUsage = useAnonQuotaSetter();
   const user = useUser();
   const textareaRef = useRef<GlobalComposerTextareaHandle | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const anyPanelRunning = useMemo(
     () => Object.values(panelsState).some((p) => p.running),
     [panelsState]
@@ -54,6 +73,43 @@ export const GlobalComposer: FC = () => {
   if (!ctx) throw new Error("GlobalComposerContext is not available");
 
   const { getRuntimes } = ctx;
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      !window.turnstile ||
+      !turnstileRef.current
+    ) {
+      return;
+    }
+
+    if (!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
+      toast.warning("Could not load Captcha; requests to AI may fail.");
+      return;
+    }
+
+    window.turnstile.render(turnstileRef.current, {
+      sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+      callback: (token) => {
+        setTurnstileToken(token);
+        window.turnstileToken = token;
+      },
+      "error-callback": () => {
+        setTurnstileToken(null);
+        window.turnstileToken = null;
+      },
+      "expired-callback": () => {
+        setTurnstileToken(null);
+        window.turnstileToken = null;
+      },
+    });
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.turnstileToken = turnstileToken;
+    }
+  }, [turnstileToken]);
 
   const handleContainerClick = (e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -86,6 +142,12 @@ export const GlobalComposer: FC = () => {
   const send = (text: string): boolean => {
     const msg = text.trim();
     if (!msg || !completeAttachments) return false;
+
+    // Check if captcha token is available
+    if (!turnstileToken) {
+      toast.error(t("captchaRequired"));
+      return false;
+    }
 
     const runtimes = getRuntimes();
     const isLoggedIn = !!user;
@@ -184,6 +246,8 @@ export const GlobalComposer: FC = () => {
       className="relative flex w-full flex-col gap-0 cursor-text"
       onClick={handleContainerClick}
     >
+      {/* Hidden Turnstile widget */}
+      <div ref={turnstileRef} style={{ display: "none" }} />
       {/* Input box (top section) */}
       <GlobalComposerTextarea
         ref={textareaRef}

@@ -1,6 +1,7 @@
 import type { env } from "cloudflare:workers";
 import { handleProviderComplete } from "./complete";
 import { cors } from "./cors";
+import { validateCaptchaToken } from "./lib/captcha";
 import { getDb } from "./lib/db";
 import type { UsageContext } from "./lib/limiting";
 import { checkUsage } from "./lib/limiting";
@@ -66,6 +67,17 @@ export default {
     const completionRequest = getConfigFromRequest(request, rawBody);
     if (completionRequest.type === "error") {
       return new Response(completionRequest.error, { status: 400, headers });
+    }
+
+    // Validate Turnstile captcha token
+    const captchaToken = request.headers.get("cf-turnstile-response");
+    if (!captchaToken) {
+      return new Response("Captcha token required", { status: 403, headers });
+    }
+
+    const captchaValidation = await validateCaptchaToken(captchaToken, env);
+    if (!captchaValidation.success) {
+      return new Response("Invalid captcha", { status: 403, headers });
     }
 
     const db = getDb(env);

@@ -137,6 +137,7 @@ const ThreadListItems: FC = () => {
     getNextPageParam: (lastPage) => lastPage.next ?? undefined,
     refetchInterval: 60 * 1000,
     refetchOnWindowFocus: true,
+    retry: 2,
   });
   const chats = useMemo(
     () => data?.pages.flatMap((page) => page.chats) ?? [],

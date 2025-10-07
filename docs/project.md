@@ -33,13 +33,14 @@
 - [x] Warn about discarding a panel
 - [x] Translate to Brazilian Portuguese
 - [x] Assign .br domains
-- [ ] Explore bot protection (Vercel BotID? Arcjet? hCaptcha?)
+- [-] Explore bot protection (Vercel BotID? Arcjet? hCaptcha?)
 - [x] Add Maritaca AI models
 - [x] Add model descriptions to (i) icon
 - [x] Language-specific chat titles
 - [x] Paginate chat history
 - [x] Add reasoning effort slider
 - [x] Search chats (backend search of all messages)
+- [ ] Bug: on mobile, closing the model details modal closes also the model selector
 - [ ] Add Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [x] Add user preferences (auto-scroll, hidden providers, pre-prompt)
