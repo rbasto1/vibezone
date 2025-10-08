@@ -2,7 +2,7 @@
 
 import { anonUsageStorageAtom, type AnonUsage } from "@/store/anon-quota";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 
 export const ANON_DAILY_LIMIT = 20;
 
@@ -10,12 +10,12 @@ export function today(): string {
   return new Date().toISOString().substring(0, 10);
 }
 
-function ensureToday(u: AnonUsage): AnonUsage {
+function ensureToday(u: AnonUsage): number {
   const t = today();
-  if (!u || typeof u.count !== "number" || !u.date)
-    return { date: t, count: 0 };
-  if (u.date !== t) return { date: t, count: 0 };
-  return u;
+  if (!u || typeof u.count !== "number" || !u.date || u.date !== t) {
+    return 0;
+  }
+  return u.count;
 }
 
 function clampCount(count: number | null): number | null {
@@ -25,8 +25,7 @@ function clampCount(count: number | null): number | null {
 
 export const useAnonQuotaValue = () => {
   const raw = useAtomValue(anonUsageStorageAtom);
-  const normalized = useMemo(() => ensureToday(raw), [raw]);
-  return normalized;
+  return ensureToday(raw);
 };
 
 export const useAnonQuotaSetter = () => {
@@ -53,14 +52,7 @@ export const useSetDepleted = () => {
   }, [set]);
 };
 
-export const useAnonQuota = () => {
-  const value = useAnonQuotaValue();
-  const set = useAnonQuotaSetter();
-  return [value, set] as const;
-};
-
 export const useAnonRemaining = () => {
-  const { count } = useAnonQuotaValue();
-  if (count === null) return null;
+  const count = useAnonQuotaValue();
   return Math.max(0, ANON_DAILY_LIMIT - count);
 };
