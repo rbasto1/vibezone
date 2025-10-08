@@ -1,7 +1,11 @@
 import { eq } from "drizzle-orm";
 
 import { models } from "../generated/models";
-import type { CheckResponse, UsageResponse } from "../objects/usage";
+import {
+  getUsageDO,
+  type CheckResponse,
+  type UsageResponse,
+} from "../objects/usage";
 import type { VibezoneContext } from "../worker";
 import { validateCaptchaToken } from "./captcha";
 import {
@@ -14,6 +18,12 @@ import { schema } from "./db";
 export type AuthScheme = "Bearer" | "Anon" | "Internal";
 
 export interface UsageContext {
+  userId: string | null;
+  userKey: string;
+  remainingQuota: number;
+}
+
+interface UsageStats {
   scheme: AuthScheme;
   userId: string | null;
   userPlan: "paid" | "free" | null;
@@ -22,7 +32,7 @@ export interface UsageContext {
 }
 
 type GetUserKeyResult =
-  | { type: "success"; context: UsageContext }
+  | { type: "success"; context: UsageStats }
   | { type: "error"; error: string };
 
 export async function checkUsage(
@@ -41,7 +51,11 @@ export async function checkUsage(
   const { context } = result;
 
   if (context.limit === Infinity) {
-    return context;
+    return {
+      userId: context.userId,
+      userKey: context.userKey,
+      remainingQuota: Infinity,
+    };
   }
 
   const { env, completionRequest } = vzContext;
@@ -69,9 +83,7 @@ export async function checkUsage(
     }
   }
 
-  const ns = env.USAGE;
-  const id = ns.idFromName(context.userKey);
-  const stub = ns.get(id);
+  const stub = getUsageDO(env, context.userKey);
 
   const res = await stub.fetch("https://internal/usage", { method: "POST" });
   if (!res.ok) {
@@ -126,15 +138,20 @@ export async function checkUsage(
           validatedAt: body.validatedAt,
         });
         return Response.json(
-          { message: "Invalid or expired captcha challenge" },
+          { code: "CAPTCHA", message: "Invalid or expired captcha challenge" },
           { status: 403, headers }
         );
       }
     }
   }
 
-  if (body.dayCount <= context.limit) {
-    return context;
+  const remainingQuota = context.limit - body.dayCount;
+  if (remainingQuota >= 0) {
+    return {
+      userId: context.userId,
+      userKey: context.userKey,
+      remainingQuota,
+    };
   }
 
   console.warn({

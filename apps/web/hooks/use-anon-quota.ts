@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  anonUsageStorageAtom,
-  defaultAnonUsage,
-  type AnonUsage,
-} from "@/store/anon-quota";
+import { anonUsageStorageAtom, type AnonUsage } from "@/store/anon-quota";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 
@@ -27,14 +23,6 @@ function clampCount(count: number | null): number | null {
   return Math.min(ANON_DAILY_LIMIT, Math.max(0, count));
 }
 
-function isPromise<T>(value: T | Promise<T>): value is Promise<T> {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as Promise<T>).then === "function"
-  );
-}
-
 export const useAnonQuotaValue = () => {
   const raw = useAtomValue(anonUsageStorageAtom);
   const normalized = useMemo(() => ensureToday(raw), [raw]);
@@ -44,23 +32,14 @@ export const useAnonQuotaValue = () => {
 export const useAnonQuotaSetter = () => {
   const set = useSetAtom(anonUsageStorageAtom);
   return useCallback(
-    (
-      update:
-        | AnonUsage
-        | ((prev: AnonUsage) => AnonUsage)
-        | ((prev: AnonUsage) => Partial<AnonUsage>)
-    ) => {
+    (remaining: number) => {
+      const count = ANON_DAILY_LIMIT - remaining;
       set((prev) => {
-        const resolved = isPromise(prev) ? defaultAnonUsage : prev;
-        const base = ensureToday(resolved ?? defaultAnonUsage);
-        const next = typeof update === "function" ? update(base) : update;
-        const merged: AnonUsage = {
+        const next = {
           date: today(),
-          count: clampCount(
-            "count" in next ? (next.count ?? null) : base.count
-          ),
+          count: clampCount(Math.max(count, prev.count ?? 0)),
         };
-        return merged;
+        return next;
       });
     },
     [set]
