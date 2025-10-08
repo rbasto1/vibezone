@@ -39,7 +39,6 @@ export async function checkUsage(
   vzContext: VibezoneContext,
   scheme: string,
   token: string,
-  captchaToken: string,
   headers: Headers
 ): Promise<Response | UsageContext> {
   const result = await getUserKey(scheme, token, vzContext);
@@ -56,6 +55,11 @@ export async function checkUsage(
       userKey: context.userKey,
       remainingQuota: Infinity,
     };
+  }
+
+  const captchaToken = vzContext.requestHeaders.get("cf-turnstile-response");
+  if (!captchaToken) {
+    return new Response("Captcha token required", { status: 403, headers });
   }
 
   const { env, completionRequest } = vzContext;
