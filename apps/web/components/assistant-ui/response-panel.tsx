@@ -2,14 +2,22 @@
 
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
+import { useAnonQuotaSetter } from "@/hooks/use-anon-quota";
 import { useAttachmentAdapter } from "@/hooks/use-attachments";
 import { useAllCanReason } from "@/hooks/use-capabilities";
-import { captchaToken } from "@/hooks/use-captcha";
+import {
+  captchaToken,
+  useCaptchaFailed,
+  useCaptchaRequested,
+  useCaptchaStateValue,
+} from "@/hooks/use-captcha";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
+import { useComposerPromptSetter } from "@/hooks/use-composer-prompt";
 import { usePanelState } from "@/hooks/use-panels";
 import { useRuntimeRegistration } from "@/hooks/use-response-registration";
 import { useSession } from "@/hooks/use-session";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
+import { safeParse } from "@/lib/json";
 import { generateFingerprint } from "@/lib/limiting";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
@@ -21,6 +29,7 @@ import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, type FC } from "react";
 import { toast } from "sonner";
+import z from "zod";
 import { PanelHeader } from "./response-panel-header";
 
 interface ResponsePanelProps {
@@ -58,22 +67,69 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
     reason: userPreferences.reasoningEffort,
   });
   const allCanReason = useAllCanReason();
+  const setAnonQuota = useAnonQuotaSetter();
+  const setCaptchaFailed = useCaptchaFailed();
+  const setCaptchaRequested = useCaptchaRequested();
+  const captchaState = useCaptchaStateValue();
+  const setGlobalPrompt = useComposerPromptSetter();
 
   plugins.current = {
     web: userPreferences.pluginWeb,
     reason: allCanReason ? userPreferences.reasoningEffort : "low",
   };
 
-  const handleModelError = (error: Error) => {
-    // TODO: We should credit back any usage that we are accounting on the frontend
-    // For now we only do that for anonymous users
-    console.warn("Model errored:", error);
+  const handleModelError = async (error: Error) => {
+    console.warn("Stream error:", error);
+    const message = error.message;
+    const json = safeParse(message, z.object({ code: z.string() }));
 
-    setPanelState((currentState) => ({
-      ...currentState,
-      error,
-      running: false,
-    }));
+    if (json?.code === "CAPTCHA") {
+      setCaptchaFailed();
+      setPanelState((currentState) => ({
+        ...currentState,
+        running: false,
+      }));
+
+      setCaptchaRequested();
+      await captchaState.execution.promise;
+      captchaState.execution.reset();
+    } else {
+      setPanelState((currentState) => ({
+        ...currentState,
+        error,
+        running: false,
+      }));
+    }
+
+    // reset the state to before sending
+    const parcel = runtime.thread.export();
+    const messages = parcel.messages;
+    if (messages.at(-1)?.message?.status?.type === "running") {
+      messages.pop();
+    }
+    const lastMessage = messages.pop();
+    if (lastMessage?.message.role === "user") {
+      if (messages.length) {
+        // TODO: import messages, but this .import is not working
+        // runtime.thread.import({ ...parcel, messages });
+      }
+      const text = lastMessage.message.content.find(
+        (c) => c.type === "text"
+      )?.text;
+      if (text) {
+        setGlobalPrompt(text);
+      }
+      const hadAttachments = lastMessage.message.content.some(
+        (c) => c.type !== "text"
+      );
+      if (hadAttachments) {
+        toast.warning("Please attach files again");
+      } else {
+        toast.info("Please submit your message again");
+      }
+    }
+
+    throw error;
   };
 
   const handleModelFinish: ChatOnFinishCallback<UIMessage> = async () => {
@@ -178,6 +234,14 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
               authorization,
             },
           })
+            .then((response) => {
+              const remainingQuota = response.headers.get("X-Remaining-Quota");
+              if (remainingQuota) {
+                setAnonQuota(Number(remainingQuota));
+              }
+              return response;
+            })
+            .catch(handleModelError)
         );
       },
     }),

@@ -2,6 +2,7 @@ import { convertToModelMessages, streamText } from "ai";
 import { waitUntil } from "cloudflare:workers";
 import { getAdapterForProvider } from "./lib/gateway";
 import { persistUsage } from "./lib/usage";
+import { getUsageDO } from "./objects/usage";
 import type { VibezoneContext } from "./worker";
 
 export async function handleProviderStream(
@@ -21,6 +22,19 @@ export async function handleProviderStream(
     ? `${adapterModelId}:online`
     : adapterModelId;
 
+  const remainingQuota = vzContext.usageContext?.remainingQuota;
+  const refund = () => {
+    const userKey = vzContext.usageContext?.userKey;
+    if (remainingQuota !== null && remainingQuota !== undefined && userKey) {
+      console.info({
+        message: "Refunding anon user",
+        userKey,
+      });
+      const stub = getUsageDO(env, userKey);
+      stub.fetch("https://internal/credit", { method: "POST" });
+    }
+  };
+
   console.info({
     message: "Starting stream",
     model: modelId,
@@ -30,26 +44,41 @@ export async function handleProviderStream(
   const result = streamText({
     model: adapter(modelSpecifier),
     messages: convertToModelMessages(messages),
-    maxOutputTokens: maxTokens,
+    maxOutputTokens: maxTokens ?? 4000,
     onError: (error) => {
       console.error({
-        message: "Caught an error creating stream text:",
+        message: "streamText onError:",
         error,
       });
+      refund();
     },
     abortSignal: vzContext.signal,
   });
 
-  // Set headers for streaming
+  // Set headers for the stream response
   headers.set("Content-Type", "text/event-stream");
   headers.set("Cache-Control", "no-store");
   headers.set("Connection", "keep-alive");
   headers.set("Transfer-Encoding", "chunked");
   headers.set("Content-Encoding", "identity");
+  if (remainingQuota !== null && remainingQuota !== undefined) {
+    headers.set("Access-Control-Expose-Headers", "X-Remaining-Quota");
+    headers.set("X-Remaining-Quota", remainingQuota.toString());
+  }
 
-  // Return the streaming response
   return result.toUIMessageStreamResponse({
     headers,
+    onError: (error) => {
+      console.error({
+        message: "toUIMessageStreamResponse onError:",
+        error,
+      });
+      if (error instanceof Error) {
+        return error.message;
+      }
+      refund();
+      return "An error occurred";
+    },
     onFinish: (e) => {
       waitUntil(
         persistUsage({

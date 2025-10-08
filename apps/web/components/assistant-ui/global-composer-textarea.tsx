@@ -3,7 +3,7 @@
 import type { KeyboardEvent } from "react";
 import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
 
-import { useStateSessionStorage } from "@/hooks/use-session-storage";
+import { useComposerPrompt } from "@/hooks/use-composer-prompt";
 
 export type GlobalComposerTextareaHandle = {
   focus: () => void;
@@ -20,7 +20,7 @@ export const GlobalComposerTextarea = forwardRef<
   GlobalComposerTextareaProps
 >(({ placeholder, onSubmit }, ref) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [prompt, setPrompt] = useStateSessionStorage("prompt");
+  const [prompt, setPrompt] = useComposerPrompt();
 
   const handleSubmit = useCallback(async (): Promise<boolean> => {
     const success = await onSubmit(prompt);

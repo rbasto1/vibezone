@@ -20,7 +20,10 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
   const t = useTranslations("ThreadError");
   const setUIState = useUIStateSetter();
 
-  if (error.message === "Out of credits") {
+  if (
+    error.message === "Out of credits" ||
+    error.message === "Please sign in to use this model"
+  ) {
     const isLoggedIn = !!user;
     if (!isLoggedIn) {
       setDepleted();
@@ -58,7 +61,9 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
             ) : (
               <>
                 <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  {t("anonymousTitle")}
+                  {error.message === "Out of credits"
+                    ? t("anonymousTitle")
+                    : t("anonymousTitleModel")}
                 </h3>
                 <Button
                   variant="outline"

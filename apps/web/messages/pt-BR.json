@@ -149,6 +149,7 @@
     "loggedInTitle": "Você esgotou os créditos diários de hoje",
     "loggedInBody": "Você poderá continuar usando o app amanhã.",
     "anonymousTitle": "Para continuar conversando, faça login.",
+    "anonymousTitleModel": "Para usar este modelo, faça login.",
     "signInButton": "Fazer login",
     "genericTitle": "Algo deu errado"
   },

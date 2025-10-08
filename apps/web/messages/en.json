@@ -149,6 +149,7 @@
     "loggedInTitle": "You ran out of daily credits for today",
     "loggedInBody": "You can continue using the app tomorrow.",
     "anonymousTitle": "To continue chatting, please sign in.",
+    "anonymousTitleModel": "To use this model, please sign in.",
     "signInButton": "Sign in",
     "genericTitle": "Something went wrong"
   },

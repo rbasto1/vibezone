@@ -20,3 +20,13 @@ class_name = "Usage"
 [[migrations]]
 tag = "usage-v1"
 new_sqlite_classes = ["Usage"]
+
+[env.dev]
+name = "development"
+[env.dev.vars]
+ENVIRONMENT = "development"
+
+[env.prod]
+name = "production"
+[env.prod.vars]
+ENVIRONMENT = "production"

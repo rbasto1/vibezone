@@ -9,6 +9,12 @@ export async function validateCaptchaToken(
     console.error("TURNSTILE_SECRET_KEY not set");
     return { success: false };
   }
+  if (!env.ENVIRONMENT) {
+    console.warn({
+      message: "Skipping Captcha verification, empty ENVIRONMENT",
+    });
+    return { success: true };
+  }
 
   try {
     const response = await fetch(

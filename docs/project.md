@@ -41,6 +41,7 @@
 - [x] Add reasoning effort slider
 - [x] Search chats (backend search of all messages)
 - [ ] Bug: on mobile, closing the model details modal closes also the model selector
+- [ ] Claude Opus 4.1 not completing
 - [ ] Add Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [x] Add user preferences (auto-scroll, hidden providers, pre-prompt)

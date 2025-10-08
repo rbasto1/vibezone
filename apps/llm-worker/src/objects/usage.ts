@@ -28,6 +28,8 @@ export class Usage {
         return this.handleValidate();
       case "/check":
         return this.handleCheck();
+      case "/credit":
+        return this.handleCredit();
       default:
         console.error({
           message: "UsageDurableObject: Invalid path in request",
@@ -87,4 +89,22 @@ export class Usage {
       validatedAt,
     } satisfies CheckResponse);
   }
+
+  private async handleCredit(): Promise<Response> {
+    const stored = await this.state.storage.get<UsageState>("usage");
+    if (stored) {
+      await this.state.storage.put<UsageState>("usage", {
+        ...stored,
+        dayCount: stored.dayCount - 1,
+        monthCount: stored.monthCount - 1,
+      });
+    }
+    return Response.json(null);
+  }
+}
+
+export function getUsageDO(env: Env, userKey: string) {
+  const ns = env.USAGE;
+  const id = ns.idFromName(userKey);
+  return ns.get(id);
 }

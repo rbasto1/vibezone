@@ -149,6 +149,7 @@
     "loggedInTitle": "Du hast deine täglichen Credits für heute verbraucht",
     "loggedInBody": "Du kannst die App morgen weiter nutzen.",
     "anonymousTitle": "Um weiter zu chatten, melde dich bitte an.",
+    "anonymousTitleModel": "Um dieses Modell zu verwenden, melde dich bitte an.",
     "signInButton": "Anmelden",
     "genericTitle": "Etwas ist schiefgelaufen"
   },
