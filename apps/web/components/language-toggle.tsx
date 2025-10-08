@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTransition, type FC } from "react";
 
 import { Button } from "@/components/ui/button";
+import { InlineSpinner } from "@/components/ui/inline-spinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,7 +60,14 @@ export const LanguageToggle: FC = () => {
           aria-label={t("trigger")}
           aria-busy={isPending}
         >
-          <Languages className="h-4 w-4" />
+          {isPending ? (
+            <InlineSpinner
+              className="border-muted-foreground"
+              aria-hidden="true"
+            />
+          ) : (
+            <Languages className="h-4 w-4" />
+          )}
           <span className="sr-only">{t("trigger")}</span>
         </Button>
       </DropdownMenuTrigger>
