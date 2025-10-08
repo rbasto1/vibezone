@@ -38,7 +38,6 @@ export const providersPrivacy: ProviderPrivacyInfo[] = [
 {"id":"qwen","name":"Qwen","privacyPolicyUrl":"https://chat.qwen.ai/legal-agreement/privacy-policy"},
 {"id":"relace","name":"Relace","privacyPolicyUrl":null},
 {"id":"shisa-ai","name":"Shisa-AI","privacyPolicyUrl":null},
-{"id":"stepfun-ai","name":"StepFun","privacyPolicyUrl":null},
 {"id":"switchpoint","name":"Switchpoint","privacyPolicyUrl":null},
 {"id":"thudm","name":"THUDM","privacyPolicyUrl":null},
 {"id":"tngtech","name":"TNG Technology","privacyPolicyUrl":null},

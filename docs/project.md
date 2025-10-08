@@ -42,6 +42,7 @@
 - [x] Search chats (backend search of all messages)
 - [ ] Bug: on mobile, closing the model details modal closes also the model selector
 - [ ] Claude Opus 4.1 not completing
+- [ ] Text attachments are going inline inside <attachment>
 - [ ] Add Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [x] Add user preferences (auto-scroll, hidden providers, pre-prompt)
@@ -67,3 +68,4 @@
 - [ ] Syntax highlighting: auto-detect language (switch to highlight.js?)
 - [ ] Add `api_created_at` to models and use our import date for created_at
 - [ ] Add description editor to admin, with auto translation
+- [ ] Disable sending when attachments are not compatible with one of the models

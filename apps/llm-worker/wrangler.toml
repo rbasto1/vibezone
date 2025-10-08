@@ -3,7 +3,6 @@ main = "src/worker.ts"
 compatibility_date = "2025-08-29"
 # compatibility_flags = ["nodejs_compat"]
 
-# Custom domain configuration
 [[routes]]
 pattern = "gen.vibezone.ai"
 custom_domain = true
@@ -12,7 +11,6 @@ custom_domain = true
 enabled = true
 head_sampling_rate = 1
 
-# Durable Objects
 [[durable_objects.bindings]]
 name = "USAGE"
 class_name = "Usage"
@@ -20,13 +18,3 @@ class_name = "Usage"
 [[migrations]]
 tag = "usage-v1"
 new_sqlite_classes = ["Usage"]
-
-[env.dev]
-name = "development"
-[env.dev.vars]
-ENVIRONMENT = "development"
-
-[env.prod]
-name = "production"
-[env.prod.vars]
-ENVIRONMENT = "production"

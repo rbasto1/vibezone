@@ -122,11 +122,11 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
       const hadAttachments = lastMessage.message.content.some(
         (c) => c.type !== "text"
       );
-      if (hadAttachments) {
-        toast.warning("Please attach files again");
-      } else {
-        toast.info("Please submit your message again");
-      }
+      toast.warning(
+        hadAttachments
+          ? `Model ${panel.model} failed, please attach the files and submit your message to try again`
+          : `Model ${panel.model} failed, please submit your message to try again`
+      );
     }
 
     throw error;

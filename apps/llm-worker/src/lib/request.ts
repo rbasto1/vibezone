@@ -34,6 +34,7 @@ export function getConfigFromRequest(
     console.error({
       message: "Zod validation failed",
       error: bodyParse.error,
+      body: rawBody,
     });
     return {
       type: "error",
