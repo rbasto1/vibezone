@@ -1,26 +1,18 @@
 "use client";
 
-import { generateId } from "ai";
-import { PlusIcon, SearchIcon } from "lucide-react";
+import { MessageCirclePlusIcon, SearchIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { useCurrentChat, useNewChat } from "@/hooks/use-chat";
+import { useCurrentChat } from "@/hooks/use-chat";
 import type { UseChatActionsResult } from "@/hooks/use-chat-actions";
 import { useChatActions } from "@/hooks/use-chat-actions";
-import {
-  usePanelsConfigSetter,
-  usePanelsStateSetter,
-} from "@/hooks/use-panels";
-import { useRuntimes } from "@/hooks/use-response-registration";
+import { useNewChatHandler } from "@/hooks/use-new-chat-handler";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import { useUser } from "@/lib/auth-client";
-import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
-import type { PanelConfig } from "@/store/panels";
 import { CustomThreadListItem } from "./custom-thread-list-item";
 
 export const ThreadList: FC = () => {
@@ -54,55 +46,8 @@ const ThreadListSearch: FC = () => {
 };
 
 const ThreadListNew: FC = () => {
-  const t = useTranslations();
-  const getRuntimes = useRuntimes();
-  const setPanelsState = usePanelsStateSetter();
-  const setPanelsConfig = usePanelsConfigSetter();
-  const setUIState = useUIStateSetter();
-  const createNewChat = useNewChat();
-  const preferences = useUserPreferencesValue();
-
-  const systemPrompt = preferences.changedPrompt
-    ? preferences.systemPrompt
-    : t("Prompts.system");
-
-  const handleNewChat = () => {
-    // Generate new chat ID
-    createNewChat();
-
-    if (!getRuntimes) return;
-    const runtimes = getRuntimes();
-    for (const runtime of runtimes.values()) {
-      runtime.thread.reset();
-    }
-
-    setPanelsState({});
-    setPanelsConfig((config) =>
-      config.map(
-        (c, order) =>
-          ({
-            id: generateThreadId(order),
-            provider: c.provider,
-            model: c.model,
-            initialMessages: systemPrompt
-              ? [
-                  {
-                    id: generateId(),
-                    role: "system",
-                    parts: [
-                      {
-                        type: "text",
-                        text: systemPrompt,
-                      },
-                    ],
-                  },
-                ]
-              : [],
-          }) satisfies PanelConfig
-      )
-    );
-    setUIState({ panelOpen: null, suggestionsUsed: false });
-  };
+  const t = useTranslations("ThreadList");
+  const handleNewChat = useNewChatHandler();
 
   return (
     <Button
@@ -110,8 +55,8 @@ const ThreadListNew: FC = () => {
       variant="ghost"
       onClick={handleNewChat}
     >
-      <PlusIcon />
-      {t("ThreadList.newChat")}
+      <MessageCirclePlusIcon />
+      {t("newChat")}
     </Button>
   );
 };
