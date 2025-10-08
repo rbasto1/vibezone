@@ -50,13 +50,12 @@
 - [x] Keep composer text in SessionStorage
 - [ ] Thumb up/down (or stars?)
 - [ ] Allow user to pin favorite models
-- [ ] Show spinner when switching languages
+- [x] Show spinner when switching languages
 - [x] Limit usage for free users (400)
 - [x] Show deleted providers and models in the admin
 - [ ] Limit usage for paid users
 - [ ] Import chats from OpenAI format
 - [ ] Add analytics (Posthog?)
-- [ ] Improve error handling (sonner)
 - [x] Refactor vz-open-login event to use jotai state
 - [x] Fix toast colors
 - [x] Simplify model selection metadata, add colors to capabilities buttons

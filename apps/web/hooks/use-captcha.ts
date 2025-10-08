@@ -3,7 +3,7 @@ import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { useCallback } from "react";
 
 const CAPTCHA_STORAGE_KEY = "vz_captcha_state";
-export const MAX_CAPTCHA_AGE_MS = 1000 * 60 * 55; // 5 minutes before the backend start rejecting the token
+export const MAX_CAPTCHA_AGE_MS = 1000 * 60 * (60 * 12 - 5); // 5 minutes before the backend start rejecting the token
 
 export let captchaToken: string | null = null;
 

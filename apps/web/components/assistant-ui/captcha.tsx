@@ -28,7 +28,7 @@ declare global {
 
 export const Captcha = () => {
   const { theme } = useTheme();
-  const language = useLocale();
+  const language = useLocale().toLocaleLowerCase();
   const [captchaState, setCaptchaToken] = useCaptchaState();
   const execution = captchaState.execution;
   const themeRef = useRef(theme);
