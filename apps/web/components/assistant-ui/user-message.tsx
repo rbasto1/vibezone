@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import type { FC } from "react";
 
 import { BranchPicker } from "./branch-picker";
-import { MarkdownText } from "./markdown-text";
 import { UserMessageAttachments } from "./message-attachments";
+import { TextWithAttachments } from "./text-with-attachments";
 import { UserActionBar } from "./user-action-bar";
 
 export const UserMessage: FC = () => {
@@ -24,7 +24,9 @@ export const UserMessage: FC = () => {
 
         {/* aui-user-message-content */}
         <div className="bg-muted text-foreground col-start-2 rounded-3xl px-5 py-2.5 break-words">
-          <MessagePrimitive.Content components={{ Text: MarkdownText }} />
+          <MessagePrimitive.Content
+            components={{ Text: TextWithAttachments }}
+          />
         </div>
 
         {/* aui-user-branch-picker */}

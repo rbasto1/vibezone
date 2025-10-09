@@ -77,8 +77,6 @@ export class TextAttachmentAdapter implements AttachmentAdapter {
 
   async send(attachment: PendingAttachment): Promise<CompleteAttachment> {
     const text = await this.fileToText(attachment.file);
-    // Convert text to base64 for file type
-    const base64Data = btoa(unescape(encodeURIComponent(text)));
 
     return {
       id: attachment.id,
@@ -89,11 +87,8 @@ export class TextAttachmentAdapter implements AttachmentAdapter {
       status: { type: "complete" },
       content: [
         {
-          type: "file",
-          filename: attachment.name,
-          mimeType:
-            attachment.contentType || attachment.file.type || "text/plain",
-          data: base64Data,
+          type: "text",
+          text: `<attachment name="${attachment.name}">\n${text}\n</attachment>`,
         },
       ],
     };
