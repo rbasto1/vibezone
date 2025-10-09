@@ -303,5 +303,13 @@
     "pdfCapabilitySingle": "Das folgende Modell ist nicht in der Lage, PDF-Dateien zu lesen:",
     "pdfCapabilityPlural": "Die folgenden Modelle sind nicht in der Lage, PDF-Dateien zu lesen:",
     "selectedModels": "Ausgewählte Modelle"
+  },
+  "IncompatibleAttachmentsModal": {
+    "title": "Inkompatible Anhänge",
+    "description": "Einige deiner Anhänge werden nicht von allen ausgewählten Modellen unterstützt.",
+    "incompatibleWith": "Inkompatibel mit:",
+    "removeAttachment": "Anhang entfernen",
+    "instructions": "Um deine Nachricht zu senden, entferne entweder die inkompatiblen Anhänge oder ersetze die Modelle, die sie nicht unterstützen.",
+    "understood": "Verstanden"
   }
 }

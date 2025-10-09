@@ -303,5 +303,13 @@
     "pdfCapabilitySingle": "O seguinte modelo não é capaz de ler arquivos PDF:",
     "pdfCapabilityPlural": "Os seguintes modelos não são capazes de ler arquivos PDF:",
     "selectedModels": "Modelos selecionados"
+  },
+  "IncompatibleAttachmentsModal": {
+    "title": "Anexos Incompatíveis",
+    "description": "Alguns dos seus anexos não são suportados por todos os modelos selecionados.",
+    "incompatibleWith": "Incompatível com:",
+    "removeAttachment": "Remover anexo",
+    "instructions": "Para enviar sua mensagem, remova os anexos incompatíveis ou substitua os modelos que não os suportam.",
+    "understood": "Entendi"
   }
 }

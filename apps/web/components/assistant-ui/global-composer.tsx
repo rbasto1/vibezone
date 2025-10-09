@@ -2,7 +2,7 @@
 import { ArrowUpIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FC, MouseEvent } from "react";
-import { useContext, useMemo, useRef } from "react";
+import { useContext, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { GlobalComposerContext } from "@/components/providers/composer-provider";
@@ -22,7 +22,8 @@ import {
   useCaptchaStateValue,
 } from "@/hooks/use-captcha";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
-import { usePanelsState } from "@/hooks/use-panels";
+import { useModelsValue } from "@/hooks/use-models";
+import { usePanelsConfigValue, usePanelsState } from "@/hooks/use-panels";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
 import { ComposerAddAttachment } from "./add-attachment";
@@ -30,6 +31,10 @@ import { AttachmentChip } from "./attachment-chip";
 import { Captcha } from "./captcha";
 import type { GlobalComposerTextareaHandle } from "./global-composer-textarea";
 import { GlobalComposerTextarea } from "./global-composer-textarea";
+import {
+  IncompatibleAttachmentsModal,
+  type IncompatibleAttachment,
+} from "./incompatible-attachments-modal";
 
 export const GlobalComposer: FC = () => {
   const t = useTranslations("GlobalComposer");
@@ -44,6 +49,12 @@ export const GlobalComposer: FC = () => {
   const remaining = useAnonRemaining();
   const clearAttachments = useClearAttachments();
   const [panelsState, setPanelsState] = usePanelsState();
+  const panels = usePanelsConfigValue();
+  const panelModelIds = useMemo(
+    () => panels.map((panel) => panel.model),
+    [panels]
+  );
+  const { models } = useModelsValue({ includeModels: panelModelIds });
   const user = useUser();
   const textareaRef = useRef<GlobalComposerTextareaHandle | null>(null);
   const anyPanelRunning = useMemo(
@@ -52,6 +63,10 @@ export const GlobalComposer: FC = () => {
   );
   const captchaState = useCaptchaStateValue();
   const setCaptchaRequested = useCaptchaRequested();
+  const [incompatibleModalOpen, setIncompatibleModalOpen] = useState(false);
+  const [incompatibleAttachments, setIncompatibleAttachments] = useState<
+    IncompatibleAttachment[]
+  >([]);
 
   const ctx = useContext(GlobalComposerContext);
   if (!ctx) throw new Error("GlobalComposerContext is not available");
@@ -86,9 +101,60 @@ export const GlobalComposer: FC = () => {
 
   const onStopAll = anyPanelRunning ? handleStopAll : null;
 
+  // Validate attachment compatibility with selected models
+  const validateAttachments = (): IncompatibleAttachment[] => {
+    if (!completeAttachments?.length) {
+      return [];
+    }
+
+    const modelsMap = new Map(models.map((model) => [model.id, model]));
+    const incompatible: IncompatibleAttachment[] = [];
+
+    for (const attachment of completeAttachments) {
+      const incompatibleModels: Array<{ id: string; name: string }> = [];
+
+      // Check each panel's model for compatibility
+      for (const panel of panels) {
+        const model = modelsMap.get(panel.model);
+        if (!model) continue;
+
+        // Determine attachment type and check compatibility
+        const isImage = attachment.type === "image";
+        const isPdf =
+          attachment.type === "document" &&
+          attachment.contentType === "application/pdf";
+
+        if (isImage && !model.capVision) {
+          incompatibleModels.push({ id: model.id, name: model.name });
+        } else if (isPdf && !model.capPdf) {
+          incompatibleModels.push({ id: model.id, name: model.name });
+        }
+      }
+
+      if (incompatibleModels.length > 0) {
+        incompatible.push({
+          id: attachment.id,
+          name: attachment.name,
+          type: attachment.type,
+          incompatibleModels,
+        });
+      }
+    }
+
+    return incompatible;
+  };
+
   const send = (text: string): boolean => {
     const msg = text.trim();
     if (!msg || !completeAttachments) return false;
+
+    // Validate attachments before sending
+    const incompatible = validateAttachments();
+    if (incompatible.length > 0) {
+      setIncompatibleAttachments(incompatible);
+      setIncompatibleModalOpen(true);
+      return false;
+    }
 
     const runtimes = getRuntimes();
     const isLoggedIn = !!user;
@@ -185,51 +251,74 @@ export const GlobalComposer: FC = () => {
   const sendLabel = t("sendLabel");
 
   return (
-    <div
-      className="relative flex w-full flex-col gap-0 cursor-text"
-      onClick={handleContainerClick}
-    >
-      <Captcha />
-      {/* Input box (top section) */}
-      <GlobalComposerTextarea
-        ref={textareaRef}
-        placeholder={t("placeholder")}
-        onSubmit={handleSubmit}
-      />
-      {/* Footer with attach and send, styled like thread composer */}
-      <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-start justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
-        <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-2">
-          <ReasoningSliderTrigger />
-          <ComposerAddAttachment />
-          {attachments.map((a) => (
-            <AttachmentChip
-              key={`${a.id}`}
-              attachment={a}
-              onRemove={() => removeAttachment(a)}
-            />
-          ))}
-        </div>
+    <>
+      {incompatibleModalOpen && (
+        <IncompatibleAttachmentsModal
+          onOpenChange={setIncompatibleModalOpen}
+          incompatibleAttachments={incompatibleAttachments}
+          onRemoveAttachment={(attachmentId) => {
+            const attachment = attachments.find((a) => a.id === attachmentId);
+            if (attachment) {
+              removeAttachment(attachment);
+            }
+            // Re-validate after removal
+            const remaining = incompatibleAttachments.filter(
+              (a) => a.id !== attachmentId
+            );
+            setIncompatibleAttachments(remaining);
+            if (!remaining.length) {
+              setIncompatibleModalOpen(false);
+            }
+          }}
+          onClose={() => setIncompatibleModalOpen(false)}
+        />
+      )}
+      <div
+        className="relative flex w-full flex-col gap-0 cursor-text"
+        onClick={handleContainerClick}
+      >
+        <Captcha />
+        {/* Input box (top section) */}
+        <GlobalComposerTextarea
+          ref={textareaRef}
+          placeholder={t("placeholder")}
+          onSubmit={handleSubmit}
+        />
+        {/* Footer with attach and send, styled like thread composer */}
+        <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-start justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
+          <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-2">
+            <ReasoningSliderTrigger />
+            <ComposerAddAttachment />
+            {attachments.map((a) => (
+              <AttachmentChip
+                key={`${a.id}`}
+                attachment={a}
+                onRemove={() => removeAttachment(a)}
+              />
+            ))}
+          </div>
 
-        {onStopAll ? (
-          <StopButton
-            onClick={onStopAll}
-            aria-label={stopAllLabel}
-            title={stopAllLabel}
-            className="self-start"
-          />
-        ) : (
-          <Button
-            size="icon"
-            onClick={() => textareaRef.current?.submit()}
-            aria-label={sendLabel}
-            title={sendLabel}
-            className="self-start"
-            disabled={pendingAttachments}
-          >
-            <ArrowUpIcon className="size-5" />
-          </Button>
-        )}
+          {onStopAll ? (
+            <StopButton
+              onClick={onStopAll}
+              aria-label={stopAllLabel}
+              title={stopAllLabel}
+              className="self-start"
+            />
+          ) : (
+            <Button
+              size="icon"
+              onClick={() => textareaRef.current?.submit()}
+              aria-label={sendLabel}
+              title={sendLabel}
+              className="self-start"
+              disabled={pendingAttachments}
+            >
+              <ArrowUpIcon className="size-5" />
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
