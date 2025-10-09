@@ -15,6 +15,7 @@ import {
 } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import type { PanelConfig } from "@/store/panels";
 import { ConfirmCloseModal } from "./confirm-close-modal";
 import { ModelDropdown } from "./model-dropdown";
@@ -33,13 +34,18 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelState = usePanelStateValue(panelId);
 
+  const preferences = useUserPreferencesValue();
+
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const setUIState = useUIStateSetter();
 
   const infoLabel = t("infoShowDetails");
 
   const handleRemoveClick = () => {
-    if (panelState.hasMessages) {
+    if (
+      panelState.hasMessages &&
+      !preferences.skipCloseThreadConfirmation
+    ) {
       setShowConfirmClose(true);
     } else {
       removePanel();

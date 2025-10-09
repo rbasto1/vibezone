@@ -142,14 +142,15 @@ const PreferencesPage = () => {
       const message =
         error instanceof Error ? error.message : JSON.stringify(error);
       toast.error(t("toast.error", { message }));
-      setPreferences({
+      setPreferences((prev) => ({
+        ...prev,
         pluginWeb: initialWebSearch,
         reasoningEffort: initialReasoningEffort,
         systemPrompt: initialSystemPrompt,
         changedPrompt: initialChangedPrompt,
         autoScroll: initialAutoScroll,
         hiddenProviders: initialHiddenProviders,
-      });
+      }));
     },
   });
 
@@ -168,7 +169,8 @@ const PreferencesPage = () => {
       hiddenProviders: hiddenList,
       systemPrompt,
     });
-    setPreferences({
+    setPreferences((prev) => ({
+      ...prev,
       pluginWeb: webSearch,
       reasoningEffort,
       systemPrompt,
@@ -176,7 +178,7 @@ const PreferencesPage = () => {
         initialChangedPrompt || systemPrompt !== initialSystemPrompt,
       autoScroll,
       hiddenProviders: hiddenList,
-    });
+    }));
   };
 
   return (

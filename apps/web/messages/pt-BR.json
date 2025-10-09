@@ -51,8 +51,11 @@
     "descriptionLoss": "Se você fechar o chat, sua conversa com esta IA será perdida.",
     "descriptionAlternate": "Você pode escolher outro modelo sem fechar o chat clicando no nome do modelo no cabeçalho.",
     "descriptionConfirm": "Tem certeza de que deseja fechar este chat?",
+    "skipLabel": "Não mostrar este aviso novamente",
+    "skipHint": "Entre na sua conta para salvar essa preferência em todos os dispositivos.",
     "cancel": "Cancelar",
-    "confirm": "Fechar chat"
+    "confirm": "Fechar chat",
+    "saveError": "Não foi possível salvar sua preferência: {message}"
   },
   "GlobalComposer": {
     "stopAllError": "Alguns painéis não puderam ser interrompidos: {failures}",

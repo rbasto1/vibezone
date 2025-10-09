@@ -1,6 +1,34 @@
 # Project Management
 
-## Pending Tasks
+## Features
+
+- [ ] Paid plans: Stripe integration (Clerk? Autumn? Polar?)
+- [ ] Add user profile (name, avatar, age, gender, country, etc)
+- [ ] Backend processing of messages: save the AI response without the need for a frontend
+- [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
+
+## Bugs
+
+- [ ] Bug: on mobile, closing the model details modal closes also the model selector
+- [ ] Text attachments are going inline inside <attachment>
+- [ ] Disable sending when attachments are not compatible with one of the models
+
+## Improvements
+
+- [ ] Thumb up/down (or stars?)
+- [ ] Allow user to pin favorite models
+- [ ] Import chats from OpenAI format
+- [ ] Export chats to OpenAI format
+- [ ] Add analytics (Posthog?)
+- [ ] Projects (group threads) - paying only
+- [x] Add a "do not show again" option to the warning about discarding a panel
+- [ ] Add Python project to calculate usage of non-OpenRouter models
+- [ ] Syntax highlighting: auto-detect language (switch to highlight.js?)
+- [ ] Add `api_created_at` to models and use our import date for created_at
+- [ ] Add auto-translation button to admin (model descriptions)
+- [ ] Schedule daily usage calculation
+
+## MVP (done)
 
 - [x] Add SEO metadata
 - [x] Mobile version
@@ -40,31 +68,13 @@
 - [x] Paginate chat history
 - [x] Add reasoning effort slider
 - [x] Search chats (backend search of all messages)
-- [ ] Bug: on mobile, closing the model details modal closes also the model selector
-- [ ] Claude Opus 4.1 not completing
-- [ ] Text attachments are going inline inside <attachment>
-- [ ] Add Stripe integration (Clerk? Autumn? Polar?)
-- [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [x] Add user preferences (auto-scroll, hidden providers, pre-prompt)
 - [x] Fix <lineBreak/> not working on i18n
 - [x] Keep composer text in SessionStorage
-- [ ] Thumb up/down (or stars?)
-- [ ] Allow user to pin favorite models
 - [x] Show spinner when switching languages
 - [x] Limit usage for free users (400)
 - [x] Show deleted providers and models in the admin
-- [ ] Limit usage for paid users
-- [ ] Import chats from OpenAI format
-- [ ] Add analytics (Posthog?)
 - [x] Refactor vz-open-login event to use jotai state
 - [x] Fix toast colors
 - [x] Simplify model selection metadata, add colors to capabilities buttons
-- [ ] Backend processing of messages: save the AI response without the need for a frontend
-- [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
-- [ ] Projects (group threads) - paying only
-- [ ] Add a "do not show again" option to the warning about discarding a panel
-- [ ] Add Python project to calculate usage of non-OpenRouter models
-- [ ] Syntax highlighting: auto-detect language (switch to highlight.js?)
-- [ ] Add `api_created_at` to models and use our import date for created_at
-- [ ] Add description editor to admin, with auto translation
-- [ ] Disable sending when attachments are not compatible with one of the models
+- [x] Add description editor to admin

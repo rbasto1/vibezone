@@ -65,6 +65,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         changedPrompt,
         autoScroll: user?.preferenceAutoScroll,
         hiddenProviders: user?.preferenceHiddenProviders ?? [],
+        skipCloseThreadConfirmation:
+          user?.preferenceSkipCloseThreadConfirmation ?? false,
       }
     : {
         pluginWeb: true,
@@ -73,6 +75,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         changedPrompt: false,
         autoScroll: false,
         hiddenProviders: [],
+        skipCloseThreadConfirmation: false,
       };
 
   // Load all the state we will pass to the client side store

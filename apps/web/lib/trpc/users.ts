@@ -137,6 +137,7 @@ export const usersRouter = t.router({
         systemPrompt: z.string().max(4000).nullable().optional(),
         webSearch: z.boolean().optional(),
         reasoningEffort: z.enum(["none", "low", "medium", "high"]).optional(),
+        skipCloseThreadConfirmation: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -183,6 +184,8 @@ export const usersRouter = t.router({
           : undefined,
         preferenceWebSearch: input.webSearch,
         preferenceReasoningEffort: input.reasoningEffort,
+        preferenceSkipCloseThreadConfirmation:
+          input.skipCloseThreadConfirmation,
       };
 
       if (
@@ -203,6 +206,7 @@ export const usersRouter = t.router({
           systemPrompt: input.systemPrompt,
           webSearch: input.webSearch,
           reasoningEffort: input.reasoningEffort,
+          skipCloseThreadConfirmation: input.skipCloseThreadConfirmation,
           lastModels:
             "lastModels" in updatePayload
               ? filteredLastModels

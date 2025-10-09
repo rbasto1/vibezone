@@ -51,8 +51,11 @@
     "descriptionLoss": "Wenn du den Chat schließt, geht deine Unterhaltung mit dieser KI verloren.",
     "descriptionAlternate": "Du kannst im Chat-Kopf auf den Modellnamen klicken, um ein anderes Modell zu wählen, ohne den Chat zu schließen.",
     "descriptionConfirm": "Bist du sicher, dass du diesen Chat schließen möchtest?",
+    "skipLabel": "Diesen Hinweis nicht mehr anzeigen",
+    "skipHint": "Melde dich an, um diese Einstellung überall zu übernehmen.",
     "cancel": "Abbrechen",
-    "confirm": "Chat schließen"
+    "confirm": "Chat schließen",
+    "saveError": "Deine Einstellung konnte nicht gespeichert werden: {message}"
   },
   "GlobalComposer": {
     "stopAllError": "Einige Panels konnten nicht gestoppt werden: {failures}",

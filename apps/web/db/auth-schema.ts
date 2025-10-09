@@ -27,6 +27,11 @@ export const user = pgTable("user", {
   preferenceReasoningEffort: text("preference_reasoning_effort")
     .default("low")
     .notNull(),
+  preferenceSkipCloseThreadConfirmation: boolean(
+    "preference_skip_close_thread_confirmation"
+  )
+    .default(false)
+    .notNull(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
