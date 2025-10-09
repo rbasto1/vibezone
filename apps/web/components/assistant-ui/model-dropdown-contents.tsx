@@ -107,11 +107,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
 
   const providersByTier = useMemo(() => {
     if (searchQuery.trim()) {
-      const query = searchQuery.trim().toLowerCase();
+      const query = normalize(searchQuery.trim().toLowerCase());
       return providers.filter((p) => {
-        if (p.name.toLowerCase().includes(query)) return true;
+        if (normalize(p.name.toLowerCase()).includes(query)) return true;
         const providerModels = models.filter((m) => m.providerId === p.id);
-        return providerModels.some((m) => m.name.toLowerCase().includes(query));
+        return providerModels.some((m) =>
+          normalize(m.name.toLowerCase()).includes(query)
+        );
       });
     }
 
@@ -150,11 +152,11 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       }
 
       if (hasSearchQuery) {
-        const query = searchQuery.toLowerCase().trim();
+        const query = normalize(searchQuery.toLowerCase().trim());
         list = list.filter(
           (m) =>
-            m.provider.name.toLowerCase().includes(query) ||
-            m.name.toLowerCase().includes(query)
+            normalize(m.provider.name.toLowerCase()).includes(query) ||
+            normalize(m.name.toLowerCase()).includes(query)
         );
       }
 
@@ -528,3 +530,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     </DropdownMenuContent>
   );
 };
+
+function normalize(s: string) {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}

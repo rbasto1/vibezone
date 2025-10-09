@@ -11,11 +11,10 @@ export interface GetConfigResponseSuccess {
     modelId: string;
     providerId: string;
     adapterModelId: string;
-    maxTokens: number | undefined;
+    maxTokens: number;
     plugins: string[];
   };
   messages: ChatMessage[];
-  error: null;
 }
 
 interface GetConfigResponseError {
@@ -63,10 +62,12 @@ export function getConfigFromRequest(
       providerId,
       adapterModelId: getAdapterModelId(modelId),
       plugins: getValidPlugins(providerId, pluginList),
-      maxTokens: bodyParse.data.maxTokens,
+      maxTokens:
+        (bodyParse.data.maxTokens ?? providerId === "maritacaai")
+          ? 12000
+          : 32000,
     },
     messages: bodyParse.data.messages,
-    error: null,
   };
 }
 

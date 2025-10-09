@@ -16,6 +16,8 @@ export const ReasoningSlider: React.FC<ReasoningSliderProps> = ({
   sliderValue,
   onSave,
 }) => {
+  // We separate the state into this component so that we only call the tRPC function to save the value
+  // when the component is closed, not at each interaction with the slider
   const t = useTranslations("UserPreferences.reasoningEffort");
   const initialValue = useRef(sliderValue);
   const currentValue = useRef(sliderValue);

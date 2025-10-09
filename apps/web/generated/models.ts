@@ -71,7 +71,6 @@ export const models = {groups:[
 {"id":"deepseek/deepseek-r1-0528:free","name":"R1 0528","providerId":"deepseek","isFree":true,"capReason":true,"provider":{"name":"DeepSeek"}},
 {"id":"deepseek/deepseek-r1-distill-llama-70b","name":"R1 Distill Llama 70B","providerId":"deepseek","isIncluded":true,"capReason":true,"capTools":true,"provider":{"name":"DeepSeek"}},
 {"id":"deepseek/deepseek-r1-distill-llama-70b:free","name":"R1 Distill Llama 70B","providerId":"deepseek","isFree":true,"capReason":true,"provider":{"name":"DeepSeek"}},
-{"id":"deepseek/deepseek-r1-distill-llama-8b","name":"R1 Distill Llama 8B","providerId":"deepseek","capReason":true,"provider":{"name":"DeepSeek"}},
 {"id":"deepseek/deepseek-r1-distill-qwen-14b","name":"R1 Distill Qwen 14B","providerId":"deepseek","isIncluded":true,"capReason":true,"provider":{"name":"DeepSeek"}},
 {"id":"deepseek/deepseek-r1-distill-qwen-32b","name":"R1 Distill Qwen 32B","providerId":"deepseek","isIncluded":true,"capReason":true,"provider":{"name":"DeepSeek"}},
 {"id":"deepseek/deepseek-r1:free","name":"R1","providerId":"deepseek","isFree":true,"capReason":true,"provider":{"name":"DeepSeek"}},

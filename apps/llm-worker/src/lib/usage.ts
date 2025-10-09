@@ -29,21 +29,18 @@ export const persistUsage = async (params: PersistUsageParams) => {
   }
 
   const metadata = await providerMetadata;
-  console.info({
-    message: "Persisting usage",
-    metadata: JSON.stringify(metadata),
-  });
 
   const openrouterMetadata = OpenRouterMetadataSchema.safeParse(metadata).data;
   const openrouterUsage = openrouterMetadata?.openrouter.usage;
 
-  try {
-    const ip =
-      requestHeaders.get("CF-Connecting-IP") ??
-      requestHeaders.get("X-Forwarded-For") ??
-      null;
+  const ip =
+    requestHeaders.get("CF-Connecting-IP") ??
+    requestHeaders.get("X-Forwarded-For") ??
+    null;
 
-    await db.insert(schema.usage).values({
+  await db
+    .insert(schema.usage)
+    .values({
       userId: usageContext.userId,
       userKey: usageContext.userKey,
       ip,
@@ -55,10 +52,18 @@ export const persistUsage = async (params: PersistUsageParams) => {
       tokensPrompt: openrouterUsage?.promptTokens,
       tokensCompletion: openrouterUsage?.completionTokens,
       responseStatus: isAborted ? "aborted" : "finished",
+    })
+    .catch((error) => {
+      console.error({
+        message: "Failed to persist usage log",
+        error,
+        metadata,
+        usageContext,
+        openrouterUsage,
+        ip,
+        modelId,
+      });
     });
-  } catch (error) {
-    console.error({ message: "Failed to persist usage log", error });
-  }
 };
 
 function extractGeo(cf: VibezoneContext["cf"]): Record<string, unknown> | null {
@@ -69,7 +74,7 @@ function extractGeo(cf: VibezoneContext["cf"]): Record<string, unknown> | null {
   try {
     return JSON.parse(JSON.stringify(cf));
   } catch (error) {
-    console.warn({ message: "Failed to serialize geo data", error });
+    console.warn({ message: "Failed to serialize geo data", error, cf });
     return null;
   }
 }

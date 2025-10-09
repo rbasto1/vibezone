@@ -16,7 +16,7 @@ export async function handleProviderStream(
 
   const pluginWeb = plugins.includes("web");
 
-  const adapter = getAdapterForProvider(env, providerId, plugins);
+  const adapter = getAdapterForProvider(env, providerId, completionRequest);
 
   const modelSpecifier = pluginWeb
     ? `${adapterModelId}:online`
@@ -24,21 +24,29 @@ export async function handleProviderStream(
 
   const remainingQuota = vzContext.usageContext?.remainingQuota;
   const refund = () => {
-    const userKey = vzContext.usageContext?.userKey;
-    if (remainingQuota !== null && remainingQuota !== undefined && userKey) {
-      console.info({
-        message: "Refunding anon user",
-        userKey,
-      });
-      const stub = getUsageDO(env, userKey);
-      stub.fetch("https://internal/credit", { method: "POST" });
+    const { userKey, userId } = vzContext.usageContext ?? {};
+    if (
+      remainingQuota === null ||
+      remainingQuota === undefined ||
+      userId ||
+      !userKey
+    ) {
+      return;
     }
+
+    console.info({
+      message: "Refunding anon user",
+      userKey,
+    });
+    const stub = getUsageDO(env, userKey);
+    stub.fetch("https://internal/credit", { method: "POST" });
   };
 
   console.info({
     message: "Starting stream",
     model: modelId,
     plugins: plugins.join(", "),
+    user: vzContext.usageContext?.userId ?? vzContext.usageContext?.userKey,
   });
 
   const result = streamText({
@@ -73,10 +81,10 @@ export async function handleProviderStream(
         message: "toUIMessageStreamResponse onError:",
         error,
       });
+      refund();
       if (error instanceof Error) {
         return error.message;
       }
-      refund();
       return "An error occurred";
     },
     onFinish: (e) => {
