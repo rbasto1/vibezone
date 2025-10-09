@@ -11,7 +11,7 @@
 
 - [ ] Bug: on mobile, closing the model details modal closes also the model selector
 - [ ] Text attachments are going inline inside <attachment>
-- [ ] Disable sending when attachments are not compatible with one of the models
+- [x] Disable sending when attachments are not compatible with one of the models
 
 ## Improvements
 
