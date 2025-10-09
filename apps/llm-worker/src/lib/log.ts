@@ -14,9 +14,21 @@ export function summarize(obj: unknown): string {
     case "object":
       if (Array.isArray(obj)) {
         const len = obj.length;
+        if (obj.every((elem) => elem === null)) {
+          return `["null[${len}]"]`;
+        }
         for (const type of ["string", "number", "boolean", "bigint"] as const) {
-          if (obj.every((elem) => typeof elem === type)) {
-            return `["${type}[${len}]"]`;
+          let hasNull = false;
+          if (
+            obj.every((elem) => {
+              if (elem === null) {
+                hasNull = true;
+                return true;
+              }
+              return typeof elem === type;
+            })
+          ) {
+            return `["${type}${hasNull ? "?" : ""}[${len}]"]`;
           }
         }
         return "[" + obj.map(summarize).join(", ") + "]";
