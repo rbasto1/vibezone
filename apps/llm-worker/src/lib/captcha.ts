@@ -9,9 +9,10 @@ export async function validateCaptchaToken(
     console.error("TURNSTILE_SECRET_KEY not set");
     return { success: false };
   }
-  if (!env.ENVIRONMENT) {
+  if (!env.ENVIRONMENT || env.ENVIRONMENT === "development") {
     console.warn({
-      message: "Skipping Captcha verification, empty ENVIRONMENT",
+      message: "Skipping Captcha verification",
+      environment: env.ENVIRONMENT,
     });
     return { success: true };
   }

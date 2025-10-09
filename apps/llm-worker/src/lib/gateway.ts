@@ -1,6 +1,7 @@
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import type { Env } from "../worker";
+import type { GetConfigResponseSuccess } from "./request";
 
 type GatewayAdapterKey = "openrouter" | "maritacaai";
 
@@ -10,6 +11,12 @@ interface GatewayConfig {
   baseURL?: string;
   compatibility?: "strict" | "compatible";
 }
+
+const effortRatio: Record<"low" | "medium" | "high", number> = {
+  low: 0.2,
+  medium: 0.5,
+  high: 0.8,
+};
 
 function getGatewayConfig(env: Env, key: GatewayAdapterKey): GatewayConfig {
   if (key === "maritacaai") {
@@ -33,17 +40,33 @@ function getGatewayConfig(env: Env, key: GatewayAdapterKey): GatewayConfig {
   return {
     apiKey: env.OPENROUTER_API_KEY,
     headers: {
-      "X-Title":
-        env.ENVIRONMENT === "development" ? "Vibezone (Dev)" : "Vibezone",
+      "HTTP-Referer": "https://vibezone.ai",
+      "X-Title": "Vibezone.ai",
     },
-    compatibility: "strict",
   };
 }
 
-function ensureGateway(env: Env, key: GatewayAdapterKey, plugins: string[]) {
+function ensureGateway(
+  env: Env,
+  key: GatewayAdapterKey,
+  completionRequest: GetConfigResponseSuccess
+) {
+  const { maxTokens, plugins } = completionRequest.config;
   const reasonPlugin = plugins.find((p) => p.startsWith("reason-"));
   const effort = reasonPlugin?.substring("reason-".length) ?? "low";
-  const reasoning = effort === "none" ? { enabled: false } : { effort };
+  if (
+    effort !== "low" &&
+    effort !== "medium" &&
+    effort !== "high" &&
+    effort !== "none"
+  ) {
+    console.error({ message: "Invalid reasoning effort", effort });
+    throw new Error("Invalid reasoning effort");
+  }
+  const reasoning =
+    effort === "none"
+      ? { enabled: false }
+      : { max_tokens: maxTokens * effortRatio[effort] };
 
   const config = getGatewayConfig(env, key);
   const adapter = createOpenRouter({
@@ -51,7 +74,7 @@ function ensureGateway(env: Env, key: GatewayAdapterKey, plugins: string[]) {
     apiKey: config.apiKey,
     headers: config.headers,
     baseURL: config.baseURL,
-    extraBody: { reasoning },
+    extraBody: key === "openrouter" ? { reasoning } : undefined,
   });
 
   return adapter;
@@ -60,14 +83,17 @@ function ensureGateway(env: Env, key: GatewayAdapterKey, plugins: string[]) {
 export function getAdapterForProvider(
   env: Env,
   providerId: string,
-  plugins: string[]
+  completionRequest: GetConfigResponseSuccess
 ): OpenRouterProvider {
   const gw = getGatewayForProvider(providerId);
-  return ensureGateway(env, gw, plugins);
+  return ensureGateway(env, gw, completionRequest);
 }
 
-export function getOpenRouter(env: Env, plugins: string[]): OpenRouterProvider {
-  return ensureGateway(env, "openrouter", plugins);
+export function getOpenRouter(
+  env: Env,
+  completionRequest: GetConfigResponseSuccess
+): OpenRouterProvider {
+  return ensureGateway(env, "openrouter", completionRequest);
 }
 
 function getGatewayForProvider(providerId: string): GatewayAdapterKey {

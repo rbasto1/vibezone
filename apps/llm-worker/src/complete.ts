@@ -10,14 +10,9 @@ export async function handleProviderComplete(
   const { modelId, maxTokens } = completionRequest.config;
   const requestMessages = completionRequest.messages;
 
-  const adapter = getOpenRouter(env, []);
+  const adapter = getOpenRouter(env, completionRequest);
 
   const messages = convertToModelMessages(requestMessages);
-  console.info({
-    message: "Starting completion",
-    model: modelId,
-    input: messages[0]?.content,
-  });
 
   try {
     const result = await generateText({
@@ -25,10 +20,6 @@ export async function handleProviderComplete(
       messages,
       maxOutputTokens: maxTokens,
       temperature: 0.1,
-    });
-    console.info({
-      message: "Completion finished",
-      text: result.text,
     });
 
     return Response.json(

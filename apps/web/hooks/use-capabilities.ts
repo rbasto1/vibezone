@@ -7,6 +7,5 @@ export function canReason(id: string) {
 
 export function useAllCanReason() {
   const panelsConfig = usePanelsConfigValue();
-
-  return !panelsConfig.some((panel) => canReason(panel.model));
+  return panelsConfig.every((panel) => canReason(panel.model));
 }

@@ -63,7 +63,6 @@ export const models: Record<string, { isIncluded?: true; isPremium?: true }> = {
   "deepseek/deepseek-r1-0528:free": {},
   "deepseek/deepseek-r1-distill-llama-70b": {"isIncluded":true},
   "deepseek/deepseek-r1-distill-llama-70b:free": {},
-  "deepseek/deepseek-r1-distill-llama-8b": {},
   "deepseek/deepseek-r1-distill-qwen-14b": {"isIncluded":true},
   "deepseek/deepseek-r1-distill-qwen-32b": {"isIncluded":true},
   "deepseek/deepseek-r1:free": {},

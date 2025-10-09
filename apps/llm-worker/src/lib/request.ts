@@ -1,3 +1,4 @@
+import { summarize } from "./log";
 import type { ChatMessage } from "./schemas";
 import { ChatRequestSchema } from "./schemas";
 
@@ -11,11 +12,10 @@ export interface GetConfigResponseSuccess {
     modelId: string;
     providerId: string;
     adapterModelId: string;
-    maxTokens: number | undefined;
+    maxTokens: number;
     plugins: string[];
   };
   messages: ChatMessage[];
-  error: null;
 }
 
 interface GetConfigResponseError {
@@ -34,7 +34,7 @@ export function getConfigFromRequest(
     console.error({
       message: "Zod validation failed",
       error: bodyParse.error,
-      body: rawBody,
+      body: summarize(rawBody),
     });
     return {
       type: "error",
@@ -63,10 +63,9 @@ export function getConfigFromRequest(
       providerId,
       adapterModelId: getAdapterModelId(modelId),
       plugins: getValidPlugins(providerId, pluginList),
-      maxTokens: bodyParse.data.maxTokens,
+      maxTokens: bodyParse.data.maxTokens ?? getProviderMaxTokens(providerId),
     },
     messages: bodyParse.data.messages,
-    error: null,
   };
 }
 
@@ -78,6 +77,15 @@ function getAdapterModelId(modelId: string) {
       return modelId.split("/")[1]!;
     default:
       return modelId;
+  }
+}
+
+function getProviderMaxTokens(providerId: string) {
+  switch (providerId) {
+    case "maritacaai":
+      return 12000;
+    default:
+      return 32000;
   }
 }
 
