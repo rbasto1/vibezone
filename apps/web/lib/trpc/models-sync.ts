@@ -181,6 +181,7 @@ export async function syncFromOpenRouter() {
               description: m.description,
               pricing: m.pricing,
               topProvider: m.topProvider,
+              apiCreatedAt: m.apiCreatedAt,
               // The insert will fail because it's a duplicate ID, we only care about the onConflictDoUpdate
               providerId: "",
               canonicalSlug: "",
@@ -201,6 +202,7 @@ export async function syncFromOpenRouter() {
             description: sql`EXCLUDED.description`,
             pricing: sql`EXCLUDED.pricing`,
             topProvider: sql`EXCLUDED.top_provider`,
+            apiCreatedAt: sql`EXCLUDED.api_created_at`,
           },
         })
         .then(() => toUpdate.length)
@@ -660,7 +662,7 @@ function apiModelToDbModel(m: OpenRouterModel) {
     pricing: m.pricing,
     topProvider: m.top_provider,
     perRequestLimits: m.per_request_limits,
-    createdAt: new Date(m.created * 1000),
+    apiCreatedAt: new Date(m.created * 1000),
     isChat,
     isFree,
   } satisfies NewModel;
