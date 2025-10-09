@@ -1,3 +1,4 @@
+import { summarize } from "./log";
 import type { ChatMessage } from "./schemas";
 import { ChatRequestSchema } from "./schemas";
 
@@ -33,7 +34,7 @@ export function getConfigFromRequest(
     console.error({
       message: "Zod validation failed",
       error: bodyParse.error,
-      body: rawBody,
+      body: summarize(rawBody),
     });
     return {
       type: "error",
