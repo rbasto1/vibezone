@@ -60,8 +60,10 @@ export const models = pgTable(
     pricing: jsonb("pricing").notNull().$type<ModelPricing>(),
     topProvider: jsonb("top_provider").notNull().$type<ModelTopProvider>(),
     perRequestLimits: jsonb("per_request_limits").$type<null>(),
-    // created from API (epoch seconds) -> timestamptz
+    // created_at is now timestamped when we import the model
     createdAt: timestampTzNow("created_at"),
+    // api_created_at stores the original created timestamp from the API (epoch seconds) -> timestamptz
+    apiCreatedAt: timestampTz("api_created_at"),
 
     // VIBEZONE specific fields
     // UI selection priority for default panels
