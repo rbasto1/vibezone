@@ -20,6 +20,7 @@ export interface AuthUser {
   preferenceSystemPromptChangedAt?: Date | null;
   preferenceWebSearch: boolean;
   preferenceReasoningEffort: string;
+  preferenceSkipCloseThreadConfirmation: boolean;
 }
 
 export const authClient = createAuthClient({

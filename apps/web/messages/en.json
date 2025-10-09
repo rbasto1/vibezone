@@ -51,8 +51,11 @@
     "descriptionLoss": "If you close the chat, your conversation with this AI will be lost.",
     "descriptionAlternate": "You can choose another model without closing the chat by clicking the model name in the chat header.",
     "descriptionConfirm": "Are you sure you want to close this chat?",
+    "skipLabel": "Do not show this warning again",
+    "skipHint": "Sign in to save this preference across devices.",
     "cancel": "Cancel",
-    "confirm": "Close Chat"
+    "confirm": "Close Chat",
+    "saveError": "We could not save your preference: {message}"
   },
   "GlobalComposer": {
     "stopAllError": "Some panels failed to stop: {failures}",

@@ -125,6 +125,10 @@ export const auth = betterAuth({
         type: "string",
         defaultValue: "low",
       },
+      preferenceSkipCloseThreadConfirmation: {
+        type: "boolean",
+        defaultValue: false,
+      },
     },
   },
 });

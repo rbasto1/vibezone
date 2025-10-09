@@ -8,6 +8,7 @@ export interface PreferencesAtom {
   autoScroll: boolean;
   hiddenProviders: string[];
   reasoningEffort: ReasoningEffort;
+  skipCloseThreadConfirmation: boolean;
 }
 
 export const preferencesAtom = atom<PreferencesAtom>({
@@ -17,4 +18,5 @@ export const preferencesAtom = atom<PreferencesAtom>({
   autoScroll: false,
   hiddenProviders: [],
   reasoningEffort: "low",
+  skipCloseThreadConfirmation: false,
 });
