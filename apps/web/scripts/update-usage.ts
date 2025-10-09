@@ -1,22 +1,4 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-
-import * as schema from "@/db/schema";
-
-const query = `UPDATE usage AS u
-  SET
-    cost_prompt = COALESCE(
-      u.cost_prompt,
-      COALESCE(u.tokens_prompt, 0) * COALESCE((m.pricing ->> 'prompt')::numeric, 0::numeric)
-    ),
-    cost_completion = COALESCE(
-      u.cost_completion,
-      COALESCE(u.tokens_completion, 0) * COALESCE((m.pricing ->> 'completion')::numeric, 0::numeric)
-    )
-  FROM models AS m
-  WHERE u.model_id = m.id
-    AND (u.cost_prompt IS NULL OR u.cost_completion IS NULL);
-`;
+import { runUpdateUsage } from "@/app/api/jobs/update-usage/job";
 
 function main() {
   const databaseUrl = process.argv[2] || process.env.DATABASE_URL;
@@ -25,10 +7,12 @@ function main() {
     process.exit(1);
   }
 
-  const sql = neon(databaseUrl);
-  const db = drizzle(sql, { schema });
-
-  db.execute(query).then((output) => console.info("Success:", output));
+  runUpdateUsage({ databaseUrl })
+    .then((output) => console.info("Success:", output))
+    .catch((error) => {
+      console.error("Failed to update usage:", error);
+      process.exit(1);
+    });
 }
 
 main();

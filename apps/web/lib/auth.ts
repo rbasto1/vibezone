@@ -10,6 +10,7 @@ import enMessages from "../messages/en.json";
 import ptBrMessages from "../messages/pt-BR.json";
 import { baseUrl } from "./base-url";
 import { detectLocale } from "./i18n/detect-locale";
+import { sendEmailWithResend } from "./resend";
 
 const AUTH_EMAIL_LOCALES = ["en", "pt-BR", "de"] as const;
 type AuthEmailLocale = (typeof AUTH_EMAIL_LOCALES)[number];
@@ -42,27 +43,6 @@ const getAuthEmailTranslator = (locale?: string) => {
   });
 };
 
-async function sendEmailWithResend(to: string, subject: string, html: string) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing RESEND_API_KEY");
-  }
-  const from = `no-reply@vibezone.ai`;
-
-  const resp = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from, to, subject, html }),
-  });
-  if (!resp.ok) {
-    const body = await resp.text().catch(() => "<no-body>");
-    throw new Error(`Resend error ${resp.status}: ${body}`);
-  }
-}
-
 export const auth = betterAuth({
   secret: process.env.AUTH_SECRET,
   cookies: nextCookies(),
@@ -91,7 +71,7 @@ export const auth = betterAuth({
           `<p><a href="${url}">${linkText}</a></p>`,
           `<p>${t("body.expiry")}</p>`,
         ].join("");
-        await sendEmailWithResend(email, subject, html);
+        await sendEmailWithResend({ to: email, subject, html });
       },
     }),
   ],
