@@ -7,7 +7,7 @@ function main() {
     process.exit(1);
   }
 
-  runUpdateUsage({ databaseUrl })
+  return runUpdateUsage({ databaseUrl })
     .then((output) => console.info("Success:", output))
     .catch((error) => {
       console.error("Failed to update usage:", error);

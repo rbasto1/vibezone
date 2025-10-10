@@ -1,11 +1,26 @@
-import { NextResponse } from "next/server";
-
 import { sendEmailWithResend } from "@/lib/resend";
 
+import type { NextMiddleware } from "next/server";
 import { runUpdateUsage } from "./job";
 
 const SUPPORT_EMAIL = "support@vibezone.ai";
 const JOB_NAME = "update-usage";
+
+export const POST: NextMiddleware = (_request, context) => {
+  context.waitUntil(
+    runUpdateUsage().catch((error) => {
+      console.error("Failed to run update usage job:", error);
+      return notifyFailure(error).catch((notifyError) => {
+        console.error(
+          "Failed to send update usage job failure notification:",
+          notifyError
+        );
+      });
+    })
+  );
+
+  return new Response("ok");
+};
 
 const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -47,21 +62,3 @@ const notifyFailure = (error: unknown) => {
     html: htmlParts.join("\n"),
   });
 };
-
-export const POST = () =>
-  runUpdateUsage()
-    .then((result) => NextResponse.json({ success: true, result }))
-    .catch(async (error) => {
-      console.error("Failed to run update usage job:", error);
-      await notifyFailure(error).catch((notifyError) => {
-        console.error(
-          "Failed to send update usage job failure notification:",
-          notifyError
-        );
-      });
-
-      return NextResponse.json(
-        { error: "Failed to update usage" },
-        { status: 500 }
-      );
-    });
