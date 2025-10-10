@@ -14,44 +14,42 @@ import { useMemo } from "react";
 const ManageUsersPageClient: NextPage = () => {
   const { data, error, isLoading, isFetching, refetch } =
     trpc.users.manageList.useQuery();
+  const { users, costCalculationBeforeDt } = data ?? {};
 
-  const totals = useMemo(
-    () => {
-      if (!data?.length) {
-        return {
-          users: 0,
-          loginsLast7: 0,
-          chatsLast7: 0,
-          completionsLast7: 0,
-          cost7: 0,
-          cost30: 0,
-        };
+  const totals = useMemo(() => {
+    if (!users?.length) {
+      return {
+        users: 0,
+        loginsLast7: 0,
+        chatsLast7: 0,
+        completionsLast7: 0,
+        cost7: 0,
+        cost30: 0,
+      };
+    }
+
+    return users.reduce(
+      (acc, user) => {
+        acc.users += 1;
+        acc.loginsLast7 += user.sessionsLast7 ?? 0;
+        acc.chatsLast7 += user.chatsCount ?? 0;
+        acc.completionsLast7 += user.completionsCount ?? 0;
+        acc.cost7 += Number(user.costLast7 ?? 0);
+        acc.cost30 += Number(user.costLast30 ?? 0);
+        return acc;
+      },
+      {
+        users: 0,
+        loginsLast7: 0,
+        chatsLast7: 0,
+        completionsLast7: 0,
+        cost7: 0,
+        cost30: 0,
       }
+    );
+  }, [users]);
 
-      return data.reduce(
-        (acc, user) => {
-          acc.users += 1;
-          acc.loginsLast7 += user.sessionsLast7 ?? 0;
-          acc.chatsLast7 += user.chatsCount ?? 0;
-          acc.completionsLast7 += user.completionsCount ?? 0;
-          acc.cost7 += Number(user.costLast7 ?? 0);
-          acc.cost30 += Number(user.costLast30 ?? 0);
-          return acc;
-        },
-        {
-          users: 0,
-          loginsLast7: 0,
-          chatsLast7: 0,
-          completionsLast7: 0,
-          cost7: 0,
-          cost30: 0,
-        }
-      );
-    },
-    [data]
-  );
-
-  const columns: ColumnDef<UsersManageListOutput[number]>[] = useMemo(
+  const columns: ColumnDef<UsersManageListOutput["users"][number]>[] = useMemo(
     () => [
       {
         accessorKey: "name",
@@ -155,6 +153,10 @@ const ManageUsersPageClient: NextPage = () => {
     );
   }
 
+  const costCalculationBeforeDtString = costCalculationBeforeDt
+    ? `Cost updated before: ${costCalculationBeforeDt.toLocaleString()}`
+    : "Cost numbers are up to date.";
+
   return (
     <div className="mx-auto w-full max-w-5xl p-6">
       <AdminHeader
@@ -167,7 +169,12 @@ const ManageUsersPageClient: NextPage = () => {
       <QueryAlert error={error} />
 
       <div className="rounded-md border">
-        <DataTable columns={columns} data={data ?? []} />
+        <DataTable columns={columns} data={users ?? []} />
+      </div>
+      <div className="mt-4">
+        <p className="text-sm text-muted-foreground">
+          {costCalculationBeforeDtString}
+        </p>
       </div>
     </div>
   );
