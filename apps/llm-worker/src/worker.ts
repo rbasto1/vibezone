@@ -1,6 +1,7 @@
 import type { env } from "cloudflare:workers";
 import { handleProviderComplete } from "./complete";
 import { cors } from "./cors";
+import { runUpdateUsage } from "./jobs/update-usage";
 import { getDb } from "./lib/db";
 import type { UsageContext } from "./lib/limiting";
 import { checkUsage } from "./lib/limiting";
@@ -100,5 +101,10 @@ export default {
         console.error({ message: "Invalid path", path: url.pathname });
         return new Response("Not found", { status: 404, headers });
     }
+  },
+
+  async scheduled(controller: ScheduledController, env: Env): Promise<void> {
+    controller.noRetry();
+    await runUpdateUsage(env);
   },
 };

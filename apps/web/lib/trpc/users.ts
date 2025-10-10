@@ -12,6 +12,7 @@ import {
   inArray,
   isNull,
   max,
+  min,
   sql,
 } from "drizzle-orm";
 import { z } from "zod";
@@ -20,6 +21,14 @@ import { adminProcedure, authenticatedProcedure, t } from "./server/initialize";
 
 export const usersRouter = t.router({
   manageList: adminProcedure.query(async () => {
+    const costCalculationBeforeDtPromise = db
+      .select({
+        date: min(usage.createdAt),
+      })
+      .from(usage)
+      .where(isNull(usage.costPrompt))
+      .then((rows) => rows[0]?.date ?? null);
+
     const lastSevenDays = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
     const lastThirtyDays = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
 
@@ -90,7 +99,12 @@ export const usersRouter = t.router({
         throw error;
       });
 
-    return usersRows;
+    const costCalculationBeforeDt = await costCalculationBeforeDtPromise;
+
+    return {
+      users: usersRows,
+      costCalculationBeforeDt,
+    };
   }),
 
   // Replace lastModels with the exact array in the given order,

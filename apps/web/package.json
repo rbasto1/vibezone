@@ -15,7 +15,6 @@
     "db:seed": "dotenvx run -- tsx db/seed.ts",
     "db:update-stage": "dotenvx run -- tsx scripts/update-stage.ts",
     "generate:data-ts": "dotenvx run -- tsx scripts/generate-data-ts.ts",
-    "update-usage": "tsx scripts/update-usage.ts",
     "set-vercel-envs": "dotenvx run -- tsx scripts/set-vercel-envs.ts"
   },
   "dependencies": {
