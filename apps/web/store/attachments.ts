@@ -1,4 +1,4 @@
-import { createAttachmentAdapter } from "@/lib/attachments";
+import { createAttachmentAdapter } from "@/lib/attachments/attachments";
 import type { Attachment, AttachmentAdapter } from "@assistant-ui/react";
 import { atom } from "jotai";
 
