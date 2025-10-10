@@ -6,6 +6,23 @@ import type { FC } from "react";
 import { MarkdownText } from "./markdown-text";
 
 /**
+ * Unescapes HTML entities in a string
+ */
+const unescapeHtml = (text: string): string => {
+  const htmlUnescapes: Record<string, string> = {
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+    "&#39;": "'",
+  };
+  return text.replace(
+    /&(?:amp|lt|gt|quot|#39);/g,
+    (entity) => htmlUnescapes[entity] || entity
+  );
+};
+
+/**
  * Extracts attachment name and content from attachment tag
  */
 const parseAttachment = (
@@ -18,11 +35,12 @@ const parseAttachment = (
     return null;
   }
 
-  // Extract the name from the opening tag
+  // Extract the name from the opening tag (it may contain escaped HTML entities)
   const nameMatch = text.match(/<attachment name="([^"]+)">/);
   if (!nameMatch || !nameMatch[1]) return null;
 
-  const name = nameMatch[1];
+  // Unescape the filename
+  const name = unescapeHtml(nameMatch[1]);
 
   // Extract content between opening and closing tags
   const contentStart = text.indexOf(">\n") + 2;

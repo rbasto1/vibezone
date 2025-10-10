@@ -77,6 +77,8 @@ export class TextAttachmentAdapter implements AttachmentAdapter {
 
   async send(attachment: PendingAttachment): Promise<CompleteAttachment> {
     const text = await this.fileToText(attachment.file);
+    // Escape the filename to handle special characters like quotes
+    const escapedName = this.escapeHtml(attachment.name);
 
     return {
       id: attachment.id,
@@ -88,10 +90,21 @@ export class TextAttachmentAdapter implements AttachmentAdapter {
       content: [
         {
           type: "text",
-          text: `<attachment name="${attachment.name}">\n${text}\n</attachment>`,
+          text: `<attachment name="${escapedName}">\n${text}\n</attachment>`,
         },
       ],
     };
+  }
+
+  private escapeHtml(text: string): string {
+    const htmlEscapes: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return text.replace(/[&<>"']/g, (char) => htmlEscapes[char] || char);
   }
 
   async remove(): Promise<void> {
