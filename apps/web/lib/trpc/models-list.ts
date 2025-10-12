@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import type { Provider } from "@/db/schema";
@@ -48,7 +48,10 @@ export async function listModels() {
         orderBy: [suggestionGroupTranslations.localeId],
       },
     },
-    orderBy: [suggestionGroups.id],
+    orderBy: [
+      sql`coalesce(${suggestionGroups.order}, 2147483647)`,
+      asc(suggestionGroups.id),
+    ],
   });
 
   const uniqueProviders = getUniqueProviders(result);

@@ -12,6 +12,7 @@ async function seed() {
       icon: "Star",
       title: "Flagship Models",
       label: "Try the best models of the leading AI companies",
+      order: 0,
       promoted: true,
       models: [
         "openai/gpt-5",
@@ -24,6 +25,7 @@ async function seed() {
       icon: "Code2",
       title: "Best Coders",
       label: "Compare the abilities of the best models for vibe coding",
+      order: 1,
       promoted: true,
       models: ["anthropic/claude-sonnet-4", "openai/gpt-5", "x-ai/grok-4"],
     },
@@ -32,6 +34,7 @@ async function seed() {
       icon: "Drama",
       title: "Roleplay Masters",
       label: "Chat with the best models for roleplay",
+      order: 2,
       promoted: true,
       models: [
         "google/gemini-2.5-flash",
@@ -44,6 +47,7 @@ async function seed() {
       icon: "Zap",
       title: "Fast Models",
       label: "Quick responses with efficient models",
+      order: 3,
       promoted: false,
       models: [
         "meta-llama/llama-3.3-8b-instruct:free",

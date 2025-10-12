@@ -13,6 +13,32 @@ import { z } from "zod";
 export const suggestionGroupsRouter = t.router({
   list: publicProcedure.query(listSuggestionGroups),
 
+  reorder: adminProcedure
+    .input(
+      z.object({
+        groupIds: z.array(z.string().nonempty()),
+      })
+    )
+    .mutation(async ({ input }) => {
+      if (!input.groupIds.length) {
+        return { ok: true } as const;
+      }
+
+      await db.transaction(async (tx) => {
+        for (const [index, groupId] of input.groupIds.entries()) {
+          await tx
+            .update(suggestionGroups)
+            .set({
+              order: index,
+              updatedAt: sql`current_timestamp`,
+            })
+            .where(eq(suggestionGroups.id, groupId));
+        }
+      });
+
+      return { ok: true } as const;
+    }),
+
   update: adminProcedure
     .input(
       z.object({
@@ -236,6 +262,9 @@ export const suggestionGroupsRouter = t.router({
 
 export async function listSuggestionGroups() {
   return await db.query.suggestionGroups.findMany({
-    orderBy: [asc(suggestionGroups.id)],
+    orderBy: [
+      sql`coalesce(${suggestionGroups.order}, 2147483647)`,
+      asc(suggestionGroups.id),
+    ],
   });
 }
