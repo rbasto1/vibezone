@@ -5,11 +5,14 @@ import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
 import { ProviderIcon } from "@/components/ui/providers/provider";
 import { cn } from "@/components/ui/utils";
 import type { ProviderTier } from "@/db";
+import { useModelFavorites } from "@/hooks/use-model-favorites";
 import { useModelsValue } from "@/hooks/use-models";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
+import type { GetModelsListReturn } from "@/lib/trpc/models";
+import { Star, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { capabilityOptions, tierOptions } from "./model-dropdown-constants";
 import { ModelDropdownItem } from "./model-dropdown-item";
 import { ModelDropdownSearch } from "./model-dropdown-search";
@@ -42,6 +45,11 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     includeModels,
   });
   const user = useUser();
+  const { favorites, hasFavorites, toggleFavorite } = useModelFavorites();
+  const providersById = useMemo(
+    () => new Map(providers.map((provider) => [provider.id, provider])),
+    [providers]
+  );
 
   // Exclusive selection between tiers and suggestion groups
   const [selectedTier, setSelectedTier] = useState<ProviderTier | null>(
@@ -55,16 +63,30 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   const [selectedCapabilities, setSelectedCapabilities] = useState(
     new Set<(typeof capabilityOptions)[number]["id"]>()
   );
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
+  const showFavoritesToggle = Boolean(user) && hasFavorites;
+
+  useEffect(() => {
+    if (!showFavoritesToggle && showFavoritesOnly) {
+      setShowFavoritesOnly(false);
+    }
+  }, [showFavoritesOnly, showFavoritesToggle]);
+
   const isSheet = variant === "sheet";
 
   // Ensure we always show something even if no providers in the default tier
   useEffect(() => {
-    if (!providers.length || selectedSuggestionGroup || searchQuery.trim())
+    if (
+      !providers.length ||
+      selectedSuggestionGroup ||
+      searchQuery.trim() ||
+      showFavoritesOnly
+    )
       return;
     const hasInSelected =
       selectedTier && providers.some((p) => p.tier === selectedTier);
@@ -74,7 +96,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       )?.id;
       if (next && next !== selectedTier) setSelectedTier(next);
     }
-  }, [providers, selectedTier, selectedSuggestionGroup, searchQuery]);
+  }, [
+    providers,
+    selectedTier,
+    selectedSuggestionGroup,
+    searchQuery,
+    showFavoritesOnly,
+  ]);
 
   const toggleCapability = (cap: (typeof capabilityOptions)[number]["id"]) => {
     setSelectedCapabilities((prev) => {
@@ -85,9 +113,22 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     });
   };
 
+  const toggleFavoritesOnly = useCallback(() => {
+    setShowFavoritesOnly((prev) => {
+      const next = !prev;
+      if (next) {
+        setSelectedSuggestionGroup(undefined);
+      }
+      return next;
+    });
+  }, [setSelectedSuggestionGroup]);
+
   const handleTierSelect = (
     tier: "leaders" | "challengers" | "specialists"
   ) => {
+    if (showFavoritesOnly) {
+      setShowFavoritesOnly(false);
+    }
     setSelectedTier(tier);
     setSelectedSuggestionGroup(undefined);
     setSearchQuery("");
@@ -101,11 +142,108 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
 
   // Handler for suggestion group selection
   const handleSuggestionGroupSelect = (groupId: string) => {
+    if (showFavoritesOnly) {
+      setShowFavoritesOnly(false);
+    }
     setSelectedSuggestionGroup(groupId);
     setSearchQuery("");
   };
 
+  const { groupedFavorites, missingFavoriteModelIds } = useMemo(() => {
+    const grouped = new Map<string, GetModelsListReturn["models"][number][]>();
+    const missing: string[] = [];
+    const modelsById = new Map(models.map((model) => [model.id, model]));
+
+    favorites.forEach((favorite) => {
+      const model = modelsById.get(favorite.modelId);
+      if (!model) {
+        missing.push(favorite.modelId);
+        return;
+      }
+      const list = grouped.get(model.providerId);
+      if (list) {
+        list.push(model);
+      } else {
+        grouped.set(model.providerId, [model]);
+      }
+    });
+
+    return {
+      groupedFavorites: grouped,
+      missingFavoriteModelIds: missing,
+    };
+  }, [favorites, models]);
+
+  const favoriteFilteredModelsByProvider = useMemo(() => {
+    if (!showFavoritesOnly) {
+      return null;
+    }
+
+    const filtered = new Map<string, GetModelsListReturn["models"][number][]>();
+    const hasSearchQuery = Boolean(searchQuery.trim());
+    const normalizedQuery = hasSearchQuery
+      ? normalize(searchQuery.trim().toLowerCase())
+      : null;
+    const hasCapabilityFilters = selectedCapabilities.size > 0;
+
+    groupedFavorites.forEach((modelsForProvider, providerId) => {
+      let list = [...modelsForProvider];
+
+      if (hasSearchQuery && normalizedQuery) {
+        const providerName =
+          providersById.get(providerId)?.name.toLowerCase() ?? "";
+        const normalizedProviderName = normalize(providerName);
+        list = list.filter((model) => {
+          if (normalizedProviderName.includes(normalizedQuery)) {
+            return true;
+          }
+          return normalize(model.name.toLowerCase()).includes(normalizedQuery);
+        });
+      }
+
+      if (hasCapabilityFilters) {
+        list = list.filter((model) => {
+          for (const cap of selectedCapabilities) {
+            if (!model[cap]) return false;
+          }
+          return true;
+        });
+      }
+
+      list.sort((a, b) => {
+        const ap = a.priority ?? -Infinity;
+        const bp = b.priority ?? -Infinity;
+        if (ap !== bp) return bp - ap;
+        return a.name.localeCompare(b.name);
+      });
+
+      if (list.length) {
+        filtered.set(providerId, list);
+      }
+    });
+
+    return filtered;
+  }, [
+    groupedFavorites,
+    providersById,
+    searchQuery,
+    selectedCapabilities,
+    showFavoritesOnly,
+  ]);
+
   const providersByTier = useMemo(() => {
+    if (showFavoritesOnly) {
+      if (!favoriteFilteredModelsByProvider) {
+        return [];
+      }
+      const favoriteProviderIds = new Set(
+        Array.from(favoriteFilteredModelsByProvider.keys())
+      );
+      return providers.filter((provider) =>
+        favoriteProviderIds.has(provider.id)
+      );
+    }
+
     if (searchQuery.trim()) {
       const query = normalize(searchQuery.trim().toLowerCase());
       return providers.filter((p) => {
@@ -133,6 +271,8 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     selectedSuggestionGroup,
     selectedTier,
     suggestionGroups,
+    favoriteFilteredModelsByProvider,
+    showFavoritesOnly,
   ]);
 
   const modelsByProvider = useMemo(() => {
@@ -141,6 +281,12 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     const hasSearchQuery = searchQuery.trim();
 
     for (const p of providersByTier) {
+      if (showFavoritesOnly) {
+        const favoriteList = favoriteFilteredModelsByProvider?.get(p.id) ?? [];
+        byProvider.set(p.id, favoriteList);
+        continue;
+      }
+
       let list = models.filter((m) => m.providerId === p.id);
 
       if (selectedSuggestionGroup) {
@@ -187,6 +333,8 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     selectedCapabilities,
     selectedSuggestionGroup,
     suggestionGroups,
+    favoriteFilteredModelsByProvider,
+    showFavoritesOnly,
   ]);
 
   const [expandedProviders, setExpandedProviders] = useState(new Set<string>());
@@ -225,15 +373,51 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   };
 
   const effectiveSelectedTier =
-    selectedSuggestionGroup || searchQuery.trim() ? null : selectedTier;
-  const effectiveSelectedSuggestionGroup = searchQuery.trim()
-    ? null
-    : selectedSuggestionGroup;
+    showFavoritesOnly || selectedSuggestionGroup || searchQuery.trim()
+      ? null
+      : selectedTier;
+  const effectiveSelectedSuggestionGroup =
+    showFavoritesOnly || searchQuery.trim() ? null : selectedSuggestionGroup;
+
+  const renderFavoritesFilterButton = () => {
+    if (!showFavoritesToggle) {
+      return null;
+    }
+    return (
+      <Button
+        type="button"
+        variant={showFavoritesOnly ? "default" : "ghost"}
+        size="sm"
+        className={cn(
+          "h-8 w-8 p-0",
+          showFavoritesOnly
+            ? "bg-background text-yellow-500 shadow-sm"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+        aria-pressed={showFavoritesOnly}
+        title={t("favoritesFilter")}
+        aria-label={t("favoritesFilter")}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          toggleFavoritesOnly();
+        }}
+      >
+        <Star
+          className={cn(
+            "h-4 w-4",
+            showFavoritesOnly ? "fill-current" : "fill-transparent"
+          )}
+        />
+      </Button>
+    );
+  };
 
   const sheetFilters = (
     <div className="mb-3 flex w-full flex-col gap-1 px-1">
       <div className="flex w-full flex-wrap items-center gap-2">
         <div className="inline-flex flex-wrap items-center gap-1 rounded-md border bg-muted p-0.5">
+          {renderFavoritesFilterButton()}
           {tierOptions.map(({ id, labelKey, Icon, color }) => {
             const active = effectiveSelectedTier === id;
             const label = t(labelKey);
@@ -310,6 +494,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     <div className="flex items-center gap-6 pb-3 border-b mb-3 shrink-0">
       <div className="flex items-center gap-3">
         <div className="inline-flex rounded-md border bg-muted p-0.5">
+          {renderFavoritesFilterButton()}
           {tierOptions.map(({ id, labelKey, Icon, color }) => {
             const active = effectiveSelectedTier === id;
             const label = t(labelKey);
@@ -382,6 +567,17 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     </div>
   );
 
+  const handleFavoriteToggle = useCallback(
+    (modelId: string) => {
+      if (!user) {
+        setUIState({ loginOpen: true });
+        return;
+      }
+      toggleFavorite(modelId);
+    },
+    [toggleFavorite, user, setUIState]
+  );
+
   const body = (
     <div className="flex h-full flex-col">
       {isSheet ? sheetFilters : desktopFilters}
@@ -389,7 +585,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       <div className="flex-1 overflow-hidden">
         {providersByTier.length === 0 ? (
           <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
-            {t("noProviders")}
+            {showFavoritesOnly ? t("favoritesEmpty") : t("noProviders")}
           </div>
         ) : (
           <div
@@ -397,6 +593,41 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
               "flex min-w-full gap-4 overflow-x-auto pb-2 h-full items-start"
             }
           >
+            {showFavoritesOnly && missingFavoriteModelIds.length > 0 && (
+              <div
+                className={
+                  "border rounded-md p-2 flex min-h-0 flex-col shrink-0 max-h-full min-w-[230px] max-w-[280px]"
+                }
+              >
+                <div className="px-1 pb-2 mb-2 border-b">
+                  <div className="text-xs tracking-wide text-muted-foreground flex items-center gap-2">
+                    <span className="font-medium">
+                      Models not longer available
+                    </span>
+                  </div>
+                </div>
+                {missingFavoriteModelIds.map((missingId) => (
+                  <div
+                    key={missingId}
+                    className="flex items-center justify-between rounded-md border border-dashed border-border px-2 py-1.5 text-sm text-muted-foreground"
+                  >
+                    <span className="truncate">{missingId}</span>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        handleFavoriteToggle(missingId);
+                      }}
+                      aria-label={t("favoriteRemove")}
+                      className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             {providersByTier.map((p) => {
               const list = modelsByProvider.get(p.id) ?? [];
               const suggested = list.filter((m) => m.isSuggested);

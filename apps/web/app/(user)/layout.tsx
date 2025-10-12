@@ -27,7 +27,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const userId = user?.id;
 
   const caller = await getServerCaller();
-  const state = await prefetch(caller, [caller.chats.listChats.prefetch({})]);
+
+  const state = await prefetch(caller, [
+    caller.chats.listChats.prefetch({}),
+    caller.users.favorites.prefetch(),
+  ]);
 
   let lastModels: string[] = [];
   const hiddenProviders = new Set<string>();

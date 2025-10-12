@@ -16,17 +16,18 @@
 ## Improvements
 
 - [ ] Thumb up/down (or stars?)
-- [ ] Allow user to pin favorite models
+- [x] Allow user to pin favorite models
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format
 - [ ] Add analytics (Posthog?)
 - [ ] Projects (group threads) - paying only
 - [x] Add a "do not show again" option to the warning about discarding a panel
 - [ ] Add Python project to calculate usage of non-OpenRouter models
+- [ ] Allow setting order of groups
 - [ ] Syntax highlighting: auto-detect language (switch to highlight.js?)
 - [x] Add `api_created_at` to models and use our import date for created_at
 - [ ] Add auto-translation button to admin (model descriptions)
-- [ ] Schedule daily usage calculation
+- [x] Schedule daily usage calculation
 
 ## MVP (done)
 
