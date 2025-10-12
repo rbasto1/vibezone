@@ -127,6 +127,7 @@ export const suggestionGroups = pgTable("suggestion_groups", {
   icon: text("icon").notNull(), // lucide icon name
   title: text("title").notNull(), // "Flagship Models", "Best Coders", etc.
   label: text("label").notNull(), // description text
+  order: integer("order"), // display ordering for groups
   promoted: boolean("promoted").notNull().default(false), // whether to show prominently
   models: text("models").array().notNull(), // array of model IDs
   createdAt: timestampTzNow("created_at"),

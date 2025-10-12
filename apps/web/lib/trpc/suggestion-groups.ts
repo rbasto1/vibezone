@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
+import type { NewSuggestionGroup } from "@/db/schema";
 import { suggestionGroups, suggestionGroupTranslations } from "@/db/schema";
 import {
   adminProcedure,
@@ -12,6 +13,41 @@ import { z } from "zod";
 
 export const suggestionGroupsRouter = t.router({
   list: publicProcedure.query(listSuggestionGroups),
+
+  reorder: adminProcedure
+    .input(
+      z.object({
+        groupIds: z.array(z.string().nonempty()),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { groupIds } = input;
+
+      if (!groupIds.length) {
+        return { ok: true } as const;
+      }
+
+      const fakeInsert = groupIds.map<NewSuggestionGroup>((id, index) => ({
+        id,
+        order: index,
+        icon: "",
+        models: [],
+        title: "",
+        label: "",
+      }));
+
+      await db
+        .insert(suggestionGroups)
+        .values(fakeInsert)
+        .onConflictDoUpdate({
+          target: suggestionGroups.id,
+          set: {
+            order: sql`EXCLUDED.order`,
+          },
+        });
+
+      return { ok: true } as const;
+    }),
 
   update: adminProcedure
     .input(
@@ -236,6 +272,9 @@ export const suggestionGroupsRouter = t.router({
 
 export async function listSuggestionGroups() {
   return await db.query.suggestionGroups.findMany({
-    orderBy: [asc(suggestionGroups.id)],
+    orderBy: [
+      sql`coalesce(${suggestionGroups.order}, 2147483647)`,
+      asc(suggestionGroups.id),
+    ],
   });
 }
