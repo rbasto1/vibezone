@@ -15,7 +15,8 @@ import type {
   SuggestionGroupsListOutput,
 } from "@/lib/trpc/server/server";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { DragEvent } from "react";
 import { toast } from "sonner";
 import { GroupModelsListItem } from "./group-models-list-item";
 
@@ -38,20 +39,32 @@ export function GroupModelsList({
 
   const [newModelId, setNewModelId] = useState("");
   const [pastedModelId, setPastedModelId] = useState("");
+  const [orderedModelIds, setOrderedModelIds] = useState<string[]>(
+    selectedGroup.models
+  );
+  const [draggedModelId, setDraggedModelId] = useState<string | null>(null);
 
-  const groupModels = selectedGroup.models.map(
-    (modelId) =>
-      modelsData.models.find((model) => model.id === modelId) ?? {
-        id: modelId,
-        name: "(model deleted)",
-        provider: {
-          name: "(missing)",
-        },
-      }
+  useEffect(() => {
+    setOrderedModelIds(selectedGroup.models);
+  }, [selectedGroup.models]);
+
+  const groupModels = useMemo(
+    () =>
+      orderedModelIds.map(
+        (modelId) =>
+          modelsData.models.find((model) => model.id === modelId) ?? {
+            id: modelId,
+            name: "(model deleted)",
+            provider: {
+              name: "(missing)",
+            },
+          }
+      ),
+    [modelsData.models, orderedModelIds]
   );
 
   const availableModels = modelsData.models
-    .filter((model) => !selectedGroup.models.includes(model.id))
+    .filter((model) => !orderedModelIds.includes(model.id))
     .toSorted((a, b) => a.id.localeCompare(b.id));
 
   const handleAddModel = async (modelId?: string) => {
@@ -100,21 +113,24 @@ export function GroupModelsList({
   };
 
   const handleMoveModel = async (modelId: string, targetIndex: number) => {
-    const currentIndex = selectedGroup.models.indexOf(modelId);
+    const previousOrder = orderedModelIds;
+    const currentIndex = previousOrder.indexOf(modelId);
     if (currentIndex === -1) return;
 
     // Clamp target index to valid range
     const clampedTargetIndex = Math.max(
       0,
-      Math.min(targetIndex, selectedGroup.models.length - 1)
+      Math.min(targetIndex, previousOrder.length - 1)
     );
 
     // If already at target position, no need to move
     if (currentIndex === clampedTargetIndex) return;
 
-    const newModels = [...selectedGroup.models];
+    const newModels = [...previousOrder];
     const [movedModel] = newModels.splice(currentIndex, 1);
     newModels.splice(clampedTargetIndex, 0, movedModel!);
+
+    setOrderedModelIds(newModels);
 
     try {
       await reorderModelsMutation.mutateAsync({
@@ -126,8 +142,94 @@ export function GroupModelsList({
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       toast.error(`Failed to reorder models: ${message}`);
+      setOrderedModelIds(previousOrder);
     }
   };
+
+  const finalizeReorder = async () => {
+    if (!draggedModelId) {
+      return;
+    }
+
+    const previousOrder = selectedGroup.models;
+    const newOrder = orderedModelIds;
+    setDraggedModelId(null);
+
+    const hasChanges =
+      newOrder.length !== previousOrder.length ||
+      newOrder.some((modelId, index) => modelId !== previousOrder[index]);
+
+    if (!hasChanges) {
+      setOrderedModelIds(previousOrder);
+      return;
+    }
+
+    try {
+      await reorderModelsMutation.mutateAsync({
+        groupId: selectedGroup.id,
+        modelIds: newOrder,
+      });
+      await utils.suggestionGroups.list.invalidate();
+      toast.success("Model order updated");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to reorder models: ${message}`);
+      setOrderedModelIds(previousOrder);
+    }
+  };
+
+  const handleDragStart = (event: DragEvent<HTMLDivElement>, modelId: string) => {
+    if (isEditing || reorderModelsMutation.isPending) return;
+    event.stopPropagation();
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", modelId);
+    setDraggedModelId(modelId);
+  };
+
+  const handleDragOver = (
+    event: DragEvent<HTMLDivElement>,
+    targetModelId: string
+  ) => {
+    event.preventDefault();
+    if (!draggedModelId || draggedModelId === targetModelId) {
+      return;
+    }
+
+    setOrderedModelIds((prev) => {
+      const draggedIndex = prev.indexOf(draggedModelId);
+      const targetIndex = prev.indexOf(targetModelId);
+      if (draggedIndex === -1 || targetIndex === -1) {
+        return prev;
+      }
+      const updated = [...prev];
+      const [moved] = updated.splice(draggedIndex, 1);
+      if (!moved) {
+        return prev;
+      }
+      const insertIndex = Math.min(
+        updated.length,
+        targetIndex + (draggedIndex < targetIndex ? 1 : 0)
+      );
+      updated.splice(insertIndex, 0, moved);
+      return updated;
+    });
+  };
+
+  const handleDrop = async (
+    event: DragEvent<HTMLDivElement>,
+    targetModelId: string
+  ) => {
+    event.preventDefault();
+    handleDragOver(event, targetModelId);
+    await finalizeReorder();
+  };
+
+  const handleDragEnd = async () => {
+    await finalizeReorder();
+  };
+
+  const draggingDisabled = isEditing || reorderModelsMutation.isPending;
+
   return (
     <div className="rounded-lg border p-4">
       <h3 className="text-lg font-medium mb-4">
@@ -147,6 +249,24 @@ export function GroupModelsList({
               totalModels={groupModels.length}
               onMoveModel={isEditing ? undefined : handleMoveModel}
               onRemoveModel={isEditing ? undefined : handleRemoveModel}
+              onDragStart={
+                draggingDisabled
+                  ? undefined
+                  : (event) => handleDragStart(event, model.id)
+              }
+              onDragOver={
+                draggingDisabled
+                  ? undefined
+                  : (event) => handleDragOver(event, model.id)
+              }
+              onDrop={
+                draggingDisabled
+                  ? undefined
+                  : (event) => handleDrop(event, model.id)
+              }
+              onDragEnd={draggingDisabled ? undefined : handleDragEnd}
+              draggingDisabled={draggingDisabled}
+              isDragging={draggedModelId === model.id}
             />
           ))}
         </div>
