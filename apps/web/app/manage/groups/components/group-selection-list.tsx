@@ -41,8 +41,14 @@ export function GroupSelectionList({
     [suggestionGroups]
   );
 
-  const handleDragStart = (groupId: string) => {
-    if (isEditing || reorderGroupsMutation.isPending) return;
+  const handleDragStart = (
+    event: React.DragEvent<HTMLDivElement>,
+    groupId: string
+  ) => {
+    if (draggingDisabled) return;
+    event.stopPropagation();
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", groupId);
     setDraggedGroupId(groupId);
   };
 
@@ -56,7 +62,9 @@ export function GroupSelectionList({
     }
 
     setOrderedGroups((prev) => {
-      const draggedIndex = prev.findIndex((group) => group.id === draggedGroupId);
+      const draggedIndex = prev.findIndex(
+        (group) => group.id === draggedGroupId
+      );
       const targetIndex = prev.findIndex((group) => group.id === targetGroupId);
       if (draggedIndex === -1 || targetIndex === -1) {
         return prev;
@@ -101,11 +109,6 @@ export function GroupSelectionList({
     }
   };
 
-  const handleDragEnd = async (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    await finalizeReorder();
-  };
-
   const handleDrop = async (
     event: React.DragEvent<HTMLDivElement>,
     targetGroupId: string
@@ -135,29 +138,36 @@ export function GroupSelectionList({
           {orderedGroups.map((group) => (
             <div
               key={group.id}
-              draggable={!draggingDisabled}
               className={cn(
                 "flex items-start gap-3 p-3 rounded-lg border transition-colors",
                 selectedGroupId === group.id && "border-primary bg-primary/5",
                 draggingDisabled
                   ? "cursor-not-allowed opacity-50"
-                  : "cursor-grab active:cursor-grabbing",
+                  : "cursor-pointer hover:bg-accent/50",
                 draggedGroupId === group.id && "opacity-75 border-primary/60",
                 !draggingDisabled &&
-                  selectedGroupId !== group.id &&
-                  "hover:bg-accent/50"
+                  selectedGroupId === group.id &&
+                  "cursor-pointer"
               )}
               onClick={() => {
                 if (!isEditing) {
                   onSelectGroup(group.id);
                 }
               }}
-              onDragStart={() => handleDragStart(group.id)}
               onDragOver={(event) => handleDragOver(event, group.id)}
               onDrop={(event) => handleDrop(event, group.id)}
-              onDragEnd={handleDragEnd}
             >
-              <div className="flex h-full items-center pt-1">
+              <div
+                className={cn(
+                  "flex h-full items-center pt-1 text-muted-foreground",
+                  draggingDisabled
+                    ? "opacity-50"
+                    : "cursor-grab active:cursor-grabbing"
+                )}
+                draggable={!draggingDisabled}
+                onDragStart={(event) => handleDragStart(event, group.id)}
+                onDragEnd={finalizeReorder}
+              >
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">

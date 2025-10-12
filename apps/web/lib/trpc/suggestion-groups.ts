@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
+import type { NewSuggestionGroup } from "@/db/schema";
 import { suggestionGroups, suggestionGroupTranslations } from "@/db/schema";
 import {
   adminProcedure,
@@ -20,21 +21,30 @@ export const suggestionGroupsRouter = t.router({
       })
     )
     .mutation(async ({ input }) => {
-      if (!input.groupIds.length) {
+      const { groupIds } = input;
+
+      if (!groupIds.length) {
         return { ok: true } as const;
       }
 
-      await db.transaction(async (tx) => {
-        for (const [index, groupId] of input.groupIds.entries()) {
-          await tx
-            .update(suggestionGroups)
-            .set({
-              order: index,
-              updatedAt: sql`current_timestamp`,
-            })
-            .where(eq(suggestionGroups.id, groupId));
-        }
-      });
+      const fakeInsert = groupIds.map<NewSuggestionGroup>((id, index) => ({
+        id,
+        order: index,
+        icon: "",
+        models: [],
+        title: "",
+        label: "",
+      }));
+
+      await db
+        .insert(suggestionGroups)
+        .values(fakeInsert)
+        .onConflictDoUpdate({
+          target: suggestionGroups.id,
+          set: {
+            order: sql`EXCLUDED.order`,
+          },
+        });
 
       return { ok: true } as const;
     }),
