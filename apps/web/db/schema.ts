@@ -16,6 +16,7 @@ import {
   supportedParametersRelations,
   threadsRelations,
   usageRelations,
+  usersModelsRelations,
   userRelations,
 } from "@/db/relations";
 
@@ -32,6 +33,7 @@ import {
   supportedParameters,
   threads,
   usage,
+  usersModels,
 } from "@/db/tables";
 
 export {
@@ -63,6 +65,8 @@ export {
   threadsRelations,
   usage,
   usageRelations,
+  usersModels,
+  usersModelsRelations,
   user,
   userRelations,
   verification,
@@ -103,3 +107,5 @@ export type Locale = typeof locales.$inferSelect;
 export type NewLocale = typeof locales.$inferInsert;
 export type ModelTranslation = typeof modelTranslations.$inferSelect;
 export type NewModelTranslation = typeof modelTranslations.$inferInsert;
+export type UserModel = typeof usersModels.$inferSelect;
+export type NewUserModel = typeof usersModels.$inferInsert;

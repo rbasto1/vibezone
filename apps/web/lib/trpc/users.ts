@@ -2,7 +2,14 @@ import "server-only";
 
 import type { User as DbUser } from "@/db";
 import { db } from "@/db";
-import { chats, models, session, usage, user } from "@/db/schema";
+import {
+  chats,
+  models,
+  session,
+  usage,
+  user,
+  usersModels,
+} from "@/db/schema";
 import {
   and,
   count,
@@ -11,6 +18,7 @@ import {
   gte,
   inArray,
   isNull,
+  isNotNull,
   max,
   min,
   sql,
@@ -141,6 +149,98 @@ export const usersRouter = t.router({
         .where(eq(user.id, authUser.id));
 
       return { ok: true as const, lastModels: ordered };
+    }),
+
+  favorites: authenticatedProcedure.query(async ({ ctx }) => {
+    const rows = await db
+      .select({
+        modelId: usersModels.modelId,
+        favoritedAt: usersModels.favoritedAt,
+      })
+      .from(usersModels)
+      .where(
+        and(
+          eq(usersModels.userId, ctx.user!.id),
+          isNotNull(usersModels.favoritedAt)
+        )
+      )
+      .orderBy(desc(usersModels.favoritedAt));
+
+    return rows;
+  }),
+
+  toggleFavorite: authenticatedProcedure
+    .input(
+      z.object({
+        modelId: z.string().min(1),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user!.id;
+
+      const [existing] = await db
+        .select({
+          favoritedAt: usersModels.favoritedAt,
+        })
+        .from(usersModels)
+        .where(
+          and(
+            eq(usersModels.userId, userId),
+            eq(usersModels.modelId, input.modelId)
+          )
+        )
+        .limit(1);
+
+      if (!existing) {
+        const [inserted] = await db
+          .insert(usersModels)
+          .values({
+            userId,
+            modelId: input.modelId,
+            favoritedAt: new Date(),
+          })
+          .returning({ favoritedAt: usersModels.favoritedAt });
+
+        return {
+          ok: true as const,
+          favorited: true as const,
+          favoritedAt: inserted?.favoritedAt ?? new Date(),
+        };
+      }
+
+      if (existing.favoritedAt) {
+        await db
+          .update(usersModels)
+          .set({ favoritedAt: null })
+          .where(
+            and(
+              eq(usersModels.userId, userId),
+              eq(usersModels.modelId, input.modelId)
+            )
+          );
+        return {
+          ok: true as const,
+          favorited: false as const,
+          favoritedAt: null,
+        };
+      }
+
+      const [updated] = await db
+        .update(usersModels)
+        .set({ favoritedAt: new Date() })
+        .where(
+          and(
+            eq(usersModels.userId, userId),
+            eq(usersModels.modelId, input.modelId)
+          )
+        )
+        .returning({ favoritedAt: usersModels.favoritedAt });
+
+      return {
+        ok: true as const,
+        favorited: true as const,
+        favoritedAt: updated?.favoritedAt ?? new Date(),
+      };
     }),
 
   updatePreferences: authenticatedProcedure

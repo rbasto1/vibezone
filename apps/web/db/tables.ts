@@ -167,6 +167,20 @@ export const modelSupportedParameters = pgTable(
   ]
 );
 
+export const usersModels = pgTable(
+  "users_models",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+    modelId: text("model_id")
+      .notNull()
+      .references(() => models.id),
+    favoritedAt: timestampTz("favorited_at"),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.modelId] })]
+);
+
 export const chats = pgTable("chats", {
   id: text("id").primaryKey(),
   userId: text("user_id")

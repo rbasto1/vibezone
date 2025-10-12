@@ -13,12 +13,14 @@ import {
   supportedParameters,
   threads,
   usage,
+  usersModels,
 } from "./tables";
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   chats: many(chats),
   usage: many(usage),
+  modelFavorites: many(usersModels),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -100,6 +102,17 @@ export const usageRelations = relations(usage, ({ one }) => ({
   }),
   model: one(models, {
     fields: [usage.modelId],
+    references: [models.id],
+  }),
+}));
+
+export const usersModelsRelations = relations(usersModels, ({ one }) => ({
+  user: one(user, {
+    fields: [usersModels.userId],
+    references: [user.id],
+  }),
+  model: one(models, {
+    fields: [usersModels.modelId],
     references: [models.id],
   }),
 }));

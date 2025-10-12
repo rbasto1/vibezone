@@ -6,6 +6,7 @@ import type { FC } from "react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ModelFavoriteButton } from "./model-favorite-button";
 import { StopButton } from "@/components/ui/stop-button";
 import { cn } from "@/components/ui/utils";
 import {
@@ -88,6 +89,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
             title={stopLabel}
           />
         )}
+        <ModelFavoriteButton modelId={modelId} size="md" />
         <Button
           type="button"
           size="icon"

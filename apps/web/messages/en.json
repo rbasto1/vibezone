@@ -98,6 +98,11 @@
     "signInToUse": "Sign in to use this model",
     "showMore": "Show more",
     "otherModels": "Other models",
+    "favoriteAdd": "Add to favorites",
+    "favoriteRemove": "Remove from favorites",
+    "favoritesFilter": "Favorites",
+    "favoritesMissingTooltip": "This model is no longer available",
+    "favoritesEmpty": "No favorite models yet.",
     "retentionIconAria": "This model may retain your data",
     "retentionTooltip": "This model may retain your messages and attachments to train new versions.<lineBreak></lineBreak>Do not share sensitive information in your chats.",
     "info": {
