@@ -4,10 +4,14 @@ import { and, asc, eq, gt, isNull, lt, or } from "drizzle-orm";
 import { z } from "zod";
 import { CHAT_LIST_PAGE_SIZE, INTERNAL_SECRET } from "../constants";
 import { searchChats } from "./chats-search";
-import { authenticatedProcedure, t } from "./server/initialize";
+import {
+  authenticatedProcedure,
+  publicProcedure,
+  t,
+} from "./server/initialize";
 
 export const chatsRouter = t.router({
-  listChats: authenticatedProcedure
+  listChats: publicProcedure
     .input(
       z.object({
         cursor: z.string().optional(),
@@ -15,6 +19,12 @@ export const chatsRouter = t.router({
       })
     )
     .query(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        return {
+          chats: [],
+          next: null,
+        };
+      }
       return listChats({
         userId: ctx.user.id,
         cursor: input.cursor,

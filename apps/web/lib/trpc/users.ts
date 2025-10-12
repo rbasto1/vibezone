@@ -2,14 +2,7 @@ import "server-only";
 
 import type { User as DbUser } from "@/db";
 import { db } from "@/db";
-import {
-  chats,
-  models,
-  session,
-  usage,
-  user,
-  usersModels,
-} from "@/db/schema";
+import { chats, models, session, usage, user, usersModels } from "@/db/schema";
 import {
   and,
   count,
@@ -17,15 +10,20 @@ import {
   eq,
   gte,
   inArray,
-  isNull,
   isNotNull,
+  isNull,
   max,
   min,
   sql,
 } from "drizzle-orm";
 import { z } from "zod";
 import { MAX_PANELS } from "../constants";
-import { adminProcedure, authenticatedProcedure, t } from "./server/initialize";
+import {
+  adminProcedure,
+  authenticatedProcedure,
+  publicProcedure,
+  t,
+} from "./server/initialize";
 
 export const usersRouter = t.router({
   manageList: adminProcedure.query(async () => {
@@ -151,7 +149,11 @@ export const usersRouter = t.router({
       return { ok: true as const, lastModels: ordered };
     }),
 
-  favorites: authenticatedProcedure.query(async ({ ctx }) => {
+  favorites: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.user) {
+      return [];
+    }
+
     const rows = await db
       .select({
         modelId: usersModels.modelId,
