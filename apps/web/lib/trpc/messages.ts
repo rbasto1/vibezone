@@ -29,6 +29,7 @@ export const MessageStatusSchema = z.object({
       "content-filter",
       "other",
       "error",
+      "interrupt",
     ])
     .optional(),
   error: z.unknown().optional(),
