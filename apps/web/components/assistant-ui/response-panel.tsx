@@ -13,6 +13,7 @@ import {
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { useComposerPromptSetter } from "@/hooks/use-composer-prompt";
 import { usePanelState } from "@/hooks/use-panels";
+import { useStableValue } from "@/hooks/use-stable-value";
 import { useThreadRuntime } from "@/hooks/use-thread-runtime";
 import { useThreadRuntimeControllerSetter } from "@/hooks/use-thread-store";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
@@ -62,8 +63,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const setCurrentChat = useCurrentChatSetter();
   const renameChatMutation = trpc.chats.renameChat.useMutation();
   const session = useAuth();
-  const sessionToken = useRef(session?.userId ?? undefined); // TODO: use session token
-  sessionToken.current = session?.userId ?? undefined;
+  const sessionToken = useStableValue(session.sessionId ?? undefined);
   const panelNotRegisteredMessage = t("panelNotRegistered");
   const transportErrorMessage = t("transportError");
   const userPreferences = useUserPreferencesValue();
@@ -79,12 +79,15 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const setGlobalPrompt = useComposerPromptSetter();
   const setRuntimeController = useThreadRuntimeControllerSetter();
   const runtimeRef = useRef<AssistantRuntime | null>(null);
+  const modelId = useStableValue(panel.model);
 
   plugins.current = {
     web: userPreferences.pluginWeb,
     reason: allCanReason ? userPreferences.reasoningEffort : "low",
   };
 
+  // This callback function is never reload by the runtime provider, so any initial value of variables
+  // in its scope will be valid for the duration of the app. That's why we need stable values (refs).
   const handleModelError = useCallback(
     async (error: Error) => {
       console.warn("Stream error:", error);
@@ -132,10 +135,11 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
           const hadAttachments = lastMessage.message.content.some(
             (c) => c.type !== "text"
           );
+          const model = modelId.current;
           toast.warning(
             hadAttachments
-              ? `Model ${panel.model} failed, please attach the files and submit your message to try again`
-              : `Model ${panel.model} failed, please submit your message to try again`
+              ? `Model ${model} failed, please attach the files and submit your message to try again`
+              : `Model ${model} failed, please submit your message to try again`
           );
         }
       }
@@ -144,7 +148,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
     },
     [
       captchaState.execution,
-      panel.model,
+      modelId,
       setCaptchaFailed,
       setCaptchaRequested,
       setGlobalPrompt,
@@ -271,6 +275,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
       panelNotRegisteredMessage,
       transportErrorMessage,
       setAnonQuota,
+      sessionToken,
       handleModelError,
     ]
   );

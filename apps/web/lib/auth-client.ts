@@ -1,14 +1,13 @@
 "use client";
 
-import { useClerk, useUser as useUserClerk } from "@clerk/nextjs";
+import { useClerk } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { useTheme } from "next-themes";
 import { useCallback } from "react";
 
-export const useUser = () => {
-  const { user, isSignedIn } = useUserClerk();
-  return isSignedIn ? user : null;
-};
+import { useAuthContext } from "@/lib/auth-context";
+
+export const useUser = useAuthContext;
 
 export const useOpenSignIn = () => {
   const { openSignIn } = useClerk();

@@ -12,9 +12,11 @@ import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
 import type { PropsWithChildren } from "react";
 
+import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "@/components/providers/toast-provider";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { cn } from "@/components/ui/utils";
+import type { FrontendUser } from "@/lib/auth-context";
 import { baseUrl } from "@/lib/base-url";
 import { siteDescription, siteName } from "@/lib/branding";
 
@@ -87,12 +89,21 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const localePromise = getLocale();
   const messagesPromise = getMessages();
   const currentUserPromise = currentUser();
-  const [locale, messages, user] = await Promise.all([
+  const [locale, messages, userFull] = await Promise.all([
     localePromise,
     messagesPromise,
     currentUserPromise,
   ]);
+  const userAsOfDate = Date.now();
   const localization = getClerkLocalization(locale);
+  const user: FrontendUser | null = userFull && {
+    id: userFull.id,
+    firstName: userFull.firstName,
+    lastName: userFull.lastName,
+    imageUrl: userFull.imageUrl,
+    hasImage: userFull.hasImage,
+    externalId: userFull.externalId,
+  };
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -133,10 +144,12 @@ export default async function RootLayout({ children }: PropsWithChildren) {
             enableSystem
           >
             <ClerkProvider localization={localization}>
-              <NextIntlClientProvider locale={locale} messages={messages}>
-                {children}
-                <Toaster />
-              </NextIntlClientProvider>
+              <AuthProvider user={user} userAsOfDate={userAsOfDate}>
+                <NextIntlClientProvider locale={locale} messages={messages}>
+                  {children}
+                  <Toaster />
+                </NextIntlClientProvider>
+              </AuthProvider>
             </ClerkProvider>
           </ThemeProvider>
         </TRPCProvider>

@@ -2,8 +2,8 @@
 
 ## Features
 
-- [-] Paid plans: Clerk
-- [-] Add user profile (name, avatar, age, gender, country, etc)
+- [x] Paid plans: Clerk
+- [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [ ] Backend processing of messages: save the AI response without the need for a frontend
 - [x] Replace AssistantCloud with ExternalStoreRuntime
 
