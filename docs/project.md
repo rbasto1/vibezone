@@ -16,6 +16,7 @@
 
 ## Improvements
 
+- [ ] Add Terms of Use
 - [ ] Add "What's New" startup modal
 - [ ] Thumb up/down (or stars?)
 - [x] Mobile: when adding a new panel, select it by default

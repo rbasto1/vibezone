@@ -16,7 +16,7 @@ export const UnauthorizedModal = () => {
           <Button asChild>
             <Link href="/">Go to Home</Link>
           </Button>
-          <SignOutButton />
+          <SignOutButton redirectUrl="/" />
         </div>
       </div>
     </div>

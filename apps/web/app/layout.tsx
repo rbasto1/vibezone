@@ -1,8 +1,10 @@
 import "katex/dist/katex.min.css";
+import "server-only";
 import "./globals.css";
 
 import { deDE, ptBR } from "@clerk/localizations";
 import { ClerkProvider } from "@clerk/nextjs";
+import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -84,9 +86,11 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: PropsWithChildren) {
   const localePromise = getLocale();
   const messagesPromise = getMessages();
-  const [locale, messages] = await Promise.all([
+  const currentUserPromise = currentUser();
+  const [locale, messages, user] = await Promise.all([
     localePromise,
     messagesPromise,
+    currentUserPromise,
   ]);
   const localization = getClerkLocalization(locale);
 

@@ -24,11 +24,7 @@ import { PageLoader } from "./page-loader";
 export default async function RootLayout({ children }: PropsWithChildren) {
   const authUser = await currentUser();
   const userId = authUser?.id;
-  const preferences = userId
-    ? await db.query.preferences.findFirst({
-        where: eq(preferencesTable.userId, userId),
-      })
-    : undefined;
+  const preferences = await ensurePreferences(userId);
 
   const t = await getTranslations("Prompts");
 
@@ -181,3 +177,21 @@ const buildInitialMessages = (
     } satisfies ThreadMessageLike,
   ];
 };
+
+async function ensurePreferences(userId: string | null | undefined) {
+  if (!userId) return null;
+
+  const row = await db.query.preferences.findFirst({
+    where: eq(preferencesTable.userId, userId),
+  });
+
+  if (!row) {
+    return await db
+      .insert(preferencesTable)
+      .values({ userId })
+      .returning()
+      .then((rows) => rows[0]);
+  }
+
+  return row;
+}
