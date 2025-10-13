@@ -1,10 +1,13 @@
-import type { Message } from "@/db";
+import { toThreadMessageLike } from "@/lib/assistant-ui/message-converters";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig, PanelState } from "@/store/panels";
-import type { UIMessage } from "ai";
+import {
+  threadMessagesAtom,
+  type ThreadMessagesState,
+} from "@/store/thread-messages";
+import { useSetAtom } from "jotai";
 import { useCallback } from "react";
 import { usePanelsConfigSetter, usePanelsStateSetter } from "./use-panels";
-import { useRuntimes } from "./use-response-registration";
 
 export type UseChatActionsResult = UseChatActionsSuccess | UseChatActionsError;
 interface UseChatActionsSuccess {
@@ -17,26 +20,24 @@ interface UseChatActionsError {
 }
 
 export const useChatActions = () => {
-  const getRuntimes = useRuntimes();
   const setPanelsConfig = usePanelsConfigSetter();
   const setPanelsState = usePanelsStateSetter();
+  const setThreadMessages = useSetAtom(threadMessagesAtom);
   const utils = trpc.useUtils();
 
   const loadChatById = useCallback(
     async (chatId: string): Promise<UseChatActionsResult> => {
-      if (!getRuntimes) {
-        return { success: false, error: "Runtimes not loaded" };
-      }
-
       try {
         const chatData = await utils.client.chats.getChatWithThreads.query({
           chatId,
         });
         const threads = chatData.threads;
 
+        const threadMessages: ThreadMessagesState = {};
         const newPanelsConfig = threads.map((thread): PanelConfig => {
-          // Convert database messages to UIMessage format
-          const initialMessages = thread.messages.map(convertToUIMessage);
+          // Convert database messages to ThreadMessageLike format
+          const initialMessages = thread.messages.map(toThreadMessageLike);
+          threadMessages[thread.id] = initialMessages;
 
           return {
             id: thread.id,
@@ -60,6 +61,7 @@ export const useChatActions = () => {
 
         setPanelsState(newPanelsState);
         setPanelsConfig(newPanelsConfig);
+        setThreadMessages(threadMessages);
 
         return { success: true, error: undefined };
       } catch (error) {
@@ -72,64 +74,13 @@ export const useChatActions = () => {
     },
     [
       utils.client.chats.getChatWithThreads,
-      getRuntimes,
       setPanelsConfig,
       setPanelsState,
+      setThreadMessages,
     ]
   );
 
   return {
     loadChatById,
   };
-};
-
-// Helper function to convert database messages to UIMessage format
-const convertToUIMessage = (msg: Message): UIMessage => {
-  // Convert content parts to UIMessage parts
-  const parts = Array.isArray(msg.content)
-    ? msg.content.map((part) => {
-        switch (part.type) {
-          case "text":
-            return {
-              type: "text" as const,
-              text: part.text || "",
-            };
-          case "file":
-            return {
-              type: "file" as const,
-              mediaType: part.mediaType,
-              filename: part.filename,
-              url: part.url,
-              providerMetadata: part.providerMetadata,
-            };
-          case "image":
-            return {
-              type: "file" as const,
-              mediaType: "image",
-              filename: part.filename,
-              url: part.image,
-              providerMetadata: part.providerMetadata,
-            };
-          case "reasoning":
-            return {
-              type: "reasoning" as const,
-              text: part.text,
-            };
-          default:
-            console.warn(`Unknown message part type: ${part.type}`);
-            return {
-              type: "text" as const,
-              text: JSON.stringify(part),
-            };
-        }
-      })
-    : [{ type: "text" as const, text: String(msg.content) }];
-
-  const uiMessage: UIMessage = {
-    id: msg.id,
-    role: msg.role as "user" | "assistant" | "system",
-    parts,
-  };
-
-  return uiMessage;
 };

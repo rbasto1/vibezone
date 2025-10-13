@@ -5,13 +5,14 @@
 - [ ] Paid plans: Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [ ] Backend processing of messages: save the AI response without the need for a frontend
-- [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
+- [x] Replace AssistantCloud with ExternalStoreRuntime
 
 ## Bugs
 
 - [x] Bug: on mobile, closing the model details modal closes also the model selector
 - [x] Text attachments are going inline inside <attachment>
 - [x] Disable sending when attachments are not compatible with one of the models
+- [ ] Stopping works but state stay as running?
 
 ## Improvements
 

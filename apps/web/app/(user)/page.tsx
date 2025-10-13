@@ -12,7 +12,6 @@ import { ModelInfoModal } from "@/components/assistant-ui/model-info-modal";
 import { ResponsePanel } from "@/components/assistant-ui/response-panel";
 import { SearchPanel } from "@/components/assistant-ui/search-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
-import { GlobalComposerProvider } from "@/components/providers/global-composer-provider";
 import { ClientOnly } from "@/components/ui/client-only";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/components/ui/utils";
@@ -29,14 +28,6 @@ import { AppSidebarLoader } from "./app-sidebar-loader";
 import PreferencesPage from "./preferences";
 
 const Assistant: FC = () => {
-  return (
-    <GlobalComposerProvider>
-      <AssistantContent />
-    </GlobalComposerProvider>
-  );
-};
-
-const AssistantContent: FC = () => {
   const t = useTranslations("Assistant");
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelsState = usePanelsStateValue();

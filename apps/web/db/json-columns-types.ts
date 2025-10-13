@@ -33,6 +33,7 @@ export interface MessageStatus {
     | "length"
     | "content-filter"
     | "other"
-    | "error";
+    | "error"
+    | "interrupt";
   error?: unknown;
 }

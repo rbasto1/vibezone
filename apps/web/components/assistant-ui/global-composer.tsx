@@ -2,10 +2,9 @@
 import { ArrowUpIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FC, MouseEvent } from "react";
-import { useContext, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { GlobalComposerContext } from "@/components/providers/composer-provider";
 import { Button } from "@/components/ui/button";
 import { ReasoningSliderTrigger } from "@/components/ui/reasoning-slider-trigger";
 import { StopButton } from "@/components/ui/stop-button";
@@ -24,8 +23,10 @@ import {
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue, usePanelsState } from "@/hooks/use-panels";
+import { useThreadRuntimeControllersValue } from "@/hooks/use-thread-store";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
+import type { CreateAppendMessage } from "@assistant-ui/react";
 import { ComposerAddAttachment } from "./add-attachment";
 import { AttachmentChip } from "./attachment-chip";
 import { Captcha } from "./captcha";
@@ -68,10 +69,11 @@ export const GlobalComposer: FC = () => {
     IncompatibleAttachment[]
   >([]);
 
-  const ctx = useContext(GlobalComposerContext);
-  if (!ctx) throw new Error("GlobalComposerContext is not available");
-
-  const { getRuntimes } = ctx;
+  const runtimeControllers = useThreadRuntimeControllersValue();
+  const controllerEntries = useMemo(
+    () => Object.entries(runtimeControllers),
+    [runtimeControllers]
+  );
 
   const handleContainerClick = (e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -82,9 +84,9 @@ export const GlobalComposer: FC = () => {
 
   const handleStopAll = () => {
     const failures: string[] = [];
-    for (const runtime of getRuntimes().values()) {
+    for (const [, controller] of controllerEntries) {
       try {
-        runtime.thread.cancelRun();
+        controller.cancel();
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         failures.push(message);
@@ -156,11 +158,10 @@ export const GlobalComposer: FC = () => {
       return false;
     }
 
-    const runtimes = getRuntimes();
     const isLoggedIn = !!user;
     if (!isLoggedIn) {
       // Anonymous quota enforcement
-      if (remaining !== null && remaining < runtimes.size) {
+      if (remaining !== null && remaining < controllerEntries.length) {
         toast.error(
           t("guestLimit", {
             limit: ANON_DAILY_LIMIT,
@@ -171,16 +172,18 @@ export const GlobalComposer: FC = () => {
     }
 
     const runningPanels: string[] = [];
-    for (const [panelId, runtime] of runtimes.entries()) {
+    for (const [threadId, controller] of controllerEntries) {
       try {
-        runtime.thread.append({
+        const appendMessage: CreateAppendMessage = {
           runConfig: { custom: { thisIscustom: true } },
           metadata: { custom: { thisIsMyMetadata: true } },
           role: "user",
           content: [{ type: "text", text: msg }],
           attachments: completeAttachments,
-        });
-        runningPanels.push(panelId);
+          createdAt: new Date(),
+        };
+        controller.append(appendMessage);
+        runningPanels.push(threadId);
       } catch (e) {
         const message = e instanceof Error ? e.message : JSON.stringify(e);
         toast.error(

@@ -25,8 +25,7 @@
       "react-dom": "19.1.1",
       "@types/react": "19.1.12",
       "ai": "5.0.24",
-      "@ai-sdk/provider-utils": "3.0.6",
-      "assistant-cloud": "workspace:*"
+      "@ai-sdk/provider-utils": "3.0.6"
     }
   },
   "devDependencies": {

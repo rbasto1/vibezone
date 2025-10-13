@@ -10,6 +10,7 @@ import { models, user as userTable } from "@/db/schema";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
+import type { ThreadMessageLike } from "@assistant-ui/react";
 
 import { Toaster } from "@/components/providers/toast-provider";
 import { models as modelsList } from "@/generated/models";
@@ -95,20 +96,9 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       id: generateThreadId(order),
       provider: r.providerId,
       model: r.id,
-      initialMessages: preferencesInitialValue.systemPrompt
-        ? [
-            {
-              id: generateId(),
-              role: "system",
-              parts: [
-                {
-                  type: "text",
-                  text: preferencesInitialValue.systemPrompt,
-                },
-              ],
-            },
-          ]
-        : [],
+      initialMessages: buildInitialMessages(
+        preferencesInitialValue.systemPrompt
+      ),
     })
   );
   return (
@@ -166,3 +156,23 @@ async function getDefaultModels() {
     .slice(0, MAX_PANELS);
   return defaultModelsCache;
 }
+
+const buildInitialMessages = (
+  prompt: string | null | undefined
+): ThreadMessageLike[] => {
+  if (!prompt) return [];
+  return [
+    {
+      id: generateId(),
+      role: "system" as const,
+      createdAt: new Date(),
+      content: [
+        {
+          type: "text" as const,
+          text: prompt,
+        },
+      ],
+      metadata: { custom: {} },
+    } satisfies ThreadMessageLike,
+  ];
+};

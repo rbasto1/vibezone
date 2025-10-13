@@ -1,107 +1,8 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env.*local"],
+  "globalDependencies": ["**/.env", "**/.dev.vars"],
   "tasks": {
-    "build": {},
-    "assistant-stream#build": {
-      "dependsOn": ["^build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "assistant-ui#build": {
-      "dependsOn": ["^build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "assistant-cloud#build": {
-      "dependsOn": ["^build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "create-assistant-ui#build": {
-      "dependsOn": ["^build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "@assistant-ui/mcp-docs-server#build": {
-      "dependsOn": ["^build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "@assistant-ui/styles#build": {
-      "dependsOn": ["^build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "@assistant-ui/tap#build": {
-      "dependsOn": ["^build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "transit:assistant-ui-1": {
-      "dependsOn": [
-        "assistant-stream#build",
-        "assistant-ui#build",
-        "assistant-cloud#build",
-        "create-assistant-ui#build",
-        "@assistant-ui/mcp-docs-server#build",
-        "@assistant-ui/styles#build",
-        "@assistant-ui/tap#build"
-      ]
-    },
-    "@assistant-ui/react#build": {
-      "dependsOn": ["transit:assistant-ui-1"],
-      "inputs": ["src/**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "@assistant-ui/react-hook-form#build": {
-      "dependsOn": ["@assistant-ui/react#build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "@assistant-ui/react-markdown#build": {
-      "dependsOn": ["@assistant-ui/react#build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "@assistant-ui/react-langgraph#build": {
-      "dependsOn": ["@assistant-ui/react#build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "@assistant-ui/react-ai-sdk#build": {
-      "dependsOn": ["@assistant-ui/react#build"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "transit:assistant-ui-3": {
-      "dependsOn": [
-        "@assistant-ui/react-hook-form#build",
-        "@assistant-ui/react-markdown#build",
-        "@assistant-ui/react-langgraph#build",
-        "@assistant-ui/react-ai-sdk#build"
-      ]
-    },
-    "@assistant-ui/react-syntax-highlighter#build": {
-      "dependsOn": ["transit:assistant-ui-3"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
-    "@assistant-ui/react-data-stream#build": {
-      "dependsOn": ["transit:assistant-ui-3"],
-      "inputs": ["**/*.*", "!.turbo"],
-      "outputs": ["dist"]
-    },
     "@vibezone/web#build": {
-      "dependsOn": [
-        "@assistant-ui/react-data-stream#build",
-        "@assistant-ui/react-syntax-highlighter#build",
-        "@assistant-ui/react-ai-sdk#build",
-        "@assistant-ui/react-markdown#build",
-        "@assistant-ui/react-langgraph#build",
-        "@assistant-ui/react-hook-form#build",
-        "@assistant-ui/react#build"
-      ],
       "inputs": ["**/*.*", "!.next", "!.turbo"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
@@ -128,10 +29,8 @@
     "NEXT_PUBLIC_*",
     "OPENROUTER_API_KEY",
     "RESEND_API_KEY",
-    "RESEND_FROM",
     "DEEPL_API_KEY",
     "MARITACAAI_API_KEY",
     "NEXT_PUBLIC_TURNSTILE_SITE_KEY"
-  ],
-  "concurrency": "2"
+  ]
 }
