@@ -45,8 +45,12 @@ export const useThreadRuntime = ({
     onFinish: () => {
       onFinish?.();
     },
-    onError(error) {
-      onError?.(error instanceof Error ? error : new Error(String(error)));
+    onError(error: unknown) {
+      if (error instanceof Error) {
+        onError?.(error);
+      } else {
+        onError?.(new Error(JSON.stringify(error)));
+      }
     },
   });
 

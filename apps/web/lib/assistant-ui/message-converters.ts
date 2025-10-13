@@ -13,44 +13,39 @@ import {
 const toTextPart = (text: string) => ({ type: "text" as const, text });
 
 const convertUIPartToThreadPart = (
-  part: UIMessagePart<UIDataTypes, UITools>,
+  part: UIMessagePart<UIDataTypes, UITools>
 ): ThreadMessageLike["content"][number] | null => {
   switch (part.type) {
     case "text":
-      return { type: "text", text: part.text } as ThreadMessageLike["content"][number];
     case "reasoning":
-      return { type: "reasoning", text: part.text } as ThreadMessageLike["content"][number];
+      return {
+        type: part.type,
+        text: part.text,
+      } as ThreadMessageLike["content"][number];
     case "file": {
       const mediaType = part.mediaType ?? "application/octet-stream";
-      if (mediaType.startsWith("image/")) {
+      if (part.url && mediaType.startsWith("image/")) {
         return {
           type: "image",
           image: part.url,
-          filename: part.filename,
+          filename: part.filename ?? "image",
         } as ThreadMessageLike["content"][number];
       }
+      if (!part.url) return null;
       return {
         type: "file",
         data: part.url,
         mimeType: mediaType,
-        filename: part.filename,
+        filename: part.filename ?? "attachment",
       } as ThreadMessageLike["content"][number];
     }
-    case "source-url":
-      return {
-        type: "source",
-        sourceType: "url",
-        id: part.sourceId,
-        url: part.url,
-        title: part.title,
-      } as ThreadMessageLike["content"][number];
     default:
       return null;
   }
 };
 
 const convertThreadPartToUIPart = (
-  part: ThreadMessageLike["content"][number],
+  part: ThreadMessageLike["content"][number]
 ): UIMessagePart<UIDataTypes, UITools> => {
   if (!part || typeof part !== "object" || !("type" in part)) {
     return toTextPart("") as UIMessagePart<UIDataTypes, UITools>;
@@ -59,8 +54,6 @@ const convertThreadPartToUIPart = (
   switch ((part as { type: string }).type) {
     case "text":
       return { type: "text", text: (part as { text: string }).text };
-    case "reasoning":
-      return { type: "reasoning", text: (part as { text: string }).text } as UIMessagePart<UIDataTypes, UITools>;
     case "image":
       return {
         type: "file",
@@ -75,20 +68,15 @@ const convertThreadPartToUIPart = (
         mediaType: (part as { mimeType: string }).mimeType,
         filename: (part as { filename?: string }).filename,
       } as UIMessagePart<UIDataTypes, UITools>;
-    case "source":
-      return {
-        type: "source-url",
-        sourceId: (part as { id: string }).id,
-        url: (part as { url: string }).url,
-        title: (part as { title?: string }).title,
-      } as UIMessagePart<UIDataTypes, UITools>;
     default:
-      return toTextPart("") as UIMessagePart<UIDataTypes, UITools>;
+      return toTextPart(
+        (part as { text?: string }).text ?? ""
+      ) as UIMessagePart<UIDataTypes, UITools>;
   }
 };
 
 export const toThreadMessages = (
-  uiMessages: readonly UIMessage[],
+  uiMessages: readonly UIMessage[]
 ): ThreadMessageLike[] => {
   return uiMessages.map((message) => {
     const converted = message.parts
@@ -106,12 +94,17 @@ export const toThreadMessages = (
 };
 
 export const toUiMessages = (
-  threadMessages: readonly ThreadMessageLike[],
+  threadMessages: readonly ThreadMessageLike[]
 ): UIMessage[] => {
   return threadMessages.map((message) => {
     const parts = Array.isArray(message.content)
       ? message.content.map(convertThreadPartToUIPart)
-      : [toTextPart(String(message.content ?? "")) as UIMessagePart<UIDataTypes, UITools>];
+      : [
+          toTextPart(String(message.content ?? "")) as UIMessagePart<
+            UIDataTypes,
+            UITools
+          >,
+        ];
 
     return {
       id: message.id ?? generateId(),
@@ -122,36 +115,44 @@ export const toUiMessages = (
 };
 
 export const createMessageFromAppend = (
-  message: AppendMessage,
+  message: AppendMessage
 ): CreateUIMessage<UIMessage> => {
   const inline = message.content
     .filter((part) => part.type === "text")
     .map((part) => ({ type: "text" as const, text: part.text }));
 
-  const attachmentParts = ((message.attachments ?? []).flatMap((attachment) =>
-    attachment.content.map((contentPart) => {
+  const attachmentParts = (message.attachments ?? [])
+    .flatMap((attachment) =>
+      attachment.content.map((contentPart) => {
         switch (contentPart.type) {
           case "text":
             return { type: "text" as const, text: contentPart.text };
           case "image":
-            return {
-              type: "file" as const,
-              url: contentPart.image,
-              mediaType: "image/png",
-              filename: contentPart.filename,
-            };
+            return contentPart.image
+              ? {
+                  type: "file" as const,
+                  url: contentPart.image,
+                  mediaType: "image/png",
+                  filename:
+                    contentPart.filename ?? attachment.name ?? "attachment",
+                }
+              : null;
           case "file":
-            return {
-              type: "file" as const,
-              url: contentPart.data,
-              mediaType: contentPart.mimeType,
-              filename: contentPart.filename,
-            };
+            return contentPart.data
+              ? {
+                  type: "file" as const,
+                  url: contentPart.data,
+                  mediaType: contentPart.mimeType ?? "application/octet-stream",
+                  filename:
+                    contentPart.filename ?? attachment.name ?? "attachment",
+                }
+              : null;
           default:
             return null;
         }
       })
-  ).filter(Boolean)) as UIMessagePart<UIDataTypes, UITools>[];
+    )
+    .filter(Boolean) as UIMessagePart<UIDataTypes, UITools>[];
 
   const parts = [...inline, ...attachmentParts] as UIMessagePart<
     UIDataTypes,
@@ -165,11 +166,9 @@ export const createMessageFromAppend = (
   } satisfies CreateUIMessage<UIMessage>;
 };
 
-export const sliceUiMessagesUntil = <
-  UI_MESSAGE extends UIMessage = UIMessage,
->(
+export const sliceUiMessagesUntil = <UI_MESSAGE extends UIMessage = UIMessage>(
   messages: UI_MESSAGE[],
-  messageId: string | null,
+  messageId: string | null
 ) => {
   if (messageId == null) return [] as UI_MESSAGE[];
 

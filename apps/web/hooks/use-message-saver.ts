@@ -1,10 +1,11 @@
+import { useEffect, useRef } from "react";
+
 import type { MessageMetadata } from "@/db/json-columns-types";
 import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import type { ThreadMessage } from "@assistant-ui/react";
 import { useThread } from "@assistant-ui/react";
-import { useEffect, useRef } from "react";
 import { useCurrentChat } from "./use-chat";
 import { usePanelStateValue } from "./use-panels";
 

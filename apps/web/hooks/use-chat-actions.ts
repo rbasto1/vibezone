@@ -6,7 +6,6 @@ import {
   type ThreadMessagesState,
 } from "@/store/thread-messages";
 import type { ThreadMessageLike } from "@assistant-ui/react";
-import { generateId } from "ai";
 import { useSetAtom } from "jotai";
 import { useCallback } from "react";
 import { usePanelsConfigSetter, usePanelsStateSetter } from "./use-panels";
@@ -91,16 +90,25 @@ export const useChatActions = () => {
 const toThreadMessageLike = (msg: Message): ThreadMessageLike => {
   const role = (msg.role ?? "system") as "user" | "assistant" | "system";
 
-  const contentArray = Array.isArray(msg.content)
-    ? msg.content.map(convertContentPart)
-    : [{ type: "text", text: String(msg.content ?? "") }];
+  const contentArrayRaw = Array.isArray(msg.content)
+    ? (msg.content
+        .map(convertContentPart)
+        .filter(
+          (part): part is ThreadMessageLike["content"][number] => part !== null,
+        ) as ThreadMessageLike["content"])
+    : ([{ type: "text", text: String(msg.content ?? "") }] as ThreadMessageLike["content"]);
+
+  const contentArray =
+    contentArrayRaw.length > 0
+      ? contentArrayRaw
+      : ([{ type: "text", text: "" }] as ThreadMessageLike["content"]);
 
   const status = role === "assistant" ? convertStatus(msg.status) : undefined;
 
   const threadMessage: ThreadMessageLike = {
     id: msg.id,
     role,
-    content: contentArray as ThreadMessageLike["content"],
+    content: contentArray,
     attachments: Array.isArray(msg.attachments)
       ? (msg.attachments as ThreadMessageLike["attachments"])
       : undefined,
@@ -116,7 +124,7 @@ const toThreadMessageLike = (msg: Message): ThreadMessageLike => {
 
 const convertContentPart = (
   part: unknown
-): ThreadMessageLike["content"][number] => {
+): ThreadMessageLike["content"][number] | null => {
   const candidate = part as Record<string, unknown>;
   switch (candidate?.type) {
     case "text":
@@ -124,27 +132,29 @@ const convertContentPart = (
         type: "text",
         text: typeof candidate.text === "string" ? candidate.text : "",
       };
-    case "reasoning":
-      return {
-        type: "reasoning",
-        text: typeof candidate.text === "string" ? candidate.text : "",
-      } as ThreadMessageLike["content"][number];
     case "image":
+      if (typeof candidate.image !== "string" && typeof candidate.url !== "string") {
+        return null;
+      }
       return {
-        type: "image",
-        image:
+        type: "file",
+        data:
           typeof candidate.image === "string"
             ? candidate.image
             : String(candidate.url ?? ""),
+        mimeType: "image/png",
         filename:
           typeof candidate.filename === "string"
             ? candidate.filename
-            : undefined,
+            : "image",
       } as ThreadMessageLike["content"][number];
     case "file":
+      if (typeof candidate.url !== "string") {
+        return null;
+      }
       return {
         type: "file",
-        data: typeof candidate.url === "string" ? candidate.url : "",
+        data: candidate.url,
         mimeType:
           typeof candidate.mediaType === "string"
             ? candidate.mediaType
@@ -152,37 +162,10 @@ const convertContentPart = (
         filename:
           typeof candidate.filename === "string"
             ? candidate.filename
-            : undefined,
-      } as ThreadMessageLike["content"][number];
-    case "tool-call":
-    case "tool-result":
-      return {
-        type: "tool-call",
-        toolCallId:
-          typeof candidate.toolCallId === "string"
-            ? candidate.toolCallId
-            : generateId(),
-        toolName:
-          typeof candidate.toolName === "string"
-            ? candidate.toolName
-            : "unknown-tool",
-        args: (candidate.args ?? {}) as unknown,
-        argsText:
-          typeof candidate.argsText === "string"
-            ? candidate.argsText
-            : JSON.stringify(candidate.args ?? {}),
-        result: candidate.result,
-        isError: Boolean(candidate.isError),
-        parentId:
-          typeof candidate.parentId === "string"
-            ? candidate.parentId
-            : undefined,
+            : "attachment",
       } as ThreadMessageLike["content"][number];
     default:
-      return {
-        type: "text",
-        text: JSON.stringify(part ?? {}),
-      } as ThreadMessageLike["content"][number];
+      return null;
   }
 };
 
