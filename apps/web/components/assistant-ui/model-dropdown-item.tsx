@@ -8,7 +8,7 @@ import {
 import { cn } from "@/components/ui/utils";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
-import { InfoIcon, ShieldAlertIcon } from "lucide-react";
+import { InfoIcon, ShieldAlertIcon, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { capabilityOptions } from "./model-dropdown-constants";
@@ -29,6 +29,7 @@ interface ModelDropdownItemProps {
   muted?: boolean;
   titleText?: string;
   showRetentionWarning?: boolean;
+  isFavorite?: boolean;
 }
 
 export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
@@ -40,6 +41,7 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
   muted = false,
   titleText,
   showRetentionWarning = false,
+  isFavorite = false,
 }) => {
   const t = useTranslations("ModelDropdown");
   const infoLabel = t("info.openDetails");
@@ -61,6 +63,9 @@ export const ModelDropdownItem: React.FC<ModelDropdownItemProps> = ({
       title={titleText}
     >
       <div className="flex items-start justify-between gap-2">
+        {isFavorite && (
+          <Star className="h-4 w-4 text-yellow-500 fill-current flex-shrink-0 mt-0.5" />
+        )}
         <span className="flex-1 min-w-0">
           <div className="truncate">{model.name}</div>
           <div className="mt-0.5 flex items-center gap-1">

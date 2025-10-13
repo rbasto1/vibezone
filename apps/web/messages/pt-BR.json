@@ -101,7 +101,7 @@
     "favoriteAdd": "Adicionar aos favoritos",
     "favoriteRemove": "Remover dos favoritos",
     "favoritesFilter": "Favoritos",
-    "favoritesMissingTooltip": "Este modelo não está mais disponível",
+    "favoritesMissingHeader": "Modelos não mais disponíveis",
     "favoritesEmpty": "Nenhum modelo favorito ainda.",
     "retentionIconAria": "Este modelo pode reter seus dados",
     "retentionTooltip": "Este modelo pode reter suas mensagens e anexos para treinar novas versões.<lineBreak></lineBreak>Não compartilhe informações sensíveis em suas conversas.",

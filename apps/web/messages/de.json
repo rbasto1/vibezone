@@ -101,7 +101,7 @@
     "favoriteAdd": "Zu Favoriten hinzufügen",
     "favoriteRemove": "Aus Favoriten entfernen",
     "favoritesFilter": "Favoriten",
-    "favoritesMissingTooltip": "Dieses Modell ist nicht mehr verfügbar",
+    "favoritesMissingHeader": "Modelle nicht mehr verfügbar",
     "favoritesEmpty": "Noch keine Favoriten.",
     "retentionIconAria": "Dieses Modell könnte deine Daten speichern",
     "retentionTooltip": "Dieses Modell kann deine Nachrichten und Anhänge speichern, um neue Versionen zu trainieren.<lineBreak></lineBreak>Teile in deinen Chats keine sensiblen Informationen.",

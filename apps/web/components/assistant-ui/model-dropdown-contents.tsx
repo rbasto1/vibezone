@@ -9,6 +9,7 @@ import { useModelFavorites } from "@/hooks/use-model-favorites";
 import { useModelsValue } from "@/hooks/use-models";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
+import { modelMap } from "@/lib/model-map";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { Star, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -149,30 +150,36 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     setSearchQuery("");
   };
 
-  const { groupedFavorites, missingFavoriteModelIds } = useMemo(() => {
-    const grouped = new Map<string, GetModelsListReturn["models"][number][]>();
-    const missing: string[] = [];
-    const modelsById = new Map(models.map((model) => [model.id, model]));
+  const { groupedFavorites, missingFavoriteModelIds, favoritesSet } =
+    useMemo(() => {
+      const grouped = new Map<
+        string,
+        GetModelsListReturn["models"][number][]
+      >();
+      const missing: string[] = [];
+      const favSet = new Set<string>();
 
-    favorites.forEach((favorite) => {
-      const model = modelsById.get(favorite.modelId);
-      if (!model) {
-        missing.push(favorite.modelId);
-        return;
-      }
-      const list = grouped.get(model.providerId);
-      if (list) {
-        list.push(model);
-      } else {
-        grouped.set(model.providerId, [model]);
-      }
-    });
+      favorites.forEach((favorite) => {
+        favSet.add(favorite.modelId);
+        const model = modelMap.get(favorite.modelId);
+        if (!model) {
+          missing.push(favorite.modelId);
+          return;
+        }
+        const list = grouped.get(model.providerId);
+        if (list) {
+          list.push(model);
+        } else {
+          grouped.set(model.providerId, [model]);
+        }
+      });
 
-    return {
-      groupedFavorites: grouped,
-      missingFavoriteModelIds: missing,
-    };
-  }, [favorites, models]);
+      return {
+        groupedFavorites: grouped,
+        missingFavoriteModelIds: missing,
+        favoritesSet: favSet,
+      };
+    }, [favorites]);
 
   const favoriteFilteredModelsByProvider = useMemo(() => {
     if (!showFavoritesOnly) {
@@ -315,14 +322,30 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
           })
         : list;
 
-      filtered.sort((a, b) => {
+      // Separate favorites from non-favorites
+      const favorites = filtered.filter((m) => favoritesSet.has(m.id));
+      const nonFavorites = filtered.filter((m) => !favoritesSet.has(m.id));
+
+      // Sort favorites by priority and name
+      favorites.sort((a, b) => {
         const ap = a.priority ?? -Infinity;
         const bp = b.priority ?? -Infinity;
         if (ap !== bp) return bp - ap;
         return a.name.localeCompare(b.name);
       });
 
-      byProvider.set(p.id, filtered);
+      // Sort non-favorites by priority and name
+      nonFavorites.sort((a, b) => {
+        const ap = a.priority ?? -Infinity;
+        const bp = b.priority ?? -Infinity;
+        if (ap !== bp) return bp - ap;
+        return a.name.localeCompare(b.name);
+      });
+
+      // Combine favorites first, then non-favorites
+      const sortedList = [...favorites, ...nonFavorites];
+
+      byProvider.set(p.id, sortedList);
     }
 
     return byProvider;
@@ -335,6 +358,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     suggestionGroups,
     favoriteFilteredModelsByProvider,
     showFavoritesOnly,
+    favoritesSet,
   ]);
 
   const [expandedProviders, setExpandedProviders] = useState(new Set<string>());
@@ -602,7 +626,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                 <div className="px-1 pb-2 mb-2 border-b">
                   <div className="text-xs tracking-wide text-muted-foreground flex items-center gap-2">
                     <span className="font-medium">
-                      Models not longer available
+                      {t("favoritesMissingHeader")}
                     </span>
                   </div>
                 </div>
@@ -630,8 +654,10 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
             )}
             {providersByTier.map((p) => {
               const list = modelsByProvider.get(p.id) ?? [];
-              const suggested = list.filter((m) => m.isSuggested);
-              const others = list.filter((m) => !m.isSuggested);
+              const favorites = list.filter((m) => favoritesSet.has(m.id));
+              const nonFavorites = list.filter((m) => !favoritesSet.has(m.id));
+              const suggested = nonFavorites.filter((m) => m.isSuggested);
+              const others = nonFavorites.filter((m) => !m.isSuggested);
               const expanded = effectiveExpandedProviders.has(p.id);
               const providerRetainsData = !!p.dataRetention;
 
@@ -659,6 +685,34 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                       </div>
                     ) : (
                       <>
+                        {/* Always show favorites first */}
+                        {favorites.map((m) => {
+                          const restricted =
+                            !user &&
+                            (Boolean(m.isPremium) || Boolean(m.isIncluded));
+                          const titleText = restricted
+                            ? t("signInToUse")
+                            : undefined;
+                          const onSelect = restricted
+                            ? () => setUIState({ loginOpen: true })
+                            : handleModelSelect;
+                          return (
+                            <ModelDropdownItem
+                              key={m.id}
+                              model={m}
+                              selected={m.id === currentModelId}
+                              onSelect={onSelect}
+                              providerId={p.id}
+                              muted={restricted}
+                              titleText={titleText}
+                              showRetentionWarning={
+                                providerRetainsData || !!m.isFree
+                              }
+                              isFavorite={true}
+                            />
+                          );
+                        })}
+
                         {suggested.map((m) => {
                           const restricted =
                             !user &&
