@@ -1,11 +1,10 @@
-import type { Message } from "@/db";
+import { toThreadMessageLike } from "@/lib/assistant-ui/message-converters";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig, PanelState } from "@/store/panels";
 import {
   threadMessagesAtom,
   type ThreadMessagesState,
 } from "@/store/thread-messages";
-import type { ThreadMessageLike } from "@assistant-ui/react";
 import { useSetAtom } from "jotai";
 import { useCallback } from "react";
 import { usePanelsConfigSetter, usePanelsStateSetter } from "./use-panels";
@@ -84,125 +83,4 @@ export const useChatActions = () => {
   return {
     loadChatById,
   };
-};
-
-// Helper function to convert database messages to ThreadMessageLike format
-const toThreadMessageLike = (msg: Message): ThreadMessageLike => {
-  const role = (msg.role ?? "system") as "user" | "assistant" | "system";
-
-  const contentArrayRaw = Array.isArray(msg.content)
-    ? (msg.content
-        .map(convertContentPart)
-        .filter(
-          (part): part is ThreadMessageLike["content"][number] => part !== null,
-        ) as ThreadMessageLike["content"])
-    : ([{ type: "text", text: String(msg.content ?? "") }] as ThreadMessageLike["content"]);
-
-  const contentArray =
-    contentArrayRaw.length > 0
-      ? contentArrayRaw
-      : ([{ type: "text", text: "" }] as ThreadMessageLike["content"]);
-
-  const status = role === "assistant" ? convertStatus(msg.status) : undefined;
-
-  const threadMessage: ThreadMessageLike = {
-    id: msg.id,
-    role,
-    content: contentArray,
-    attachments: Array.isArray(msg.attachments)
-      ? (msg.attachments as ThreadMessageLike["attachments"])
-      : undefined,
-    metadata: msg.metadata?.custom
-      ? { custom: msg.metadata.custom }
-      : undefined,
-    createdAt: msg.createdAt ? new Date(msg.createdAt) : undefined,
-    ...(status ? { status } : {}),
-  };
-
-  return threadMessage;
-};
-
-const convertContentPart = (
-  part: unknown
-): ThreadMessageLike["content"][number] | null => {
-  const candidate = part as Record<string, unknown>;
-  switch (candidate?.type) {
-    case "text":
-      return {
-        type: "text",
-        text: typeof candidate.text === "string" ? candidate.text : "",
-      };
-    case "image":
-      if (typeof candidate.image !== "string" && typeof candidate.url !== "string") {
-        return null;
-      }
-      return {
-        type: "file",
-        data:
-          typeof candidate.image === "string"
-            ? candidate.image
-            : String(candidate.url ?? ""),
-        mimeType: "image/png",
-        filename:
-          typeof candidate.filename === "string"
-            ? candidate.filename
-            : "image",
-      } as ThreadMessageLike["content"][number];
-    case "file":
-      if (typeof candidate.url !== "string") {
-        return null;
-      }
-      return {
-        type: "file",
-        data: candidate.url,
-        mimeType:
-          typeof candidate.mediaType === "string"
-            ? candidate.mediaType
-            : "application/octet-stream",
-        filename:
-          typeof candidate.filename === "string"
-            ? candidate.filename
-            : "attachment",
-      } as ThreadMessageLike["content"][number];
-    default:
-      return null;
-  }
-};
-
-const convertStatus = (
-  status: Message["status"]
-): ThreadMessageLike["status"] => {
-  if (!status?.type) return undefined;
-  switch (status.type) {
-    case "running":
-      return { type: "running" };
-    case "requires-action":
-      if (status.reason === "tool-calls") {
-        return { type: "requires-action", reason: "tool-calls" };
-      }
-      return undefined;
-    case "complete":
-      return {
-        type: "complete",
-        reason:
-          status.reason === "stop" || status.reason === "unknown"
-            ? status.reason
-            : "unknown",
-      };
-    case "incomplete":
-      return {
-        type: "incomplete",
-        reason:
-          status.reason === "cancelled" ||
-          status.reason === "tool-calls" ||
-          status.reason === "length" ||
-          status.reason === "content-filter" ||
-          status.reason === "other" ||
-          status.reason === "error"
-            ? status.reason
-            : "other",
-      };
-    default:
-      return undefined;
-  }
 };

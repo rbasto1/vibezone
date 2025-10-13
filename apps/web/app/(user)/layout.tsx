@@ -91,26 +91,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const fallbackModels = await getDefaultModels();
   const modelListForPanels = userModelList ?? fallbackModels;
 
-  const buildInitialMessages = (
-    prompt: string | null | undefined
-  ): ThreadMessageLike[] => {
-    if (!prompt) return [];
-    return [
-      {
-        id: generateId(),
-        role: "system" as const,
-        createdAt: new Date(),
-        content: [
-          {
-            type: "text" as const,
-            text: prompt,
-          },
-        ],
-        metadata: { custom: {} },
-      } satisfies ThreadMessageLike,
-    ];
-  };
-
   const initialPanels = modelListForPanels.map(
     (r, order): PanelConfig => ({
       id: generateThreadId(order),
@@ -176,3 +156,23 @@ async function getDefaultModels() {
     .slice(0, MAX_PANELS);
   return defaultModelsCache;
 }
+
+const buildInitialMessages = (
+  prompt: string | null | undefined
+): ThreadMessageLike[] => {
+  if (!prompt) return [];
+  return [
+    {
+      id: generateId(),
+      role: "system" as const,
+      createdAt: new Date(),
+      content: [
+        {
+          type: "text" as const,
+          text: prompt,
+        },
+      ],
+      metadata: { custom: {} },
+    } satisfies ThreadMessageLike,
+  ];
+};

@@ -30,24 +30,6 @@ export function useNewChatHandler() {
     ? preferences.systemPrompt
     : t("Prompts.system");
 
-  const buildSystemMessages = useCallback(() => {
-    if (!systemPrompt) return [] as ThreadMessageLike[];
-    return [
-      {
-        id: generateId(),
-        role: "system" as const,
-        createdAt: new Date(),
-        content: [
-          {
-            type: "text" as const,
-            text: systemPrompt,
-          },
-        ],
-        metadata: { custom: {} },
-      } satisfies ThreadMessageLike,
-    ];
-  }, [systemPrompt]);
-
   return useCallback(() => {
     createNewChat();
 
@@ -60,7 +42,7 @@ export function useNewChatHandler() {
     setPanelsConfig((config) =>
       config.map((panel, order) => {
         const id = generateThreadId(order);
-        const initialMessages = buildSystemMessages();
+        const initialMessages = buildSystemMessages(systemPrompt);
         nextThreadMessages[id] = initialMessages;
         return {
           id,
@@ -74,12 +56,32 @@ export function useNewChatHandler() {
 
     setUIState({ panelOpen: null, suggestionsUsed: false });
   }, [
-    buildSystemMessages,
     createNewChat,
     runtimeControllers,
     setPanelsConfig,
     setPanelsState,
     setThreadMessages,
     setUIState,
+    systemPrompt,
   ]);
 }
+
+const buildSystemMessages = (
+  systemPrompt: string | null
+): ThreadMessageLike[] => {
+  if (!systemPrompt) return [];
+  return [
+    {
+      id: generateId(),
+      role: "system" as const,
+      createdAt: new Date(),
+      content: [
+        {
+          type: "text" as const,
+          text: systemPrompt,
+        },
+      ],
+      metadata: { custom: {} },
+    } satisfies ThreadMessageLike,
+  ];
+};
