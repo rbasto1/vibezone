@@ -3,7 +3,6 @@
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAnonQuotaSetter } from "@/hooks/use-anon-quota";
-import { useAttachmentAdapter } from "@/hooks/use-attachments";
 import { useAllCanReason } from "@/hooks/use-capabilities";
 import {
   captchaToken,
@@ -61,7 +60,6 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   }, [id]);
   const [panelState, setPanelState] = usePanelState(id);
   const setCurrentChat = useCurrentChatSetter();
-  const attachmentAdapter = useAttachmentAdapter();
   const renameChatMutation = trpc.chats.renameChat.useMutation();
   const session = useSession();
   const sessionToken = useRef(session?.session.token);
@@ -283,9 +281,6 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
     transport,
     onFinish: handleModelFinish,
     onError: handleModelError,
-    adapters: {
-      attachments: attachmentAdapter,
-    },
   });
   runtimeRef.current = runtime;
 
@@ -306,14 +301,14 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
 
   // Commented out for us to check later if it gets to work
   // useEffect(() => {
-  //   // This is not working as of assitant-ui@0.10.43
+  //   // This is not working as of assitant-ui/react@0.11.28
   //   return runtime.registerModelContextProvider({
   //     getModelContext: (): ModelContext => {
-  //       console.info("Yay! It works! Called getModelContext:", id, model);
+  //       console.info("Yay! It works! Called getModelContext:", id);
   //       return {};
   //     },
   //   });
-  // }, [runtime, model, id]);
+  // }, [runtime, id]);
 
   // This is how we execute the chat from the global composer
   // It registers the runtime so that messages sent from the composer are sent to this panel's runtime
