@@ -16,11 +16,13 @@ import { AnonMobileQuotaLabel } from "./anon-mobile-quota-label";
 interface AssistantHeaderProps {
   panelCount: number;
   suggestionsUsed: boolean;
+  onAddPanel?: (id: string) => void;
 }
 
 export const AssistantHeader: FC<AssistantHeaderProps> = ({
   panelCount,
   suggestionsUsed,
+  onAddPanel,
 }) => {
   const user = useUser();
   const handleNewChat = useNewChatHandler();
@@ -31,7 +33,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
       <SidebarTrigger />
 
       <div className="ml-auto flex items-center">
-        <AddAiButton panelCount={panelCount} />
+        <AddAiButton panelCount={panelCount} onAddPanel={onAddPanel} />
 
         <Button
           variant="outline"

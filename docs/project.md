@@ -17,7 +17,7 @@
 
 - [ ] Add news startup modal
 - [ ] Thumb up/down (or stars?)
-- [ ] Mobile: when adding a new panel, select it by default
+- [x] Mobile: when adding a new panel, select it by default
 - [x] Allow user to pin favorite models
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format

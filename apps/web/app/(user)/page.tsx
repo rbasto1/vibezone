@@ -115,6 +115,7 @@ const AssistantContent: FC = () => {
           <AssistantHeader
             panelCount={panelsConfig.length}
             suggestionsUsed={uiState.suggestionsUsed}
+            onAddPanel={focusPanelId ? setFocusPanelId : undefined}
           />
           {uiState.panelOpen === "preferences" && <PreferencesPage />}
           {uiState.panelOpen === "search" && <SearchPanel />}

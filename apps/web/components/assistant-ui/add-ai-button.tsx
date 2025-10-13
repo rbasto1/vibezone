@@ -25,9 +25,13 @@ import { ModelDropdownContents } from "./model-dropdown-contents";
 
 interface AddAiButtonProps {
   panelCount: number;
+  onAddPanel?: (id: string) => void;
 }
 
-export const AddAiButton: FC<AddAiButtonProps> = ({ panelCount }) => {
+export const AddAiButton: FC<AddAiButtonProps> = ({
+  panelCount,
+  onAddPanel,
+}) => {
   const t = useTranslations("AssistantHeader");
   const setLastModels = trpc.users.setLastModels.useMutation();
   const setPanelsConfig = usePanelsConfigSetter();
@@ -70,6 +74,7 @@ export const AddAiButton: FC<AddAiButtonProps> = ({ panelCount }) => {
 
       return newPanels;
     });
+    onAddPanel?.(id);
   };
 
   return (
