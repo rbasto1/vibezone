@@ -16,7 +16,6 @@ import {
   usersModelsRelations,
 } from "@/db/relations";
 
-import type { userStats } from "@/db/tables";
 import {
   chats,
   locales,
@@ -32,6 +31,7 @@ import {
   threads,
   usage,
   usersModels,
+  userStats,
 } from "@/db/tables";
 
 export {
@@ -63,6 +63,7 @@ export {
   usageRelations,
   usersModels,
   usersModelsRelations,
+  userStats,
 };
 
 export type ProviderTier = (typeof providerTiers.enumValues)[number];

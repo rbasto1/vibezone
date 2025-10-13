@@ -1,6 +1,10 @@
+import "server-only";
+
 import { currentUser } from "@clerk/nextjs/server";
 import { HydrationBoundary } from "@tanstack/react-query";
+import { generateId } from "ai";
 import { and, eq, inArray, isNull } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 import { Suspense, type PropsWithChildren } from "react";
 
 import { StoreProvider } from "@/components/providers/store-provider";
@@ -15,8 +19,6 @@ import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
 import type { PanelConfig } from "@/store/panels";
 import type { PreferencesAtom } from "@/store/preferences";
 import type { ThreadMessageLike } from "@assistant-ui/react";
-import { generateId } from "ai";
-import { getTranslations } from "next-intl/server";
 import { PageLoader } from "./page-loader";
 
 export default async function RootLayout({ children }: PropsWithChildren) {

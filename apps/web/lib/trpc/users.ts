@@ -4,7 +4,6 @@ import { db } from "@/db";
 import type { Preferences } from "@/db/schema";
 import { chats, models, usage, usersModels } from "@/db/schema";
 import { preferences, userStats } from "@/db/tables";
-import { currentUser } from "@clerk/nextjs/server";
 import {
   and,
   count,
@@ -121,8 +120,8 @@ export const usersRouter = t.router({
   // filtering out invalid/deleted/non-chat models
   setLastModels: authenticatedProcedure
     .input(z.object({ modelIds: z.array(z.string()).max(MAX_PANELS) }))
-    .mutation(async ({ input }) => {
-      const authUser = await currentUser();
+    .mutation(async ({ ctx, input }) => {
+      const authUser = ctx.user;
       if (!authUser) throw new Error("Assert: auth procedure must have user");
 
       if (!input.modelIds.length) {
@@ -154,8 +153,8 @@ export const usersRouter = t.router({
       return { ok: true as const, lastModels: ordered };
     }),
 
-  favorites: publicProcedure.query(async () => {
-    const user = await currentUser();
+  favorites: publicProcedure.query(async ({ ctx }) => {
+    const user = ctx.user;
     if (!user) {
       return [];
     }
@@ -180,8 +179,8 @@ export const usersRouter = t.router({
         modelId: z.string().min(1),
       })
     )
-    .mutation(async ({ input }) => {
-      const authUser = await currentUser();
+    .mutation(async ({ ctx, input }) => {
+      const authUser = ctx.user;
       if (!authUser) throw new Error("Assert: auth procedure must have user");
 
       const userId = authUser.id;
@@ -262,8 +261,8 @@ export const usersRouter = t.router({
         skipCloseThreadConfirmation: z.boolean().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      const authUser = await currentUser();
+    .mutation(async ({ ctx, input }) => {
+      const authUser = ctx.user;
       if (!authUser) throw new Error("Assert: auth procedure must have user");
 
       const sanitizedHiddenProviders = input.hiddenProviders

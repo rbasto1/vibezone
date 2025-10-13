@@ -1,15 +1,17 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import "server-only";
 
-import { createContext } from "@/lib/trpc/server/initialize";
 import { appRouter } from "@/lib/trpc/server/server";
+import { currentUser } from "@clerk/nextjs/server";
 
 const handler = (req: Request) =>
   fetchRequestHandler({
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext,
+    createContext: async () => ({
+      user: await currentUser(),
+    }),
     onError({ error, path, type }) {
       console.error(`Error in module ${path} (${type}):`, error);
     },

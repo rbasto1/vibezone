@@ -1,5 +1,4 @@
 import { chats, db, messages, threads } from "@/db";
-import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { and, asc, eq, gt, isNull, lt, or } from "drizzle-orm";
 import { z } from "zod";
@@ -19,8 +18,8 @@ export const chatsRouter = t.router({
         limit: z.number().min(1).max(100).default(CHAT_LIST_PAGE_SIZE),
       })
     )
-    .query(async ({ input }) => {
-      const user = await currentUser();
+    .query(async ({ ctx, input }) => {
+      const user = ctx.user;
       if (!user) {
         return {
           chats: [],
@@ -41,8 +40,8 @@ export const chatsRouter = t.router({
         limit: z.number().min(1).max(50).default(CHAT_LIST_PAGE_SIZE),
       })
     )
-    .query(async ({ input }) => {
-      const user = await currentUser();
+    .query(async ({ ctx, input }) => {
+      const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
       return searchChats({
         userId: user.id,
@@ -60,9 +59,9 @@ export const chatsRouter = t.router({
         firstUserMessage: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { chatId, title: inputTitle, firstUserMessage } = input;
-      const user = await currentUser();
+      const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
       const userId = user.id;
 
@@ -107,9 +106,9 @@ export const chatsRouter = t.router({
         chatId: z.string(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const { chatId } = input;
-      const user = await currentUser();
+      const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
 
       // Get the chat
@@ -148,9 +147,9 @@ export const chatsRouter = t.router({
         chatId: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { chatId } = input;
-      const user = await currentUser();
+      const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
       const userId = user.id;
 

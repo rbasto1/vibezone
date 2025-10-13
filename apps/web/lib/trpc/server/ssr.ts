@@ -1,3 +1,4 @@
+import { currentUser } from "@clerk/nextjs/server";
 import type { DehydratedState } from "@tanstack/react-query";
 import { createServerSideHelpers } from "@trpc/react-query/server";
 import type { SuperJSONResult } from "superjson";
@@ -6,9 +7,13 @@ import superjson from "superjson";
 import { appRouter } from "@/lib/trpc/server/server";
 
 export async function getServerCaller() {
+  const user = (await currentUser()) ?? null;
+
   return createServerSideHelpers({
     router: appRouter,
-    ctx: {},
+    ctx: {
+      user,
+    },
     transformer: superjson,
   });
 }
