@@ -36,7 +36,11 @@ export const useMessageSaver = (panel: PanelConfig) => {
     },
   });
   const savedMessageIds = useRef(
-    new Set<string>(initialMessages?.map((msg) => msg.id))
+    new Set<string>(
+      (initialMessages ?? [])
+        .map((msg) => msg.id)
+        .filter((id): id is string => Boolean(id))
+    )
   );
   const userId = user?.id;
   const messages = thread.messages;

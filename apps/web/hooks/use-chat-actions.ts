@@ -1,10 +1,15 @@
 import type { Message } from "@/db";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig, PanelState } from "@/store/panels";
-import type { UIMessage } from "ai";
+import {
+  threadMessagesAtom,
+  type ThreadMessagesState,
+} from "@/store/thread-messages";
+import type { ThreadMessageLike } from "@assistant-ui/react";
+import { generateId } from "ai";
+import { useSetAtom } from "jotai";
 import { useCallback } from "react";
 import { usePanelsConfigSetter, usePanelsStateSetter } from "./use-panels";
-import { useRuntimes } from "./use-response-registration";
 
 export type UseChatActionsResult = UseChatActionsSuccess | UseChatActionsError;
 interface UseChatActionsSuccess {
@@ -17,26 +22,24 @@ interface UseChatActionsError {
 }
 
 export const useChatActions = () => {
-  const getRuntimes = useRuntimes();
   const setPanelsConfig = usePanelsConfigSetter();
   const setPanelsState = usePanelsStateSetter();
+  const setThreadMessages = useSetAtom(threadMessagesAtom);
   const utils = trpc.useUtils();
 
   const loadChatById = useCallback(
     async (chatId: string): Promise<UseChatActionsResult> => {
-      if (!getRuntimes) {
-        return { success: false, error: "Runtimes not loaded" };
-      }
-
       try {
         const chatData = await utils.client.chats.getChatWithThreads.query({
           chatId,
         });
         const threads = chatData.threads;
 
+        const threadMessages: ThreadMessagesState = {};
         const newPanelsConfig = threads.map((thread): PanelConfig => {
-          // Convert database messages to UIMessage format
-          const initialMessages = thread.messages.map(convertToUIMessage);
+          // Convert database messages to ThreadMessageLike format
+          const initialMessages = thread.messages.map(toThreadMessageLike);
+          threadMessages[thread.id] = initialMessages;
 
           return {
             id: thread.id,
@@ -60,6 +63,7 @@ export const useChatActions = () => {
 
         setPanelsState(newPanelsState);
         setPanelsConfig(newPanelsConfig);
+        setThreadMessages(threadMessages);
 
         return { success: true, error: undefined };
       } catch (error) {
@@ -72,9 +76,9 @@ export const useChatActions = () => {
     },
     [
       utils.client.chats.getChatWithThreads,
-      getRuntimes,
       setPanelsConfig,
       setPanelsState,
+      setThreadMessages,
     ]
   );
 
@@ -83,53 +87,139 @@ export const useChatActions = () => {
   };
 };
 
-// Helper function to convert database messages to UIMessage format
-const convertToUIMessage = (msg: Message): UIMessage => {
-  // Convert content parts to UIMessage parts
-  const parts = Array.isArray(msg.content)
-    ? msg.content.map((part) => {
-        switch (part.type) {
-          case "text":
-            return {
-              type: "text" as const,
-              text: part.text || "",
-            };
-          case "file":
-            return {
-              type: "file" as const,
-              mediaType: part.mediaType,
-              filename: part.filename,
-              url: part.url,
-              providerMetadata: part.providerMetadata,
-            };
-          case "image":
-            return {
-              type: "file" as const,
-              mediaType: "image",
-              filename: part.filename,
-              url: part.image,
-              providerMetadata: part.providerMetadata,
-            };
-          case "reasoning":
-            return {
-              type: "reasoning" as const,
-              text: part.text,
-            };
-          default:
-            console.warn(`Unknown message part type: ${part.type}`);
-            return {
-              type: "text" as const,
-              text: JSON.stringify(part),
-            };
-        }
-      })
-    : [{ type: "text" as const, text: String(msg.content) }];
+// Helper function to convert database messages to ThreadMessageLike format
+const toThreadMessageLike = (msg: Message): ThreadMessageLike => {
+  const role = (msg.role ?? "system") as "user" | "assistant" | "system";
 
-  const uiMessage: UIMessage = {
+  const contentArray = Array.isArray(msg.content)
+    ? msg.content.map(convertContentPart)
+    : [{ type: "text", text: String(msg.content ?? "") }];
+
+  const status = role === "assistant" ? convertStatus(msg.status) : undefined;
+
+  const threadMessage: ThreadMessageLike = {
     id: msg.id,
-    role: msg.role as "user" | "assistant" | "system",
-    parts,
+    role,
+    content: contentArray as ThreadMessageLike["content"],
+    attachments: Array.isArray(msg.attachments)
+      ? (msg.attachments as ThreadMessageLike["attachments"])
+      : undefined,
+    metadata: msg.metadata?.custom
+      ? { custom: msg.metadata.custom }
+      : undefined,
+    createdAt: msg.createdAt ? new Date(msg.createdAt) : undefined,
+    ...(status ? { status } : {}),
   };
 
-  return uiMessage;
+  return threadMessage;
+};
+
+const convertContentPart = (
+  part: unknown
+): ThreadMessageLike["content"][number] => {
+  const candidate = part as Record<string, unknown>;
+  switch (candidate?.type) {
+    case "text":
+      return {
+        type: "text",
+        text: typeof candidate.text === "string" ? candidate.text : "",
+      };
+    case "reasoning":
+      return {
+        type: "reasoning",
+        text: typeof candidate.text === "string" ? candidate.text : "",
+      } as ThreadMessageLike["content"][number];
+    case "image":
+      return {
+        type: "image",
+        image:
+          typeof candidate.image === "string"
+            ? candidate.image
+            : String(candidate.url ?? ""),
+        filename:
+          typeof candidate.filename === "string"
+            ? candidate.filename
+            : undefined,
+      } as ThreadMessageLike["content"][number];
+    case "file":
+      return {
+        type: "file",
+        data: typeof candidate.url === "string" ? candidate.url : "",
+        mimeType:
+          typeof candidate.mediaType === "string"
+            ? candidate.mediaType
+            : "application/octet-stream",
+        filename:
+          typeof candidate.filename === "string"
+            ? candidate.filename
+            : undefined,
+      } as ThreadMessageLike["content"][number];
+    case "tool-call":
+    case "tool-result":
+      return {
+        type: "tool-call",
+        toolCallId:
+          typeof candidate.toolCallId === "string"
+            ? candidate.toolCallId
+            : generateId(),
+        toolName:
+          typeof candidate.toolName === "string"
+            ? candidate.toolName
+            : "unknown-tool",
+        args: (candidate.args ?? {}) as unknown,
+        argsText:
+          typeof candidate.argsText === "string"
+            ? candidate.argsText
+            : JSON.stringify(candidate.args ?? {}),
+        result: candidate.result,
+        isError: Boolean(candidate.isError),
+        parentId:
+          typeof candidate.parentId === "string"
+            ? candidate.parentId
+            : undefined,
+      } as ThreadMessageLike["content"][number];
+    default:
+      return {
+        type: "text",
+        text: JSON.stringify(part ?? {}),
+      } as ThreadMessageLike["content"][number];
+  }
+};
+
+const convertStatus = (
+  status: Message["status"]
+): ThreadMessageLike["status"] => {
+  if (!status?.type) return undefined;
+  switch (status.type) {
+    case "running":
+      return { type: "running" };
+    case "requires-action":
+      if (status.reason === "tool-calls") {
+        return { type: "requires-action", reason: "tool-calls" };
+      }
+      return undefined;
+    case "complete":
+      return {
+        type: "complete",
+        reason:
+          status.reason === "stop" || status.reason === "unknown"
+            ? status.reason
+            : "unknown",
+      };
+    case "incomplete":
+      return {
+        type: "incomplete",
+        reason:
+          status.reason === "cancelled" ||
+          status.reason === "tool-calls" ||
+          status.reason === "length" ||
+          status.reason === "content-filter" ||
+          status.reason === "other" ||
+          status.reason === "error"
+            ? status.reason
+            : "other",
+      };
+    default:
+      return undefined;
+  }
 };

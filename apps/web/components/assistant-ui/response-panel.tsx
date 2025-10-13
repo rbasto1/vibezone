@@ -14,20 +14,22 @@ import {
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { useComposerPromptSetter } from "@/hooks/use-composer-prompt";
 import { usePanelState } from "@/hooks/use-panels";
-import { useRuntimeRegistration } from "@/hooks/use-response-registration";
 import { useSession } from "@/hooks/use-session";
+import { useThreadRuntime } from "@/hooks/use-thread-runtime";
+import { useThreadRuntimeControllerSetter } from "@/hooks/use-thread-store";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import { safeParse } from "@/lib/json";
 import { generateFingerprint } from "@/lib/limiting";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
-import { AssistantRuntimeProvider } from "@assistant-ui/react";
-import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
-import type { ChatOnFinishCallback, UIMessage } from "ai";
+import {
+  AssistantRuntimeProvider,
+  type AssistantRuntime,
+} from "@assistant-ui/react";
 import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef, type FC } from "react";
+import { useCallback, useEffect, useMemo, useRef, type FC } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import { PanelHeader } from "./response-panel-header";
@@ -52,6 +54,11 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const t = useTranslations("ResponsePanel");
   const { id } = panel;
   panelGlobalContext[id] = panel;
+  useEffect(() => {
+    return () => {
+      delete panelGlobalContext[id];
+    };
+  }, [id]);
   const [panelState, setPanelState] = usePanelState(id);
   const setCurrentChat = useCurrentChatSetter();
   const attachmentAdapter = useAttachmentAdapter();
@@ -72,67 +79,82 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const setCaptchaRequested = useCaptchaRequested();
   const captchaState = useCaptchaStateValue();
   const setGlobalPrompt = useComposerPromptSetter();
+  const setRuntimeController = useThreadRuntimeControllerSetter();
+  const runtimeRef = useRef<AssistantRuntime | null>(null);
 
   plugins.current = {
     web: userPreferences.pluginWeb,
     reason: allCanReason ? userPreferences.reasoningEffort : "low",
   };
 
-  const handleModelError = async (error: Error) => {
-    console.warn("Stream error:", error);
-    const message = error.message;
-    const json = safeParse(message, z.object({ code: z.string() }));
+  const handleModelError = useCallback(
+    async (error: Error) => {
+      console.warn("Stream error:", error);
+      const message = error.message;
+      const json = safeParse(message, z.object({ code: z.string() }));
 
-    if (json?.code === "CAPTCHA") {
-      setCaptchaFailed();
-      setPanelState((currentState) => ({
-        ...currentState,
-        running: false,
-      }));
+      if (json?.code === "CAPTCHA") {
+        setCaptchaFailed();
+        setPanelState((currentState) => ({
+          ...currentState,
+          running: false,
+        }));
 
-      setCaptchaRequested();
-      await captchaState.execution.promise;
-      captchaState.execution.reset();
-    } else {
-      setPanelState((currentState) => ({
-        ...currentState,
-        error,
-        running: false,
-      }));
-    }
-
-    // reset the state to before sending
-    const parcel = runtime.thread.export();
-    const messages = parcel.messages;
-    if (messages.at(-1)?.message?.status?.type === "running") {
-      messages.pop();
-    }
-    const lastMessage = messages.pop();
-    if (lastMessage?.message.role === "user") {
-      if (messages.length) {
-        // TODO: import messages, but this .import is not working
-        // runtime.thread.import({ ...parcel, messages });
+        setCaptchaRequested();
+        await captchaState.execution.promise;
+        captchaState.execution.reset();
+      } else {
+        setPanelState((currentState) => ({
+          ...currentState,
+          error,
+          running: false,
+        }));
       }
-      const text = lastMessage.message.content.find(
-        (c) => c.type === "text"
-      )?.text;
-      if (text) {
-        setGlobalPrompt(text);
+
+      // reset the state to before sending
+      const runtimeInstance = runtimeRef.current;
+      if (runtimeInstance) {
+        const parcel = runtimeInstance.thread.export();
+        const messages = parcel.messages;
+        if (messages.at(-1)?.message?.status?.type === "running") {
+          messages.pop();
+        }
+        const lastMessage = messages.pop();
+        if (lastMessage?.message.role === "user") {
+          if (messages.length) {
+            // TODO: import messages, but this .import is not working
+            // runtimeInstance.thread.import({ ...parcel, messages });
+          }
+          const text = lastMessage.message.content.find(
+            (c) => c.type === "text"
+          )?.text;
+          if (text) {
+            setGlobalPrompt(text);
+          }
+          const hadAttachments = lastMessage.message.content.some(
+            (c) => c.type !== "text"
+          );
+          toast.warning(
+            hadAttachments
+              ? `Model ${panel.model} failed, please attach the files and submit your message to try again`
+              : `Model ${panel.model} failed, please submit your message to try again`
+          );
+        }
       }
-      const hadAttachments = lastMessage.message.content.some(
-        (c) => c.type !== "text"
-      );
-      toast.warning(
-        hadAttachments
-          ? `Model ${panel.model} failed, please attach the files and submit your message to try again`
-          : `Model ${panel.model} failed, please submit your message to try again`
-      );
-    }
 
-    throw error;
-  };
+      throw error;
+    },
+    [
+      captchaState.execution,
+      panel.model,
+      setCaptchaFailed,
+      setCaptchaRequested,
+      setGlobalPrompt,
+      setPanelState,
+    ]
+  );
 
-  const handleModelFinish: ChatOnFinishCallback<UIMessage> = async () => {
+  const handleModelFinish = async () => {
     setPanelState((currentState) => ({
       ...currentState,
       running: false,
@@ -190,68 +212,93 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
     });
   };
 
-  const runtime = useChatRuntime({
-    transport: new DefaultChatTransport({
-      api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
-      fetch: (url, init) => {
-        if (!panelGlobalContext[id]) {
-          toast.error(panelNotRegisteredMessage);
-          return Promise.resolve(
-            new Response(transportErrorMessage, {
-              status: 400,
-            })
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/stream`,
+        fetch: (url, init) => {
+          if (!panelGlobalContext[id]) {
+            toast.error(panelNotRegisteredMessage);
+            return Promise.resolve(
+              new Response(transportErrorMessage, {
+                status: 400,
+              })
+            );
+          }
+
+          if (!captchaToken) {
+            toast.error("Captcha validation failed");
+            return Promise.resolve(
+              new Response(transportErrorMessage, {
+                status: 400,
+              })
+            );
+          }
+
+          const { model } = panelGlobalContext[id];
+          const { web, reason } = plugins.current;
+          const pluginList = [];
+          if (web) pluginList.push("web");
+          pluginList.push(`reason-${reason}`);
+          const modelSpecifier = pluginList.length
+            ? `${model}#${pluginList.join(",")}`
+            : model;
+          const cfTurnstileResponse = captchaToken;
+
+          return generateFingerprint(sessionToken.current).then(
+            (authorization) =>
+              fetch(url, {
+                ...init,
+                headers: {
+                  ...init?.headers,
+                  "x-vz-model-id": modelSpecifier,
+                  "cf-turnstile-response": cfTurnstileResponse,
+                  authorization,
+                },
+              })
+                .then((response) => {
+                  const remainingQuota =
+                    response.headers.get("X-Remaining-Quota");
+                  if (remainingQuota) {
+                    setAnonQuota(Number(remainingQuota));
+                  }
+                  return response;
+                })
+                .catch(handleModelError)
           );
-        }
+        },
+      }),
+    [
+      id,
+      panelNotRegisteredMessage,
+      transportErrorMessage,
+      setAnonQuota,
+      handleModelError,
+    ]
+  );
 
-        if (!captchaToken) {
-          // Shouldn't happen, we don't allow the "send" command to run before captcha succeeds
-          toast.error("Captcha validation failed");
-          return Promise.resolve(
-            new Response(transportErrorMessage, {
-              status: 400,
-            })
-          );
-        }
-
-        const { model } = panelGlobalContext[id];
-        const { web, reason } = plugins.current;
-        const pluginList = [];
-        if (web) pluginList.push("web");
-        // Models that can't reason ignore this option
-        pluginList.push(`reason-${reason}`);
-        const modelSpecifier = pluginList.length
-          ? `${model}#${pluginList.join(",")}`
-          : model;
-        const cfTurnstileResponse = captchaToken;
-
-        return generateFingerprint(sessionToken.current).then((authorization) =>
-          fetch(url, {
-            ...init,
-            headers: {
-              ...init?.headers,
-              "x-vz-model-id": modelSpecifier,
-              "cf-turnstile-response": cfTurnstileResponse,
-              authorization,
-            },
-          })
-            .then((response) => {
-              const remainingQuota = response.headers.get("X-Remaining-Quota");
-              if (remainingQuota) {
-                setAnonQuota(Number(remainingQuota));
-              }
-              return response;
-            })
-            .catch(handleModelError)
-        );
-      },
-    }),
-    onError: handleModelError,
+  const runtime = useThreadRuntime({
+    threadId: id,
+    initialMessages: panel.initialMessages,
+    transport,
     onFinish: handleModelFinish,
-    messages: panel.initialMessages,
+    onError: handleModelError,
     adapters: {
       attachments: attachmentAdapter,
     },
   });
+  runtimeRef.current = runtime;
+
+  useEffect(() => {
+    setRuntimeController(id, {
+      runtime,
+      append: (message) => runtime.thread.append(message),
+      cancel: () => runtime.thread.cancelRun(),
+    });
+    return () => {
+      setRuntimeController(id, null);
+    };
+  }, [runtime, id, setRuntimeController]);
 
   // We will update the runtime using the global variable above
   // // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -270,8 +317,6 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
 
   // This is how we execute the chat from the global composer
   // It registers the runtime so that messages sent from the composer are sent to this panel's runtime
-  useRuntimeRegistration(id, runtime);
-
   const handleStop = () => {
     try {
       runtime.thread.cancelRun();

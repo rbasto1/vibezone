@@ -5,7 +5,7 @@
 - [ ] Paid plans: Stripe integration (Clerk? Autumn? Polar?)
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [ ] Backend processing of messages: save the AI response without the need for a frontend
-- [ ] See if a History adapter solves the problem instead of hacking AssistantCloud
+- [-] See if a History adapter solves the problem instead of hacking AssistantCloud
 
 ## Bugs
 

@@ -4,7 +4,6 @@ import { DefaultChatTransport } from "ai";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { useSession } from "@/hooks/use-session";
-import { getGlobalAssistantCloud } from "@/lib/assistant-cloud/provider";
 import type { FC } from "react";
 
 export function AppSidebarLoader() {
@@ -14,20 +13,10 @@ export function AppSidebarLoader() {
     return <AppSidebarWithAnon />;
   }
 
-  return (
-    <AppSidebarWithRuntime token={auth.session.token} userId={auth.user.id} />
-  );
+  return <AppSidebarWithRuntime />;
 }
 
-interface AppSidebarWithRuntimeProps {
-  token: string;
-  userId: string;
-}
-
-const AppSidebarWithRuntime: FC<AppSidebarWithRuntimeProps> = ({
-  token,
-  userId,
-}) => {
+const AppSidebarWithRuntime: FC = () => {
   // Runtime for the sidebar components (e.g., ThreadList) that require context
   const sidebarRuntime = useChatRuntime({
     transport: new DefaultChatTransport({
@@ -38,7 +27,6 @@ const AppSidebarWithRuntime: FC<AppSidebarWithRuntimeProps> = ({
         },
       },
     }),
-    cloud: getGlobalAssistantCloud(token, userId),
   });
 
   return (

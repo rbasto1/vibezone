@@ -1,0 +1,101 @@
+"use client";
+
+import {
+  createMessageFromAppend,
+  sliceUiMessagesUntil,
+  toThreadMessages,
+  toUiMessages,
+} from "@/lib/assistant-ui/message-converters";
+import { useChat, type UIMessage } from "@ai-sdk/react";
+import type { ThreadMessageLike } from "@assistant-ui/react";
+import {
+  useExternalStoreRuntime,
+  type AssistantRuntime,
+  type ExternalStoreAdapter,
+} from "@assistant-ui/react";
+import type { DefaultChatTransport } from "ai";
+import { useEffect } from "react";
+import { useThreadMessages } from "./use-thread-store";
+
+interface UseThreadRuntimeParams {
+  threadId: string;
+  initialMessages?: ThreadMessageLike[];
+  transport: DefaultChatTransport<UIMessage>;
+  onFinish?: () => void;
+  onError?: (error: Error) => void;
+  adapters?: ExternalStoreAdapter["adapters"];
+}
+
+export const useThreadRuntime = ({
+  threadId,
+  initialMessages,
+  transport,
+  onFinish,
+  onError,
+  adapters,
+}: UseThreadRuntimeParams): AssistantRuntime => {
+  const [messages, setMessages] = useThreadMessages(threadId);
+
+  const chat = useChat<UIMessage>({
+    id: threadId,
+    messages: toUiMessages(
+      messages.length ? messages : (initialMessages ?? [])
+    ),
+    transport,
+    onFinish: () => {
+      onFinish?.();
+    },
+    onError(error) {
+      onError?.(error instanceof Error ? error : new Error(String(error)));
+    },
+  });
+
+  useEffect(() => {
+    if (!messages.length && initialMessages?.length) {
+      setMessages(initialMessages);
+      chat.setMessages(toUiMessages(initialMessages));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    setMessages(toThreadMessages(chat.messages));
+  }, [chat.messages, setMessages]);
+
+  const runtime = useExternalStoreRuntime<ThreadMessageLike>({
+    messages,
+    isRunning: chat.status === "streaming" || chat.status === "submitted",
+    convertMessage: (message) => message,
+    setMessages: (nextMessages) => {
+      const nextArray = Array.from(nextMessages);
+      setMessages(nextArray);
+      chat.setMessages(toUiMessages(nextArray));
+    },
+    onNew: async (message) => {
+      const uiMessage = createMessageFromAppend(message);
+      await chat.sendMessage(uiMessage, {
+        metadata: message.runConfig,
+      });
+    },
+    onEdit: async (message) => {
+      const trimmedMessages = sliceUiMessagesUntil(
+        chat.messages,
+        message.parentId
+      );
+      chat.setMessages(trimmedMessages);
+      const uiMessage = createMessageFromAppend(message);
+      await chat.sendMessage(uiMessage, {
+        metadata: message.runConfig,
+      });
+    },
+    onReload: async (parentId, config) => {
+      const trimmedMessages = sliceUiMessagesUntil(chat.messages, parentId);
+      chat.setMessages(trimmedMessages);
+      await chat.regenerate({ metadata: config.runConfig });
+    },
+    onCancel: async () => chat.stop(),
+    adapters,
+  });
+
+  return runtime;
+};
