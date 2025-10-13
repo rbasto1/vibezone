@@ -3,6 +3,7 @@ import "server-only";
 import type { User as DbUser } from "@/db";
 import { db } from "@/db";
 import { chats, models, session, usage, user, usersModels } from "@/db/schema";
+import { currentUser } from "@clerk/nextjs/server";
 import {
   and,
   count,
@@ -117,8 +118,9 @@ export const usersRouter = t.router({
   // filtering out invalid/deleted/non-chat models
   setLastModels: authenticatedProcedure
     .input(z.object({ modelIds: z.array(z.string()).max(MAX_PANELS) }))
-    .mutation(async ({ ctx, input }) => {
-      const authUser = ctx.user!;
+    .mutation(async ({ input }) => {
+      const authUser = await currentUser();
+      if (!authUser) throw new Error("Assert: auth procedure must have user");
 
       if (!input.modelIds.length) {
         await db
@@ -149,8 +151,9 @@ export const usersRouter = t.router({
       return { ok: true as const, lastModels: ordered };
     }),
 
-  favorites: publicProcedure.query(async ({ ctx }) => {
-    if (!ctx.user) {
+  favorites: publicProcedure.query(async () => {
+    const user = await currentUser();
+    if (!user) {
       return [];
     }
 
@@ -161,10 +164,7 @@ export const usersRouter = t.router({
       })
       .from(usersModels)
       .where(
-        and(
-          eq(usersModels.userId, ctx.user!.id),
-          isNotNull(usersModels.favoritedAt)
-        )
+        and(eq(usersModels.userId, user.id), isNotNull(usersModels.favoritedAt))
       )
       .orderBy(desc(usersModels.favoritedAt));
 
@@ -177,8 +177,11 @@ export const usersRouter = t.router({
         modelId: z.string().min(1),
       })
     )
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user!.id;
+    .mutation(async ({ input }) => {
+      const authUser = await currentUser();
+      if (!authUser) throw new Error("Assert: auth procedure must have user");
+
+      const userId = authUser.id;
 
       const [existing] = await db
         .select({
@@ -256,8 +259,9 @@ export const usersRouter = t.router({
         skipCloseThreadConfirmation: z.boolean().optional(),
       })
     )
-    .mutation(async ({ ctx, input }) => {
-      const authUser = ctx.user;
+    .mutation(async ({ input }) => {
+      const authUser = await currentUser();
+      if (!authUser) throw new Error("Assert: auth procedure must have user");
 
       const sanitizedHiddenProviders = input.hiddenProviders
         ? Array.from(

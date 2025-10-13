@@ -1,39 +1,30 @@
 import "server-only";
 
-import { auth } from "@/lib/auth";
-import type { AuthUser } from "@/lib/auth-client";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
-import { headers } from "next/headers";
 import superjson from "superjson";
 
-export const t = initTRPC
-  .context<{
-    user?: AuthUser;
-  }>()
-  .create({
-    transformer: superjson,
-  });
+export const t = initTRPC.create({
+  transformer: superjson,
+});
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
-export const authenticatedProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.user) {
+export const authenticatedProcedure = t.procedure.use(async ({ next }) => {
+  const user = await currentUser();
+  if (!user) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "You must be logged in",
     });
   }
-  return next({ ctx: { ...ctx, user: ctx.user } });
+  return next();
 });
 
 export const createContext = async () => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
     return {
-      user: session.user,
+      user: await currentUser(),
     };
   } catch {
     return {
@@ -42,25 +33,21 @@ export const createContext = async () => {
   }
 };
 
-export const adminProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.user) {
+export const adminProcedure = t.procedure.use(async ({ next }) => {
+  const { isAuthenticated, has } = await auth();
+  if (!isAuthenticated) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "You must be logged in to access this resource",
     });
   }
 
-  if (!ctx.user.isAdmin) {
+  if (!has({ permission: "org:admin" })) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "You must be an admin to access this resource",
     });
   }
 
-  return next({
-    ctx: {
-      ...ctx,
-      user: ctx.user,
-    },
-  });
+  return next();
 });

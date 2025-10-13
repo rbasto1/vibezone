@@ -13,7 +13,6 @@ import {
 import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { useComposerPromptSetter } from "@/hooks/use-composer-prompt";
 import { usePanelState } from "@/hooks/use-panels";
-import { useSession } from "@/hooks/use-session";
 import { useThreadRuntime } from "@/hooks/use-thread-runtime";
 import { useThreadRuntimeControllerSetter } from "@/hooks/use-thread-store";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
@@ -25,6 +24,7 @@ import {
   AssistantRuntimeProvider,
   type AssistantRuntime,
 } from "@assistant-ui/react";
+import { useAuth } from "@clerk/nextjs";
 import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -61,9 +61,9 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const [panelState, setPanelState] = usePanelState(id);
   const setCurrentChat = useCurrentChatSetter();
   const renameChatMutation = trpc.chats.renameChat.useMutation();
-  const session = useSession();
-  const sessionToken = useRef(session?.session.token);
-  sessionToken.current = session?.session.token;
+  const session = useAuth();
+  const sessionToken = useRef(session?.userId ?? undefined); // TODO: use session token
+  sessionToken.current = session?.userId ?? undefined;
   const panelNotRegisteredMessage = t("panelNotRegistered");
   const transportErrorMessage = t("transportError");
   const userPreferences = useUserPreferencesValue();

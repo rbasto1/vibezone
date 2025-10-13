@@ -7,8 +7,7 @@ import { cn } from "@/components/ui/utils";
 import type { ProviderTier } from "@/db";
 import { useModelFavorites } from "@/hooks/use-model-favorites";
 import { useModelsValue } from "@/hooks/use-models";
-import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { useUser } from "@/lib/auth-client";
+import { useOpenSignIn, useUser } from "@/lib/auth-client";
 import { modelMap } from "@/lib/model-map";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { Star, X } from "lucide-react";
@@ -33,7 +32,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   variant = "dropdown",
 }) => {
   const t = useTranslations("ModelDropdown");
-  const setUIState = useUIStateSetter();
+  const openSignIn = useOpenSignIn();
   const includeModels = useMemo(
     () => (currentModelId ? [currentModelId] : []),
     [currentModelId]
@@ -594,12 +593,12 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   const handleFavoriteToggle = useCallback(
     (modelId: string) => {
       if (!user) {
-        setUIState({ loginOpen: true });
+        openSignIn();
         return;
       }
       toggleFavorite(modelId);
     },
-    [toggleFavorite, user, setUIState]
+    [toggleFavorite, user, openSignIn]
   );
 
   const body = (
@@ -694,7 +693,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                             ? t("signInToUse")
                             : undefined;
                           const onSelect = restricted
-                            ? () => setUIState({ loginOpen: true })
+                            ? openSignIn
                             : handleModelSelect;
                           return (
                             <ModelDropdownItem
@@ -721,7 +720,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                             ? t("signInToUse")
                             : undefined;
                           const onSelect = restricted
-                            ? () => setUIState({ loginOpen: true })
+                            ? openSignIn
                             : handleModelSelect;
                           return (
                             <ModelDropdownItem
@@ -765,7 +764,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                                 ? t("signInToUse")
                                 : undefined;
                               const onSelect = restricted
-                                ? () => setUIState({ loginOpen: true })
+                                ? openSignIn
                                 : handleModelSelect;
                               return (
                                 <ModelDropdownItem

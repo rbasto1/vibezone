@@ -3,13 +3,13 @@ import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DefaultChatTransport } from "ai";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { useSession } from "@/hooks/use-session";
+import { useUser } from "@/lib/auth-client";
 import type { FC } from "react";
 
 export function AppSidebarLoader() {
-  const auth = useSession();
+  const user = useUser();
 
-  if (!auth?.user) {
+  if (!user) {
     return <AppSidebarWithAnon />;
   }
 

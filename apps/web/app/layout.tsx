@@ -1,21 +1,20 @@
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
+import { deDE, ptBR } from "@clerk/localizations";
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
+import type { PropsWithChildren } from "react";
 
-import { SessionProvider } from "@/components/providers/session-provider";
 import { Toaster } from "@/components/providers/toast-provider";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { cn } from "@/components/ui/utils";
-import { auth } from "@/lib/auth";
 import { baseUrl } from "@/lib/base-url";
 import { siteDescription, siteName } from "@/lib/branding";
-import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
-import { headers } from "next/headers";
-import type { PropsWithChildren } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -83,12 +82,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  // Fetch session server-side for SSR
-  const authData = await auth.api.getSession({
-    headers: await headers(),
-  });
-  const locale = await getLocale();
-  const messages = await getMessages();
+  const localePromise = getLocale();
+  const messagesPromise = getMessages();
+  const [locale, messages] = await Promise.all([
+    localePromise,
+    messagesPromise,
+  ]);
+  const localization = getClerkLocalization(locale);
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -122,21 +122,32 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         className={cn(geistSans.variable, geistMono.variable, "antialiased")}
       >
         <TRPCProvider>
-          <SessionProvider serverAuthData={authData}>
-            <NextIntlClientProvider locale={locale} messages={messages}>
-              <ThemeProvider
-                attribute="class"
-                storageKey="theme"
-                defaultTheme="system"
-                enableSystem
-              >
+          <ThemeProvider
+            attribute="class"
+            storageKey="theme"
+            defaultTheme="system"
+            enableSystem
+          >
+            <ClerkProvider localization={localization}>
+              <NextIntlClientProvider locale={locale} messages={messages}>
                 {children}
                 <Toaster />
-              </ThemeProvider>
-            </NextIntlClientProvider>
-          </SessionProvider>
+              </NextIntlClientProvider>
+            </ClerkProvider>
+          </ThemeProvider>
         </TRPCProvider>
       </body>
     </html>
   );
+}
+
+function getClerkLocalization(locale: string) {
+  switch (locale) {
+    case "pt-BR":
+      return ptBR;
+    case "de":
+      return deDE;
+    default:
+      return undefined;
+  }
 }

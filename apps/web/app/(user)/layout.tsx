@@ -1,30 +1,33 @@
+import { currentUser } from "@clerk/nextjs/server";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import { headers } from "next/headers";
 import { Suspense, type PropsWithChildren } from "react";
 
 import { StoreProvider } from "@/components/providers/store-provider";
+import { Toaster } from "@/components/providers/toast-provider";
 import { db } from "@/db";
 import type { Model } from "@/db/schema";
 import { models, user as userTable } from "@/db/schema";
+import { models as modelsList } from "@/generated/models";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
-import type { PanelConfig } from "@/store/panels";
-import type { ThreadMessageLike } from "@assistant-ui/react";
-
-import { Toaster } from "@/components/providers/toast-provider";
-import { models as modelsList } from "@/generated/models";
-import { auth } from "@/lib/auth";
 import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
+import type { PanelConfig } from "@/store/panels";
 import type { PreferencesAtom } from "@/store/preferences";
+import type { ThreadMessageLike } from "@assistant-ui/react";
 import { generateId } from "ai";
 import { getTranslations } from "next-intl/server";
 import { PageLoader } from "./page-loader";
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const authUser = await currentUser();
+  const user = authUser?.id
+    ? await db.query.user.findFirst({
+        where: eq(userTable.id, authUser.id),
+      })
+    : undefined;
+
   const t = await getTranslations("Prompts");
-  const user = session?.user;
   const userId = user?.id;
 
   const caller = await getServerCaller();

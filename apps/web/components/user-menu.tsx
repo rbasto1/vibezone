@@ -1,95 +1,44 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/components/ui/utils";
-import { useUIState } from "@/hooks/use-ui-state";
-import { signOut, useUser } from "@/lib/auth-client";
-import { UserCircle } from "lucide-react";
+import { dark } from "@clerk/themes";
 import { useTranslations } from "next-intl";
-import { LoginModal } from "./login-model";
+import { useTheme } from "next-themes";
 
-interface UserMenuProps {
-  className?: string;
-}
+import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { Settings2Icon } from "lucide-react";
+import { Button } from "./ui/button";
 
-export const UserMenu = ({ className }: UserMenuProps) => {
-  const user = useUser();
+export const UserMenu = () => {
   const t = useTranslations("UserMenu");
-  const [uiState, setUIState] = useUIState();
-  const open = uiState.loginOpen;
+  const setUIState = useUIStateSetter();
+  const { resolvedTheme } = useTheme();
+  const user = useUser();
 
-  if (!user) {
+  const theme = resolvedTheme === "dark" ? dark : ("simple" as const);
+
+  if (!user.isSignedIn) {
     return (
-      <>
-        <Button
-          variant="outline"
-          className={cn("h-8 px-2 text-sm", className)}
-          onClick={() => setUIState({ loginOpen: true })}
-        >
-          {t("signInButton")}
-        </Button>
-        {open && <LoginModal />}
-      </>
+      <SignInButton appearance={{ theme }} mode="modal">
+        <Button variant="outline">{t("signInButton")}</Button>
+      </SignInButton>
     );
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className={cn("h-8 px-2 gap-2 flex items-center", className)}
-        >
-          {user?.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={user.image}
-              alt={user.name || user.email || t("fallbackName")}
-              className="size-6 rounded-full"
-              referrerPolicy="no-referrer"
-              rel="noreferrer noopener"
-            />
-          ) : (
-            <UserCircle className="size-5" />
-          )}
-          <span className="hidden sm:inline text-sm">
-            {user?.name || user?.email || t("profileLabel")}
-          </span>
-          <span className="sr-only">{t("profileMenu")}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>
-          <div className="flex flex-col">
-            <span className="font-medium truncate">
-              {user?.name || t("fallbackName")}
-            </span>
-            {user?.email && (
-              <span className="text-muted-foreground text-xs truncate">
-                {user.email}
-              </span>
-            )}
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
+    <UserButton
+      appearance={{ theme }}
+      userProfileProps={{
+        appearance: { theme },
+      }}
+    >
+      <UserButton.MenuItems>
+        <UserButton.Action
           onClick={() => setUIState({ panelOpen: "preferences" })}
-        >
-          {t("preferences")}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>
-          {t("signOut")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          label={t("preferences")}
+          labelIcon={<Settings2Icon size={16} />}
+        />
+      </UserButton.MenuItems>
+    </UserButton>
   );
 };

@@ -2,7 +2,7 @@
 
 import { cn } from "@/components/ui/utils";
 import { useModelFavorites } from "@/hooks/use-model-favorites";
-import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useOpenSignIn } from "@/lib/auth-client";
 import { Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, type MouseEvent } from "react";
@@ -19,7 +19,7 @@ export const ModelFavoriteButton: React.FC<ModelFavoriteButtonProps> = ({
   size = "sm",
 }) => {
   const { isFavorite, toggleFavorite, isToggling, user } = useModelFavorites();
-  const setUIState = useUIStateSetter();
+  const openSignIn = useOpenSignIn();
   const t = useTranslations("ModelDropdown");
 
   const favorite = user ? isFavorite(modelId) : false;
@@ -30,12 +30,12 @@ export const ModelFavoriteButton: React.FC<ModelFavoriteButtonProps> = ({
       event.preventDefault();
       event.stopPropagation();
       if (!user) {
-        setUIState({ loginOpen: true });
+        openSignIn();
         return;
       }
       toggleFavorite(modelId);
     },
-    [modelId, toggleFavorite, user, setUIState]
+    [modelId, toggleFavorite, user, openSignIn]
   );
 
   return (

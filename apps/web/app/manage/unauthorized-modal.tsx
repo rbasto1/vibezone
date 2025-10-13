@@ -1,5 +1,5 @@
-import { LogoutButton } from "@/app/manage/logout-button";
 import { Button } from "@/components/ui/button";
+import { SignOutButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 export const UnauthorizedModal = () => {
@@ -16,7 +16,7 @@ export const UnauthorizedModal = () => {
           <Button asChild>
             <Link href="/">Go to Home</Link>
           </Button>
-          <LogoutButton />
+          <SignOutButton />
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import "server-only";
 
 import { db } from "@/db";
 import { chats, messages, threads } from "@/db/schema";
+import { currentUser } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -55,12 +56,14 @@ export const messagesRouter = t.router({
         messages: z.array(MessageSchema),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ input }) => {
       const { chatId, threadId, modelId, messages: inputMessages } = input;
+      const user = await currentUser();
+      if (!user) throw new Error("Assert: auth procedure must have user");
 
       try {
         // Ensure chat exists
-        const chatPromise = getOrInsertChat(chatId, ctx.user.id);
+        const chatPromise = getOrInsertChat(chatId, user.id);
 
         // Ensure thread exists
         const existingThread = await db.query.threads.findFirst({

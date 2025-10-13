@@ -1,17 +1,14 @@
-import { auth } from "@/lib/auth";
-import { appRouter } from "@/lib/trpc/server/server";
 import type { DehydratedState } from "@tanstack/react-query";
 import { createServerSideHelpers } from "@trpc/react-query/server";
-import { headers } from "next/headers";
 import type { SuperJSONResult } from "superjson";
 import superjson from "superjson";
 
-export async function getServerCaller() {
-  const session = await auth.api.getSession({ headers: await headers() });
+import { appRouter } from "@/lib/trpc/server/server";
 
+export async function getServerCaller() {
   return createServerSideHelpers({
     router: appRouter,
-    ctx: { user: session?.user },
+    ctx: {},
     transformer: superjson,
   });
 }

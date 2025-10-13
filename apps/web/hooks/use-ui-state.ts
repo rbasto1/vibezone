@@ -3,7 +3,6 @@ import { useCallback } from "react";
 
 export interface UIState {
   suggestionsUsed: boolean;
-  loginOpen: boolean;
   panelOpen: "preferences" | "search" | null;
   detailsModelId?: string;
 }
@@ -11,7 +10,6 @@ export interface UIState {
 // Global UI state atom
 const uiStateAtom = atom<UIState>({
   suggestionsUsed: false,
-  loginOpen: false,
   panelOpen: null,
 });
 
