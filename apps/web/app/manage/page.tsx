@@ -24,13 +24,8 @@ interface KpiCard {
 }
 
 import { db } from "@/db/connection";
-import {
-  chats,
-  models as modelstable,
-  providers,
-  usage,
-  user,
-} from "@/db/schema";
+import { chats, models as modelstable, providers, usage } from "@/db/schema";
+import { userStats } from "@/db/tables";
 import { models } from "@/generated/models";
 import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 
@@ -45,11 +40,11 @@ const ManagePage: NextPage<PageProps<"/manage">> = async () => {
     .select({
       totalUsers: sql<number>`count(*)::int`.as("totalUsers"),
       newUsers:
-        sql<number>`count(case when ${user.createdAt} > ${lastSevenDays} then 1 else 0 end)::int`.as(
+        sql<number>`count(case when ${userStats.createdAt} > ${lastSevenDays} then 1 else 0 end)::int`.as(
           "newUsers"
         ),
     })
-    .from(user);
+    .from(userStats);
 
   const usageStatsPromise = db
     .select({

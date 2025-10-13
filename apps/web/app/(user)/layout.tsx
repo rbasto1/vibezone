@@ -7,7 +7,7 @@ import { StoreProvider } from "@/components/providers/store-provider";
 import { Toaster } from "@/components/providers/toast-provider";
 import { db } from "@/db";
 import type { Model } from "@/db/schema";
-import { models, user as userTable } from "@/db/schema";
+import { models, preferences as preferencesTable } from "@/db/schema";
 import { models as modelsList } from "@/generated/models";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
@@ -21,14 +21,14 @@ import { PageLoader } from "./page-loader";
 
 export default async function RootLayout({ children }: PropsWithChildren) {
   const authUser = await currentUser();
-  const user = authUser?.id
-    ? await db.query.user.findFirst({
-        where: eq(userTable.id, authUser.id),
+  const userId = authUser?.id;
+  const preferences = userId
+    ? await db.query.preferences.findFirst({
+        where: eq(preferencesTable.userId, userId),
       })
     : undefined;
 
   const t = await getTranslations("Prompts");
-  const userId = user?.id;
 
   const caller = await getServerCaller();
 
@@ -45,11 +45,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       { lastModels: userLastModels, hiddenProviders: userHiddenProviders } = {},
     ] = await db
       .select({
-        lastModels: userTable.lastModels,
-        hiddenProviders: userTable.preferenceHiddenProviders,
+        lastModels: preferencesTable.lastModels,
+        hiddenProviders: preferencesTable.preferenceHiddenProviders,
       })
-      .from(userTable)
-      .where(eq(userTable.id, userId))
+      .from(preferencesTable)
+      .where(eq(preferencesTable.userId, userId))
       .limit(1);
 
     lastModels = userLastModels ?? [];
@@ -58,23 +58,23 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     }
   }
 
-  const changedPrompt = !!user?.preferenceSystemPromptChangedAt;
-  const preferencesInitialValue: PreferencesAtom = userId
+  const changedPrompt = !!preferences?.preferenceSystemPromptChangedAt;
+  const preferencesInitialValue: PreferencesAtom = preferences
     ? {
-        pluginWeb: user?.preferenceWebSearch,
-        reasoningEffort: user?.preferenceReasoningEffort as
+        pluginWeb: preferences?.preferenceWebSearch,
+        reasoningEffort: preferences?.preferenceReasoningEffort as
           | "none"
           | "low"
           | "medium"
           | "high",
         systemPrompt: changedPrompt
-          ? (user?.preferenceSystemPrompt ?? null)
+          ? (preferences?.preferenceSystemPrompt ?? null)
           : t("system"),
         changedPrompt,
-        autoScroll: user?.preferenceAutoScroll,
-        hiddenProviders: user?.preferenceHiddenProviders ?? [],
+        autoScroll: preferences?.preferenceAutoScroll,
+        hiddenProviders: preferences?.preferenceHiddenProviders ?? [],
         skipCloseThreadConfirmation:
-          user?.preferenceSkipCloseThreadConfirmation ?? false,
+          preferences?.preferenceSkipCloseThreadConfirmation ?? false,
       }
     : {
         pluginWeb: true,

@@ -1,7 +1,5 @@
 import { providerTiers } from "@/db/enums";
 
-import { account, session, user, verification } from "@/db/auth-schema";
-
 import {
   chatRelations,
   localesRelations,
@@ -10,16 +8,15 @@ import {
   modelSupportedParametersRelations,
   modelTranslationsRelations,
   providersRelations,
-  sessionRelations,
   suggestionGroupsRelations,
   suggestionGroupTranslationsRelations,
   supportedParametersRelations,
   threadsRelations,
   usageRelations,
   usersModelsRelations,
-  userRelations,
 } from "@/db/relations";
 
+import type { userStats } from "@/db/tables";
 import {
   chats,
   locales,
@@ -27,6 +24,7 @@ import {
   models,
   modelSupportedParameters,
   modelTranslations,
+  preferences,
   providers,
   suggestionGroups,
   suggestionGroupTranslations,
@@ -37,7 +35,6 @@ import {
 } from "@/db/tables";
 
 export {
-  account,
   chatRelations,
   chats,
   locales,
@@ -50,11 +47,10 @@ export {
   modelSupportedParametersRelations,
   modelTranslations,
   modelTranslationsRelations,
+  preferences,
   providers,
   providersRelations,
   providerTiers,
-  session,
-  sessionRelations,
   suggestionGroups,
   suggestionGroupsRelations,
   suggestionGroupTranslations,
@@ -67,22 +63,15 @@ export {
   usageRelations,
   usersModels,
   usersModelsRelations,
-  user,
-  userRelations,
-  verification,
 };
 
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
 export type ReasoningEffort = "none" | "low" | "medium" | "high";
 
-export type Account = typeof account.$inferSelect;
-export type NewAccount = typeof account.$inferInsert;
-export type Session = typeof session.$inferSelect;
-export type NewSession = typeof session.$inferInsert;
-export type User = typeof user.$inferSelect;
-export type NewUser = typeof user.$inferInsert;
-export type Verification = typeof verification.$inferSelect;
-export type NewVerification = typeof verification.$inferInsert;
+export type UserStats = typeof userStats.$inferSelect;
+export type NewUserStats = typeof userStats.$inferInsert;
+export type Preferences = typeof preferences.$inferSelect;
+export type NewPreferences = typeof preferences.$inferInsert;
 export type Provider = typeof providers.$inferSelect;
 export type NewProvider = typeof providers.$inferInsert;
 export type Model = typeof models.$inferSelect;

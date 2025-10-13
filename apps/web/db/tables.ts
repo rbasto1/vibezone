@@ -10,7 +10,6 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth-schema";
 import { providerTiers } from "./enums";
 import { timestampTz, timestampTzNow, timestampTzNowUpdated } from "./helpers";
 import type {
@@ -19,6 +18,50 @@ import type {
   ModelPricing,
   ModelTopProvider,
 } from "./json-columns-types";
+
+export const userStats = pgTable("user_stats", {
+  id: text("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull().unique(),
+  imageUrl: text("image_url"),
+
+  createdAt: timestampTz("created_at").notNull(),
+  lastSignInAt: timestampTz("last_sign_in_at"),
+  lastActiveAt: timestampTz("last_active_at"),
+  lastUpdatedAt: timestampTzNowUpdated("last_updated_at"),
+});
+
+export const preferences = pgTable("preferences", {
+  userId: text("user_id").primaryKey(),
+
+  // User preferences
+  lastModels: text("last_models").array(),
+  favoriteModels: text("favorite_models").array(),
+  preferenceAutoScroll: boolean("preference_auto_scroll")
+    .default(false)
+    .notNull(),
+  preferenceHiddenProviders: text("preference_hidden_providers")
+    .array()
+    .default([])
+    .notNull(),
+  preferenceSystemPrompt: text("preference_system_prompt"),
+  preferenceSystemPromptChangedAt: timestampTz(
+    "preference_system_prompt_changed_at"
+  ),
+  preferenceWebSearch: boolean("preference_web_search").default(true).notNull(),
+  preferenceReasoningEffort: text("preference_reasoning_effort")
+    .default("low")
+    .notNull(),
+  preferenceSkipCloseThreadConfirmation: boolean(
+    "preference_skip_close_thread_confirmation"
+  )
+    .default(false)
+    .notNull(),
+
+  createdAt: timestampTzNow("created_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
+});
 
 export const providers = pgTable("providers", {
   id: text("id").primaryKey(), // openai, anthropic, gemini, etc.
@@ -171,9 +214,7 @@ export const modelSupportedParameters = pgTable(
 export const usersModels = pgTable(
   "users_models",
   {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id),
+    userId: text("user_id").notNull(),
     modelId: text("model_id")
       .notNull()
       .references(() => models.id),
@@ -184,9 +225,7 @@ export const usersModels = pgTable(
 
 export const chats = pgTable("chats", {
   id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id),
+  userId: text("user_id").notNull(),
   title: text("title").notNull(),
   isArchived: boolean("is_archived").notNull().default(false),
   lastMessageAt: timestampTz("last_message_at").notNull(),
@@ -231,7 +270,7 @@ export const usage = pgTable(
   "usage",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id").references(() => user.id),
+    userId: text("user_id"),
     userKey: text("user_key"),
     ip: text("ip"),
     userAgent: text("user_agent"),
