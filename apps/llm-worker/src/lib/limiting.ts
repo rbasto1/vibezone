@@ -175,7 +175,7 @@ async function getUserKey(
 ): Promise<GetUserKeyResult> {
   switch (scheme as AuthScheme) {
     case "Bearer": {
-      const userId = await getSession(token);
+      const userId = await getSession(token, vzContext.origin);
       if (!userId) {
         return { type: "error", error: "Invalid session token" };
       }
