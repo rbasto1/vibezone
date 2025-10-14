@@ -2,6 +2,9 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env", "**/.dev.vars"],
   "tasks": {
+    "build": {
+      "dependsOn": ["@vibezone/web#build"]
+    },
     "@vibezone/web#build": {
       "inputs": ["**/*.*", "!.next", "!.turbo"],
       "outputs": [".next/**", "!.next/cache/**"]
