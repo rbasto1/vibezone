@@ -30,43 +30,43 @@ const SyncResultModal = ({
     () => [
       {
         value: "added-providers",
-        label: `Added providers (${result.addedProviders.length})`,
+        label: `New providers (${result.addedProviders.length})`,
         isModel: false,
         content: result.addedProviders,
       },
       {
         value: "added-models",
-        label: `Added models (${result.addedModels.length})`,
+        label: `New models (${result.addedModels.length})`,
         isModel: true,
         content: result.addedModels,
       },
       {
         value: "updated-models",
-        label: `Updated models (${result.updatedModels.length})`,
+        label: `Updated  (${result.updatedModels.length})`,
         isModel: true,
         content: result.updatedModels,
       },
       {
         value: "deleted-models",
-        label: `Deleted models (${result.deletedModels.length})`,
+        label: `Deleted (${result.deletedModels.length})`,
         isModel: true,
         content: result.deletedModels,
       },
       {
         value: "undeleted-models",
-        label: `Restored models (${result.undeletedModels.length})`,
+        label: `Restored (${result.undeletedModels.length})`,
         isModel: true,
         content: result.undeletedModels,
       },
       {
         value: "translated-models",
-        label: `Translated models (${result.translatedModels.length})`,
+        label: `Translated (${result.translatedModels.length})`,
         isModel: true,
         content: result.translatedModels,
       },
       {
         value: "added-parameters",
-        label: `Added parameters (${result.addedSupportedParameters.length})`,
+        label: `New parameters (${result.addedSupportedParameters.length})`,
         isModel: false,
         content: result.addedSupportedParameters,
       },
@@ -108,7 +108,7 @@ const SyncResultModal = ({
           </div>
         ) : (
           <Tabs defaultValue={initialTab} className="w-full">
-            <TabsList className="mb-3 flex-wrap gap-1">
+            <TabsList className="mb-7 flex-wrap gap-1">
               {visibleTabs.map((tab) => (
                 <TabsTrigger key={tab.value} value={tab.value}>
                   {tab.label}
@@ -117,7 +117,7 @@ const SyncResultModal = ({
             </TabsList>
             {visibleTabs.map((tab) => (
               <TabsContent key={tab.value} value={tab.value}>
-                <div className="max-h-64 overflow-y-auto pr-1">
+                <div className="h-64 overflow-y-auto pr-1">
                   {tab.content.map((id) => (
                     <li
                       key={id}

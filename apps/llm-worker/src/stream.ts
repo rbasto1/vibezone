@@ -10,7 +10,7 @@ export async function handleProviderStream(
   headers: Headers
 ): Promise<Response> {
   const { env, completionRequest } = vzContext;
-  const { modelId, providerId, adapterModelId, maxTokens, plugins } =
+  const { modelId, providerId, adapterModelId, plugins } =
     completionRequest.config;
   const messages = completionRequest.messages;
 
@@ -52,7 +52,6 @@ export async function handleProviderStream(
   const result = streamText({
     model: adapter(modelSpecifier),
     messages: convertToModelMessages(messages),
-    maxOutputTokens: maxTokens ?? 4000,
     onError: (error) => {
       console.error({
         message: "streamText onError:",

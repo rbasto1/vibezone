@@ -82,12 +82,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@ai-sdk/anthropic':
-        specifier: ^2.0.12
-        version: 2.0.17(zod@4.1.11)
-      '@ai-sdk/openai':
-        specifier: ^2.0.24
-        version: 2.0.32(zod@4.1.11)
       '@ai-sdk/react':
         specifier: ^2.0.48
         version: 2.0.48(react@19.1.1)(zod@4.1.11)
@@ -291,20 +285,8 @@ importers:
 
 packages:
 
-  '@ai-sdk/anthropic@2.0.17':
-    resolution: {integrity: sha512-fEmGD3H3cI4ahcrtU/ekA6xvUq9kk/IpOh2TI3wOSxqvKqpo+ztwiem5/x5R92Yenl9KRooYIefr0LNlFUR5Ow==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4
-
   '@ai-sdk/gateway@1.0.13':
     resolution: {integrity: sha512-szF5ZsvNUY+GuCT3GYkXDqKjfoVk8i0SegVogD3bT9h4Wr1lkNI9QpUzo+ji3TayczG0kDAW+WKL0jjdIwZ4TQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4
-
-  '@ai-sdk/openai@2.0.32':
-    resolution: {integrity: sha512-p7giSkCs66Q1qYO/NPYI41CrSg65mcm8R2uAdF86+Y1D1/q4mUrWMyf5UTOJ0bx/z4jIPiNgGDCg2Kabi5zrKQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
@@ -5228,19 +5210,7 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/anthropic@2.0.17(zod@4.1.11)':
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.6(zod@4.1.11)
-      zod: 4.1.11
-
   '@ai-sdk/gateway@1.0.13(zod@4.1.11)':
-    dependencies:
-      '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.6(zod@4.1.11)
-      zod: 4.1.11
-
-  '@ai-sdk/openai@2.0.32(zod@4.1.11)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.6(zod@4.1.11)
@@ -6838,7 +6808,7 @@ snapshots:
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 6.0.0
-      '@types/node': 24.5.2
+      '@types/node': 22.18.6
 
   '@types/hast@3.0.4':
     dependencies:
@@ -6875,7 +6845,7 @@ snapshots:
 
   '@types/pg@8.15.5':
     dependencies:
-      '@types/node': 24.5.2
+      '@types/node': 22.18.6
       pg-protocol: 1.10.3
       pg-types: 2.2.0
 
@@ -6889,7 +6859,7 @@ snapshots:
 
   '@types/through@0.0.33':
     dependencies:
-      '@types/node': 24.5.2
+      '@types/node': 22.18.6
 
   '@types/tinycolor2@1.4.6': {}
 

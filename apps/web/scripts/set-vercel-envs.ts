@@ -283,7 +283,7 @@ async function createVariable(
     return;
   }
 
-  log("info", `✅ Created ${key} (${type}) for targets: ${targets.join(",")}`);
+  log("info", `🟢 Created ${key} (${type}) for targets: ${targets.join(",")}`);
 }
 
 async function updateVariable(
@@ -314,7 +314,7 @@ async function updateVariable(
     );
   }
 
-  log("info", `✅ Updated ${key} (${type}) for targets: ${targets.join(",")}`);
+  log("info", `🟢 Updated ${key} (${type}) for targets: ${targets.join(",")}`);
 }
 
 function getVarType(key: string) {

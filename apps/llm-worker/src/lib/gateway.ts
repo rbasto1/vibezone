@@ -51,7 +51,7 @@ function ensureGateway(
   key: GatewayAdapterKey,
   completionRequest: GetConfigResponseSuccess
 ) {
-  const { maxTokens, plugins } = completionRequest.config;
+  const { maxTokens, plugins, providerId } = completionRequest.config;
   const reasonPlugin = plugins.find((p) => p.startsWith("reason-"));
   const effort = reasonPlugin?.substring("reason-".length) ?? "low";
   if (
@@ -63,10 +63,7 @@ function ensureGateway(
     console.error({ message: "Invalid reasoning effort", effort });
     throw new Error("Invalid reasoning effort");
   }
-  const reasoning =
-    effort === "none"
-      ? { enabled: false }
-      : { max_tokens: maxTokens * effortRatio[effort] };
+  const reasoning = getEffortSpecification(effort, maxTokens, providerId);
 
   const config = getGatewayConfig(env, key);
   const adapter = createOpenRouter({
@@ -103,4 +100,18 @@ function getGatewayForProvider(providerId: string): GatewayAdapterKey {
     default:
       return "openrouter";
   }
+}
+
+function getEffortSpecification(
+  effort: "low" | "medium" | "high" | "none",
+  maxTokens: number,
+  providerId: string
+) {
+  if (effort === "none") {
+    return { enabled: false };
+  }
+  if (providerId === "anthropic") {
+    return { effort };
+  }
+  return { max_tokens: Math.floor(maxTokens * effortRatio[effort]) };
 }

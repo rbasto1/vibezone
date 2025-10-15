@@ -660,7 +660,10 @@ function apiModelToDbModel(m: OpenRouterModel) {
     architectureTokenizer: m.architecture.tokenizer,
     architectureInstructType: m.architecture.instruct_type,
     pricing: m.pricing,
-    topProvider: m.top_provider,
+    topProvider: {
+      ...m.top_provider,
+      context_length: m.top_provider.context_length ?? 32000, // only openrouter/auto has `null` here
+    },
     perRequestLimits: m.per_request_limits,
     apiCreatedAt: new Date(m.created * 1000),
     isChat,

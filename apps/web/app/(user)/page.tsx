@@ -222,8 +222,12 @@ const Assistant: FC = () => {
             </div>
             <div className="flex justify-center text-xs gap-4 [&>a]:underline">
               <span>{t("aiDisclaimer")}</span>
-              <Link href="/privacy">{t("privacyPolicy")}</Link>
-              <Link href="/terms">{t("termsOfUse")}</Link>
+              <Link href="/privacy" prefetch={false}>
+                {t("privacyPolicy")}
+              </Link>
+              <Link href="/terms" prefetch={false}>
+                {t("termsOfUse")}
+              </Link>
             </div>
           </div>
         </SidebarInset>

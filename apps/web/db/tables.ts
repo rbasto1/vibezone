@@ -41,10 +41,7 @@ export const preferences = pgTable("preferences", {
   preferenceAutoScroll: boolean("preference_auto_scroll")
     .default(false)
     .notNull(),
-  preferenceHiddenProviders: text("preference_hidden_providers")
-    .array()
-    .default([])
-    .notNull(),
+  preferenceHiddenProviders: text("preference_hidden_providers").array(),
   preferenceSystemPrompt: text("preference_system_prompt"),
   preferenceSystemPromptChangedAt: timestampTz(
     "preference_system_prompt_changed_at"
