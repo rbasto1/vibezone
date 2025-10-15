@@ -316,5 +316,9 @@
     "removeAttachment": "Remove attachment",
     "instructions": "To send your message, either remove the incompatible attachments or replace the models that don't support them.",
     "understood": "Understood"
+  },
+  "WhatsNew": {
+    "title": "🥳 What's New",
+    "dismiss": "Dismiss"
   }
 }

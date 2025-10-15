@@ -55,9 +55,19 @@ export const preferences = pgTable("preferences", {
   )
     .default(false)
     .notNull(),
+  lastNewsSeenAt: timestampTz("last_news_seen_at"),
 
   createdAt: timestampTzNow("created_at"),
   updatedAt: timestampTzNowUpdated("updated_at"),
+});
+
+export const newsArticles = pgTable("news_articles", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: jsonb("title").notNull().$type<Record<string, string>>(),
+  body: jsonb("body").notNull().$type<Record<string, string>>(),
+  createdAt: timestampTzNow("created_at"),
+  updatedAt: timestampTzNowUpdated("updated_at"),
+  deletedAt: timestampTz("deleted_at"),
 });
 
 export const providers = pgTable("providers", {
