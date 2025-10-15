@@ -61,10 +61,10 @@ export const preferences = pgTable("preferences", {
   updatedAt: timestampTzNowUpdated("updated_at"),
 });
 
-export const newsArticle = pgTable("news_article", {
+export const newsArticles = pgTable("news_articles", {
   id: uuid("id").defaultRandom().primaryKey(),
-  title: text("title").notNull(),
-  body: text("body").notNull(),
+  title: jsonb("title").notNull().$type<Record<string, string>>(),
+  body: jsonb("body").notNull().$type<Record<string, string>>(),
   createdAt: timestampTzNow("created_at"),
   updatedAt: timestampTzNowUpdated("updated_at"),
   deletedAt: timestampTz("deleted_at"),

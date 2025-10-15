@@ -8,17 +8,43 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { News } from "@/db";
+import type { NewsArticle } from "@/db";
 import { useAuthContext } from "@/lib/auth-context";
 import { formatDate } from "@/lib/format";
+import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import { trpc } from "@/lib/trpc/client";
+import { useLocale } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const LOCAL_STORAGE_KEY = "whats-new:last-dismissed-at";
 
+const resolveTranslation = (
+  translations: Record<string, string>,
+  locale: string
+) => {
+  const localized = translations[locale];
+  if (typeof localized === "string" && localized.trim().length > 0) {
+    return localized.trim();
+  }
+
+  const defaultTranslation = translations[DEFAULT_LOCALE];
+  if (
+    typeof defaultTranslation === "string" &&
+    defaultTranslation.trim().length > 0
+  ) {
+    return defaultTranslation.trim();
+  }
+
+  const firstAvailable = Object.values(translations).find(
+    (value) => typeof value === "string" && value.trim().length > 0
+  );
+
+  return firstAvailable?.trim() ?? "";
+};
+
 interface WhatsNewModalProps {
-  items: Pick<News, "id" | "title" | "body" | "createdAt">[];
+  items: Pick<NewsArticle, "id" | "title" | "body" | "createdAt">[];
   lastNewsSeenAt: Date | null;
 }
 
@@ -29,6 +55,7 @@ export const WhatsNewModal = ({
   const authUser = useAuthContext();
   const [dismissed, setDismissed] = useState(false);
   const markNewsSeenMutation = trpc.news.markNewsSeen.useMutation();
+  const locale = useLocale();
 
   const unseenItems = useMemo(() => {
     const resolvedLastSeen = getLastSeen(lastNewsSeenAt);
@@ -36,12 +63,25 @@ export const WhatsNewModal = ({
     return items.filter((item) => item.createdAt > resolvedLastSeen);
   }, [items, lastNewsSeenAt]);
 
-  if (dismissed || !unseenItems.length) {
+  const localizedItems = useMemo(() => {
+    return unseenItems
+      .map((item) => {
+        const titleText = resolveTranslation(item.title, locale);
+        const bodyText = resolveTranslation(item.body, locale);
+        if (!titleText && !bodyText) {
+          return null;
+        }
+        return { ...item, titleText, bodyText };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+  }, [unseenItems, locale]);
+
+  if (dismissed || localizedItems.length === 0) {
     return null;
   }
 
   const handleDismiss = () => {
-    const lastNewsSeenAt = items[0]?.createdAt ?? new Date();
+    const lastNewsSeenAt = localizedItems[0]?.createdAt ?? new Date();
     setDismissed(true);
     localStorage.setItem(LOCAL_STORAGE_KEY, lastNewsSeenAt.toISOString());
     if (authUser) {
@@ -68,16 +108,16 @@ export const WhatsNewModal = ({
           <DialogTitle>🥳 What&apos;s New</DialogTitle>
         </DialogHeader>
         <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
-          {unseenItems.map((item) => (
+          {localizedItems.map((item) => (
             <article key={item.id} className="space-y-2 rounded-md border p-3">
               <header className="flex flex-col">
                 <span className="text-xs text-muted-foreground">
                   {formatDate(item.createdAt)}
                 </span>
-                <h3 className="text-base font-medium">{item.title}</h3>
+                <h3 className="text-base font-medium">{item.titleText}</h3>
               </header>
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                {item.body}
+                {item.bodyText}
               </p>
             </article>
           ))}

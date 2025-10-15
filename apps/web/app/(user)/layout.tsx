@@ -12,7 +12,11 @@ import { StoreProvider } from "@/components/providers/store-provider";
 import { Toaster } from "@/components/providers/toast-provider";
 import { db } from "@/db";
 import type { Model } from "@/db/schema";
-import { models, news, preferences as preferencesTable } from "@/db/schema";
+import {
+  models,
+  newsArticles,
+  preferences as preferencesTable,
+} from "@/db/schema";
 import { models as modelsList } from "@/generated/models";
 import { MAX_PANELS, NEWS_WINDOW_MS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
@@ -218,14 +222,16 @@ async function getRecentNews(lastSeenAt: Date | null | undefined) {
 
   const rows = await db
     .select({
-      id: news.id,
-      title: news.title,
-      body: news.body,
-      createdAt: news.createdAt,
+      id: newsArticles.id,
+      title: newsArticles.title,
+      body: newsArticles.body,
+      createdAt: newsArticles.createdAt,
     })
-    .from(news)
-    .where(and(isNull(news.deletedAt), gt(news.createdAt, cutoff)))
-    .orderBy(desc(news.createdAt))
+    .from(newsArticles)
+    .where(
+      and(isNull(newsArticles.deletedAt), gt(newsArticles.createdAt, cutoff))
+    )
+    .orderBy(desc(newsArticles.createdAt))
     .catch((error) => {
       console.error("Failed to load recent news:", error);
       throw error instanceof Error ? error : new Error(String(error));

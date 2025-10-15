@@ -1,7 +1,8 @@
 import "server-only";
 
 import { db } from "@/db";
-import { news, preferences } from "@/db/schema";
+import { newsArticles, preferences } from "@/db/schema";
+import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import {
   adminProcedure,
   authenticatedProcedure,
@@ -9,6 +10,42 @@ import {
 } from "@/lib/trpc/server/initialize";
 import { and, desc, eq, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
+
+const translationValueSchema = z.string().trim().min(1);
+
+const translationsSchema = z
+  .record(z.string(), translationValueSchema)
+  .superRefine((value, ctx) => {
+    if (!value || Object.keys(value).length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Provide at least one translation",
+      });
+    }
+
+    const defaultTranslation = value?.[DEFAULT_LOCALE];
+    if (!defaultTranslation || defaultTranslation.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Missing ${DEFAULT_LOCALE} translation`,
+      });
+    }
+  });
+
+const normalizeTranslations = (translations: Record<string, string>) => {
+  return Object.entries(translations).reduce<Record<string, string>>(
+    (accumulator, [locale, content]) => {
+      const trimmedLocale = locale.trim();
+      const trimmedContent = content.trim();
+      if (!trimmedLocale || !trimmedContent) {
+        return accumulator;
+      }
+      accumulator[trimmedLocale] = trimmedContent;
+      return accumulator;
+    },
+    {}
+  );
+};
 
 export const newsRouter = t.router({
   list: adminProcedure
@@ -18,44 +55,47 @@ export const newsRouter = t.router({
       if (includeDeleted) {
         return await db
           .select({
-            id: news.id,
-            title: news.title,
-            body: news.body,
-            createdAt: news.createdAt,
-            updatedAt: news.updatedAt,
-            deletedAt: news.deletedAt,
+            id: newsArticles.id,
+            title: newsArticles.title,
+            body: newsArticles.body,
+            createdAt: newsArticles.createdAt,
+            updatedAt: newsArticles.updatedAt,
+            deletedAt: newsArticles.deletedAt,
           })
-          .from(news)
-          .orderBy(desc(news.createdAt));
+          .from(newsArticles)
+          .orderBy(desc(newsArticles.createdAt));
       }
 
       return await db
         .select({
-          id: news.id,
-          title: news.title,
-          body: news.body,
-          createdAt: news.createdAt,
-          updatedAt: news.updatedAt,
-          deletedAt: news.deletedAt,
+          id: newsArticles.id,
+          title: newsArticles.title,
+          body: newsArticles.body,
+          createdAt: newsArticles.createdAt,
+          updatedAt: newsArticles.updatedAt,
+          deletedAt: newsArticles.deletedAt,
         })
-        .from(news)
-        .where(isNull(news.deletedAt))
-        .orderBy(desc(news.createdAt));
+        .from(newsArticles)
+        .where(isNull(newsArticles.deletedAt))
+        .orderBy(desc(newsArticles.createdAt));
     }),
 
   create: adminProcedure
     .input(
       z.object({
-        title: z.string().min(1),
-        body: z.string().min(1),
+        title: translationsSchema,
+        body: translationsSchema,
       })
     )
     .mutation(async ({ input }) => {
+      const normalizedTitle = normalizeTranslations(input.title);
+      const normalizedBody = normalizeTranslations(input.body);
+
       const [created] = await db
-        .insert(news)
+        .insert(newsArticles)
         .values({
-          title: input.title,
-          body: input.body,
+          title: normalizedTitle,
+          body: normalizedBody,
         })
         .returning();
 
@@ -69,16 +109,19 @@ export const newsRouter = t.router({
   update: adminProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
-        title: z.string().min(1),
-        body: z.string().min(1),
+        id: z.uuid(),
+        title: translationsSchema,
+        body: translationsSchema,
       })
     )
     .mutation(async ({ input }) => {
+      const normalizedTitle = normalizeTranslations(input.title);
+      const normalizedBody = normalizeTranslations(input.body);
+
       const [updated] = await db
-        .update(news)
-        .set({ title: input.title, body: input.body })
-        .where(eq(news.id, input.id))
+        .update(newsArticles)
+        .set({ title: normalizedTitle, body: normalizedBody })
+        .where(eq(newsArticles.id, input.id))
         .returning();
 
       if (!updated) {
@@ -89,12 +132,12 @@ export const newsRouter = t.router({
     }),
 
   delete: adminProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ input }) => {
       const [archived] = await db
-        .update(news)
+        .update(newsArticles)
         .set({ deletedAt: sql`current_timestamp` })
-        .where(eq(news.id, input.id))
+        .where(eq(newsArticles.id, input.id))
         .returning();
 
       if (!archived) {
@@ -105,12 +148,12 @@ export const newsRouter = t.router({
     }),
 
   restore: adminProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.uuid() }))
     .mutation(async ({ input }) => {
       const [restored] = await db
-        .update(news)
+        .update(newsArticles)
         .set({ deletedAt: null })
-        .where(eq(news.id, input.id))
+        .where(eq(newsArticles.id, input.id))
         .returning();
 
       if (!restored) {
