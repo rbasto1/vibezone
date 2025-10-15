@@ -13,6 +13,7 @@
 - [x] Text attachments are going inline inside <attachment>
 - [x] Disable sending when attachments are not compatible with one of the models
 - [ ] Stopping works but state stay as running?
+- [ ] Switching models with attachments is causing issues with the other models
 
 ## Improvements
 
