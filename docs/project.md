@@ -2,7 +2,7 @@
 
 ## Features
 
-- [ ] Paid plans: Stripe integration (Clerk? Autumn? Polar?)
+- [x] Paid plans: Clerk
 - [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [ ] Backend processing of messages: save the AI response without the need for a frontend
 - [x] Replace AssistantCloud with ExternalStoreRuntime
@@ -16,7 +16,8 @@
 
 ## Improvements
 
-- [ ] Add news startup modal
+- [ ] Add Terms of Use
+- [ ] Add "What's New" startup modal
 - [ ] Thumb up/down (or stars?)
 - [x] Mobile: when adding a new panel, select it by default
 - [x] Allow user to pin favorite models

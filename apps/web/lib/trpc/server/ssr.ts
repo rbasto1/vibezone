@@ -1,17 +1,19 @@
-import { auth } from "@/lib/auth";
-import { appRouter } from "@/lib/trpc/server/server";
+import { currentUser } from "@clerk/nextjs/server";
 import type { DehydratedState } from "@tanstack/react-query";
 import { createServerSideHelpers } from "@trpc/react-query/server";
-import { headers } from "next/headers";
 import type { SuperJSONResult } from "superjson";
 import superjson from "superjson";
 
+import { appRouter } from "@/lib/trpc/server/server";
+
 export async function getServerCaller() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const user = (await currentUser()) ?? null;
 
   return createServerSideHelpers({
     router: appRouter,
-    ctx: { user: session?.user },
+    ctx: {
+      user,
+    },
     transformer: superjson,
   });
 }

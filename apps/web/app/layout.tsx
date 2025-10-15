@@ -1,21 +1,24 @@
 import "katex/dist/katex.min.css";
+import "server-only";
 import "./globals.css";
 
+import { deDE, ptBR } from "@clerk/localizations";
+import { ClerkProvider } from "@clerk/nextjs";
+import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono } from "next/font/google";
+import type { PropsWithChildren } from "react";
 
-import { SessionProvider } from "@/components/providers/session-provider";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "@/components/providers/toast-provider";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { cn } from "@/components/ui/utils";
-import { auth } from "@/lib/auth";
+import type { FrontendUser } from "@/lib/auth-context";
 import { baseUrl } from "@/lib/base-url";
 import { siteDescription, siteName } from "@/lib/branding";
-import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
-import { headers } from "next/headers";
-import type { PropsWithChildren } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -83,12 +86,24 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  // Fetch session server-side for SSR
-  const authData = await auth.api.getSession({
-    headers: await headers(),
-  });
-  const locale = await getLocale();
-  const messages = await getMessages();
+  const localePromise = getLocale();
+  const messagesPromise = getMessages();
+  const currentUserPromise = currentUser();
+  const [locale, messages, userFull] = await Promise.all([
+    localePromise,
+    messagesPromise,
+    currentUserPromise,
+  ]);
+  const userAsOfDate = Date.now();
+  const localization = getClerkLocalization(locale);
+  const user: FrontendUser | null = userFull && {
+    id: userFull.id,
+    firstName: userFull.firstName,
+    lastName: userFull.lastName,
+    imageUrl: userFull.imageUrl,
+    hasImage: userFull.hasImage,
+    externalId: userFull.externalId,
+  };
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -122,21 +137,34 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         className={cn(geistSans.variable, geistMono.variable, "antialiased")}
       >
         <TRPCProvider>
-          <SessionProvider serverAuthData={authData}>
-            <NextIntlClientProvider locale={locale} messages={messages}>
-              <ThemeProvider
-                attribute="class"
-                storageKey="theme"
-                defaultTheme="system"
-                enableSystem
-              >
-                {children}
-                <Toaster />
-              </ThemeProvider>
-            </NextIntlClientProvider>
-          </SessionProvider>
+          <ThemeProvider
+            attribute="class"
+            storageKey="theme"
+            defaultTheme="system"
+            enableSystem
+          >
+            <ClerkProvider localization={localization}>
+              <AuthProvider user={user} userAsOfDate={userAsOfDate}>
+                <NextIntlClientProvider locale={locale} messages={messages}>
+                  {children}
+                  <Toaster />
+                </NextIntlClientProvider>
+              </AuthProvider>
+            </ClerkProvider>
+          </ThemeProvider>
         </TRPCProvider>
       </body>
     </html>
   );
+}
+
+function getClerkLocalization(locale: string) {
+  switch (locale) {
+    case "pt-BR":
+      return ptBR;
+    case "de":
+      return deDE;
+    default:
+      return undefined;
+  }
 }

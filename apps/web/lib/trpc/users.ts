@@ -1,8 +1,9 @@
 import "server-only";
 
-import type { User as DbUser } from "@/db";
 import { db } from "@/db";
-import { chats, models, session, usage, user, usersModels } from "@/db/schema";
+import type { Preferences } from "@/db/schema";
+import { chats, models, usage, usersModels } from "@/db/schema";
+import { preferences, userStats } from "@/db/tables";
 import {
   and,
   count,
@@ -12,7 +13,6 @@ import {
   inArray,
   isNotNull,
   isNull,
-  max,
   min,
   sql,
 } from "drizzle-orm";
@@ -24,9 +24,12 @@ import {
   publicProcedure,
   t,
 } from "./server/initialize";
+import { syncUsers } from "./users-sync";
 
 export const usersRouter = t.router({
   manageList: adminProcedure.query(async () => {
+    const syncUsersPromise = syncUsers();
+
     const costCalculationBeforeDtPromise = db
       .select({
         date: min(usage.createdAt),
@@ -61,45 +64,45 @@ export const usersRouter = t.router({
       .groupBy(usage.userId)
       .as("u30");
 
+    await syncUsersPromise;
     const usersRows = await db
       .select({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
+        id: userStats.id,
+        name: userStats.firstName,
+        email: userStats.email,
+        createdAt: userStats.createdAt,
         continents: costQuery.continents,
         countries: costQuery.countries,
-        sessionsLast7: count(sql`distinct ${session.id}`),
-        lastLoginAt: max(session.createdAt),
+        lastLoginAt: userStats.lastSignInAt,
+        lastActiveAt: userStats.lastActiveAt,
         chatsCount: count(sql`distinct ${chats.id}`),
         completionsCount: count(sql`distinct ${usage.id}`),
         activeDaysCount: sql<number>`count(distinct date_trunc('day', ${usage.createdAt}))::int`,
         costLast30: costQuery.totalCost30,
         costLast7: costQuery.totalCost7,
       })
-      .from(user)
-      .leftJoin(
-        session,
-        and(eq(session.userId, user.id), gte(session.createdAt, lastSevenDays))
-      )
+      .from(userStats)
       .leftJoin(
         chats,
-        and(eq(chats.userId, user.id), gte(chats.lastMessageAt, lastSevenDays))
+        and(
+          eq(chats.userId, userStats.id),
+          gte(chats.lastMessageAt, lastSevenDays)
+        )
       )
       .leftJoin(
         usage,
-        and(eq(usage.userId, user.id), gte(usage.createdAt, lastSevenDays))
+        and(eq(usage.userId, userStats.id), gte(usage.createdAt, lastSevenDays))
       )
-      .leftJoinLateral(costQuery, eq(costQuery.userId, user.id))
+      .leftJoinLateral(costQuery, eq(costQuery.userId, userStats.id))
       .groupBy(
-        user.id,
+        userStats.id,
         costQuery.userId,
         costQuery.totalCost30,
         costQuery.totalCost7,
         costQuery.continents,
         costQuery.countries
       )
-      .orderBy(desc(user.createdAt))
+      .orderBy(desc(userStats.createdAt))
       .catch((error) => {
         console.error(error);
         throw error;
@@ -118,13 +121,14 @@ export const usersRouter = t.router({
   setLastModels: authenticatedProcedure
     .input(z.object({ modelIds: z.array(z.string()).max(MAX_PANELS) }))
     .mutation(async ({ ctx, input }) => {
-      const authUser = ctx.user!;
+      const authUser = ctx.user;
+      if (!authUser) throw new Error("Assert: auth procedure must have user");
 
       if (!input.modelIds.length) {
         await db
-          .update(user)
+          .update(preferences)
           .set({ lastModels: [] })
-          .where(eq(user.id, authUser.id));
+          .where(eq(preferences.userId, authUser.id));
         return { ok: true as const, lastModels: [] as string[] };
       }
 
@@ -142,15 +146,16 @@ export const usersRouter = t.router({
       const ordered = input.modelIds.filter((id) => valid.has(id)).slice(0, 3);
 
       await db
-        .update(user)
+        .update(preferences)
         .set({ lastModels: ordered })
-        .where(eq(user.id, authUser.id));
+        .where(eq(preferences.userId, authUser.id));
 
       return { ok: true as const, lastModels: ordered };
     }),
 
   favorites: publicProcedure.query(async ({ ctx }) => {
-    if (!ctx.user) {
+    const user = ctx.user;
+    if (!user) {
       return [];
     }
 
@@ -161,10 +166,7 @@ export const usersRouter = t.router({
       })
       .from(usersModels)
       .where(
-        and(
-          eq(usersModels.userId, ctx.user!.id),
-          isNotNull(usersModels.favoritedAt)
-        )
+        and(eq(usersModels.userId, user.id), isNotNull(usersModels.favoritedAt))
       )
       .orderBy(desc(usersModels.favoritedAt));
 
@@ -178,7 +180,10 @@ export const usersRouter = t.router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user!.id;
+      const authUser = ctx.user;
+      if (!authUser) throw new Error("Assert: auth procedure must have user");
+
+      const userId = authUser.id;
 
       const [existing] = await db
         .select({
@@ -258,6 +263,7 @@ export const usersRouter = t.router({
     )
     .mutation(async ({ ctx, input }) => {
       const authUser = ctx.user;
+      if (!authUser) throw new Error("Assert: auth procedure must have user");
 
       const sanitizedHiddenProviders = input.hiddenProviders
         ? Array.from(
@@ -275,9 +281,9 @@ export const usersRouter = t.router({
 
       const [current] = hiddenSet
         ? await db
-            .select({ lastModels: user.lastModels })
-            .from(user)
-            .where(eq(user.id, authUser.id))
+            .select({ lastModels: preferences.lastModels })
+            .from(preferences)
+            .where(eq(preferences.userId, authUser.id))
             .limit(1)
         : [];
 
@@ -291,7 +297,7 @@ export const usersRouter = t.router({
             })
         : undefined;
 
-      const updatePayload: Partial<DbUser> = {
+      const updatePayload: Partial<Preferences> = {
         preferenceAutoScroll: input.autoScroll,
         preferenceHiddenProviders: sanitizedHiddenProviders,
         preferenceSystemPrompt: input.systemPrompt,
@@ -312,7 +318,10 @@ export const usersRouter = t.router({
         Object.assign(updatePayload, { lastModels: filteredLastModels });
       }
 
-      await db.update(user).set(updatePayload).where(eq(user.id, authUser.id));
+      await db
+        .update(preferences)
+        .set(updatePayload)
+        .where(eq(preferences.userId, authUser.id));
 
       return {
         ok: true as const,
@@ -330,4 +339,9 @@ export const usersRouter = t.router({
         },
       };
     }),
+
+  syncUsers: adminProcedure.mutation(async () => {
+    await syncUsers();
+    return { ok: true };
+  }),
 });

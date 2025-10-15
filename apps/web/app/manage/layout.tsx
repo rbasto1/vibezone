@@ -1,15 +1,16 @@
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+
+import { isUserAdmin } from "@/lib/admin";
 import { AdminTopNav } from "./admin-topnav";
 import { UnauthorizedModal } from "./unauthorized-modal";
 
 const ManageLayout = async ({ children }: LayoutProps<"/manage">) => {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) {
+  const user = await currentUser();
+  if (!user) {
     redirect("/");
   }
-  if (!session.user.isAdmin) {
+  if (!isUserAdmin(user)) {
     return <UnauthorizedModal />;
   }
 

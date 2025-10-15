@@ -1,5 +1,4 @@
 import { relations } from "drizzle-orm";
-import { session, user } from "./auth-schema";
 import {
   chats,
   locales,
@@ -15,20 +14,6 @@ import {
   usage,
   usersModels,
 } from "./tables";
-
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  chats: many(chats),
-  usage: many(usage),
-  modelFavorites: many(usersModels),
-}));
-
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
-  }),
-}));
 
 export const modelsRelations = relations(models, ({ one, many }) => ({
   provider: one(providers, {
@@ -64,11 +49,7 @@ export const modelSupportedParametersRelations = relations(
   })
 );
 
-export const chatRelations = relations(chats, ({ one, many }) => ({
-  user: one(user, {
-    fields: [chats.userId],
-    references: [user.id],
-  }),
+export const chatRelations = relations(chats, ({ many }) => ({
   threads: many(threads),
 }));
 
@@ -96,10 +77,6 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 }));
 
 export const usageRelations = relations(usage, ({ one }) => ({
-  user: one(user, {
-    fields: [usage.userId],
-    references: [user.id],
-  }),
   model: one(models, {
     fields: [usage.modelId],
     references: [models.id],
@@ -107,10 +84,6 @@ export const usageRelations = relations(usage, ({ one }) => ({
 }));
 
 export const usersModelsRelations = relations(usersModels, ({ one }) => ({
-  user: one(user, {
-    fields: [usersModels.userId],
-    references: [user.id],
-  }),
   model: one(models, {
     fields: [usersModels.modelId],
     references: [models.id],

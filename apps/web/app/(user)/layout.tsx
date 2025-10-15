@@ -1,31 +1,32 @@
+import "server-only";
+
+import { currentUser } from "@clerk/nextjs/server";
 import { HydrationBoundary } from "@tanstack/react-query";
+import { generateId } from "ai";
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 import { Suspense, type PropsWithChildren } from "react";
 
 import { StoreProvider } from "@/components/providers/store-provider";
+import { Toaster } from "@/components/providers/toast-provider";
 import { db } from "@/db";
 import type { Model } from "@/db/schema";
-import { models, user as userTable } from "@/db/schema";
+import { models, preferences as preferencesTable } from "@/db/schema";
+import { models as modelsList } from "@/generated/models";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
-import type { PanelConfig } from "@/store/panels";
-import type { ThreadMessageLike } from "@assistant-ui/react";
-
-import { Toaster } from "@/components/providers/toast-provider";
-import { models as modelsList } from "@/generated/models";
-import { auth } from "@/lib/auth";
 import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
+import type { PanelConfig } from "@/store/panels";
 import type { PreferencesAtom } from "@/store/preferences";
-import { generateId } from "ai";
-import { getTranslations } from "next-intl/server";
+import type { ThreadMessageLike } from "@assistant-ui/react";
 import { PageLoader } from "./page-loader";
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const authUser = await currentUser();
+  const userId = authUser?.id;
+  const preferences = await ensurePreferences(userId);
+
   const t = await getTranslations("Prompts");
-  const user = session?.user;
-  const userId = user?.id;
 
   const caller = await getServerCaller();
 
@@ -42,11 +43,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       { lastModels: userLastModels, hiddenProviders: userHiddenProviders } = {},
     ] = await db
       .select({
-        lastModels: userTable.lastModels,
-        hiddenProviders: userTable.preferenceHiddenProviders,
+        lastModels: preferencesTable.lastModels,
+        hiddenProviders: preferencesTable.preferenceHiddenProviders,
       })
-      .from(userTable)
-      .where(eq(userTable.id, userId))
+      .from(preferencesTable)
+      .where(eq(preferencesTable.userId, userId))
       .limit(1);
 
     lastModels = userLastModels ?? [];
@@ -55,23 +56,23 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     }
   }
 
-  const changedPrompt = !!user?.preferenceSystemPromptChangedAt;
-  const preferencesInitialValue: PreferencesAtom = userId
+  const changedPrompt = !!preferences?.preferenceSystemPromptChangedAt;
+  const preferencesInitialValue: PreferencesAtom = preferences
     ? {
-        pluginWeb: user?.preferenceWebSearch,
-        reasoningEffort: user?.preferenceReasoningEffort as
+        pluginWeb: preferences?.preferenceWebSearch,
+        reasoningEffort: preferences?.preferenceReasoningEffort as
           | "none"
           | "low"
           | "medium"
           | "high",
         systemPrompt: changedPrompt
-          ? (user?.preferenceSystemPrompt ?? null)
+          ? (preferences?.preferenceSystemPrompt ?? null)
           : t("system"),
         changedPrompt,
-        autoScroll: user?.preferenceAutoScroll,
-        hiddenProviders: user?.preferenceHiddenProviders ?? [],
+        autoScroll: preferences?.preferenceAutoScroll,
+        hiddenProviders: preferences?.preferenceHiddenProviders ?? [],
         skipCloseThreadConfirmation:
-          user?.preferenceSkipCloseThreadConfirmation ?? false,
+          preferences?.preferenceSkipCloseThreadConfirmation ?? false,
       }
     : {
         pluginWeb: true,
@@ -176,3 +177,21 @@ const buildInitialMessages = (
     } satisfies ThreadMessageLike,
   ];
 };
+
+async function ensurePreferences(userId: string | null | undefined) {
+  if (!userId) return null;
+
+  const row = await db.query.preferences.findFirst({
+    where: eq(preferencesTable.userId, userId),
+  });
+
+  if (!row) {
+    return await db
+      .insert(preferencesTable)
+      .values({ userId })
+      .returning()
+      .then((rows) => rows[0]);
+  }
+
+  return row;
+}

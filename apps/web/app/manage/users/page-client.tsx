@@ -20,27 +20,29 @@ const ManageUsersPageClient: NextPage = () => {
     if (!users?.length) {
       return {
         users: 0,
-        loginsLast7: 0,
         chatsLast7: 0,
         completionsLast7: 0,
+        activeLast7: 0,
         cost7: 0,
         cost30: 0,
       };
     }
 
+    const lastSevenDays = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
     return users.reduce(
       (acc, user) => {
         acc.users += 1;
-        acc.loginsLast7 += user.sessionsLast7 ?? 0;
         acc.chatsLast7 += user.chatsCount ?? 0;
         acc.completionsLast7 += user.completionsCount ?? 0;
+        acc.activeLast7 +=
+          user.lastActiveAt && user.lastActiveAt > lastSevenDays ? 1 : 0;
         acc.cost7 += Number(user.costLast7 ?? 0);
         acc.cost30 += Number(user.costLast30 ?? 0);
         return acc;
       },
       {
         users: 0,
-        loginsLast7: 0,
+        activeLast7: 0,
         chatsLast7: 0,
         completionsLast7: 0,
         cost7: 0,
@@ -97,7 +99,7 @@ const ManageUsersPageClient: NextPage = () => {
           <span className="block text-right tabular-nums">
             users: {totals.users}
             <br />
-            logins: {totals.loginsLast7}
+            active: {totals.activeLast7}
           </span>
         ),
       },

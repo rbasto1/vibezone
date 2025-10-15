@@ -55,12 +55,14 @@ export const messagesRouter = t.router({
         messages: z.array(MessageSchema),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ ctx, input }) => {
       const { chatId, threadId, modelId, messages: inputMessages } = input;
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
 
       try {
         // Ensure chat exists
-        const chatPromise = getOrInsertChat(chatId, ctx.user.id);
+        const chatPromise = getOrInsertChat(chatId, user.id);
 
         // Ensure thread exists
         const existingThread = await db.query.threads.findFirst({

@@ -2,6 +2,9 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env", "**/.dev.vars"],
   "tasks": {
+    "build": {
+      "dependsOn": ["@vibezone/web#build"]
+    },
     "@vibezone/web#build": {
       "inputs": ["**/*.*", "!.next", "!.turbo"],
       "outputs": [".next/**", "!.next/cache/**"]
@@ -21,16 +24,11 @@
     }
   },
   "globalEnv": [
-    "AUTH_SECRET",
-    "DATABASE_URL",
-    "DATABASE_URL_UNPOOLED",
-    "GOOGLE_CLIENT_ID",
-    "GOOGLE_CLIENT_SECRET",
     "NEXT_PUBLIC_*",
-    "OPENROUTER_API_KEY",
-    "RESEND_API_KEY",
+    "DATABASE_URL",
+    "CLERK_SECRET_KEY",
     "DEEPL_API_KEY",
-    "MARITACAAI_API_KEY",
-    "NEXT_PUBLIC_TURNSTILE_SITE_KEY"
+    "OPENROUTER_API_KEY",
+    "MARITACAAI_API_KEY"
   ]
 }

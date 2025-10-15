@@ -2,13 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import { ANON_DAILY_LIMIT, useAnonRemaining } from "@/hooks/use-anon-quota";
-import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useOpenSignIn } from "@/lib/auth-client";
 import { AlertTriangle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export function AnonQuotaBanner() {
   const t = useTranslations("AnonQuota");
-  const setUIState = useUIStateSetter();
+  const openSignIn = useOpenSignIn();
   const remaining = useAnonRemaining() ?? "";
   const mobileLabel = t("mobileBanner", {
     remaining,
@@ -36,7 +36,7 @@ export function AnonQuotaBanner() {
         className={
           "bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-400 dark:text-black transition-all duration-1000 vz-glow-pulse w-full md:w-auto"
         }
-        onClick={() => setUIState({ loginOpen: true })}
+        onClick={openSignIn}
       >
         {t("signInCta")}
       </Button>

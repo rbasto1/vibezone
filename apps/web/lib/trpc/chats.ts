@@ -19,14 +19,15 @@ export const chatsRouter = t.router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.user) {
+      const user = ctx.user;
+      if (!user) {
         return {
           chats: [],
           next: null,
         };
       }
       return listChats({
-        userId: ctx.user.id,
+        userId: user.id,
         cursor: input.cursor,
         limit: input.limit,
       });
@@ -39,14 +40,16 @@ export const chatsRouter = t.router({
         limit: z.number().min(1).max(50).default(CHAT_LIST_PAGE_SIZE),
       })
     )
-    .query(({ ctx, input }) =>
-      searchChats({
-        userId: ctx.user.id,
+    .query(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
+      return searchChats({
+        userId: user.id,
         query: input.query,
         cursor: input.cursor,
         limit: input.limit,
-      })
-    ),
+      });
+    }),
 
   renameChat: authenticatedProcedure
     .input(
@@ -56,9 +59,11 @@ export const chatsRouter = t.router({
         firstUserMessage: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ ctx, input }) => {
       const { chatId, title: inputTitle, firstUserMessage } = input;
-      const userId = ctx.user.id;
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
+      const userId = user.id;
 
       const chat = await db.query.chats.findFirst({
         columns: { id: true, userId: true },
@@ -101,14 +106,16 @@ export const chatsRouter = t.router({
         chatId: z.string(),
       })
     )
-    .query(async ({ input, ctx }) => {
+    .query(async ({ ctx, input }) => {
       const { chatId } = input;
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
 
       // Get the chat
       const chatRecord = await db.query.chats.findFirst({
         where: and(
           eq(chats.id, chatId),
-          eq(chats.userId, ctx.user.id),
+          eq(chats.userId, user.id),
           isNull(chats.deletedAt),
           eq(chats.isArchived, false)
         ),
@@ -140,9 +147,11 @@ export const chatsRouter = t.router({
         chatId: z.string(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ ctx, input }) => {
       const { chatId } = input;
-      const userId = ctx.user.id;
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
+      const userId = user.id;
 
       // Verify chat belongs to user and archive it
       const result = await db

@@ -77,6 +77,7 @@ const ThreadListItems: FC = () => {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    refetch,
   } = trpc.chats.listChats.useInfiniteQuery(listInput, {
     enabled: !!user,
     getNextPageParam: (lastPage) => lastPage.next ?? undefined,
@@ -89,6 +90,15 @@ const ThreadListItems: FC = () => {
     [data]
   );
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!user || isLoading) return;
+    void refetch();
+
+    // We want isLoading to be ignored, because we want the effect to run only if the query
+    // already ran but the user changed, so isLoading will be false.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, refetch]);
 
   useEffect(() => {
     const node = sentinelRef.current;

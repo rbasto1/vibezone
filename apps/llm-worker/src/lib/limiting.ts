@@ -1,5 +1,3 @@
-import { eq } from "drizzle-orm";
-
 import { models } from "../generated/models";
 import {
   getUsageDO,
@@ -8,12 +6,12 @@ import {
 } from "../objects/usage";
 import type { VibezoneContext } from "../worker";
 import { validateCaptchaToken } from "./captcha";
+import { getSession } from "./clerk";
 import {
   MAX_ANON_REQUESTS_PER_DAY,
   MAX_CAPTCHA_AGE_MS,
   MAX_USER_REQUESTS_PER_DAY,
 } from "./constants";
-import { schema } from "./db";
 
 export type AuthScheme = "Bearer" | "Anon" | "Internal";
 
@@ -177,7 +175,7 @@ async function getUserKey(
 ): Promise<GetUserKeyResult> {
   switch (scheme as AuthScheme) {
     case "Bearer": {
-      const userId = await getUserIdFromToken(token, vzContext);
+      const userId = await getSession(token, vzContext.origin);
       if (!userId) {
         return { type: "error", error: "Invalid session token" };
       }
@@ -242,28 +240,6 @@ async function createHash(data: unknown) {
   );
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return btoa(String.fromCharCode(...hashArray));
-}
-
-async function getUserIdFromToken(token: string, vzContext: VibezoneContext) {
-  const db = vzContext.db;
-  const [sessionRecord] = await db
-    .select({
-      userId: schema.session.userId,
-      expiresAt: schema.session.expiresAt,
-    })
-    .from(schema.session)
-    .where(eq(schema.session.token, token))
-    .limit(1);
-
-  if (!sessionRecord) {
-    return null;
-  }
-
-  if (sessionRecord.expiresAt <= new Date()) {
-    return null;
-  }
-
-  return sessionRecord.userId;
 }
 
 function isValidated(validatedAt: number | undefined) {

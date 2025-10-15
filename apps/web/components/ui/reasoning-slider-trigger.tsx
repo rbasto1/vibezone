@@ -9,6 +9,7 @@ import {
 import type { ReasoningEffort } from "@/db";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
+import { useUser } from "@/lib/auth-client";
 import { modelMap } from "@/lib/model-map";
 import { trpc } from "@/lib/trpc/client";
 import { BrainIcon } from "lucide-react";
@@ -38,18 +39,22 @@ export const ReasoningSliderTrigger = () => {
   const panelsConfig = usePanelsConfigValue();
   const t = useTranslations("UserPreferences.reasoningEffort");
   const utils = trpc.useUtils();
+  const user = useUser();
+  const isLoggedIn = !!user;
 
   const handleSave = useCallback(
     (sliderValue: number) => {
       const reasoningEffort: ReasoningEffortValue =
         sliderValue <= 1 ? "low" : sliderValue === 2 ? "medium" : "high";
-      utils.client.users.updatePreferences
+      if (!isLoggedIn) return;
+
+      void utils.client.users.updatePreferences
         .mutate({ reasoningEffort })
         .catch((error) => {
           toast.error(error.message || "Failed to update preferences");
         });
     },
-    [utils]
+    [utils, isLoggedIn]
   );
 
   const { allModelsHaveReasoning, blockingReasoningModelNames } =

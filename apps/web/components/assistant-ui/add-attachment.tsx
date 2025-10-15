@@ -22,8 +22,7 @@ import { cn } from "@/components/ui/utils";
 import { useAppendAttachments } from "@/hooks/use-attachments";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
-import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { useUser } from "@/lib/auth-client";
+import { useOpenSignIn, useUser } from "@/lib/auth-client";
 import { ComposerPrimitive } from "@assistant-ui/react";
 import { AttachmentUI } from "./message-attachments";
 
@@ -61,7 +60,7 @@ const formatModelNames = (
 
 export const ComposerAddAttachment: FC = () => {
   const t = useTranslations("ComposerAddAttachment");
-  const setUIState = useUIStateSetter();
+  const openSignIn = useOpenSignIn();
   const panels = usePanelsConfigValue();
   const panelModelIds = useMemo(
     () => panels.map((panel) => panel.model),
@@ -167,7 +166,7 @@ ${formatModelNames(attachmentsCapabilities.pdf.blockingModels, t)}`;
                 if (!isLoggedIn) {
                   event.preventDefault();
                   event.stopPropagation();
-                  setUIState({ loginOpen: true });
+                  openSignIn();
                   return;
                 }
                 item.onSelect();

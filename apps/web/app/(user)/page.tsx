@@ -19,7 +19,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { usePanelsConfig, usePanelsStateValue } from "@/hooks/use-panels";
 import { useUIState } from "@/hooks/use-ui-state";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
-import { useUser } from "@/lib/auth-client";
+import { useOpenSignIn, useUser } from "@/lib/auth-client";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { modelMap } from "@/lib/model-map";
@@ -36,6 +36,7 @@ const Assistant: FC = () => {
   const user = useUser();
   const isMobile = useIsMobile();
   const [focusPanelId, setFocusPanelId] = useState<string>();
+  const openSignIn = useOpenSignIn();
 
   useEffect(() => {
     if (isMobile) {
@@ -74,7 +75,7 @@ const Assistant: FC = () => {
         });
 
     if (!allowedModelIds.length) {
-      setUIState({ loginOpen: true });
+      openSignIn();
       return;
     }
 

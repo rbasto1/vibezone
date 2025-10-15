@@ -1,14 +1,14 @@
 "use client";
 
-import { CircleXIcon } from "@/components/ui/icons/circle-x-icon";
-import { useSetDepleted } from "@/hooks/use-anon-quota";
-import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { useUser } from "@/lib/auth-client";
 import { AlertCircleIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
-import { Button } from "../ui/button";
-import { cn } from "../ui/utils";
+
+import { Button } from "@/components/ui/button";
+import { CircleXIcon } from "@/components/ui/icons/circle-x-icon";
+import { cn } from "@/components/ui/utils";
+import { useSetDepleted } from "@/hooks/use-anon-quota";
+import { useOpenSignIn, useUser } from "@/lib/auth-client";
 
 interface ThreadErrorProps {
   error: Error;
@@ -18,7 +18,7 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
   const user = useUser();
   const setDepleted = useSetDepleted();
   const t = useTranslations("ThreadError");
-  const setUIState = useUIStateSetter();
+  const openSignIn = useOpenSignIn();
 
   if (
     error.message === "Out of credits" ||
@@ -65,10 +65,7 @@ export const ThreadError: FC<ThreadErrorProps> = ({ error }) => {
                     ? t("anonymousTitle")
                     : t("anonymousTitleModel")}
                 </h3>
-                <Button
-                  variant="outline"
-                  onClick={() => setUIState({ loginOpen: true })}
-                >
+                <Button variant="outline" onClick={() => openSignIn()}>
                   {t("signInButton")}
                 </Button>
               </>
