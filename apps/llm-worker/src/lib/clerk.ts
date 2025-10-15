@@ -1,5 +1,4 @@
 import { env } from "cloudflare:workers";
-import type { VibezoneContext } from "../worker";
 
 interface ClerkSession {
   object: "session";
@@ -36,14 +35,17 @@ interface ClerkSession {
   tasks: unknown[];
 }
 
-export async function getSession(
-  token: string,
-  origin: VibezoneContext["origin"]
-) {
+export async function getSession(token: string, origin: string) {
   const clerkSecretKey =
-    origin === "multipla.ia.br"
+    origin === "https://www.multipla.ia.br"
       ? env.CLERK_SECRET_KEY_MULTIPLAIA
       : env.CLERK_SECRET_KEY;
+  if (!clerkSecretKey) {
+    throw new Error(
+      `Clerk Secret Key for this origin (${origin}) is not defined`
+    );
+  }
+
   const response = await fetch(`https://api.clerk.com/v1/sessions/${token}`, {
     headers: {
       Authorization: `Bearer ${clerkSecretKey}`,

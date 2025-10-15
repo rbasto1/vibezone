@@ -14,7 +14,7 @@ export type Env = typeof env;
 
 export interface VibezoneContext {
   env: Env;
-  origin: "vibezone.ai" | "multipla.ia.br";
+  origin: string;
   db: ReturnType<typeof getDb>;
   requestHeaders: Headers;
   completionRequest: GetConfigResponseSuccess;
@@ -111,15 +111,6 @@ export default {
   },
 };
 
-function getOriginFromRequest(
-  request: Request
-): "vibezone.ai" | "multipla.ia.br" {
-  const url = new URL(request.url);
-  const origin = url.searchParams.get("origin");
-  switch (origin) {
-    case "multipla.ia.br":
-      return "multipla.ia.br";
-    default:
-      return "vibezone.ai";
-  }
+function getOriginFromRequest(request: Request): string {
+  return request.headers.get("origin") ?? "";
 }
