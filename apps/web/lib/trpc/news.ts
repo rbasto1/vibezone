@@ -2,7 +2,6 @@ import "server-only";
 
 import { db } from "@/db";
 import { newsArticles, preferences } from "@/db/schema";
-import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import {
   adminProcedure,
   authenticatedProcedure,
@@ -13,24 +12,7 @@ import { z } from "zod";
 
 const translationValueSchema = z.string().trim().min(1);
 
-const translationsSchema = z
-  .record(z.string(), translationValueSchema)
-  .superRefine((value, ctx) => {
-    if (!value || Object.keys(value).length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Provide at least one translation",
-      });
-    }
-
-    const defaultTranslation = value?.[DEFAULT_LOCALE];
-    if (!defaultTranslation || defaultTranslation.trim().length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Missing ${DEFAULT_LOCALE} translation`,
-      });
-    }
-  });
+const translationsSchema = z.record(z.string(), translationValueSchema);
 
 const normalizeTranslations = (translations: Record<string, string>) => {
   return Object.entries(translations).reduce<Record<string, string>>(

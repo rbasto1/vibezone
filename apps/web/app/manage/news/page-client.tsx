@@ -68,10 +68,7 @@ const NewsManagePageClient: NextPage = () => {
     event.preventDefault();
     const titlePayload = sanitizeTranslations(newDraft.title);
     const bodyPayload = sanitizeTranslations(newDraft.body);
-    if (!titlePayload[DEFAULT_LOCALE] || !bodyPayload[DEFAULT_LOCALE]) {
-      toast.error("Default locale title and body are required");
-      return;
-    }
+
     await createMutation
       .mutateAsync({ title: titlePayload, body: bodyPayload })
       .then(async () => {
@@ -233,11 +230,7 @@ const NewsManagePageClient: NextPage = () => {
             <Button
               type="submit"
               loading={createMutation.isPending}
-              disabled={
-                createMutation.isPending ||
-                !newDraft.title[DEFAULT_LOCALE]?.trim() ||
-                !newDraft.body[DEFAULT_LOCALE]?.trim()
-              }
+              disabled={createMutation.isPending}
             >
               Publish
             </Button>

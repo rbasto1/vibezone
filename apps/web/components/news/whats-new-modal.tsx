@@ -1,4 +1,8 @@
 "use client";
+import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -8,12 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/components/ui/utils";
 import type { NewsArticle } from "@/db";
 import { useAuthContext } from "@/lib/auth-context";
 import { formatDate } from "@/lib/format";
 import { trpc } from "@/lib/trpc/client";
-import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
 
 const LOCAL_STORAGE_KEY = "whats-new:last-dismissed-at";
 
@@ -69,17 +72,25 @@ export const WhatsNewModal = ({
           <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
         <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
-          {unseenItems.map((item) => (
-            <article key={item.id} className="space-y-2 rounded-md border p-3">
+          {unseenItems.map((item, index) => (
+            <article
+              key={item.id}
+              className={cn(
+                "space-y-2 mb-6 py-2",
+                index < unseenItems.length - 1 && "border-b"
+              )}
+            >
               <header className="flex flex-col">
                 <span className="text-xs text-muted-foreground">
                   {formatDate(item.createdAt)}
                 </span>
                 <h3 className="text-base font-medium">{item.titleText}</h3>
               </header>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                {item.bodyText}
-              </p>
+              <div className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground [&_a]:underline">
+                <ReactMarkdown skipHtml remarkPlugins={[remarkGfm]}>
+                  {item.bodyText}
+                </ReactMarkdown>
+              </div>
             </article>
           ))}
         </div>

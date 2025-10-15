@@ -34,8 +34,15 @@ async function main() {
     process.exit(1);
   }
 
+  const news = process.argv[3] === "--news";
+
   const sourceDb = db;
   const targetDb = drizzle(targetConnStr, { schema });
+
+  if (news) {
+    await copyNews(sourceDb, targetDb);
+    return;
+  }
 
   await copyLocales(sourceDb, targetDb);
   await copySuggestionGroups(sourceDb, targetDb);
@@ -259,6 +266,33 @@ async function copyModelTranslations(sourceDb: Client, targetDb: Client) {
   await targetDb.insert(schema.modelTranslations).values(missingRows);
   const count = missingRows.length;
   console.info(`✅ Model translations copied successfully: ${count} rows`);
+}
+
+async function copyNews(sourceDb: Client, targetDb: Client) {
+  const rows = await sourceDb.select().from(schema.newsArticles);
+  if (!rows.length) {
+    console.error("No rows found in source table");
+    process.exit(8);
+  }
+
+  const existingRows = await targetDb
+    .select({
+      id: schema.newsArticles.id,
+    })
+    .from(schema.newsArticles);
+
+  const missingRows = rows.filter(
+    (row) => !existingRows.some((r) => r.id === row.id)
+  );
+
+  if (!missingRows.length) {
+    console.info("🔵 No missing news articles found");
+    return;
+  }
+
+  await targetDb.insert(schema.newsArticles).values(missingRows);
+  const count = missingRows.length;
+  console.info(`✅ News articles copied successfully: ${count} rows`);
 }
 
 main();
