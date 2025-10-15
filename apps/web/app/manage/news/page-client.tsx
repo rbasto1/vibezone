@@ -1,92 +1,24 @@
 "use client";
 
 import type { NextPage } from "next";
-import {
-  type ChangeEvent,
-  type FormEvent,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AdminHeader } from "@/components/ui/admin-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { QueryAlert } from "@/components/ui/query-alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDate } from "@/lib/format";
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/lib/i18n/locales";
+import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
 import { trpc } from "@/lib/trpc/client";
 
-interface NewsDraft {
-  title: Record<string, string>;
-  body: Record<string, string>;
-}
-
-const ensureDraft = (draft?: Partial<NewsDraft>): NewsDraft => ({
-  title: { [DEFAULT_LOCALE]: "", ...(draft?.title ?? {}) },
-  body: { [DEFAULT_LOCALE]: "", ...(draft?.body ?? {}) },
-});
-
-const sanitizeTranslations = (translations: Record<string, string>) => {
-  const result: Record<string, string> = {};
-  Object.entries(translations).forEach(([locale, value]) => {
-    const trimmedValue = value.trim();
-    if (!trimmedValue) {
-      return;
-    }
-    result[locale] = trimmedValue;
-  });
-  return result;
-};
-
-const normalizeForCompare = (translations: Record<string, string>) =>
-  Object.entries(translations)
-    .filter(([, value]) => value.trim().length > 0)
-    .map(([locale, value]) => [locale, value.trim()] as const)
-    .sort(([localeA], [localeB]) => localeA.localeCompare(localeB));
-
-const translationsMatch = (
-  first: Record<string, string>,
-  second: Record<string, string>
-) => {
-  const normalizedFirst = normalizeForCompare(first);
-  const normalizedSecond = normalizeForCompare(second);
-  if (normalizedFirst.length !== normalizedSecond.length) {
-    return false;
-  }
-  return normalizedFirst.every(([locale, value], index) => {
-    if (!normalizedSecond[index]) throw new Error("Assert: Mismatched length");
-    const [otherLocale, otherValue] = normalizedSecond[index];
-    return locale === otherLocale && value === otherValue;
-  });
-};
-
-const updateDraftField = (
-  draft: NewsDraft,
-  field: keyof NewsDraft,
-  locale: string,
-  value: string
-): NewsDraft => ({
-  ...draft,
-  [field]: {
-    ...draft[field],
-    [locale]: value,
-  },
-});
+import { cn } from "@/components/ui/utils";
+import { EditNewsArticle, type NewsDraft } from "./EditNewsArticle";
 
 const NewsManagePageClient: NextPage = () => {
   const listInput = useMemo(() => ({ includeDeleted: true }), []);
   const { data, error, isLoading, refetch, isFetching } =
     trpc.news.list.useQuery(listInput);
-
-  const {
-    data: localesData,
-    error: localesError,
-    isLoading: localesLoading,
-  } = trpc.locales.list.useQuery();
 
   const utils = trpc.useUtils();
 
@@ -95,28 +27,9 @@ const NewsManagePageClient: NextPage = () => {
   const deleteMutation = trpc.news.delete.useMutation();
   const restoreMutation = trpc.news.restore.useMutation();
 
-  const localeIds = useMemo(() => {
-    const availableLocales =
-      localesData
-        ?.filter((locale) => locale.available)
-        .map((locale) => locale.id) ?? [];
-    const base =
-      availableLocales.length > 0
-        ? availableLocales
-        : Array.from(SUPPORTED_LOCALES);
-    return Array.from(new Set([DEFAULT_LOCALE, ...base]));
-  }, [localesData]);
-
-  const localeLabelMap = useMemo(() => {
-    const map = new Map<string, string>();
-    localesData?.forEach((locale) => {
-      map.set(locale.id, locale.name);
-    });
-    return map;
-  }, [localesData]);
-
   const [newDraft, setNewDraft] = useState<NewsDraft>(() => ensureDraft());
   const [drafts, setDrafts] = useState<Record<string, NewsDraft>>({});
+  const [selectedArticleId, setSelectedArticleId] = useState<string>();
 
   useEffect(() => {
     if (!data) return;
@@ -131,8 +44,14 @@ const NewsManagePageClient: NextPage = () => {
     );
   }, [data]);
 
+  useEffect(() => {
+    if (!data || !selectedArticleId) return;
+    if (!data.some((item) => item.id === selectedArticleId)) {
+      setSelectedArticleId(undefined);
+    }
+  }, [data, selectedArticleId]);
+
   const newsItems = data ?? [];
-  const isInitialLoading = isLoading || localesLoading;
 
   const invalidateList = async () => {
     await utils.news.list.invalidate(listInput).catch((mutationError) => {
@@ -186,9 +105,20 @@ const NewsManagePageClient: NextPage = () => {
   };
 
   const handleSave = async (id: string) => {
-    const draft = drafts[id];
-    if (!draft) return;
-    const ensuredDraft = ensureDraft(draft);
+    const existingItem = newsItems.find((entry) => entry.id === id);
+    if (!drafts[id] && !existingItem) {
+      toast.error("Unable to find news item to update");
+      return;
+    }
+    const ensuredDraft = ensureDraft(
+      drafts[id] ??
+        (existingItem
+          ? {
+              title: { ...existingItem.title },
+              body: { ...existingItem.body },
+            }
+          : undefined)
+    );
     const titlePayload = sanitizeTranslations(ensuredDraft.title);
     const bodyPayload = sanitizeTranslations(ensuredDraft.body);
     if (!titlePayload[DEFAULT_LOCALE] || !bodyPayload[DEFAULT_LOCALE]) {
@@ -245,6 +175,32 @@ const NewsManagePageClient: NextPage = () => {
       });
   };
 
+  const handleSelect = (id: string) => {
+    setSelectedArticleId((previous) => (previous === id ? undefined : id));
+  };
+
+  const selectedItem = selectedArticleId
+    ? (newsItems.find((item) => item.id === selectedArticleId) ?? null)
+    : null;
+
+  const selectedDraft =
+    selectedItem === null
+      ? null
+      : ensureDraft(
+          drafts[selectedItem.id] ?? {
+            title: { ...selectedItem.title },
+            body: { ...selectedItem.body },
+          }
+        );
+
+  const selectedIsUnchanged =
+    selectedItem === null ||
+    selectedDraft === null ||
+    (translationsMatch(selectedDraft.title, selectedItem.title) &&
+      translationsMatch(selectedDraft.body, selectedItem.body));
+
+  const selectedIsArchived = selectedItem?.deletedAt !== null;
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
       <AdminHeader
@@ -254,7 +210,7 @@ const NewsManagePageClient: NextPage = () => {
         isFetching={isFetching}
       />
 
-      <QueryAlert error={error ?? localesError} />
+      <QueryAlert error={error} />
 
       <section className="space-y-4 rounded-lg border p-4">
         <div>
@@ -264,71 +220,15 @@ const NewsManagePageClient: NextPage = () => {
           </p>
         </div>
         <form onSubmit={handleCreate} className="space-y-4">
-          <div className="grid gap-4">
-            <Tabs defaultValue="en">
-              <TabsList>
-                {localeIds.toSorted().map((localeId) => (
-                  <TabsTrigger key={localeId} value={localeId}>
-                    {localeId}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {localeIds.map((localeId) => {
-                const localeLabel = localeLabelMap.get(localeId) ?? localeId;
-                const isDefaultLocale = localeId === DEFAULT_LOCALE;
-                const titleId = `new-title-${localeId}`;
-                const bodyId = `new-body-${localeId}`;
-                return (
-                  <TabsContent
-                    key={`create-${localeId}`}
-                    value={localeId}
-                    className="space-y-2"
-                  >
-                    <label htmlFor={titleId} className="text-sm font-medium">
-                      Title ({localeLabel} · {localeId})
-                      {isDefaultLocale ? " *" : ""}
-                    </label>
-                    <Input
-                      id={titleId}
-                      placeholder={`Short headline (${localeId})`}
-                      value={newDraft.title[localeId] ?? ""}
-                      onChange={(event) =>
-                        setNewDraft((previous) =>
-                          updateDraftField(
-                            previous,
-                            "title",
-                            localeId,
-                            event.target.value
-                          )
-                        )
-                      }
-                      maxLength={200}
-                    />
-                    <label htmlFor={bodyId} className="text-sm font-medium">
-                      Body ({localeLabel} · {localeId})
-                      {isDefaultLocale ? " *" : ""}
-                    </label>
-                    <textarea
-                      id={bodyId}
-                      value={newDraft.body[localeId] ?? ""}
-                      onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-                        setNewDraft((previous) =>
-                          updateDraftField(
-                            previous,
-                            "body",
-                            localeId,
-                            event.target.value
-                          )
-                        )
-                      }
-                      placeholder={`Describe the update (${localeId})...`}
-                      className="min-h-[150px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-                    />
-                  </TabsContent>
-                );
-              })}
-            </Tabs>
-          </div>
+          <EditNewsArticle
+            draft={newDraft}
+            id="new"
+            onDraftChange={(field, localeId, value) =>
+              setNewDraft((previous) =>
+                updateDraftField(previous, field, localeId, value)
+              )
+            }
+          />
           <div className="flex justify-end">
             <Button
               type="submit"
@@ -345,7 +245,7 @@ const NewsManagePageClient: NextPage = () => {
         </form>
       </section>
 
-      {isInitialLoading ? (
+      {isLoading ? (
         <Skeleton className="h-48 w-full" />
       ) : newsItems.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
@@ -353,126 +253,119 @@ const NewsManagePageClient: NextPage = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {newsItems.map((item) => {
-            const storedDraft = drafts[item.id];
-            const draft =
-              storedDraft ??
-              ensureDraft({
-                title: { ...item.title },
-                body: { ...item.body },
-              });
-            const isArchived = item.deletedAt !== null;
-            const isUnchanged =
-              translationsMatch(draft.title, item.title) &&
-              translationsMatch(draft.body, item.body);
-            return (
-              <article
-                key={item.id}
-                className="space-y-4 rounded-lg border p-4 shadow-xs"
-              >
-                <header className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">
-                      Created {formatDate(item.createdAt)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      Updated {formatDate(item.updatedAt)}
-                    </span>
-                  </div>
-                  {isArchived && (
-                    <span className="rounded-full bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
-                      Archived
-                    </span>
-                  )}
-                </header>
-                <div className="grid gap-4">
-                  {localeIds.map((localeId) => {
-                    const localeLabel =
-                      localeLabelMap.get(localeId) ?? localeId;
-                    const isDefaultLocale = localeId === DEFAULT_LOCALE;
-                    const titleId = `${item.id}-title-${localeId}`;
-                    const bodyId = `${item.id}-body-${localeId}`;
-                    return (
-                      <div key={`${item.id}-${localeId}`} className="space-y-2">
-                        <label
-                          htmlFor={titleId}
-                          className="text-sm font-medium"
-                        >
-                          Title ({localeLabel} · {localeId})
-                          {isDefaultLocale ? " *" : ""}
-                        </label>
-                        <Input
-                          id={titleId}
-                          value={draft.title[localeId] ?? ""}
-                          onChange={(event) =>
-                            handleDraftChange(
-                              item.id,
-                              "title",
-                              localeId,
-                              event.target.value
-                            )
-                          }
-                          placeholder={`Title (${localeId})`}
-                          maxLength={200}
-                        />
-                        <label htmlFor={bodyId} className="text-sm font-medium">
-                          Body ({localeLabel} · {localeId})
-                          {isDefaultLocale ? " *" : ""}
-                        </label>
-                        <textarea
-                          id={bodyId}
-                          value={draft.body[localeId] ?? ""}
-                          onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-                            handleDraftChange(
-                              item.id,
-                              "body",
-                              localeId,
-                              event.target.value
-                            )
-                          }
-                          className="min-h-[140px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-                          placeholder={`Body (${localeId})`}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-                <footer className="flex flex-wrap items-center gap-2">
-                  <Button
-                    onClick={() => handleSave(item.id)}
-                    loading={updateMutation.isPending}
-                    disabled={
-                      updateMutation.isPending ||
-                      isUnchanged ||
-                      !draft.title[DEFAULT_LOCALE]?.trim() ||
-                      !draft.body[DEFAULT_LOCALE]?.trim()
-                    }
+          <section className="space-y-3 rounded-lg border p-4">
+            <div>
+              <h2 className="text-lg font-semibold">Existing news</h2>
+              <p className="text-sm text-muted-foreground">
+                Select an article to review or update translations.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              {newsItems.map((item) => {
+                const defaultTitle =
+                  item.title[DEFAULT_LOCALE]?.trim() || "(untitled)";
+                const defaultBody = item.body[DEFAULT_LOCALE]?.trim() ?? "";
+                const preview =
+                  defaultBody.length > 0
+                    ? `${defaultBody.slice(0, 120)}${
+                        defaultBody.length > 120 ? "..." : ""
+                      }`
+                    : "No body content in default locale.";
+                const isSelected = selectedArticleId === item.id;
+                const isArchived = item.deletedAt !== null;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleSelect(item.id)}
+                    className={cn(
+                      "cursor-pointer rounded-lg border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      isSelected ? "border-ring bg-muted" : "hover:bg-muted"
+                    )}
                   >
-                    Save changes
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{defaultTitle}</span>
+                      {isArchived && (
+                        <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                          Archived
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {preview}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {selectedItem && selectedDraft && (
+            <article className="space-y-4 rounded-lg border p-4 shadow-xs">
+              <header className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">
+                    Created {formatDate(selectedItem.createdAt)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Updated {formatDate(selectedItem.updatedAt)}
+                  </span>
+                </div>
+                {selectedIsArchived && (
+                  <span className="rounded-full bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive">
+                    Archived
+                  </span>
+                )}
+              </header>
+              <EditNewsArticle
+                draft={selectedDraft}
+                id={`edit-${selectedItem.id}`}
+                onDraftChange={(field, localeId, value) =>
+                  handleDraftChange(selectedItem.id, field, localeId, value)
+                }
+              />
+              <footer className="flex flex-wrap items-center gap-2">
+                <Button
+                  onClick={() => handleSave(selectedItem.id)}
+                  loading={updateMutation.isPending}
+                  disabled={
+                    updateMutation.isPending ||
+                    selectedIsUnchanged ||
+                    !selectedDraft.title[DEFAULT_LOCALE]?.trim() ||
+                    !selectedDraft.body[DEFAULT_LOCALE]?.trim()
+                  }
+                >
+                  Save changes
+                </Button>
+                {selectedIsArchived ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleRestore(selectedItem.id)}
+                    loading={restoreMutation.isPending}
+                  >
+                    Restore
                   </Button>
-                  {isArchived ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleRestore(item.id)}
-                      loading={restoreMutation.isPending}
-                    >
-                      Restore
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={() => handleDelete(item.id)}
-                      loading={deleteMutation.isPending}
-                    >
-                      Archive
-                    </Button>
-                  )}
-                </footer>
-              </article>
-            );
-          })}
+                ) : (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => handleDelete(selectedItem.id)}
+                    loading={deleteMutation.isPending}
+                  >
+                    Archive
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSelectedArticleId(undefined)}
+                >
+                  Close
+                </Button>
+              </footer>
+            </article>
+          )}
         </div>
       )}
     </div>
@@ -480,3 +373,55 @@ const NewsManagePageClient: NextPage = () => {
 };
 
 export default NewsManagePageClient;
+
+const ensureDraft = (draft?: Partial<NewsDraft>): NewsDraft => ({
+  title: { [DEFAULT_LOCALE]: "", ...(draft?.title ?? {}) },
+  body: { [DEFAULT_LOCALE]: "", ...(draft?.body ?? {}) },
+});
+
+const sanitizeTranslations = (translations: Record<string, string>) => {
+  const result: Record<string, string> = {};
+  Object.entries(translations).forEach(([locale, value]) => {
+    const trimmedValue = value.trim();
+    if (!trimmedValue) {
+      return;
+    }
+    result[locale] = trimmedValue;
+  });
+  return result;
+};
+
+const normalizeForCompare = (translations: Record<string, string>) =>
+  Object.entries(translations)
+    .filter(([, value]) => value.trim().length > 0)
+    .map(([locale, value]) => [locale, value.trim()] as const)
+    .sort(([localeA], [localeB]) => localeA.localeCompare(localeB));
+
+const translationsMatch = (
+  first: Record<string, string>,
+  second: Record<string, string>
+) => {
+  const normalizedFirst = normalizeForCompare(first);
+  const normalizedSecond = normalizeForCompare(second);
+  if (normalizedFirst.length !== normalizedSecond.length) {
+    return false;
+  }
+  return normalizedFirst.every(([locale, value], index) => {
+    if (!normalizedSecond[index]) throw new Error("Assert: Mismatched length");
+    const [otherLocale, otherValue] = normalizedSecond[index];
+    return locale === otherLocale && value === otherValue;
+  });
+};
+
+const updateDraftField = (
+  draft: NewsDraft,
+  field: keyof NewsDraft,
+  locale: string,
+  value: string
+): NewsDraft => ({
+  ...draft,
+  [field]: {
+    ...draft[field],
+    [locale]: value,
+  },
+});

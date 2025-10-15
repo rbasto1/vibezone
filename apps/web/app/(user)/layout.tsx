@@ -3,8 +3,8 @@ import "server-only";
 import { currentUser } from "@clerk/nextjs/server";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { generateId } from "ai";
-import { and, desc, eq, gt, inArray, isNull } from "drizzle-orm";
-import { getTranslations } from "next-intl/server";
+import { and, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense, type PropsWithChildren } from "react";
 
 import { WhatsNewModal } from "@/components/news/whats-new-modal";
@@ -28,6 +28,7 @@ import { PageLoader } from "./page-loader";
 
 export default async function RootLayout({ children }: PropsWithChildren) {
   const tPromise = getTranslations("Prompts");
+  const localePromise = getLocale();
 
   const authUser = await currentUser();
   const userId = authUser?.id;
@@ -61,8 +62,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     }
   }
 
-  const preferences = await preferencesPromise;
-  const recentNewsPromise = getRecentNews(preferences?.lastNewsSeenAt);
+  const [preferences, locale] = await Promise.all([
+    preferencesPromise,
+    localePromise,
+  ]);
+  const recentNewsPromise = getRecentNews(preferences?.lastNewsSeenAt, locale);
   const t = await tPromise;
 
   const changedPrompt = !!preferences?.preferenceSystemPromptChangedAt;
@@ -216,20 +220,28 @@ async function ensurePreferences(userId: string | null | undefined) {
   return row;
 }
 
-async function getRecentNews(lastSeenAt: Date | null | undefined) {
+async function getRecentNews(
+  lastSeenAt: Date | null | undefined,
+  locale: string
+) {
   const oldest = new Date(Date.now() - NEWS_WINDOW_MS);
   const cutoff = !lastSeenAt || lastSeenAt < oldest ? oldest : lastSeenAt;
 
   const rows = await db
     .select({
       id: newsArticles.id,
-      title: newsArticles.title,
-      body: newsArticles.body,
+      titleText: sql<string>`title->>${locale}`,
+      bodyText: sql<string>`body->>${locale}`,
       createdAt: newsArticles.createdAt,
     })
     .from(newsArticles)
     .where(
-      and(isNull(newsArticles.deletedAt), gt(newsArticles.createdAt, cutoff))
+      and(
+        isNull(newsArticles.deletedAt),
+        gt(newsArticles.createdAt, cutoff),
+        sql<boolean>`title->>${locale} IS NOT NULL`,
+        sql<boolean>`body->>${locale} IS NOT NULL`
+      )
     )
     .orderBy(desc(newsArticles.createdAt))
     .catch((error) => {
