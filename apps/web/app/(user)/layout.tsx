@@ -3,17 +3,18 @@ import "server-only";
 import { currentUser } from "@clerk/nextjs/server";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { generateId } from "ai";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNull } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 import { Suspense, type PropsWithChildren } from "react";
 
+import { WhatsNewModal } from "@/components/news/whats-new-modal";
 import { StoreProvider } from "@/components/providers/store-provider";
 import { Toaster } from "@/components/providers/toast-provider";
 import { db } from "@/db";
 import type { Model } from "@/db/schema";
-import { models, preferences as preferencesTable } from "@/db/schema";
+import { models, news, preferences as preferencesTable } from "@/db/schema";
 import { models as modelsList } from "@/generated/models";
-import { MAX_PANELS } from "@/lib/constants";
+import { MAX_PANELS, NEWS_WINDOW_MS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
 import type { PanelConfig } from "@/store/panels";
@@ -22,18 +23,18 @@ import type { ThreadMessageLike } from "@assistant-ui/react";
 import { PageLoader } from "./page-loader";
 
 export default async function RootLayout({ children }: PropsWithChildren) {
+  const tPromise = getTranslations("Prompts");
+
   const authUser = await currentUser();
   const userId = authUser?.id;
-  const preferences = await ensurePreferences(userId);
+  const preferencesPromise = ensurePreferences(userId);
 
-  const t = await getTranslations("Prompts");
-
-  const caller = await getServerCaller();
-
-  const state = await prefetch(caller, [
-    caller.chats.listChats.prefetch({}),
-    caller.users.favorites.prefetch(),
-  ]);
+  const statePromise = getServerCaller().then((caller) =>
+    prefetch(caller, [
+      caller.chats.listChats.prefetch({}),
+      caller.users.favorites.prefetch(),
+    ])
+  );
 
   let lastModels: string[] = [];
   const hiddenProviders = new Set<string>();
@@ -55,6 +56,10 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       hiddenProviders.add(providerId);
     }
   }
+
+  const preferences = await preferencesPromise;
+  const recentNewsPromise = getRecentNews(preferences?.lastNewsSeenAt);
+  const t = await tPromise;
 
   const changedPrompt = !!preferences?.preferenceSystemPromptChangedAt;
   const preferencesInitialValue: PreferencesAtom = preferences
@@ -89,7 +94,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     lastModels,
     hiddenProviders
   );
-  const fallbackModels = await getDefaultModels();
+  const fallbackModels = getDefaultModels();
+
   const modelListForPanels = userModelList ?? fallbackModels;
 
   const initialPanels = modelListForPanels.map(
@@ -102,6 +108,12 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       ),
     })
   );
+
+  const [state, recentNews] = await Promise.all([
+    statePromise,
+    recentNewsPromise,
+  ]);
+
   return (
     <Suspense fallback={<PageLoader />}>
       <HydrationBoundary state={state}>
@@ -111,6 +123,10 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           preferencesInitialValue={preferencesInitialValue}
         >
           {children}
+          <WhatsNewModal
+            items={recentNews}
+            lastNewsSeenAt={preferences?.lastNewsSeenAt ?? null}
+          />
         </StoreProvider>
         <Toaster />
       </HydrationBoundary>
@@ -150,7 +166,7 @@ async function getUserPreferredModels(
 }
 
 let defaultModelsCache: Pick<Model, "id" | "providerId">[] | null = null;
-async function getDefaultModels() {
+function getDefaultModels() {
   defaultModelsCache ??= modelsList.models
     .filter((m) => !!m.priority)
     .toSorted((a, b) => (a.priority ?? 0) - (b.priority ?? 0))
@@ -194,4 +210,26 @@ async function ensurePreferences(userId: string | null | undefined) {
   }
 
   return row;
+}
+
+async function getRecentNews(lastSeenAt: Date | null | undefined) {
+  const oldest = new Date(Date.now() - NEWS_WINDOW_MS);
+  const cutoff = !lastSeenAt || lastSeenAt < oldest ? oldest : lastSeenAt;
+
+  const rows = await db
+    .select({
+      id: news.id,
+      title: news.title,
+      body: news.body,
+      createdAt: news.createdAt,
+    })
+    .from(news)
+    .where(and(isNull(news.deletedAt), gt(news.createdAt, cutoff)))
+    .orderBy(desc(news.createdAt))
+    .catch((error) => {
+      console.error("Failed to load recent news:", error);
+      throw error instanceof Error ? error : new Error(String(error));
+    });
+
+  return rows;
 }

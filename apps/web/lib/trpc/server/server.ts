@@ -6,6 +6,7 @@ import { localesRouter } from "../locales";
 import { messagesRouter } from "../messages";
 import { modelsRouter } from "../models";
 import { providersRouter } from "../providers";
+import { newsRouter } from "../news";
 import { suggestionGroupsRouter } from "../suggestion-groups";
 import { usersRouter } from "../users";
 import { t } from "./initialize";
@@ -18,6 +19,7 @@ export const appRouter = t.router({
   suggestionGroups: suggestionGroupsRouter,
   users: usersRouter,
   locales: localesRouter,
+  news: newsRouter,
 });
 
 export type AppRouter = typeof appRouter;
@@ -42,3 +44,4 @@ export type UsersManageListOutput = RouterOutputs["users"]["manageList"];
 export type ModelTranslationDetailsOutput = RouterOutputs["models"]["details"];
 export type AdminDescriptionsOutput =
   RouterOutputs["models"]["adminDescriptions"];
+export type NewsAdminListOutput = RouterOutputs["news"]["list"];

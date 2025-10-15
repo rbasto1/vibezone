@@ -1,0 +1,100 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import type { News } from "@/db";
+import { useAuthContext } from "@/lib/auth-context";
+import { formatDate } from "@/lib/format";
+import { trpc } from "@/lib/trpc/client";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+
+const LOCAL_STORAGE_KEY = "whats-new:last-dismissed-at";
+
+interface WhatsNewModalProps {
+  items: Pick<News, "id" | "title" | "body" | "createdAt">[];
+  lastNewsSeenAt: Date | null;
+}
+
+export const WhatsNewModal = ({
+  items,
+  lastNewsSeenAt,
+}: WhatsNewModalProps) => {
+  const authUser = useAuthContext();
+  const [dismissed, setDismissed] = useState(false);
+  const markNewsSeenMutation = trpc.news.markNewsSeen.useMutation();
+
+  const unseenItems = useMemo(() => {
+    const resolvedLastSeen = getLastSeen(lastNewsSeenAt);
+    if (!resolvedLastSeen) return items;
+    return items.filter((item) => item.createdAt > resolvedLastSeen);
+  }, [items, lastNewsSeenAt]);
+
+  if (dismissed || !unseenItems.length) {
+    return null;
+  }
+
+  const handleDismiss = () => {
+    const lastNewsSeenAt = items[0]?.createdAt ?? new Date();
+    setDismissed(true);
+    localStorage.setItem(LOCAL_STORAGE_KEY, lastNewsSeenAt.toISOString());
+    if (authUser) {
+      void markNewsSeenMutation.mutateAsync(
+        { lastNewsSeenAt },
+        {
+          onError: (error) => {
+            console.error("Failed to mark news as seen:", error);
+            toast.error(
+              error instanceof Error
+                ? error.message
+                : "Failed to update news status"
+            );
+          },
+        }
+      );
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={handleDismiss}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>🥳 What&apos;s New</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
+          {unseenItems.map((item) => (
+            <article key={item.id} className="space-y-2 rounded-md border p-3">
+              <header className="flex flex-col">
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(item.createdAt)}
+                </span>
+                <h3 className="text-base font-medium">{item.title}</h3>
+              </header>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                {item.body}
+              </p>
+            </article>
+          ))}
+        </div>
+        <DialogFooter className="sm:justify-start">
+          <Button onClick={handleDismiss}>Dismiss</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+function getLastSeen(lastNewsSeenAt: Date | null) {
+  if (lastNewsSeenAt) return lastNewsSeenAt;
+  if (typeof localStorage === "undefined") return null;
+  const savedValue = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (!savedValue) return null;
+  const parsed = new Date(savedValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}

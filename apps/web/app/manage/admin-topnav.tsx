@@ -25,6 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/manage/providers", label: "Providers" },
   { href: "/manage/groups", label: "Groups" },
   { href: "/manage/locales", label: "Locales" },
+  { href: "/manage/news", label: "News" },
 ];
 
 export const AdminTopNav: FC<AdminTopNavProps> = ({

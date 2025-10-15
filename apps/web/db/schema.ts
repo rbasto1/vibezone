@@ -23,6 +23,7 @@ import {
   models,
   modelSupportedParameters,
   modelTranslations,
+  newsArticle,
   preferences,
   providers,
   suggestionGroups,
@@ -47,6 +48,7 @@ export {
   modelSupportedParametersRelations,
   modelTranslations,
   modelTranslationsRelations,
+  newsArticle as news,
   preferences,
   providers,
   providersRelations,
@@ -87,6 +89,8 @@ export type SupportedParameter = typeof supportedParameters.$inferSelect;
 export type NewSupportedParameter = typeof supportedParameters.$inferInsert;
 export type Thread = typeof threads.$inferSelect;
 export type NewThread = typeof threads.$inferInsert;
+export type News = typeof newsArticle.$inferSelect;
+export type NewNews = typeof newsArticle.$inferInsert;
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
 export type Chat = typeof chats.$inferSelect;
