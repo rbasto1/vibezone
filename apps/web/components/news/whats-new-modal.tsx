@@ -12,8 +12,8 @@ import type { NewsArticle } from "@/db";
 import { useAuthContext } from "@/lib/auth-context";
 import { formatDate } from "@/lib/format";
 import { trpc } from "@/lib/trpc/client";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
 
 const LOCAL_STORAGE_KEY = "whats-new:last-dismissed-at";
 
@@ -34,6 +34,7 @@ export const WhatsNewModal = ({
   const authUser = useAuthContext();
   const [dismissed, setDismissed] = useState(false);
   const markNewsSeenMutation = trpc.news.markNewsSeen.useMutation();
+  const t = useTranslations("WhatsNew");
 
   const unseenItems = useMemo(() => {
     const resolvedLastSeen = getLastSeen(lastNewsSeenAt);
@@ -55,11 +56,6 @@ export const WhatsNewModal = ({
         {
           onError: (error) => {
             console.error("Failed to mark news as seen:", error);
-            toast.error(
-              error instanceof Error
-                ? error.message
-                : "Failed to update news status"
-            );
           },
         }
       );
@@ -70,7 +66,7 @@ export const WhatsNewModal = ({
     <Dialog open onOpenChange={handleDismiss}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>🥳 What&apos;s New</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
         <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
           {unseenItems.map((item) => (
@@ -88,7 +84,9 @@ export const WhatsNewModal = ({
           ))}
         </div>
         <DialogFooter className="sm:justify-start">
-          <Button onClick={handleDismiss}>Dismiss</Button>
+          <Button onClick={handleDismiss} variant="outline">
+            {t("dismiss")}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -316,5 +316,9 @@
     "removeAttachment": "Anhang entfernen",
     "instructions": "Um deine Nachricht zu senden, entferne entweder die inkompatiblen Anhänge oder ersetze die Modelle, die sie nicht unterstützen.",
     "understood": "Verstanden"
+  },
+  "WhatsNew": {
+    "title": "🥳 Neuigkeiten",
+    "dismiss": "Schließen"
   }
 }

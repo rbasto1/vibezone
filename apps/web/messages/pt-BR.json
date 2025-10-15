@@ -316,5 +316,9 @@
     "removeAttachment": "Remover anexo",
     "instructions": "Para enviar sua mensagem, remova os anexos incompatíveis ou substitua os modelos que não os suportam.",
     "understood": "Entendi"
+  },
+  "WhatsNew": {
+    "title": "🥳 Novidades",
+    "dismiss": "Ok"
   }
 }
