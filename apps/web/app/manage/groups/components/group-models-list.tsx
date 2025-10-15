@@ -15,8 +15,8 @@ import type {
   SuggestionGroupsListOutput,
 } from "@/lib/trpc/server/server";
 import { Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 import type { DragEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { GroupModelsListItem } from "./group-models-list-item";
 
@@ -94,7 +94,7 @@ export function GroupModelsList({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      handlePasteModelId();
+      void handlePasteModelId();
     }
   };
 
@@ -178,7 +178,10 @@ export function GroupModelsList({
     }
   };
 
-  const handleDragStart = (event: DragEvent<HTMLDivElement>, modelId: string) => {
+  const handleDragStart = (
+    event: DragEvent<HTMLDivElement>,
+    modelId: string
+  ) => {
     if (isEditing || reorderModelsMutation.isPending) return;
     event.stopPropagation();
     event.dataTransfer.effectAllowed = "move";

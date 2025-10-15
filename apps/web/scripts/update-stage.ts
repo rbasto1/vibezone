@@ -34,7 +34,8 @@ async function main() {
     process.exit(1);
   }
 
-  const news = process.argv[3] === "--news";
+  const opts = process.argv[3];
+  const { news } = getOpts(opts);
 
   const sourceDb = db;
   const targetDb = drizzle(targetConnStr, { schema });
@@ -295,4 +296,16 @@ async function copyNews(sourceDb: Client, targetDb: Client) {
   console.info(`✅ News articles copied successfully: ${count} rows`);
 }
 
-main();
+function getOpts(opts = "") {
+  switch (opts) {
+    case "--news":
+      return { news: true };
+    case "":
+      return { news: false };
+    default:
+      console.error(`Unknown option: ${opts}`);
+      process.exit(1);
+  }
+}
+
+void main();

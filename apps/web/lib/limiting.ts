@@ -6,7 +6,7 @@ export function generateFingerprint(sessionToken: string | undefined) {
 
   return (fingerprintPromise ??= new Promise((resolve) => {
     let devicesLength = 0;
-    navigator.mediaDevices
+    void navigator.mediaDevices
       .enumerateDevices()
       .then((devices) => {
         devicesLength = devices.length;
@@ -26,7 +26,9 @@ export function generateFingerprint(sessionToken: string | undefined) {
           getWebGLFingerprint(),
           getCanvasFingerprint(),
         ];
-        createHash(data).then((fingerprint) => resolve(`Anon ${fingerprint}`));
+        void createHash(data).then((fingerprint) =>
+          resolve(`Anon ${fingerprint}`)
+        );
       });
   }));
 }

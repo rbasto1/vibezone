@@ -28,9 +28,7 @@ export function GroupEditor({
   const deleteGroupMutation = trpc.suggestionGroups.delete.useMutation();
   const updateTranslationMutation =
     trpc.suggestionGroups.updateTranslation.useMutation({
-      onSuccess: () => {
-        utils.suggestionGroups.listTranslations.invalidate();
-      },
+      onSuccess: () => utils.suggestionGroups.listTranslations.invalidate(),
     });
   const translateMutation = trpc.locales.translate.useMutation();
 

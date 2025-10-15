@@ -191,7 +191,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
       }
 
       // our backend will generate the title based on the conversation history
-      renameChatMutation
+      void renameChatMutation
         .mutateAsync({
           chatId: currentChat.id,
           title: null,

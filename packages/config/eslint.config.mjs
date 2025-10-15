@@ -80,6 +80,10 @@ export default [
       "require-await": "off",
       "@typescript-eslint/triple-slash-reference": "warn",
 
+      // Promises
+      "@typescript-eslint/no-floating-promises": "warn",
+      "@typescript-eslint/await-thenable": "off",
+
       // Console
       "no-console": ["warn", { allow: ["warn", "error", "info", "debug"] }],
 

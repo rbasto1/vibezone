@@ -133,7 +133,7 @@ const ThreadListItems: FC = () => {
           })),
         };
       });
-      utils.chats.listChats.invalidate();
+      return utils.chats.listChats.invalidate();
     },
   });
 
@@ -154,7 +154,7 @@ const ThreadListItems: FC = () => {
           })),
         };
       });
-      utils.chats.listChats.invalidate();
+      return utils.chats.listChats.invalidate();
     },
   });
 

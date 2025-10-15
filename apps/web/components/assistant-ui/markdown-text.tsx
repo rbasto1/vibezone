@@ -36,7 +36,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
   const { isCopied, copyToClipboard } = useCopyToClipboard();
   const onCopy = () => {
     if (!code || isCopied) return;
-    copyToClipboard(code);
+    return copyToClipboard(code);
   };
 
   return (
@@ -60,7 +60,7 @@ const useCopyToClipboard = ({
   const copyToClipboard = (value: string) => {
     if (!value) return;
 
-    navigator.clipboard.writeText(value).then(() => {
+    return navigator.clipboard.writeText(value).then(() => {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), copiedDuration);
     });

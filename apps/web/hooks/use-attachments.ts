@@ -24,7 +24,7 @@ export const useAppendAttachments = () => {
           ...prev,
           attachments: prev.attachments.concat(attachment),
         }));
-        adapter.send(attachment).then((attachment) => {
+        void adapter.send(attachment).then((attachment) => {
           set((prev) => ({
             ...prev,
             attachments: prev.attachments.map((a) =>
@@ -86,7 +86,7 @@ export const useRemoveAttachment = () => {
   const set = useSetAtom(attachmentsAtom);
   return useCallback(
     (attachment: Attachment) => {
-      adapter.remove(attachment);
+      void adapter.remove(attachment);
       set((prev) => ({
         ...prev,
         attachments: prev.attachments.filter((a) => a.id !== attachment.id),

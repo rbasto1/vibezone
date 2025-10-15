@@ -310,7 +310,7 @@ const ModelsPageClient: NextPage = () => {
                   if (m.hiddenAt) {
                     const previousHiddenAt = m.hiddenAt;
                     setCacheFields({ hiddenAt: null });
-                    updateMutation.mutateAsync(
+                    void updateMutation.mutateAsync(
                       { id: m.id, hiddenAt: null },
                       {
                         onError: (error) => {
@@ -325,7 +325,7 @@ const ModelsPageClient: NextPage = () => {
                     );
                     return;
                   }
-                  hideMutation.mutateAsync(
+                  void hideMutation.mutateAsync(
                     { id: m.id },
                     {
                       onError: (error) => {

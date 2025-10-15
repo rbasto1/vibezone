@@ -49,7 +49,7 @@ export const GlobalComposerTextarea = forwardRef<
       !event.metaKey
     ) {
       event.preventDefault();
-      handleSubmit();
+      void handleSubmit();
     }
   };
 

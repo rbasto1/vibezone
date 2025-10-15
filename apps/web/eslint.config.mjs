@@ -11,6 +11,9 @@ export default [
       "react-refresh": reactRefresh,
     },
     languageOptions: {
+      parserOptions: {
+        project: "./tsconfig.json",
+      },
       globals: {
         // React
         React: "readonly",

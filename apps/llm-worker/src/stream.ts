@@ -23,7 +23,7 @@ export async function handleProviderStream(
     : adapterModelId;
 
   const remainingQuota = vzContext.usageContext?.remainingQuota;
-  const refund = () => {
+  const refund = async () => {
     const { userKey, userId } = vzContext.usageContext ?? {};
     if (
       remainingQuota === null ||
@@ -39,7 +39,7 @@ export async function handleProviderStream(
       userKey,
     });
     const stub = getUsageDO(env, userKey);
-    stub.fetch("https://internal/credit", { method: "POST" });
+    return stub.fetch("https://internal/credit", { method: "POST" });
   };
 
   console.info({
@@ -57,7 +57,7 @@ export async function handleProviderStream(
         message: "streamText onError:",
         error,
       });
-      refund();
+      waitUntil(refund());
     },
     abortSignal: vzContext.signal,
   });
@@ -80,7 +80,7 @@ export async function handleProviderStream(
         message: "toUIMessageStreamResponse onError:",
         error,
       });
-      refund();
+      waitUntil(refund());
       if (error instanceof Error) {
         return error.message;
       }

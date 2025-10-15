@@ -186,8 +186,6 @@ async function main() {
   }
 }
 
-main();
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cleanup(obj: any) {
   Object.keys(obj).forEach((key) => {
@@ -198,3 +196,5 @@ function cleanup(obj: any) {
   delete obj.createdAt;
   delete obj.updatedAt;
 }
+
+void main();
