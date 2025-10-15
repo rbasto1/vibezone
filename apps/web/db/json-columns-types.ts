@@ -11,7 +11,7 @@ export interface ModelPricing {
 
 export interface ModelTopProvider {
   is_moderated: boolean;
-  context_length: number | null;
+  context_length: number;
   max_completion_tokens: number | null;
 }
 

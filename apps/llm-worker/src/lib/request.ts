@@ -1,3 +1,4 @@
+import { models } from "../generated/models";
 import { summarize } from "./log";
 import type { ChatMessage } from "./schemas";
 import { ChatRequestSchema } from "./schemas";
@@ -56,6 +57,7 @@ export function getConfigFromRequest(
     ? plugins.split(",").filter((plugin) => !!plugin)
     : [];
 
+  const modelMaxTokens = models[modelId]?.maxTokens ?? 32000;
   return {
     type: "success",
     config: {
@@ -63,7 +65,7 @@ export function getConfigFromRequest(
       providerId,
       adapterModelId: getAdapterModelId(modelId),
       plugins: getValidPlugins(providerId, pluginList),
-      maxTokens: bodyParse.data.maxTokens ?? getProviderMaxTokens(providerId),
+      maxTokens: Math.min(bodyParse.data.maxTokens ?? Infinity, modelMaxTokens),
     },
     messages: bodyParse.data.messages,
   };
@@ -77,15 +79,6 @@ function getAdapterModelId(modelId: string) {
       return modelId.split("/")[1]!;
     default:
       return modelId;
-  }
-}
-
-function getProviderMaxTokens(providerId: string) {
-  switch (providerId) {
-    case "maritacaai":
-      return 12000;
-    default:
-      return 32000;
   }
 }
 

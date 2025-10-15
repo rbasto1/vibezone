@@ -300,11 +300,8 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
     };
   }, [runtime, id, setRuntimeController]);
 
-  // We will update the runtime using the global variable above
-  // // eslint-disable-next-line react-hooks/exhaustive-deps
-  // const runtime = useMemo(() => _runtime, []);
-
-  // Commented out for us to check later if it gets to work
+  // This model context provider seem to apply only to tool calls.
+  // Commented out for us to check later if it gets to work for other calls as well.
   // useEffect(() => {
   //   // This is not working as of assitant-ui/react@0.11.28
   //   return runtime.registerModelContextProvider({

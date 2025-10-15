@@ -10,7 +10,7 @@ export async function handleProviderStream(
   headers: Headers
 ): Promise<Response> {
   const { env, completionRequest } = vzContext;
-  const { modelId, providerId, adapterModelId, maxTokens, plugins } =
+  const { modelId, providerId, adapterModelId, plugins } =
     completionRequest.config;
   const messages = completionRequest.messages;
 
@@ -52,7 +52,11 @@ export async function handleProviderStream(
   const result = streamText({
     model: adapter(modelSpecifier),
     messages: convertToModelMessages(messages),
-    maxOutputTokens: maxTokens ?? 4000,
+    // We use maxTokens for calculating reasoning, but we will let the model decide the max output tokens
+    // since knowing the maxTokens is not simple. The prompt is included in the budget, so we would have
+    // to calculate how many tokens are in the input and subtract from the model's limit to figure out
+    // what the max output tokens could be.
+    maxOutputTokens: undefined,
     onError: (error) => {
       console.error({
         message: "streamText onError:",
