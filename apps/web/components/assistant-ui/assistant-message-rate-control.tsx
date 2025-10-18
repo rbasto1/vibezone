@@ -9,8 +9,10 @@ import { cn } from "@/components/ui/utils";
 import type {
   MessageMetadataCustom,
   MessageRate,
+  MessageRatingAttachment,
 } from "@/db/json-columns-types";
-import { useThreadMessagesSetter } from "@/hooks/use-thread-store";
+import { useThreadMessages } from "@/hooks/use-thread-store";
+import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import {
   useMessage,
@@ -52,26 +54,31 @@ export const AssistantMessageRateControl: FC<
   const t = useTranslations("AssistantMessageRate");
   const message = useMessage();
   const thread = useThreadListItem();
-  const setThreadMessages = useThreadMessagesSetter(thread.id);
+  const [threadMessages, setThreadMessages] = useThreadMessages(thread.id);
   const rateMutation = trpc.messages.rateMessage.useMutation();
+  const rateAnonymousMutation =
+    trpc.messages.rateMessageAnonymous.useMutation();
+  const user = useUser();
+  const [anonymousRatingId, setAnonymousRatingId] = useState<string>();
 
-  const messageId = message?.id ?? null;
+  const messageId = message.id;
 
-  const metadataRate = useMemo<MessageRate | null>(() => {
-    const rateValue = (message?.metadata as MetadataWithCustom | undefined)
+  const metadataRate = useMemo(() => {
+    const rateValue = (message.metadata as MetadataWithCustom | undefined)
       ?.custom?.rate;
-    return (rateValue as MessageRate | undefined) ?? null;
-  }, [message?.metadata]);
+    return rateValue ?? null;
+  }, [message.metadata]);
 
-  const [optimisticRate, setOptimisticRate] = useState<MessageRate | null>(
-    metadataRate
-  );
+  const [optimisticRate, setOptimisticRate] = useState(metadataRate);
 
   useEffect(() => {
     setOptimisticRate(metadataRate);
+    if (metadataRate == null) {
+      setAnonymousRatingId(undefined);
+    }
   }, [metadataRate, messageId]);
 
-  if (!thread.id || !messageId || message?.role !== "assistant") return null;
+  if (message.role !== "assistant") return null;
 
   const handleSelect = (
     event: MouseEvent<HTMLButtonElement>,
@@ -85,15 +92,74 @@ export const AssistantMessageRateControl: FC<
     setOptimisticRate(nextRate);
     setThreadMessages((prev) => applyRateToMessages(prev, messageId, nextRate));
 
-    rateMutation.mutate(
-      { messageId, rate: nextRate },
+    const handleError = (error: unknown) => {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to rate message: ${errorMessage}`);
+      setOptimisticRate(previousRate);
+      setThreadMessages((prev) =>
+        applyRateToMessages(prev, messageId, previousRate)
+      );
+    };
+
+    if (user) {
+      rateMutation.mutate(
+        {
+          messageId,
+          rate: nextRate,
+        },
+        { onError: handleError }
+      );
+      return;
+    }
+
+    if (nextRate === null) {
+      if (!anonymousRatingId) {
+        return;
+      }
+
+      rateAnonymousMutation.mutate(
+        {
+          ratingId: anonymousRatingId,
+          rate: null,
+        },
+        {
+          onError: handleError,
+          onSuccess: (data) => {
+            setAnonymousRatingId(data.ratingId ?? undefined);
+          },
+        }
+      );
+      return;
+    }
+
+    const messageIndex = threadMessages.findIndex(
+      (item) => item.id === messageId
+    );
+    const previousUserMessage =
+      messageIndex > 0
+        ? [...threadMessages]
+            .slice(0, messageIndex)
+            .reverse()
+            .find((item) => item.role === "user")
+        : undefined;
+
+    const attachments = getMessageAttachments(message);
+    const responseText = ensureNonEmpty(getMessagePlainText(message));
+    const promptText = ensureNonEmpty(getMessagePlainText(previousUserMessage));
+
+    rateAnonymousMutation.mutate(
       {
-        onError: (error) => {
-          toast.error(`Failed to rate message: ${error.message}`);
-          setOptimisticRate(previousRate);
-          setThreadMessages((prev) =>
-            applyRateToMessages(prev, messageId, previousRate)
-          );
+        ratingId: anonymousRatingId ?? undefined,
+        prompt: promptText,
+        response: responseText,
+        attachments,
+        rate: nextRate,
+      },
+      {
+        onError: handleError,
+        onSuccess: (data) => {
+          setAnonymousRatingId(data.ratingId ?? undefined);
         },
       }
     );
@@ -113,7 +179,7 @@ export const AssistantMessageRateControl: FC<
             data-selected={isSelected}
             onClick={(event) => handleSelect(event, value)}
             className={cn("data-[selected=true]:text-amber-600")}
-            disabled={rateMutation.isPending}
+            disabled={rateMutation.isPending || rateAnonymousMutation.isPending}
           >
             <Icon className="size-4" />
           </TooltipIconButton>
@@ -121,6 +187,97 @@ export const AssistantMessageRateControl: FC<
       })}
     </>
   );
+};
+
+const getMessagePlainText = (message?: ThreadMessageLike): string => {
+  if (!message) return "";
+
+  const { content } = message;
+  if (typeof content === "string") {
+    return content.trim();
+  }
+
+  if (!Array.isArray(content)) {
+    return "";
+  }
+
+  return content
+    .map((part) => {
+      if (!part || typeof part !== "object" || !("type" in part)) {
+        return "";
+      }
+
+      if (part.type === "text" || part.type === "reasoning") {
+        return part.text ?? "";
+      }
+
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+};
+
+const getMessageAttachments = (
+  message?: ThreadMessageLike
+): MessageRatingAttachment[] => {
+  if (!message) return [];
+
+  const summaries: MessageRatingAttachment[] = [];
+  const seen = new Set<string>();
+
+  const pushAttachment = (filename?: unknown, mimeType?: unknown) => {
+    if (typeof filename !== "string" || filename.trim().length === 0) {
+      return;
+    }
+
+    const normalizedFilename = filename.trim();
+    const normalizedMime =
+      typeof mimeType === "string" && mimeType.trim().length
+        ? mimeType.trim()
+        : undefined;
+
+    const key = `${normalizedFilename}|${normalizedMime ?? ""}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    summaries.push(
+      normalizedMime
+        ? { filename: normalizedFilename, mimeType: normalizedMime }
+        : { filename: normalizedFilename }
+    );
+  };
+
+  if (Array.isArray(message.attachments)) {
+    for (const attachment of message.attachments) {
+      if (!attachment || typeof attachment !== "object") continue;
+      const record = attachment as Record<string, unknown>;
+      pushAttachment(
+        record.filename ?? record.name,
+        record.mimeType ?? record.type
+      );
+    }
+  }
+
+  if (Array.isArray(message.content)) {
+    for (const part of message.content) {
+      if (!part || typeof part !== "object" || !("type" in part)) continue;
+      const partRecord = part as Record<string, unknown>;
+      const type = String(partRecord.type ?? "");
+      if (type === "file" || type === "image") {
+        pushAttachment(
+          partRecord.filename ?? partRecord.name,
+          partRecord.mimeType ?? partRecord.type
+        );
+      }
+    }
+  }
+
+  return summaries;
+};
+
+const ensureNonEmpty = (value: string): string => {
+  return value.trim() || "[empty]";
 };
 
 const applyRateToMessages = (

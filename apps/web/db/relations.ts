@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   chats,
   locales,
+  messageRatings,
   messages,
   models,
   modelSupportedParameters,
@@ -65,7 +66,7 @@ export const threadsRelations = relations(threads, ({ one, many }) => ({
   messages: many(messages),
 }));
 
-export const messagesRelations = relations(messages, ({ one }) => ({
+export const messagesRelations = relations(messages, ({ one, many }) => ({
   thread: one(threads, {
     fields: [messages.threadId],
     references: [threads.id],
@@ -73,6 +74,14 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   model: one(models, {
     fields: [messages.modelId],
     references: [models.id],
+  }),
+  ratings: many(messageRatings),
+}));
+
+export const messageRatingsRelations = relations(messageRatings, ({ one }) => ({
+  message: one(messages, {
+    fields: [messageRatings.messageId],
+    references: [messages.id],
   }),
 }));
 

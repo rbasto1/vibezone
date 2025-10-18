@@ -22,6 +22,11 @@ export interface MessageMetadataCustom {
   [key: string]: unknown;
 }
 
+export interface MessageRatingAttachment {
+  filename: string;
+  mimeType?: string;
+}
+
 export interface MessageMetadata {
   custom: MessageMetadataCustom;
   steps?: unknown[];
