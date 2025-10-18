@@ -8,6 +8,7 @@ import {
 } from "ai";
 
 import type { Message } from "@/db";
+import type { MessageMetadata } from "@/db/json-columns-types";
 import type { AppendMessage, ThreadMessageLike } from "@assistant-ui/react";
 
 const toTextPart = (text: string) => ({ type: "text" as const, text });
@@ -83,12 +84,21 @@ export const toThreadMessages = (
       ?.map(convertUIPartToThreadPart)
       .filter(Boolean) as ThreadMessageLike["content"] | undefined;
 
+    const metadata = message.metadata as MessageMetadata | undefined;
+
     return {
       id: message.id,
       role: message.role,
       createdAt: new Date(),
       content: converted && converted.length ? converted : [toTextPart("")],
-      metadata: { custom: {} },
+      ...(metadata
+        ? {
+            metadata: {
+              ...metadata,
+              custom: metadata.custom ?? {},
+            },
+          }
+        : { metadata: { custom: {} } }),
     } as ThreadMessageLike;
   });
 };
@@ -110,6 +120,9 @@ export const toUiMessages = (
       id: message.id ?? generateId(),
       role: message.role,
       parts,
+      ...(message.metadata
+        ? { metadata: message.metadata as Record<string, unknown> }
+        : {}),
     } satisfies UIMessage;
   });
 };

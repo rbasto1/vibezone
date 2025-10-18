@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -7,6 +8,7 @@ import {
   pgTable,
   primaryKey,
   text,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -14,6 +16,8 @@ import { providerTiers } from "./enums";
 import { timestampTz, timestampTzNow, timestampTzNowUpdated } from "./helpers";
 import type {
   MessageMetadata,
+  MessageRate,
+  MessageRatingAttachment,
   MessageStatus,
   ModelPricing,
   ModelTopProvider,
@@ -272,6 +276,26 @@ export const messages = pgTable("messages", {
   updatedAt: timestampTzNowUpdated("updated_at"),
   deletedAt: timestampTz("deleted_at"),
 });
+
+export const messageRatings = pgTable(
+  "message_ratings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    messageId: text("message_id").references(() => messages.id),
+    prompt: text("prompt").notNull(),
+    response: text("response").notNull(),
+    rate: text("rate").$type<MessageRate>().notNull(),
+    attachments: jsonb("attachments")
+      .$type<MessageRatingAttachment[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    createdAt: timestampTzNow("created_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
+  },
+  (table) => [
+    uniqueIndex("message_ratings_message_id_unique").on(table.messageId),
+  ]
+);
 
 export const usage = pgTable(
   "usage",

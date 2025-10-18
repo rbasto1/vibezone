@@ -14,6 +14,9 @@ export function summarize(obj: unknown): string {
     case "object":
       if (Array.isArray(obj)) {
         const len = obj.length;
+        if (!obj.length) {
+          return "[]";
+        }
         if (obj.every((elem) => elem === null)) {
           return `["null[${len}]"]`;
         }

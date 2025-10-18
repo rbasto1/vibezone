@@ -15,8 +15,20 @@ export interface ModelTopProvider {
   max_completion_tokens: number | null;
 }
 
+export type MessageRate = "dislike" | "like" | "really-like";
+
+export interface MessageMetadataCustom {
+  rate?: MessageRate;
+  [key: string]: unknown;
+}
+
+export interface MessageRatingAttachment {
+  filename: string;
+  mimeType?: string;
+}
+
 export interface MessageMetadata {
-  custom: Record<string, unknown>;
+  custom: MessageMetadataCustom;
   steps?: unknown[];
   unstable_data?: unknown[];
   unstable_state?: null;

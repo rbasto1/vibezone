@@ -43,5 +43,6 @@ export const providersPrivacy: ProviderPrivacyInfo[] = [
 {"id":"tngtech","name":"TNG Technology","privacyPolicyUrl":null},
 {"id":"tencent","name":"Tencent","privacyPolicyUrl":null},
 {"id":"z-ai","name":"Z.ai","privacyPolicyUrl":"https://chat.z.ai/legal-agreement/privacy-policy"},
+{"id":"inclusionai","name":"inclusionAI","privacyPolicyUrl":null},
 {"id":"x-ai","name":"xAI","privacyPolicyUrl":"https://x.ai/legal/terms-of-service-enterprise"}
 ];

@@ -14,12 +14,13 @@
 - [x] Disable sending when attachments are not compatible with one of the models
 - [ ] Stopping works but state stay as running?
 - [ ] Switching models with attachments is causing issues with the other models
+- [ ] Reloading chats loses the multiple generations (refreshes)
 
 ## Improvements
 
 - [ ] Add Terms of Use
 - [x] Add "What's New" startup modal
-- [ ] Thumb up/down (or stars?)
+- [x] Rating system
 - [x] Mobile: when adding a new panel, select it by default
 - [x] Allow user to pin favorite models
 - [ ] Import chats from OpenAI format
@@ -33,6 +34,7 @@
 - [x] Add `api_created_at` to models and use our import date for created_at
 - [ ] Add auto-translation button to admin (model descriptions)
 - [x] Schedule daily usage calculation
+- [ ] Use `useMessage` for saving messages instead of thread message list
 
 ## MVP (done)
 

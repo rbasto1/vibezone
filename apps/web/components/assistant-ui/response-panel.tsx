@@ -184,30 +184,32 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
         fetchedTitlePanelId: id,
       });
 
-      const firstUserMessage = currentChat.firstUserMessage;
-      if (!firstUserMessage) {
-        console.warn("No first user message found");
-        return currentChat;
-      }
+      if (sessionToken.current) {
+        const firstUserMessage = currentChat.firstUserMessage;
+        if (!firstUserMessage) {
+          console.warn("No first user message found");
+          return currentChat;
+        }
 
-      // our backend will generate the title based on the conversation history
-      void renameChatMutation
-        .mutateAsync({
-          chatId: currentChat.id,
-          title: null,
-          firstUserMessage,
-        })
-        .then((chat) => {
-          if (!chat.success) {
-            console.warn("Failed to rename chat", chat.message);
-            return;
-          }
-          // this happens after the mutation is successful, asynchronously
-          setCurrentChat((currentChat) => ({
-            ...currentChat,
-            title: chat.title,
-          }));
-        });
+        // our backend will generate the title based on the conversation history
+        void renameChatMutation
+          .mutateAsync({
+            chatId: currentChat.id,
+            title: null,
+            firstUserMessage,
+          })
+          .then((chat) => {
+            if (!chat.success) {
+              console.warn("Failed to rename chat", chat.message);
+              return;
+            }
+            // this happens after the mutation is successful, asynchronously
+            setCurrentChat((currentChat) => ({
+              ...currentChat,
+              title: chat.title,
+            }));
+          });
+      }
 
       // make sure not to overwrite the fetched title panel id with empty value
       return { ...currentChat, fetchedTitlePanelId: id };
