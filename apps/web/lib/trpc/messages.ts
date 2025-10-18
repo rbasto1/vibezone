@@ -7,7 +7,7 @@ import type {
 } from "@/db/json-columns-types";
 import { chats, messageRatings, messages, threads } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
-import { and, eq, lt } from "drizzle-orm";
+import { and, desc, eq, lt } from "drizzle-orm";
 import { z } from "zod";
 import {
   authenticatedProcedure,
@@ -220,7 +220,7 @@ export const messagesRouter = t.router({
             threadId: messageRecord.threadId,
             createdAt: messageRecord.createdAt,
           }),
-          orderBy: (message, { desc }) => [desc(message.createdAt)],
+          orderBy: [desc(messages.createdAt)],
           columns: {
             content: true,
           },

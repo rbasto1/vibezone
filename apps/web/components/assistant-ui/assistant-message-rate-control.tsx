@@ -11,12 +11,11 @@ import type {
   MessageRate,
   MessageRatingAttachment,
 } from "@/db/json-columns-types";
-import { useThreadMessages } from "@/hooks/use-thread-store";
 import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import {
   useMessage,
-  useThreadListItem,
+  useThread,
   type ThreadMessageLike,
 } from "@assistant-ui/react";
 import type { LucideIcon } from "lucide-react";
@@ -53,8 +52,7 @@ export const AssistantMessageRateControl: FC<
 > = ({ delayDuration }) => {
   const t = useTranslations("AssistantMessageRate");
   const message = useMessage();
-  const thread = useThreadListItem();
-  const [threadMessages, setThreadMessages] = useThreadMessages(thread.id);
+  const thread = useThread();
   const rateMutation = trpc.messages.rateMessage.useMutation();
   const rateAnonymousMutation =
     trpc.messages.rateMessageAnonymous.useMutation();
@@ -90,16 +88,17 @@ export const AssistantMessageRateControl: FC<
     const previousRate = optimisticRate;
 
     setOptimisticRate(nextRate);
-    setThreadMessages((prev) => applyRateToMessages(prev, messageId, nextRate));
 
-    const handleError = (error: unknown) => {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to rate message: ${errorMessage}`);
+    type HandleErrorFunction = NonNullable<
+      Parameters<typeof rateMutation.mutate>[1]
+    >["onError"] &
+      NonNullable<
+        Parameters<typeof rateAnonymousMutation.mutate>[1]
+      >["onError"];
+
+    const handleError: HandleErrorFunction = (error) => {
+      toast.error(`Failed to rate message: ${error.message}`);
       setOptimisticRate(previousRate);
-      setThreadMessages((prev) =>
-        applyRateToMessages(prev, messageId, previousRate)
-      );
     };
 
     if (user) {
@@ -133,17 +132,9 @@ export const AssistantMessageRateControl: FC<
       return;
     }
 
-    const messageIndex = threadMessages.findIndex(
-      (item) => item.id === messageId
+    const previousUserMessage = thread.messages.find(
+      (msg) => msg.id === message.parentId
     );
-    const previousUserMessage =
-      messageIndex > 0
-        ? [...threadMessages]
-            .slice(0, messageIndex)
-            .reverse()
-            .find((item) => item.role === "user")
-        : undefined;
-
     const attachments = getMessageAttachments(message);
     const responseText = ensureNonEmpty(getMessagePlainText(message));
     const promptText = ensureNonEmpty(getMessagePlainText(previousUserMessage));
@@ -279,35 +270,3 @@ const getMessageAttachments = (
 const ensureNonEmpty = (value: string): string => {
   return value.trim() || "[empty]";
 };
-
-const applyRateToMessages = (
-  messages: ThreadMessageLike[],
-  messageId: string,
-  rate: MessageRate | null
-) =>
-  messages.map((message) => {
-    if (message.id !== messageId) return message;
-
-    const metadata: MetadataWithCustom = {
-      custom: {},
-      ...(message.metadata ?? {}),
-    };
-
-    const custom: MetadataWithCustom["custom"] = {
-      ...(metadata.custom ?? {}),
-    };
-
-    if (rate) {
-      custom.rate = rate;
-    } else {
-      delete custom.rate;
-    }
-
-    return {
-      ...message,
-      metadata: {
-        ...metadata,
-        custom,
-      },
-    };
-  });
