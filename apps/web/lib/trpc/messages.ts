@@ -7,7 +7,7 @@ import type {
 } from "@/db/json-columns-types";
 import { chats, messageRatings, messages, threads } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, lte } from "drizzle-orm";
 import { z } from "zod";
 import {
   authenticatedProcedure,
@@ -136,6 +136,7 @@ export const messagesRouter = t.router({
         });
       }
     }),
+
   rateMessage: authenticatedProcedure
     .input(
       z.object({
@@ -216,10 +217,11 @@ export const messagesRouter = t.router({
 
       if (rate) {
         const promptMessage = await db.query.messages.findFirst({
-          where: findPreviousUserMessageWhere({
-            threadId: messageRecord.threadId,
-            createdAt: messageRecord.createdAt,
-          }),
+          where: and(
+            eq(messages.threadId, messageRecord.threadId),
+            eq(messages.role, "user"),
+            lte(messages.createdAt, messageRecord.createdAt)
+          ),
           orderBy: [desc(messages.createdAt)],
           columns: {
             content: true,
@@ -262,6 +264,7 @@ export const messagesRouter = t.router({
         rate: nextMetadata.custom.rate ?? null,
       };
     }),
+
   rateMessageAnonymous: publicProcedure
     .input(
       z.object({
@@ -283,11 +286,13 @@ export const messagesRouter = t.router({
       const { ratingId, prompt, response, attachments, rate } = input;
 
       if (rate === null) {
-        if (ratingId) {
-          await db
-            .delete(messageRatings)
-            .where(eq(messageRatings.id, ratingId));
+        if (!ratingId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Rating ID is required",
+          });
         }
+        await db.delete(messageRatings).where(eq(messageRatings.id, ratingId));
         return { success: true as const, ratingId: null };
       }
 
@@ -298,17 +303,29 @@ export const messagesRouter = t.router({
           .where(eq(messageRatings.id, ratingId))
           .returning({ id: messageRatings.id });
 
-        const record = updated[0] ?? null;
-        if (record) {
-          return { success: true as const, ratingId: record.id };
+        const record = updated[0];
+        if (!record) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Rating not found",
+          });
         }
+
+        return { success: true as const, ratingId: record.id };
+      }
+
+      if (prompt === undefined || response === undefined) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Prompt and response are required",
+        });
       }
 
       const inserted = await db
         .insert(messageRatings)
         .values({
-          prompt: ensureNonEmpty(prompt ?? ""),
-          response: ensureNonEmpty(response ?? ""),
+          prompt,
+          response,
           attachments: attachments ?? [],
           rate,
         })
@@ -425,27 +442,4 @@ const extractAttachmentsFromMessage = (
   }
 
   return summaries;
-};
-
-const findPreviousUserMessageWhere = (context: {
-  threadId?: string | null;
-  createdAt?: Date | null;
-}) => {
-  if (!context.threadId) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Message is missing thread information",
-    });
-  }
-
-  const baseCondition = and(
-    eq(messages.threadId, context.threadId),
-    eq(messages.role, "user")
-  );
-
-  if (!context.createdAt) {
-    return baseCondition;
-  }
-
-  return and(baseCondition, lt(messages.createdAt, context.createdAt));
 };

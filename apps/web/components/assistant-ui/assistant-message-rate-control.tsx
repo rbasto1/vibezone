@@ -157,7 +157,7 @@ export const AssistantMessageRateControl: FC<
   };
 
   return (
-    <>
+    <div className="flex">
       {RATE_OPTIONS.map(({ value, Icon, translationKey }) => {
         const isSelected = optimisticRate === value;
 
@@ -176,7 +176,7 @@ export const AssistantMessageRateControl: FC<
           </TooltipIconButton>
         );
       })}
-    </>
+    </div>
   );
 };
 
