@@ -11,19 +11,39 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
+import type { TooltipProps } from "@radix-ui/react-tooltip";
 
-export type TooltipIconButtonProps = ComponentPropsWithoutRef<typeof Button> & {
-  tooltip: string;
-  side?: "top" | "bottom" | "left" | "right";
-};
+export type TooltipIconButtonProps = ComponentPropsWithoutRef<typeof Button> &
+  TooltipProps & {
+    tooltip: string;
+    side?: "top" | "bottom" | "left" | "right";
+  };
 
 export const TooltipIconButton = forwardRef<
   HTMLButtonElement,
   TooltipIconButtonProps
->(({ children, tooltip, side = "bottom", className, ...rest }, ref) => {
+>((props, ref) => {
+  const {
+    children,
+    className,
+    tooltip,
+    side = "bottom",
+    delayDuration,
+    open,
+    defaultOpen,
+    onOpenChange,
+    disableHoverableContent,
+    ...rest
+  } = props;
   return (
     <TooltipProvider>
-      <Tooltip>
+      <Tooltip
+        delayDuration={delayDuration}
+        open={open}
+        defaultOpen={defaultOpen}
+        onOpenChange={onOpenChange}
+        disableHoverableContent={disableHoverableContent}
+      >
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
