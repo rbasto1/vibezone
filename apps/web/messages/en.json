@@ -31,6 +31,11 @@
   "AssistantMessageImage": {
     "loading": "Loading image..."
   },
+  "AssistantMessageRate": {
+    "dislike": "Response was not satisfactory",
+    "like": "Response was good",
+    "reallyLike": "Response was great, it surprised me"
+  },
   "AssistantMessageReasoning": {
     "title": "Reasoning",
     "collapse": "Collapse reasoning"

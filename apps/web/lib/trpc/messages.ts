@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
+import type { MessageMetadata } from "@/db/json-columns-types";
 import { chats, messages, threads } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
@@ -125,6 +126,86 @@ export const messagesRouter = t.router({
           message: "Failed to save messages",
         });
       }
+    }),
+  rateMessage: authenticatedProcedure
+    .input(
+      z.object({
+        messageId: z.string(),
+        rate: z.enum(["dislike", "like", "really-like"]).nullable(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
+
+      const { messageId, rate } = input;
+
+      const messageRecord = await db.query.messages.findFirst({
+        where: eq(messages.id, messageId),
+        columns: {
+          role: true,
+          metadata: true,
+        },
+        with: {
+          thread: {
+            columns: { chatId: true },
+            with: {
+              chat: {
+                columns: { userId: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (!messageRecord || !messageRecord.thread?.chat) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Message not found",
+        });
+      }
+
+      if (messageRecord.thread.chat.userId !== user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Access denied",
+        });
+      }
+
+      if (messageRecord.role !== "assistant") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only assistant messages can be rated",
+        });
+      }
+
+      const existingMetadata: MessageMetadata = messageRecord.metadata ?? {
+        custom: {},
+      };
+
+      const nextMetadata: MessageMetadata = {
+        ...existingMetadata,
+        custom: {
+          ...existingMetadata.custom,
+        },
+      };
+
+      if (rate) {
+        nextMetadata.custom.rate = rate;
+      } else {
+        delete nextMetadata.custom.rate;
+      }
+
+      await db
+        .update(messages)
+        .set({ metadata: nextMetadata })
+        .where(eq(messages.id, messageId));
+
+      return {
+        success: true as const,
+        messageId,
+        rate: nextMetadata.custom.rate ?? null,
+      };
     }),
 });
 
