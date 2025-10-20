@@ -3,7 +3,7 @@
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAnonQuotaSetter } from "@/hooks/use-anon-quota";
-import { useAllCanReason } from "@/hooks/use-capabilities";
+import { canReason } from "@/hooks/use-capabilities";
 import {
   captchaToken,
   useCaptchaFailed,
@@ -71,7 +71,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
     web: userPreferences.pluginWeb,
     reason: userPreferences.reasoningEffort,
   });
-  const allCanReason = useAllCanReason();
+  const panelCanReason = canReason(panel.model);
   const setAnonQuota = useAnonQuotaSetter();
   const setCaptchaFailed = useCaptchaFailed();
   const setCaptchaRequested = useCaptchaRequested();
@@ -81,9 +81,14 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const runtimeRef = useRef<AssistantRuntime | null>(null);
   const modelId = useStableValue(panel.model);
 
+  const reasoningEffort =
+    userPreferences.reasoningEffort === "none"
+      ? "low"
+      : userPreferences.reasoningEffort;
+
   plugins.current = {
     web: userPreferences.pluginWeb,
-    reason: allCanReason ? userPreferences.reasoningEffort : "low",
+    reason: panelCanReason ? reasoningEffort : "low",
   };
 
   // This callback function is never reload by the runtime provider, so any initial value of variables
