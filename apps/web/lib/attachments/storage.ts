@@ -1,5 +1,3 @@
-"use client";
-
 import type {
   CompleteAttachment,
   ThreadUserMessagePart,
@@ -14,163 +12,74 @@ export interface UploadMeta {
   uploadedBy?: string;
 }
 
-export interface SerializableAttachment
-  extends Omit<CompleteAttachment, "file"> {
-  remoteUrl?: string;
-  remoteKey?: string;
-  remoteSize?: number;
-  remoteContentType?: string;
-  originalFileName?: string;
-  remoteUploadedBy?: string;
-}
-
 const ATTACHMENT_TAG_REGEX =
   /^<attachment name="([^"]+)">\n([\s\S]*)\n<\/attachment>$/;
 
-const EXTENSION_MIME_MAP: Record<string, string> = {
-  txt: "text/plain",
-  text: "text/plain",
-  md: "text/markdown",
-  markdown: "text/markdown",
-  csv: "text/csv",
-  json: "application/json",
-  xml: "application/xml",
-  html: "text/html",
-  css: "text/css",
-  js: "application/javascript",
-  mjs: "application/javascript",
-  ts: "application/typescript",
-  tsx: "application/typescript",
-  jsx: "application/javascript",
-  pdf: "application/pdf",
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  gif: "image/gif",
-  webp: "image/webp",
-  svg: "image/svg+xml",
-  bmp: "image/bmp",
-  heic: "image/heic",
-  heif: "image/heif",
-  mp3: "audio/mpeg",
-  wav: "audio/wav",
-  ogg: "audio/ogg",
-  mp4: "video/mp4",
-  mov: "video/quicktime",
-  avi: "video/x-msvideo",
-  mkv: "video/x-matroska",
-  zip: "application/zip",
-  gz: "application/gzip",
-  tar: "application/x-tar",
-  rar: "application/vnd.rar",
+const ensureArray = <T>(value: readonly T[] | undefined) =>
+  Array.isArray(value) ? [...value] : ([] as T[]);
+
+const replaceContentWithRemoteUrl = (
+  attachment: CompleteAttachment,
+  remoteUrl: string
+) => {
+  return ensureArray(attachment.content).map<ThreadUserMessagePart>((part) => {
+    if (part.type === "image") {
+      return {
+        ...part,
+        image: remoteUrl,
+        filename: part.filename ?? attachment.name,
+      };
+    }
+    if (part.type === "file") {
+      return {
+        ...part,
+        data: remoteUrl,
+        mimeType: part.mimeType ?? attachment.contentType,
+        filename: part.filename ?? attachment.name,
+      };
+    }
+    if (part.type === "text") {
+      return {
+        ...part,
+        text: sanitizeAttachmentText(part.text, remoteUrl),
+      };
+    }
+    return part;
+  });
 };
 
-export const isRemoteUrl = (value: string | undefined) =>
-  typeof value === "string" && /^https?:\/\//i.test(value);
+const buildAttachmentTag = (name: string, value: string) =>
+  `<attachment name="${name}">\n${value}\n</attachment>`;
 
-export const parseAttachmentTag = (
+const parseAttachmentTag = (
   text: string
 ): { name: string; content: string } | null => {
   const match = text.match(ATTACHMENT_TAG_REGEX);
   if (!match?.[1] || !match?.[2]) return null;
-  return {
-    name: match[1],
-    content: match[2],
-  };
+  return { name: match[1], content: match[2] };
 };
 
-export const buildAttachmentTag = (name: string, value: string) =>
-  `<attachment name="${name}">\n${value}\n</attachment>`;
-
-const decodeBase64 = (base64: string): Uint8Array | null => {
-  try {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let idx = 0; idx < binary.length; idx += 1) {
-      bytes[idx] = binary.charCodeAt(idx);
-    }
-    return bytes;
-  } catch (error) {
-    console.error("Failed to decode base64:", error);
-    return null;
+export const sanitizeAttachmentText = (text: string, remoteUrl: string) => {
+  const parsed = parseAttachmentTag(text);
+  if (!parsed) {
+    return remoteUrl;
   }
+  return buildAttachmentTag(parsed.name, remoteUrl);
 };
 
-export const dataUrlToFile = (
-  dataUrl: string,
-  name: string,
-  fallbackType: string
-): File | null => {
-  const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
-  if (!match) return null;
-  const [, mimeTypeRaw, base64] = match;
-  if (!base64) return null;
-  const bytes = decodeBase64(base64);
-  if (!bytes) return null;
-  const mimeType = mimeTypeRaw || fallbackType;
-  const blob = new Blob([bytes], { type: mimeType });
-  return new File([blob], name, { type: mimeType });
-};
-
-export const base64ToFile = (
-  base64: string,
-  name: string,
-  mimeType: string
-): File | null => {
-  const bytes = decodeBase64(base64);
-  if (!bytes) return null;
-  const blob = new Blob([bytes], { type: mimeType });
-  return new File([blob], name, { type: mimeType });
-};
-
-export const textToFile = (text: string, name: string, mimeType: string) =>
-  new File([text], name, { type: mimeType });
-
-export const guessMimeTypeFromFilename = (
-  filename: string | undefined,
-  fallback: string
-) => {
-  if (!filename) return fallback;
-  const extension = filename.split(".").pop()?.toLowerCase();
-  if (!extension) return fallback;
-  return EXTENSION_MIME_MAP[extension] ?? fallback;
-};
-
-export const buildSerializableAttachment = (params: {
-  id?: string;
-  type: "image" | "document" | "file";
-  name: string;
-  contentType: string;
-  remoteUrl: string;
-  content: ThreadUserMessagePart[];
-  meta?: UploadMeta;
-}): SerializableAttachment => {
-  const { id, type, name, contentType, remoteUrl, content, meta } = params;
+export const applyUploadMetaToAttachment = (
+  attachment: CompleteAttachment,
+  meta: UploadMeta,
+  originalFile?: File
+): CompleteAttachment => {
+  const remoteUrl = meta.fileUrl;
+  const content = replaceContentWithRemoteUrl(attachment, remoteUrl);
 
   return {
-    id: id ?? crypto.randomUUID(),
-    type,
-    name,
-    contentType,
-    status: { type: "complete" },
+    ...attachment,
+    file: originalFile ?? attachment.file,
     content,
-    remoteUrl,
-    remoteKey: meta?.fileKey,
-    remoteSize: meta?.size,
-    remoteContentType: meta?.contentType ?? contentType,
-    originalFileName: meta?.name ?? name,
-    remoteUploadedBy: meta?.uploadedBy,
+    contentType: meta.contentType ?? attachment.contentType,
+    name: meta.name ?? attachment.name,
   };
-};
-
-export const sanitizeAttachmentText = (
-  existingText: string,
-  name: string,
-  remoteUrl: string
-) => {
-  const match = parseAttachmentTag(existingText);
-  if (!match) {
-    return buildAttachmentTag(name, remoteUrl);
-  }
-  return buildAttachmentTag(match.name, remoteUrl);
 };

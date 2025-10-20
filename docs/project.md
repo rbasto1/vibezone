@@ -20,6 +20,7 @@
 ## Improvements
 
 - [ ] Add Terms of Use
+- [x] Sending an empty message with attachments should be possible
 - [x] Add "What's New" startup modal
 - [x] Rating system
 - [x] Mobile: when adding a new panel, select it by default

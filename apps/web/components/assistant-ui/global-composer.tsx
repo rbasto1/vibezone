@@ -148,7 +148,8 @@ export const GlobalComposer: FC = () => {
 
   const send = (text: string): boolean => {
     const msg = text.trim();
-    if (!msg || !completeAttachments) return false;
+    if (!completeAttachments) return false; // pending upload
+    if (!msg && !completeAttachments?.length) return false; // empty message with no attachments
 
     // Validate attachments before sending
     const incompatible = validateAttachments();
