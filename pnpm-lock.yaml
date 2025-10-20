@@ -166,6 +166,9 @@ importers:
       drizzle-orm:
         specifier: ^0.44.5
         version: 0.44.5(@neondatabase/serverless@1.0.1)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.7)
+      flourite:
+        specifier: ^1.3.0
+        version: 1.3.0
       framer-motion:
         specifier: ^12.23.15
         version: 12.23.16(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -3172,6 +3175,10 @@ packages:
 
   flatted@3.3.3:
     resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
+
+  flourite@1.3.0:
+    resolution: {integrity: sha512-iuhWXuX07QwHMnJ1Irh4sD1bk/QFMHg8jVgWsjSAqoIqgIyJtRPnUNKyZAPXrw7pQkDvxb5AIz2KPihEoyVcqw==}
+    engines: {node: '>=16'}
 
   follow-redirects@1.15.11:
     resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
@@ -8062,6 +8069,8 @@ snapshots:
       keyv: 4.5.4
 
   flatted@3.3.3: {}
+
+  flourite@1.3.0: {}
 
   follow-redirects@1.15.11: {}
 

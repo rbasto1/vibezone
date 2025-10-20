@@ -3,7 +3,6 @@
 ## Features
 
 - [x] Paid plans: Clerk
-- [ ] Add user profile (name, avatar, age, gender, country, etc)
 - [ ] Backend processing of messages: save the AI response without the need for a frontend
 - [x] Replace AssistantCloud with ExternalStoreRuntime
 
@@ -15,6 +14,7 @@
 - [ ] Stopping works but state stay as running?
 - [ ] Switching models with attachments is causing issues with the other models
 - [ ] Reloading chats loses the multiple generations (refreshes)
+- [x] Code blocks rendering as download items
 
 ## Improvements
 
@@ -23,6 +23,8 @@
 - [x] Rating system
 - [x] Mobile: when adding a new panel, select it by default
 - [x] Allow user to pin favorite models
+- [ ] Attachments should be stored as links to files
+- [ ] Allow selection of reasoning effort if any model accepts it
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format
 - [ ] Add analytics (Posthog?)
@@ -30,7 +32,7 @@
 - [x] Add a "do not show again" option to the warning about discarding a panel
 - [ ] Add Python project to calculate usage of non-OpenRouter models
 - [x] Allow setting order of groups
-- [ ] Syntax highlighting: auto-detect language (switch to highlight.js?)
+- [x] Syntax highlighting: auto-detect language
 - [x] Add `api_created_at` to models and use our import date for created_at
 - [ ] Add auto-translation button to admin (model descriptions)
 - [x] Schedule daily usage calculation
