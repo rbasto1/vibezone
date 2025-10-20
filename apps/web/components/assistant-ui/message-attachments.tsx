@@ -21,6 +21,7 @@ import { FileImageIcon, FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
 import { FaRegFilePdf } from "react-icons/fa";
+import { Button } from "../ui/button";
 import { AttachmentPreviewDialog } from "./attachment-preview";
 
 const ATTACHMENT_TAG_REGEX =
@@ -58,7 +59,8 @@ const deriveAttachmentsFromMessage = (
     return message.attachments as Attachment[];
   }
 
-  const metadataAttachments = (message.metadata as { custom?: unknown })?.custom;
+  const metadataAttachments = (message.metadata as { custom?: unknown })
+    ?.custom;
   if (
     metadataAttachments &&
     typeof metadataAttachments === "object" &&
@@ -228,14 +230,19 @@ const AttachmentTile: FC<{ attachment: Attachment }> = ({ attachment }) => {
     if (href) {
       return (
         <TooltipTrigger asChild>
-          <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex"
+          <Button
+            className="cursor-pointer transition-colors hover:bg-accent/50"
+            asChild
           >
-            {tileContent}
-          </a>
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex"
+            >
+              {tileContent}
+            </a>
+          </Button>
         </TooltipTrigger>
       );
     }
