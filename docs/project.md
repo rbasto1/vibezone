@@ -20,13 +20,14 @@
 ## Improvements
 
 - [ ] Add Terms of Use
+- [ ] Translate Privacy Policy and Terms of Use
 - [x] Sending an empty message with attachments should be possible
 - [x] Add "What's New" startup modal
 - [x] Rating system
 - [x] Mobile: when adding a new panel, select it by default
 - [x] Allow user to pin favorite models
 - [x] Attachments should be stored as links to files
-- [ ] Allow selection of reasoning effort if any model accepts it
+- [x] Allow selection of reasoning effort if any model accepts it
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format
 - [ ] Add analytics (Posthog?)

@@ -43,13 +43,35 @@ export const useAppendAttachments = () => {
 
   const finalizeAttachment = useCallback(
     async (pending: PendingAttachment) => {
+      const updateProgress = (progress: number) => {
+        set((prev) => ({
+          ...prev,
+          attachments: prev.attachments.map((attachment) =>
+            attachment.id === pending.id
+              ? ({
+                  ...attachment,
+                  status: {
+                    type: "running",
+                    reason: "uploading",
+                    progress: Math.min(100, Math.max(0, Math.round(progress))),
+                  },
+                } as PendingAttachment)
+              : attachment
+          ),
+        }));
+      };
+
       set((prev) => ({
         ...prev,
         attachments: prev.attachments.map((attachment) =>
           attachment.id === pending.id
             ? ({
                 ...attachment,
-                status: { type: "running", reason: "uploading", progress: 0 },
+                status: {
+                  type: "running",
+                  reason: "uploading",
+                  progress: 0,
+                },
               } as PendingAttachment)
             : attachment
         ),
@@ -58,6 +80,9 @@ export const useAppendAttachments = () => {
       try {
         const results = await uploadFiles("messageAttachment", {
           files: [pending.file],
+          onUploadProgress: ({ progress }) => {
+            updateProgress(progress);
+          },
         });
         const uploaded = results?.[0] as
           | ClientUploadedFileData<UploadMeta>
