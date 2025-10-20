@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { ClipboardEvent, KeyboardEvent } from "react";
 import {
   forwardRef,
@@ -8,11 +9,10 @@ import {
   useMemo,
   useRef,
 } from "react";
-import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { useComposerPrompt } from "@/hooks/use-composer-prompt";
 import { useAppendAttachments } from "@/hooks/use-attachments";
+import { useComposerPrompt } from "@/hooks/use-composer-prompt";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
 import { useOpenSignIn, useUser } from "@/lib/auth-client";
@@ -43,7 +43,7 @@ type GlobalComposerTextareaProps = {
 export const GlobalComposerTextarea = forwardRef<
   GlobalComposerTextareaHandle,
   GlobalComposerTextareaProps
-(({ placeholder, onSubmit }, ref) => {
+>(({ placeholder, onSubmit }, ref) => {
   const t = useTranslations("ComposerAddAttachment");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [prompt, setPrompt] = useComposerPrompt();
@@ -146,12 +146,11 @@ export const GlobalComposerTextarea = forwardRef<
         return;
       }
 
-      const hasBlockedImage =
-        Array.from(files).some(
-          (file) =>
-            file.type.startsWith("image/") &&
-            !attachmentsCapabilities.image.allowed
-        );
+      const hasBlockedImage = Array.from(files).some(
+        (file) =>
+          file.type.startsWith("image/") &&
+          !attachmentsCapabilities.image.allowed
+      );
 
       if (hasBlockedImage) {
         event.preventDefault();
@@ -159,10 +158,11 @@ export const GlobalComposerTextarea = forwardRef<
         return;
       }
 
-      const hasBlockedPdf =
-        Array.from(files).some(
-          (file) => file.type === "application/pdf" && !attachmentsCapabilities.pdf.allowed
-        );
+      const hasBlockedPdf = Array.from(files).some(
+        (file) =>
+          file.type === "application/pdf" &&
+          !attachmentsCapabilities.pdf.allowed
+      );
 
       if (hasBlockedPdf) {
         event.preventDefault();
