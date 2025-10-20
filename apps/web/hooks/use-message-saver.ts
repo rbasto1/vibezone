@@ -4,7 +4,14 @@ import type { MessageMetadata } from "@/db/json-columns-types";
 import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
-import type { ThreadMessage } from "@assistant-ui/react";
+import type {
+  CompleteAttachment,
+  FileMessagePart,
+  ImageMessagePart,
+  TextMessagePart,
+  ThreadMessage,
+  ThreadUserMessagePart,
+} from "@assistant-ui/react";
 import { useThread } from "@assistant-ui/react";
 import { useCurrentChat } from "./use-chat";
 import { usePanelStateValue } from "./use-panels";
@@ -15,6 +22,78 @@ interface DebouncedSaveTimeout {
 }
 
 const DEBOUNCED_SAVE_TIMEOUT = 1000;
+
+const ATTACHMENT_TAG_REGEX =
+  /^<attachment name="([^"]+)">\n([\s\S]*)\n<\/attachment>$/;
+
+const ensureAttachmentArray = (msg: ThreadMessage): CompleteAttachment[] => {
+  if (Array.isArray(msg.attachments) && msg.attachments.length > 0) {
+    return msg.attachments as CompleteAttachment[];
+  }
+
+  const derived: CompleteAttachment[] = [];
+
+  msg.content.forEach((part, index) => {
+    if (part.type === "image") {
+      const imagePart = part as ImageMessagePart;
+      derived.push({
+        id: `${msg.id}-image-${index}`,
+        type: "image",
+        name: imagePart.filename ?? `image-${index + 1}`,
+        contentType: "image/png",
+        status: { type: "complete" },
+        content: [imagePart as ThreadUserMessagePart],
+      });
+      return;
+    }
+
+    if (part.type === "file") {
+      const filePart = part as FileMessagePart;
+      derived.push({
+        id: `${msg.id}-file-${index}`,
+        type: filePart.mimeType?.startsWith("image/")
+          ? "image"
+          : filePart.mimeType === "application/pdf"
+            ? "document"
+            : "file",
+        name: filePart.filename ?? `file-${index + 1}`,
+        contentType: filePart.mimeType ?? "application/octet-stream",
+        status: { type: "complete" },
+        content: [filePart as ThreadUserMessagePart],
+      });
+      return;
+    }
+
+    if (part.type === "text") {
+      const textPart = part as TextMessagePart;
+      const match = textPart.text.match(ATTACHMENT_TAG_REGEX);
+      if (!match) return;
+      const [, rawName, body] = match;
+      const content = body?.trim();
+      const name = rawName;
+
+      if (content?.startsWith("http")) {
+        derived.push({
+          id: `${msg.id}-link-${index}`,
+          type: "document",
+          name: name || `attachment-${index + 1}`,
+          contentType: "application/octet-stream",
+          status: { type: "complete" },
+          content: [
+            {
+              type: "file",
+              data: content,
+              filename: name || `attachment-${index + 1}`,
+              mimeType: "application/octet-stream",
+            } as ThreadUserMessagePart,
+          ],
+        });
+      }
+    }
+  });
+
+  return derived;
+};
 
 export const useMessageSaver = (panel: PanelConfig) => {
   const { id, model, initialMessages } = panel;
@@ -116,7 +195,7 @@ export const useMessageSaver = (panel: PanelConfig) => {
               id: msg.id,
               role: msg.role,
               content: msg.content,
-              attachments: msg.attachments || [],
+              attachments: ensureAttachmentArray(msg),
               metadata: msg.metadata as MessageMetadata,
               status: msg.status,
               createdAt: msg.createdAt,

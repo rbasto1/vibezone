@@ -28,6 +28,7 @@
 - [x] Allow user to pin favorite models
 - [x] Attachments should be stored as links to files
 - [x] Allow selection of reasoning effort if any model accepts it
+- [ ] Allow pasting attachments with Ctrl-V
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format
 - [ ] Add analytics (Posthog?)

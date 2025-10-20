@@ -19,19 +19,31 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
-import { useAppendAttachments } from "@/hooks/use-attachments";
+import {
+  useAppendAttachments,
+  useAttachmentsValue,
+  useRemoveAttachment,
+} from "@/hooks/use-attachments";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
 import { useOpenSignIn, useUser } from "@/lib/auth-client";
-import { ComposerPrimitive } from "@assistant-ui/react";
-import { AttachmentUI } from "./message-attachments";
+import { AttachmentChip } from "./attachment-chip";
 
 export const ComposerAttachments: FC = () => {
+  const attachments = useAttachmentsValue();
+  const removeAttachment = useRemoveAttachment();
+
+  if (!attachments.length) return null;
+
   return (
     <div className="aui-composer-attachments mb-2 flex w-full flex-row items-center gap-2 overflow-x-auto px-1.5 pt-0.5 pb-1 empty:hidden">
-      <ComposerPrimitive.Attachments
-        components={{ Attachment: AttachmentUI }}
-      />
+      {attachments.map((attachment) => (
+        <AttachmentChip
+          key={attachment.id}
+          attachment={attachment}
+          onRemove={removeAttachment}
+        />
+      ))}
     </div>
   );
 };
