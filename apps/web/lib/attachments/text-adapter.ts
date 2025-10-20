@@ -87,6 +87,7 @@ export class TextAttachmentAdapter implements AttachmentAdapter {
       contentType:
         attachment.contentType || attachment.file.type || "text/plain",
       status: { type: "complete" },
+      file: attachment.file,
       content: [
         {
           type: "text",

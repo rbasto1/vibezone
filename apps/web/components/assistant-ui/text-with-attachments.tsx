@@ -60,7 +60,14 @@ const AttachmentTile: FC<{ name: string; content: string }> = ({
   name,
   content,
 }) => {
+  const trimmedContent = content.trim();
+  const isRemote = /^https?:\/\//i.test(trimmedContent);
+
   const handleClick = () => {
+    if (isRemote) {
+      window.open(trimmedContent, "_blank", "noopener,noreferrer");
+      return;
+    }
     // Create a blob and download the file
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);

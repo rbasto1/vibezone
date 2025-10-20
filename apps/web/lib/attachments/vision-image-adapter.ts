@@ -34,6 +34,7 @@ export class VisionImageAttachmentAdapter implements AttachmentAdapter {
       contentType:
         attachment.contentType || attachment.file.type || "image/jpeg",
       status: { type: "complete" },
+      file: attachment.file,
       content: [
         {
           type: "image",

@@ -1,5 +1,10 @@
 "use client";
 
+import { FileImageIcon, FileTextIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { type FC } from "react";
+import { FaRegFilePdf } from "react-icons/fa";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -14,11 +19,7 @@ import {
   MessagePrimitive,
   useAssistantState,
 } from "@assistant-ui/react";
-import { FileImageIcon, FileTextIcon } from "lucide-react";
-import { type FC } from "react";
-import { FaRegFilePdf } from "react-icons/fa";
 import { AttachmentPreviewDialog } from "./attachment-preview";
-import { useTranslations } from "next-intl";
 
 interface AttachmentThumbProps {
   attachment: Attachment;
@@ -30,6 +31,17 @@ const AttachmentThumb: FC<AttachmentThumbProps> = ({ attachment, altText }) => {
   const src = useAttachmentSrc(attachment);
   const type = attachment.contentType;
 
+  if (type === "application/pdf") {
+    return (
+      <FaRegFilePdf className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
+    );
+  }
+  if (!type.startsWith("image/")) {
+    return (
+      <FileTextIcon className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
+    );
+  }
+
   return (
     <Avatar className="aui-attachment-tile-avatar h-full w-full rounded-none">
       <AvatarImage
@@ -38,13 +50,7 @@ const AttachmentThumb: FC<AttachmentThumbProps> = ({ attachment, altText }) => {
         className="aui-attachment-tile-image object-cover"
       />
       <AvatarFallback delayMs={isImage ? 200 : 0}>
-        {type.startsWith("image/") ? (
-          <FileImageIcon className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
-        ) : type == "application/pdf" ? (
-          <FaRegFilePdf className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
-        ) : (
-          <FileTextIcon className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
-        )}
+        <FileImageIcon className="aui-attachment-tile-fallback-icon size-8 text-muted-foreground" />
       </AvatarFallback>
     </Avatar>
   );

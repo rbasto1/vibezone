@@ -15,6 +15,7 @@
 - [ ] Switching models with attachments is causing issues with the other models
 - [ ] Reloading chats loses the multiple generations (refreshes)
 - [x] Code blocks rendering as download items
+- [ ] PDF attachments not rendering
 
 ## Improvements
 
@@ -23,7 +24,7 @@
 - [x] Rating system
 - [x] Mobile: when adding a new panel, select it by default
 - [x] Allow user to pin favorite models
-- [ ] Attachments should be stored as links to files
+- [x] Attachments should be stored as links to files
 - [ ] Allow selection of reasoning effort if any model accepts it
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format
