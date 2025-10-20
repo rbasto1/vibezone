@@ -15,7 +15,7 @@
 - [ ] Switching models with attachments is causing issues with the other models
 - [ ] Reloading chats loses the multiple generations (refreshes)
 - [x] Code blocks rendering as download items
-- [ ] PDF attachments not rendering
+- [x] PDF attachments not rendering
 
 ## Improvements
 
