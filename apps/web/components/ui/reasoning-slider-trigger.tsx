@@ -57,25 +57,29 @@ export const ReasoningSliderTrigger = () => {
     [utils, isLoggedIn]
   );
 
-  const { allModelsHaveReasoning, blockingReasoningModelNames } =
-    useMemo(() => {
-      const blockingNames = new Set<string>();
+  const { anyModelHasReasoning, blockingReasoningModelNames } = useMemo(() => {
+    const blockingNames = new Set<string>();
+    let hasReasoningModel = false;
 
-      panelsConfig.forEach((panel) => {
-        const model = modelMap.get(panel.model);
-        if (!model?.capReason) {
-          const modelName = model?.name ?? panel.model;
-          blockingNames.add(modelName);
-        }
-      });
+    panelsConfig.forEach((panel) => {
+      const model = modelMap.get(panel.model);
 
-      return {
-        allModelsHaveReasoning: blockingNames.size === 0,
-        blockingReasoningModelNames: Array.from(blockingNames).sort((a, b) =>
-          a.localeCompare(b)
-        ),
-      };
-    }, [panelsConfig]);
+      if (model?.capReason) {
+        hasReasoningModel = true;
+        return;
+      }
+
+      const modelName = model?.name ?? panel.model;
+      blockingNames.add(modelName);
+    });
+
+    return {
+      anyModelHasReasoning: hasReasoningModel,
+      blockingReasoningModelNames: Array.from(blockingNames).sort((a, b) =>
+        a.localeCompare(b)
+      ),
+    };
+  }, [panelsConfig]);
 
   useEffect(() => {
     if (!showReasoningSlider) return;
@@ -96,13 +100,15 @@ export const ReasoningSliderTrigger = () => {
     };
   }, [showReasoningSlider]);
 
-  const disabledTooltipMessage = allModelsHaveReasoning
-    ? undefined
-    : `${t(
-        blockingReasoningModelNames.length === 1
-          ? "disabledTooltipSingle"
-          : "disabledTooltipPlural"
-      )}\n${formatModelNames(blockingReasoningModelNames, t)}`;
+  const disabledTooltipMessage = !anyModelHasReasoning
+    ? t("disabledTooltip")
+    : blockingReasoningModelNames.length === 0
+      ? undefined
+      : `${t(
+          blockingReasoningModelNames.length === 1
+            ? "disabledTooltipSingle"
+            : "disabledTooltipPlural"
+        )}\n${formatModelNames(blockingReasoningModelNames, t)}`;
 
   const reasoningEffort = preferences.reasoningEffort;
   const normalizedReasoningEffort = normalizeReasoningEffort(reasoningEffort);
@@ -125,7 +131,7 @@ export const ReasoningSliderTrigger = () => {
             variant="ghost"
             size="icon"
             onClick={() => setShowReasoningSlider((prev) => !prev)}
-            disabled={!allModelsHaveReasoning}
+            disabled={!anyModelHasReasoning}
             aria-label={t("label")}
             className="size-[34px] rounded-full p-1 hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30"
           >
@@ -141,11 +147,11 @@ export const ReasoningSliderTrigger = () => {
         </div>
       </TooltipTrigger>
       <TooltipContent>
-        {allModelsHaveReasoning
-          ? t("label")
-          : (disabledTooltipMessage ?? t("disabledTooltip"))
-              .split("\n")
-              .map((line, idx) => <p key={idx}>{line}</p>)}
+        {(disabledTooltipMessage ?? t("label"))
+          .split("\n")
+          .map((line, idx) => (
+            <p key={idx}>{line}</p>
+          ))}
       </TooltipContent>
     </Tooltip>
   );

@@ -267,9 +267,9 @@
     "reasoningEffort": {
       "label": "Reasoning effort",
       "description": "Control how much reasoning effort the AI uses when the selected model supports it.",
-      "disabledTooltip": "Only available when all selected models support reasoning",
-      "disabledTooltipSingle": "The following model does not support reasoning:",
-      "disabledTooltipPlural": "The following models do not support reasoning:",
+      "disabledTooltip": "No models allow reasoning effort to be adjusted.",
+      "disabledTooltipSingle": "The following model is not capable of reasoning effort adjustment and will not be affected:",
+      "disabledTooltipPlural": "The following models are not capable of reasoning effort adjustment and will not be affected:",
       "selectedModels": "Selected models",
       "none": "Off",
       "low": "Low",

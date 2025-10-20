@@ -267,9 +267,9 @@
     "reasoningEffort": {
       "label": "Denkaufwand",
       "description": "Steuere, wie viel Denkaufwand die KI verwendet, wenn das ausgewählte Modell das unterstützt.",
-      "disabledTooltip": "Nur verfügbar, wenn alle ausgewählten Modelle Schlussfolgern unterstützen",
-      "disabledTooltipSingle": "Das folgende Modell ist nicht in der Lage, Schlussfolgerungen zu ziehen:",
-      "disabledTooltipPlural": "Die folgenden Modelle sind nicht in der Lage, Schlussfolgerungen zu ziehen:",
+      "disabledTooltip": "Keine Modelle ermöglichen die Anpassung des Reasoning-Aufwands.",
+      "disabledTooltipSingle": "Das folgende Modell kann den Reasoning-Aufwand nicht anpassen und wird nicht betroffen sein:",
+      "disabledTooltipPlural": "Die folgenden Modelle können den Reasoning-Aufwand nicht anpassen und werden nicht betroffen sein:",
       "selectedModels": "Ausgewählte Modelle",
       "none": "Kein",
       "low": "Niedrig",
