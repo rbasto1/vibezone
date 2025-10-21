@@ -6,6 +6,7 @@ import {
   forwardRef,
   useCallback,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
@@ -109,6 +110,20 @@ export const GlobalComposerTextarea = forwardRef<
     }
     return success;
   }, [onSubmit, prompt, setPrompt]);
+
+  const resizeTextarea = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, []);
+
+  useLayoutEffect(() => {
+    resizeTextarea();
+  }, [prompt, resizeTextarea]);
 
   useImperativeHandle(
     ref,
