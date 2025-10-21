@@ -325,5 +325,23 @@
   "WhatsNew": {
     "title": "🥳 Neuigkeiten",
     "dismiss": "Schließen"
+  },
+  "Legal": {
+    "lastUpdated": "Zuletzt aktualisiert",
+    "models": {
+      "title": "Modellzugriff",
+      "totalModels": "Wir bieten insgesamt {count} Modelle von {providers} Anbietern.",
+      "freeModels": "Kostenlose Modelle ({count})",
+      "includedModels": "Enthaltene Modelle ({count})",
+      "premiumModels": "Premium-Modelle ({count})",
+      "backTo": "Zurück zu",
+      "termsOfUse": "Nutzungsbedingungen"
+    },
+    "privacy": {
+      "title": "Datenschutzrichtlinie"
+    },
+    "terms": {
+      "title": "Nutzungsbedingungen"
+    }
   }
 }

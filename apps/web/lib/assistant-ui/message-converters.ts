@@ -247,7 +247,8 @@ const convertContentPart = (
     case "image":
       if (
         typeof candidate.image !== "string" &&
-        typeof candidate.url !== "string"
+        typeof candidate.url !== "string" &&
+        typeof candidate.data !== "string"
       ) {
         return null;
       }
@@ -256,27 +257,44 @@ const convertContentPart = (
         data:
           typeof candidate.image === "string"
             ? candidate.image
-            : String(candidate.url ?? ""),
+            : typeof candidate.url === "string"
+              ? candidate.url
+              : String(candidate.data ?? ""),
         mimeType: "image/png",
         filename:
           typeof candidate.filename === "string" ? candidate.filename : "image",
       } as ThreadMessageLike["content"][number];
     case "file":
-      if (typeof candidate.url !== "string") {
+      if (
+        typeof candidate.url !== "string" &&
+        typeof candidate.data !== "string"
+      ) {
         return null;
       }
-      return {
-        type: "file",
-        data: candidate.url,
-        mimeType:
+      {
+        const data =
+          typeof candidate.url === "string"
+            ? candidate.url
+            : (candidate.data as string);
+        const mimeType =
           typeof candidate.mediaType === "string"
             ? candidate.mediaType
-            : "application/octet-stream",
-        filename:
+            : typeof candidate.mimeType === "string"
+              ? candidate.mimeType
+              : "application/octet-stream";
+        const filename =
           typeof candidate.filename === "string"
             ? candidate.filename
-            : "attachment",
+            : typeof candidate.name === "string"
+              ? candidate.name
+              : "attachment";
+      return {
+        type: "file",
+          data,
+          mimeType,
+          filename,
       } as ThreadMessageLike["content"][number];
+      }
     default:
       return null;
   }

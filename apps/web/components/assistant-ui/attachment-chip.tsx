@@ -73,6 +73,19 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
   const previewSrc = useImagePreview(
     attachment.type === "image" ? attachment : undefined
   );
+  const uploadProgress =
+    attachment.status.type === "running" &&
+    attachment.status.reason === "uploading"
+      ? Math.max(
+          0,
+          Math.min(100, Math.round(attachment.status.progress ?? 0))
+        )
+      : attachment.status.type === "complete"
+        ? 100
+        : null;
+  const isUploading =
+    attachment.status.type === "running" &&
+    attachment.status.reason === "uploading";
 
   const handleRemove = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -84,11 +97,21 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
     <Tooltip>
       <TooltipTrigger asChild>
         <Chip
-          className={cn("max-w-[12rem] cursor-default select-none", className)}
+          className={cn(
+            "relative max-w-[12rem] cursor-default select-none overflow-hidden",
+            className
+          )}
         >
+          {uploadProgress !== null && uploadProgress < 100 ? (
+            <span
+              className="absolute inset-y-0 left-0 z-0 h-full bg-primary/15 transition-[width] duration-300 ease-out"
+              style={{ width: `${uploadProgress}%` }}
+              aria-hidden
+            />
+          ) : null}
           <ChipLeading
             className={cn(
-              "bg-background/80",
+              "relative z-10 bg-background/80",
               previewSrc && "bg-transparent shadow-none"
             )}
           >
@@ -110,8 +133,12 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
               )}
             </AttachmentPreviewDialog>
           </ChipLeading>
-          <ChipLabel>{attachment.name}</ChipLabel>
-          <ChipTrailing>
+          <ChipLabel className="relative z-10">
+            {isUploading && uploadProgress !== null && uploadProgress < 100
+              ? `${attachment.name} (${uploadProgress}%)`
+              : attachment.name}
+          </ChipLabel>
+          <ChipTrailing className="relative z-10">
             <ChipDismissButton
               aria-label={t("remove", { name: attachment.name ?? "" })}
               onClick={handleRemove}
@@ -122,7 +149,11 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
           </ChipTrailing>
         </Chip>
       </TooltipTrigger>
-      <TooltipContent side="top">{attachment.name}</TooltipContent>
+      <TooltipContent side="top">
+        {isUploading && uploadProgress !== null && uploadProgress < 100
+          ? `${attachment.name ?? ""} (${uploadProgress}%)`
+          : attachment.name}
+      </TooltipContent>
     </Tooltip>
   );
 };

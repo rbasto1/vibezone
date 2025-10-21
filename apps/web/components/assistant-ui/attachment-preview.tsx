@@ -3,7 +3,6 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAttachmentSrc } from "@/hooks/use-attachments";
 import type { Attachment } from "@assistant-ui/react";
-import Image from "next/image";
 import type { PropsWithChildren } from "react";
 import { useState, type FC } from "react";
 import { Button } from "../ui/button";
@@ -54,18 +53,16 @@ interface AttachmentPreviewProps {
 const AttachmentPreview: FC<AttachmentPreviewProps> = ({ src }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
       src={src}
       alt="Image Preview"
-      width={1}
-      height={1}
       className={
         isLoaded
           ? "aui-attachment-preview-image-loaded block h-auto max-h-[80vh] w-auto max-w-full object-contain"
           : "aui-attachment-preview-image-loading hidden"
       }
       onLoad={() => setIsLoaded(true)}
-      priority={false}
     />
   );
 };

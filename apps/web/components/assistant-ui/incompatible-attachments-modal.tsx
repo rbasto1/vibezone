@@ -99,7 +99,7 @@ export const IncompatibleAttachmentsModal: FC<
           <p className="text-sm text-muted-foreground text-left">
             {t("instructions")}
           </p>
-          <Button onClick={onClose} className="w-full sm:w-auto">
+          <Button onClick={onClose} className="sm:w-full">
             {t("understood")}
           </Button>
         </DialogFooter>

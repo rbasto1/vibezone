@@ -44,6 +44,22 @@ export const GlobalComposer: FC = () => {
   const pendingAttachments = attachments.some(
     (a) => a.status.type !== "complete"
   );
+  const uploadProgress = useMemo(() => {
+    const uploading = attachments.filter(
+      (attachment) =>
+        attachment.status.type === "running" &&
+        attachment.status.reason === "uploading"
+    );
+    if (!uploading.length) return null;
+    const total = uploading.reduce((sum, attachment) => {
+      const progress =
+        attachment.status.type === "running"
+          ? attachment.status.progress ?? 0
+          : 0;
+      return sum + progress;
+    }, 0);
+    return Math.round(total / uploading.length);
+  }, [attachments]);
   const completeAttachments = useCompleteAttachmentsValue();
   const setCurrentChat = useCurrentChatSetter();
   const setUIState = useUIStateSetter();
@@ -148,7 +164,8 @@ export const GlobalComposer: FC = () => {
 
   const send = (text: string): boolean => {
     const msg = text.trim();
-    if (!msg || !completeAttachments) return false;
+    if (!completeAttachments) return false; // pending upload
+    if (!msg && !completeAttachments?.length) return false; // empty message with no attachments
 
     // Validate attachments before sending
     const incompatible = validateAttachments();
@@ -312,12 +329,26 @@ export const GlobalComposer: FC = () => {
             <Button
               size="icon"
               onClick={() => textareaRef.current?.submit()}
-              aria-label={sendLabel}
-              title={sendLabel}
+              aria-label={
+                uploadProgress !== null
+                  ? `${sendLabel} ${uploadProgress}%`
+                  : sendLabel
+              }
+              title={
+                uploadProgress !== null
+                  ? `${sendLabel} ${uploadProgress}%`
+                  : sendLabel
+              }
               className="self-start"
               disabled={pendingAttachments}
             >
-              <ArrowUpIcon className="size-5" />
+              {uploadProgress !== null ? (
+                <span className="min-w-[2.5rem] text-sm font-semibold">
+                  {uploadProgress}%
+                </span>
+              ) : (
+                <ArrowUpIcon className="size-5" />
+              )}
             </Button>
           )}
         </div>

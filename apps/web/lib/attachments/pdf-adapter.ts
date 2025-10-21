@@ -34,6 +34,7 @@ export class PdfAttachmentAdapter implements AttachmentAdapter {
       contentType:
         attachment.contentType || attachment.file.type || "application/pdf",
       status: { type: "complete" },
+      file: attachment.file,
       content: [
         {
           type: "file",

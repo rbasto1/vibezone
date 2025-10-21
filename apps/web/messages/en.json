@@ -325,5 +325,23 @@
   "WhatsNew": {
     "title": "🥳 What's New",
     "dismiss": "Dismiss"
+  },
+  "Legal": {
+    "lastUpdated": "Last updated",
+    "models": {
+      "title": "Model Access",
+      "totalModels": "We offer in total {count} models from {providers} providers.",
+      "freeModels": "Free Models ({count})",
+      "includedModels": "Included Models ({count})",
+      "premiumModels": "Premium Models ({count})",
+      "backTo": "Back to",
+      "termsOfUse": "Terms of Use"
+    },
+    "privacy": {
+      "title": "Privacy Policy"
+    },
+    "terms": {
+      "title": "Terms of Service"
+    }
   }
 }
