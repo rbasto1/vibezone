@@ -1,8 +1,12 @@
-import { chats, db, messages, threads } from "@/db";
+import { chats, db, messages, projects, threads } from "@/db";
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, gt, isNull, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import { CHAT_LIST_PAGE_SIZE, INTERNAL_SECRET } from "../constants";
+import {
+  CHAT_LIST_PAGE_SIZE,
+  DEFAULT_PROJECT_COLOR,
+  INTERNAL_SECRET,
+} from "../constants";
 import { searchChats } from "./chats-search";
 import {
   authenticatedProcedure,
@@ -38,6 +42,7 @@ export const chatsRouter = t.router({
         query: z.string().min(2),
         cursor: z.string().optional(),
         limit: z.number().min(1).max(50).default(CHAT_LIST_PAGE_SIZE),
+        projectId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -48,6 +53,7 @@ export const chatsRouter = t.router({
         query: input.query,
         cursor: input.cursor,
         limit: input.limit,
+        projectId: input.projectId,
       });
     }),
 
@@ -66,10 +72,14 @@ export const chatsRouter = t.router({
       const userId = user.id;
 
       const chat = await db.query.chats.findFirst({
-        columns: { id: true, userId: true },
         where: eq(chats.id, chatId),
+        with: {
+          project: {
+            columns: { id: true, userId: true, deletedAt: true },
+          },
+        },
       });
-      if (chat && chat.userId !== userId) {
+      if (chat && chat.project?.userId !== userId) {
         return { success: false, message: "Access denied" } as const;
       }
 
@@ -81,13 +91,48 @@ export const chatsRouter = t.router({
           .set({
             title,
           })
-          .where(and(eq(chats.id, chatId), eq(chats.userId, userId)));
+          .where(eq(chats.id, chatId));
       } else {
+        const generalProject = await db.query.projects.findFirst({
+          where: and(
+            eq(projects.id, userId),
+            eq(projects.userId, userId),
+            isNull(projects.deletedAt)
+          ),
+        });
+
+        const ensuredProject =
+          generalProject ??
+          (await db
+            .insert(projects)
+            .values({
+              id: userId,
+              userId,
+              name: "General",
+              color: DEFAULT_PROJECT_COLOR,
+            })
+            .onConflictDoUpdate({
+              target: projects.id,
+              set: {
+                name: "General",
+                deletedAt: null,
+              },
+            })
+            .returning()
+            .then((rows) => rows[0]));
+
+        if (!ensuredProject) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Default project not found",
+          });
+        }
+
         await db
           .insert(chats)
           .values({
             id: chatId,
-            userId,
+            projectId: ensuredProject.id,
             title,
             lastMessageAt: new Date(),
           })
@@ -115,11 +160,20 @@ export const chatsRouter = t.router({
       const chatRecord = await db.query.chats.findFirst({
         where: and(
           eq(chats.id, chatId),
-          eq(chats.userId, user.id),
           isNull(chats.deletedAt),
           eq(chats.isArchived, false)
         ),
         with: {
+          project: {
+            columns: {
+              id: true,
+              userId: true,
+              instructions: true,
+              name: true,
+              color: true,
+              deletedAt: true,
+            },
+          },
           threads: {
             with: {
               messages: {
@@ -131,7 +185,12 @@ export const chatsRouter = t.router({
         },
       });
 
-      if (!chatRecord) {
+      if (
+        !chatRecord ||
+        !chatRecord.project ||
+        chatRecord.project.userId !== user.id ||
+        chatRecord.project.deletedAt
+      ) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Chat not found",
@@ -153,17 +212,26 @@ export const chatsRouter = t.router({
       if (!user) throw new Error("Assert: auth procedure must have user");
       const userId = user.id;
 
-      // Verify chat belongs to user and archive it
-      const result = await db
+      const chatRecord = await db.query.chats.findFirst({
+        where: eq(chats.id, chatId),
+        with: {
+          project: {
+            columns: { userId: true },
+          },
+        },
+      });
+
+      if (!chatRecord || chatRecord.project?.userId !== userId) {
+        return { success: false, message: "Access denied" };
+      }
+
+      await db
         .update(chats)
         .set({
           isArchived: true,
           updatedAt: new Date(),
         })
-        .where(and(eq(chats.id, chatId), eq(chats.userId, userId)));
-      if (!result) {
-        return { success: false, message: "Access denied" };
-      }
+        .where(eq(chats.id, chatId));
 
       return { success: true };
     }),
@@ -180,13 +248,13 @@ export async function listChats({
   cursor,
   limit = CHAT_LIST_PAGE_SIZE,
 }: ListChatsInput) {
-  let whereCondition = and(
-    eq(chats.userId, userId),
+  const filters = [
+    eq(projects.userId, userId),
+    isNull(projects.deletedAt),
     isNull(chats.deletedAt),
-    eq(chats.isArchived, false)
-  );
+    eq(chats.isArchived, false),
+  ];
 
-  // Parse cursor if provided
   if (cursor) {
     const separatorIndex = cursor.lastIndexOf(":");
     if (separatorIndex > 0) {
@@ -198,25 +266,37 @@ export async function listChats({
           : null;
 
       if (cursorDate) {
-        const baseCondition = lt(chats.lastMessageAt, cursorDate);
-        const cursorCondition =
+        filters.push(
           id.length > 0
             ? or(
-                baseCondition,
+                lt(chats.lastMessageAt, cursorDate),
                 and(eq(chats.lastMessageAt, cursorDate), gt(chats.id, id))
               )
-            : baseCondition;
-
-        whereCondition = and(whereCondition, cursorCondition);
+            : lt(chats.lastMessageAt, cursorDate)
+        );
       }
     }
   }
 
-  const result = await db.query.chats.findMany({
-    where: whereCondition,
-    orderBy: (chat, { desc, asc }) => [desc(chat.lastMessageAt), asc(chat.id)],
-    limit: limit + 1, // Get one extra to check if there are more
-  });
+  const result = await db
+    .select({
+      id: chats.id,
+      title: chats.title,
+      lastMessageAt: chats.lastMessageAt,
+      createdAt: chats.createdAt,
+      project: {
+        id: projects.id,
+        name: projects.name,
+        color: projects.color,
+        instructions: projects.instructions,
+        isDefault: sql<boolean>`${projects.id} = ${userId}`,
+      },
+    })
+    .from(chats)
+    .innerJoin(projects, eq(projects.id, chats.projectId))
+    .where(and(...filters))
+    .orderBy(desc(chats.lastMessageAt), asc(chats.id))
+    .limit(limit + 1);
 
   const hasMore = result.length > limit;
   const chatsData = hasMore ? result.slice(0, limit) : result;
@@ -234,6 +314,7 @@ export async function listChats({
       title: chat.title,
       lastMessageAt: chat.lastMessageAt,
       createdAt: chat.createdAt,
+      project: chat.project,
     })),
     next,
   };

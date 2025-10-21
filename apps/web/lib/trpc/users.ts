@@ -2,7 +2,7 @@ import "server-only";
 
 import { db } from "@/db";
 import type { Preferences } from "@/db/schema";
-import { chats, models, usage, usersModels } from "@/db/schema";
+import { chats, models, projects, usage, usersModels } from "@/db/schema";
 import { preferences, userStats } from "@/db/tables";
 import {
   and,
@@ -83,10 +83,16 @@ export const usersRouter = t.router({
       })
       .from(userStats)
       .leftJoin(
+        projects,
+        and(eq(projects.userId, userStats.id), isNull(projects.deletedAt))
+      )
+      .leftJoin(
         chats,
         and(
-          eq(chats.userId, userStats.id),
-          gte(chats.lastMessageAt, lastSevenDays)
+          eq(chats.projectId, projects.id),
+          gte(chats.lastMessageAt, lastSevenDays),
+          isNull(chats.deletedAt),
+          eq(chats.isArchived, false)
         )
       )
       .leftJoin(

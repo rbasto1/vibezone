@@ -9,12 +9,13 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
  */
 export function useNewChat() {
   const setCurrentChat = useCurrentChatSetter();
-  return () => {
+  return (projectId: string) => {
     // Helper hook to create new chat
     const newChat: ChatConfig = {
       id: generateChatId(),
       createdAt: new Date(),
       addedToList: false,
+      projectId,
       fetchedTitlePanelId: null,
     };
     setCurrentChat(newChat);

@@ -7,6 +7,7 @@ import {
   models,
   modelSupportedParameters,
   modelTranslations,
+  projects,
   providers,
   suggestionGroups,
   suggestionGroupTranslations,
@@ -14,6 +15,7 @@ import {
   threads,
   usage,
   usersModels,
+  userStats,
 } from "./tables";
 
 export const modelsRelations = relations(models, ({ one, many }) => ({
@@ -50,8 +52,20 @@ export const modelSupportedParametersRelations = relations(
   })
 );
 
-export const chatRelations = relations(chats, ({ many }) => ({
+export const chatRelations = relations(chats, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [chats.projectId],
+    references: [projects.id],
+  }),
   threads: many(threads),
+}));
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  user: one(userStats, {
+    fields: [projects.userId],
+    references: [userStats.id],
+  }),
+  chats: many(chats),
 }));
 
 export const threadsRelations = relations(threads, ({ one, many }) => ({

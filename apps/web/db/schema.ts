@@ -8,6 +8,7 @@ import {
   modelsRelations,
   modelSupportedParametersRelations,
   modelTranslationsRelations,
+  projectsRelations,
   providersRelations,
   suggestionGroupsRelations,
   suggestionGroupTranslationsRelations,
@@ -27,6 +28,7 @@ import {
   modelTranslations,
   newsArticles,
   preferences,
+  projects,
   providers,
   suggestionGroups,
   suggestionGroupTranslations,
@@ -42,10 +44,10 @@ export {
   chats,
   locales,
   localesRelations,
-  messages,
   messageRatings,
-  messagesRelations,
   messageRatingsRelations,
+  messages,
+  messagesRelations,
   models,
   modelsRelations,
   modelSupportedParameters,
@@ -54,6 +56,8 @@ export {
   modelTranslationsRelations,
   newsArticles,
   preferences,
+  projects,
+  projectsRelations,
   providers,
   providersRelations,
   providerTiers,
@@ -81,6 +85,8 @@ export type Preferences = typeof preferences.$inferSelect;
 export type NewPreferences = typeof preferences.$inferInsert;
 export type Provider = typeof providers.$inferSelect;
 export type NewProvider = typeof providers.$inferInsert;
+export type Project = typeof projects.$inferSelect;
+export type NewProject = typeof projects.$inferInsert;
 export type Model = typeof models.$inferSelect;
 export type NewModel = typeof models.$inferInsert;
 export type SuggestionGroup = typeof suggestionGroups.$inferSelect;

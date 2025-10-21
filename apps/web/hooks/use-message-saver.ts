@@ -126,6 +126,7 @@ export const useMessageSaver = (panel: PanelConfig) => {
   const messages = thread.messages;
   const isDirty = panelState.dirty;
   const chatId = currentChat.id;
+  const projectId = currentChat.projectId;
 
   // Watch for messages and save ones that are ready and not yet saved
   useEffect(() => {
@@ -174,7 +175,7 @@ export const useMessageSaver = (panel: PanelConfig) => {
       toSave.forEach((m) => savedMessageIds.current.add(m.id));
 
       // Optimistically ensure chat exists in cache
-      if (userId) {
+      if (userId && projectId) {
         setCurrentChat((currentChat) => {
           if (currentChat.addedToList) return currentChat;
 
@@ -191,6 +192,7 @@ export const useMessageSaver = (panel: PanelConfig) => {
             chatId,
             threadId: id, // panelId is the same as threadId
             modelId: model,
+            projectId,
             messages: toSave.map((msg) => ({
               id: msg.id,
               role: msg.role,
@@ -224,6 +226,7 @@ export const useMessageSaver = (panel: PanelConfig) => {
     messages,
     model,
     userId,
+    projectId,
     setCurrentChat,
     saveMessagesMutation,
     utils.chats.listChats,

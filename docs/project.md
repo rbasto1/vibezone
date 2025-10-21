@@ -19,7 +19,7 @@
 ## Improvements
 
 - [x] Add Terms of Use
-- [ ] Translate Privacy Policy and Terms of Use
+- [x] Translate Privacy Policy and Terms of Use
 - [x] Sending an empty message with attachments should be possible
 - [x] Add "What's New" startup modal
 - [x] Rating system
