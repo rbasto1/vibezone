@@ -30,7 +30,7 @@
 - [x] Allow pasting attachments with Ctrl-V
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format
-- [ ] Composer text area should grow with text
+- [x] Composer text area should grow with text
 - [ ] Add analytics (Posthog?)
 - [ ] Projects (group threads) - paying only
 - [x] Add a "do not show again" option to the warning about discarding a panel
@@ -38,7 +38,7 @@
 - [x] Allow setting order of groups
 - [x] Syntax highlighting: auto-detect language
 - [x] Add `api_created_at` to models and use our import date for created_at
-- [ ] Add auto-translation button to admin (model descriptions)
+- [ ] Add auto-translation button to admin (model descriptions, news)
 - [x] Schedule daily usage calculation
 - [ ] Use `useMessage` for saving messages instead of thread message list
 - [ ] Add cleanup of attachments never sent or older than 30 days for free users
