@@ -2,9 +2,10 @@ import type { Metadata, NextPage } from "next";
 
 import { siteDomain, siteName } from "@/lib/branding";
 import { ArrowUpRightIcon } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { ItemList, SectionHeader, SectionSubheader } from "../text";
+import PagePtBr from "./page-pt-BR";
 
 const title = `Terms of Service | ${siteName}`;
 
@@ -27,6 +28,12 @@ export const metadata: Metadata = {
 };
 
 const TermsPage: NextPage = async () => {
+  const locale = await getLocale();
+
+  if (locale === "pt-BR") {
+    return <PagePtBr />;
+  }
+
   const t = await getTranslations("Legal");
   const nameFull =
     siteDomain === "multipla.ia.br" ? "Multipla.ia.br" : "Vibezone.ai";
@@ -275,15 +282,15 @@ const TermsPage: NextPage = async () => {
         <section>
           <SectionHeader num={6}>Intellectual Property</SectionHeader>
 
-          <SectionSubheader>Vibezone Materials</SectionSubheader>
+          <SectionSubheader>{siteName} Materials</SectionSubheader>
           <p>
             All software, design, text, images, logos, and other materials
             forming part of the {siteName} Service (
-            <strong>Vibezone Materials</strong>) are owned by or licensed to{" "}
+            <strong>{siteName} Materials</strong>) are owned by or licensed to{" "}
             <strong>AI Tech LLC</strong>. Except for the limited right to use
             the Service as permitted under these Terms, no rights are
             transferred to you. You may not copy, modify, distribute, or create
-            derivative works from Vibezone Materials without our prior written
+            derivative works from {siteName} Materials without our prior written
             consent.
           </p>
 
