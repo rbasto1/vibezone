@@ -61,6 +61,7 @@ async function generateModels() {
     stringifyList(models.models),
     ", providers:",
     stringifyList(models.providers),
+    `, maxUpdatedAt: new Date(${models.maxUpdatedAt.getTime()}),`,
     "} as unknown as GetModelsListReturn;\n",
   ].join("");
   fs.writeFileSync(fullFilename, fileContents);

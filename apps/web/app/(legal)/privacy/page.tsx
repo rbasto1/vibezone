@@ -1,9 +1,12 @@
 import type { Metadata, NextPage } from "next";
+import { getTranslations } from "next-intl/server";
 
 import type { ProviderPrivacyInfo } from "@/generated/providers-privacy";
 import { providersPrivacy } from "@/generated/providers-privacy";
 import { siteDomain, siteName } from "@/lib/branding";
-import { type PropsWithChildren } from "react";
+import { ArrowUpRightIcon } from "lucide-react";
+import Link from "next/link";
+import { ItemList, SectionHeader, SectionSubheader } from "../text";
 
 const title = `Privacy Policy | ${siteName}`;
 
@@ -25,7 +28,8 @@ export const metadata: Metadata = {
   },
 };
 
-const PrivacyPage: NextPage = () => {
+const PrivacyPage: NextPage = async () => {
+  const t = await getTranslations("Legal");
   const nameFull =
     siteDomain === "multipla.ia.br" ? "Multipla.ia.br" : "Vibezone.ai";
   const supportEmail =
@@ -37,10 +41,10 @@ const PrivacyPage: NextPage = () => {
     <article className="mx-auto w-full max-w-3xl px-4 sm:px-6 md:px-8 space-y-8">
       <header className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-          Privacy Policy
+          {t("privacy.title")}
         </h1>
         <p className="text-muted-foreground italic">
-          Last updated: September 24, 2025
+          {t("lastUpdated")}: September 24, 2025
         </p>
       </header>
 
@@ -105,9 +109,13 @@ const PrivacyPage: NextPage = () => {
           </p>
           <p>
             By accessing or using our Site or Service, you agree to this Privacy
-            Policy and our Terms of Service. If you do not agree with them, you
-            should not use the Site or Service. Please review both documents
-            carefully before proceeding.
+            Policy and our{" "}
+            <Link href="/terms" className="underline">
+              Terms of Service
+              <ArrowUpRightIcon className="inline size-3 mb-1 ml-1" />
+            </Link>
+            . If you do not agree with them, you should not use the Site or
+            Service. Please review both documents carefully before proceeding.
           </p>
           <p>
             We may update this Privacy Policy from time to time. When we make
@@ -626,30 +634,6 @@ const PrivacyPage: NextPage = () => {
 };
 
 export default PrivacyPage;
-
-function SectionHeader({
-  children,
-  num,
-}: PropsWithChildren & { num: number | null }) {
-  return (
-    <a id={num ? num.toString() : undefined}>
-      <h2 className="text-2xl font-semibold tracking-tight mt-6">
-        {num ? num + ". " : ""}
-        {children}
-      </h2>
-    </a>
-  );
-}
-
-function SectionSubheader({ children }: PropsWithChildren) {
-  return (
-    <h3 className="text-xl font-semibold tracking-tight mt-6">{children}</h3>
-  );
-}
-
-function ItemList({ children }: PropsWithChildren) {
-  return <ul className="list-disc mt-2 pl-6 space-y-1">{children}</ul>;
-}
 
 function ProviderPolicyItem({
   provider: { name, privacyPolicyUrl },

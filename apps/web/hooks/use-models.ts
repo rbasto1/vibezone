@@ -72,6 +72,7 @@ export function useModelsValue(
       providers,
       models,
       groups,
+      maxUpdatedAt: raw.maxUpdatedAt,
     } satisfies GetModelsListReturn;
   }, [preferences?.hiddenProviders, includeModelsOption]);
 }

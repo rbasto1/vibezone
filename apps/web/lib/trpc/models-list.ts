@@ -18,6 +18,8 @@ export async function listModels() {
       architectureModality: false,
       architectureTokenizer: false,
       architectureInstructType: false,
+      deletedAt: false,
+      hiddenAt: false,
     },
     where: and(
       isNull(modelsTable.deletedAt),
@@ -55,6 +57,11 @@ export async function listModels() {
   });
 
   const uniqueProviders = getUniqueProviders(result);
+  const maxUpdatedAt = result.reduce(
+    (max, model) =>
+      model.updatedAt && model.updatedAt > max ? model.updatedAt : max,
+    result[0]?.updatedAt ?? new Date()
+  );
 
   return {
     models: result.map((model) => {
@@ -73,7 +80,6 @@ export async function listModels() {
         isIncluded: model.isIncluded,
         isFree: model.isFree,
         createdAt: model.createdAt,
-        deletedAt: model.deletedAt,
         // Capabilities (short names used in UI)
         capReason: modelParams.includes("reasoning"),
         capTools: modelParams.includes("tools"),
@@ -95,10 +101,9 @@ export async function listModels() {
       order: provider.order,
       dataRetention: provider.dataRetention || !provider.privacyPolicyUrl,
       createdAt: provider.createdAt,
-      updatedAt: provider.updatedAt,
-      deletedAt: provider.deletedAt,
     })),
     groups,
+    maxUpdatedAt,
   };
 }
 

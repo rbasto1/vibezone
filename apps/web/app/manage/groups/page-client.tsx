@@ -24,6 +24,7 @@ const GroupsPageClient: NextPage = () => {
     models: [],
     providers: [],
     groups: [],
+    maxUpdatedAt: new Date(),
   };
 
   const utils = trpc.useUtils();
