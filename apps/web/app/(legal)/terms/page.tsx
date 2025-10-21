@@ -1,6 +1,7 @@
 import type { Metadata, NextPage } from "next";
 
 import { siteDomain, siteName } from "@/lib/branding";
+import Link from "next/link";
 import { ItemList, SectionHeader, SectionSubheader } from "../text";
 
 const title = `Terms of Service | ${siteName}`;
@@ -38,7 +39,7 @@ const TermsPage: NextPage = () => {
           Terms of Service
         </h1>
         <p className="text-muted-foreground italic">
-          Last updated: October 20, 2025
+          Last updated: October 21, 2025
         </p>
       </header>
 
@@ -58,9 +59,9 @@ const TermsPage: NextPage = () => {
           <p>
             By accessing or using the Service, you agree to be bound by these
             Terms and our{" "}
-            <a href="/privacy" className="underline">
+            <Link href="/privacy" className="underline">
               Privacy Policy
-            </a>
+            </Link>
             . If you do not agree, do not use the Service.
           </p>
           <p>
@@ -186,9 +187,9 @@ const TermsPage: NextPage = () => {
             The availability of specific models and features, including which
             models are categorized as “included,” “premium,” or “free,” is
             described on our{" "}
-            <a href="/models" className="underline">
+            <Link href="/models" className="underline">
               Model Access Page
-            </a>
+            </Link>
             . That information is provided for convenience and may change at any
             time without notice. Updates to model availability or access tiers
             do not constitute an amendment to these Terms.
@@ -562,43 +563,10 @@ const TermsPage: NextPage = () => {
           <p>
             {siteName} connects you with models operated by third-party
             providers. Your use of those models is also subject to the terms and
-            policies of the respective providers, including (but not limited
-            to):
+            policies of the respective providers.
           </p>
-          <ItemList>
-            <li>
-              <a
-                href="https://openai.com/policies/terms-of-use"
-                className="underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                OpenAI Terms of Use
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.anthropic.com/legal/terms-of-service"
-                className="underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Anthropic Terms of Service
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://x.ai/terms"
-                className="underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                xAI Terms of Service
-              </a>
-            </li>
-          </ItemList>
           <p>
-            These policies may change independently of {siteName}. You are
+            Such policies may change independently of {siteName}. You are
             responsible for reviewing and complying with them when using the
             corresponding models.
           </p>
