@@ -1,10 +1,14 @@
-import { providerMap } from "@/lib/model-map";
 import type { NextPage } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+
+import { providerMap } from "@/lib/model-map";
+import { ArrowUpRightIcon } from "lucide-react";
 import { models } from "../../../generated/models";
 import { ItemList, SectionHeader } from "../text";
 
-const ModelsPage: NextPage = () => {
+const ModelsPage: NextPage = async () => {
+  const t = await getTranslations("Legal");
   const { free, included, premium } = models.models.reduce(
     (acc, model) => {
       if (model.isPremium) {
@@ -30,19 +34,23 @@ const ModelsPage: NextPage = () => {
     <article className="mx-auto w-full max-w-3xl px-4 sm:px-6 md:px-8 space-y-8">
       <header className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-          Model Access
+          {t("models.title")}
         </h1>
         <p className="text-muted-foreground italic">
-          Last updated: {models.maxUpdatedAt.toLocaleDateString()}
+          {t("lastUpdated")}: {models.maxUpdatedAt.toLocaleDateString()}
         </p>
         <p>
-          We offer in total {models.models.length} models from{" "}
-          {models.providers.length} providers.
+          {t("models.totalModels", {
+            count: models.models.length,
+            providers: models.providers.length,
+          })}
         </p>
       </header>
 
       <section>
-        <SectionHeader num={1}>Free Models ({free.length})</SectionHeader>
+        <SectionHeader num={1}>
+          {t("models.freeModels", { count: free.length })}
+        </SectionHeader>
         <ItemList>
           {free.map((model) => (
             <ModelItem key={model.id} model={model} />
@@ -52,7 +60,7 @@ const ModelsPage: NextPage = () => {
 
       <section>
         <SectionHeader num={2}>
-          Included Models ({included.length})
+          {t("models.includedModels", { count: included.length })}
         </SectionHeader>
         <ItemList>
           {included.map((model) => (
@@ -62,7 +70,9 @@ const ModelsPage: NextPage = () => {
       </section>
 
       <section>
-        <SectionHeader num={3}>Premium Models ({premium.length})</SectionHeader>
+        <SectionHeader num={3}>
+          {t("models.premiumModels", { count: premium.length })}
+        </SectionHeader>
         <ItemList>
           {premium.map((model) => (
             <ModelItem key={model.id} model={model} />
@@ -70,9 +80,10 @@ const ModelsPage: NextPage = () => {
         </ItemList>
       </section>
       <p>
-        Back to{" "}
+        {t("models.backTo")}{" "}
         <Link href="/terms" className="underline">
-          Terms of Use
+          {t("terms.title")}
+          <ArrowUpRightIcon className="inline size-3 mb-1 ml-1" />
         </Link>
       </p>
     </article>

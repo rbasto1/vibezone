@@ -1,6 +1,8 @@
 import type { Metadata, NextPage } from "next";
 
 import { siteDomain, siteName } from "@/lib/branding";
+import { ArrowUpRightIcon } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { ItemList, SectionHeader, SectionSubheader } from "../text";
 
@@ -24,7 +26,8 @@ export const metadata: Metadata = {
   },
 };
 
-const TermsPage: NextPage = () => {
+const TermsPage: NextPage = async () => {
+  const t = await getTranslations("Legal");
   const nameFull =
     siteDomain === "multipla.ia.br" ? "Multipla.ia.br" : "Vibezone.ai";
   const supportEmail =
@@ -36,10 +39,10 @@ const TermsPage: NextPage = () => {
     <article className="mx-auto w-full max-w-3xl px-4 sm:px-6 md:px-8 space-y-8">
       <header className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-          Terms of Service
+          {t("terms.title")}
         </h1>
         <p className="text-muted-foreground italic">
-          Last updated: October 21, 2025
+          {t("lastUpdated")}: October 21, 2025
         </p>
       </header>
 
@@ -61,6 +64,7 @@ const TermsPage: NextPage = () => {
             Terms and our{" "}
             <Link href="/privacy" className="underline">
               Privacy Policy
+              <ArrowUpRightIcon className="inline size-3 mb-1 ml-1" />
             </Link>
             . If you do not agree, do not use the Service.
           </p>
@@ -147,7 +151,7 @@ const TermsPage: NextPage = () => {
                   Each model queried counts separately toward the limit.
                 </td>
               </tr>
-              <tr className="bg-gray-50 dark:bg-gray-800">
+              <tr>
                 <td className="border border-gray-300 px-4 py-2 font-semibold">
                   Registered (logged-in) users
                 </td>
@@ -187,8 +191,9 @@ const TermsPage: NextPage = () => {
             The availability of specific models and features, including which
             models are categorized as “included,” “premium,” or “free,” is
             described on our{" "}
-            <Link href="/models" className="underline">
+            <Link href="/models" className="underline font-semibold">
               Model Access Page
+              <ArrowUpRightIcon className="inline size-3 mb-1 ml-1" />
             </Link>
             . That information is provided for convenience and may change at any
             time without notice. Updates to model availability or access tiers
