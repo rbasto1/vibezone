@@ -1,6 +1,5 @@
 "use client";
 
-import { HelpCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -8,12 +7,10 @@ import React from "react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/sidebar";
 import { siteName } from "@/lib/branding";
 import { useTranslations } from "next-intl";
@@ -50,7 +47,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <ThreadList />
       </SidebarContent>
 
-      <SidebarRail />
+      {/* <SidebarRail />
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -67,7 +64,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarFooter>
+      </SidebarFooter> */}
     </Sidebar>
   );
 }
