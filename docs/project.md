@@ -3,7 +3,6 @@
 ## Features
 
 - [x] Paid plans: Clerk
-- [ ] Backend processing of messages: save the AI response without the need for a frontend
 - [x] Replace AssistantCloud with ExternalStoreRuntime
 
 ## Bugs
@@ -18,7 +17,8 @@
 
 ## Improvements
 
-- [ ] Add Terms of Use
+- [x] Add Terms of Use
+- [ ] Translate legal pages
 - [x] Add "What's New" startup modal
 - [x] Rating system
 - [x] Mobile: when adding a new panel, select it by default
@@ -27,6 +27,7 @@
 - [ ] Allow selection of reasoning effort if any model accepts it
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format
+- [ ] Composer text area should grow with text
 - [ ] Add analytics (Posthog?)
 - [ ] Projects (group threads) - paying only
 - [x] Add a "do not show again" option to the warning about discarding a panel
