@@ -1,8 +1,9 @@
+import { ArrowUpRightIcon } from "lucide-react";
 import type { Metadata, NextPage } from "next";
+import { getTranslations } from "next-intl/server";
+import Link from "next/link";
 
 import { siteDomain, siteName } from "@/lib/branding";
-import { ArrowUpRightIcon } from "lucide-react";
-import Link from "next/link";
 import { ItemList, SectionHeader, SectionSubheader } from "../text";
 
 const title = `Termos de Serviço | ${siteName}`;
@@ -25,7 +26,8 @@ export const metadata: Metadata = {
   },
 };
 
-const TermsPagePtBR: NextPage = () => {
+const TermsPagePtBR: NextPage = async () => {
+  const t = await getTranslations("Legal");
   const nameFull =
     siteDomain === "multipla.ia.br" ? "Multipla.ia.br" : "Vibezone.ai";
   const supportEmail =
@@ -37,10 +39,10 @@ const TermsPagePtBR: NextPage = () => {
     <article className="mx-auto w-full max-w-3xl px-4 sm:px-6 md:px-8 space-y-8">
       <header className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-          Termos de Serviço
+          {t("terms.title")}
         </h1>
         <p className="text-muted-foreground italic">
-          Última atualização: 21 de outubro de 2025
+          {t("lastUpdated")}: 21 de outubro de 2025
         </p>
       </header>
 
@@ -53,9 +55,10 @@ const TermsPagePtBR: NextPage = () => {
             Estes Termos de Uso (<strong>"Termos"</strong>) regem o seu acesso e
             uso do site e dos serviços do {nameFull} (coletivamente, o{" "}
             <strong>"Serviço"</strong>), operados pela{" "}
-            <strong>AI Tech LLC</strong>, uma empresa de responsabilidade limitada
-            da Flórida (<strong>"{nameFull}"</strong>, <strong>"nós"</strong>,{" "}
-            <strong>"nosso"</strong> ou <strong>"nos"</strong>).
+            <strong>AI Tech LLC</strong>, uma empresa de responsabilidade
+            limitada da Flórida (<strong>"{nameFull}"</strong>,{" "}
+            <strong>"nós"</strong>, <strong>"nosso"</strong> ou{" "}
+            <strong>"nos"</strong>).
           </p>
           <p>
             Ao acessar ou utilizar o Serviço, você concorda em ficar vinculado a
@@ -72,14 +75,15 @@ const TermsPagePtBR: NextPage = () => {
             Anthropic, xAI e outros (cada um, um{" "}
             <strong>Provedor de Modelo</strong>). O {nameFull} não cria nem
             controla esses modelos. As respostas e demais resultados que você
-            recebe por meio do Serviço (<strong>Resultados de Modelo</strong>) são
-            gerados pelos Provedores de Modelo subjacentes e não pelo {nameFull}.
+            recebe por meio do Serviço (<strong>Resultados de Modelo</strong>)
+            são gerados pelos Provedores de Modelo subjacentes e não pelo{" "}
+            {nameFull}.
           </p>
           <p>
             Podemos atualizar estes Termos periodicamente, publicando uma versão
             revisada nesta página e atualizando a data de "última atualização".
-            O uso contínuo do Serviço após quaisquer alterações significa que você
-            aceita os Termos revisados.
+            O uso contínuo do Serviço após quaisquer alterações significa que
+            você aceita os Termos revisados.
           </p>
         </section>
 
@@ -87,20 +91,21 @@ const TermsPagePtBR: NextPage = () => {
           <SectionHeader num={2}>Elegibilidade e Contas</SectionHeader>
           <p>
             Você deve ter pelo menos <strong>18 anos</strong> (ou a idade de
-            maioridade legal em sua jurisdição) para utilizar o Serviço. Ao usar o{" "}
-            {siteName}, você declara que atende a esse requisito.
+            maioridade legal em sua jurisdição) para utilizar o Serviço. Ao usar
+            o {siteName}, você declara que atende a esse requisito.
           </p>
           <p>
-            Você pode utilizar o Serviço <strong>sem criar uma conta</strong>, caso
-            em que determinados recursos e limites de uso serão aplicados. Para
-            acessar recursos adicionais ou limites mais altos, você pode criar uma
-            conta fornecendo informações precisas e completas. Você é responsável
-            por manter a confidencialidade das credenciais de sua conta e por toda
-            atividade realizada nela.
+            Você pode utilizar o Serviço <strong>sem criar uma conta</strong>,
+            caso em que determinados recursos e limites de uso serão aplicados.
+            Para acessar recursos adicionais ou limites mais altos, você pode
+            criar uma conta fornecendo informações precisas e completas. Você é
+            responsável por manter a confidencialidade das credenciais de sua
+            conta e por toda atividade realizada nela.
           </p>
           <p>
-            Se você criar uma conta em nome de uma organização, declara e garante
-            que possui autoridade para vincular essa organização a estes Termos.
+            Se você criar uma conta em nome de uma organização, declara e
+            garante que possui autoridade para vincular essa organização a estes
+            Termos.
           </p>
           <p>
             Podemos suspender ou encerrar sua conta se acreditarmos que você
@@ -116,7 +121,9 @@ const TermsPagePtBR: NextPage = () => {
             vários provedores por meio de uma interface unificada. Você só pode
             usar o Serviço para fins legais e de acordo com estes Termos.
           </p>
-          <p>Aplicam-se diferentes níveis de uso conforme o status da sua conta:</p>
+          <p>
+            Aplicam-se diferentes níveis de uso conforme o status da sua conta:
+          </p>
           <table className="w-full border-collapse border border-gray-300 my-4">
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-800">
@@ -182,21 +189,21 @@ const TermsPagePtBR: NextPage = () => {
           </table>
           <p>
             Podemos alterar esses limites, adicionar novos planos ou introduzir
-            restrições e recursos adicionais a qualquer momento. O uso contínuo do
-            Serviço após tais mudanças constitui aceitação dessas alterações.
+            restrições e recursos adicionais a qualquer momento. O uso contínuo
+            do Serviço após tais mudanças constitui aceitação dessas alterações.
           </p>
           <p>
             A disponibilidade de modelos e recursos específicos, incluindo quais
-            modelos são categorizados como "incluídos", "premium" ou "gratuitos",
-            está descrita em nossa{" "}
+            modelos são categorizados como "incluídos", "premium" ou
+            "gratuitos", está descrita em nossa{" "}
             <Link href="/models" className="underline font-semibold">
               Página de Acesso a Modelos
               <ArrowUpRightIcon className="inline size-3 mb-1 ml-1" />
             </Link>
             . Essas informações são fornecidas para conveniência e podem mudar a
-            qualquer momento, sem aviso prévio. Atualizações na disponibilidade de
-            modelos ou nos níveis de acesso não constituem uma alteração destes
-            Termos.
+            qualquer momento, sem aviso prévio. Atualizações na disponibilidade
+            de modelos ou nos níveis de acesso não constituem uma alteração
+            destes Termos.
           </p>
         </section>
 
@@ -208,8 +215,8 @@ const TermsPagePtBR: NextPage = () => {
           </p>
           <ItemList>
             <li>
-              Utilizar o Serviço de qualquer forma que viole leis ou regulamentos
-              aplicáveis.
+              Utilizar o Serviço de qualquer forma que viole leis ou
+              regulamentos aplicáveis.
             </li>
             <li>
               Usar, compartilhar ou gerar conteúdo que seja nocivo, enganoso,
@@ -224,16 +231,16 @@ const TermsPagePtBR: NextPage = () => {
               automatizados, como scraping ou envios em massa.
             </li>
             <li>
-              Tentar contornar limites de uso, controles de acesso ou sistemas de
-              cobrança.
+              Tentar contornar limites de uso, controles de acesso ou sistemas
+              de cobrança.
             </li>
             <li>
               Utilizar o Serviço de forma que viole os termos ou políticas dos
               Provedores de Modelo acessíveis pelo {siteName}.
             </li>
             <li>
-              Usar o Serviço de maneira que possa prejudicar o {siteName}, outros
-              usuários ou qualquer Provedor de Modelo.
+              Usar o Serviço de maneira que possa prejudicar o {siteName},
+              outros usuários ou qualquer Provedor de Modelo.
             </li>
           </ItemList>
           <p>
@@ -243,17 +250,20 @@ const TermsPagePtBR: NextPage = () => {
         </section>
 
         <section>
-          <SectionHeader num={5}>Modelos e Conteúdos de Terceiros</SectionHeader>
+          <SectionHeader num={5}>
+            Modelos e Conteúdos de Terceiros
+          </SectionHeader>
           <p>
             O {siteName} conecta você a modelos de linguagem e outros serviços
             operados por <strong>provedores de modelos independentes</strong>,
             incluindo, sem limitação, OpenAI, Anthropic e xAI. O {siteName} não
-            cria, controla ou revisa o conteúdo ou o comportamento desses modelos.
+            cria, controla ou revisa o conteúdo ou o comportamento desses
+            modelos.
           </p>
           <p>
-            Todas as respostas, textos ou outros materiais que você recebe por meio
-            do Serviço (<strong>Resultados de Modelo</strong>) são gerados por
-            esses provedores terceirizados.{" "}
+            Todas as respostas, textos ou outros materiais que você recebe por
+            meio do Serviço (<strong>Resultados de Modelo</strong>) são gerados
+            por esses provedores terceirizados.{" "}
             <strong>
               O {siteName} não garante que qualquer Resultado de Modelo seja
               preciso, confiável, seguro ou adequado a qualquer finalidade.
@@ -262,53 +272,55 @@ const TermsPagePtBR: NextPage = () => {
             independente.
           </p>
           <p>
-            Cada provedor pode ter seus próprios termos de uso e políticas. Ao usar
-            o {siteName}, você concorda em cumprir esses termos sempre que acessar
-            seus modelos pela nossa plataforma. O {siteName} não é responsável por
-            violações das políticas de um provedor ou por quaisquer consequências
-            decorrentes do uso que você faz dos modelos deles.
+            Cada provedor pode ter seus próprios termos de uso e políticas. Ao
+            usar o {siteName}, você concorda em cumprir esses termos sempre que
+            acessar seus modelos pela nossa plataforma. O {siteName} não é
+            responsável por violações das políticas de um provedor ou por
+            quaisquer consequências decorrentes do uso que você faz dos modelos
+            deles.
           </p>
         </section>
 
         <section>
           <SectionHeader num={6}>Propriedade Intelectual</SectionHeader>
 
-          <SectionSubheader>Materiais do Vibezone</SectionSubheader>
+          <SectionSubheader>Materiais do {siteName}</SectionSubheader>
           <p>
-            Todo o software, design, texto, imagens, logotipos e demais materiais
-            que compõem o Serviço do {siteName} ({" "}
-            <strong>Materiais Vibezone</strong>) pertencem ou são licenciados à{" "}
-            <strong>AI Tech LLC</strong>. Exceto pelo direito limitado de usar o
-            Serviço conforme permitido por estes Termos, nenhum direito é
-            transferido a você. Você não pode copiar, modificar, distribuir ou criar
-            obras derivadas dos Materiais Vibezone sem nossa autorização prévia por
-            escrito.
+            Todo o software, design, texto, imagens, logotipos e demais
+            materiais que compõem o Serviço do {siteName} (
+            <strong>Materiais {siteName}</strong>) pertencem ou são licenciados
+            à <strong>AI Tech LLC</strong>. Exceto pelo direito limitado de usar
+            o Serviço conforme permitido por estes Termos, nenhum direito é
+            transferido a você. Você não pode copiar, modificar, distribuir ou
+            criar obras derivadas dos Materiais {siteName} sem nossa autorização
+            prévia por escrito.
           </p>
 
           <SectionSubheader>Seu Conteúdo</SectionSubheader>
           <p>
             Você mantém todos os direitos sobre os prompts, textos, uploads e
-            demais materiais que enviar por meio do Serviço ({" "}
-            <strong>Conteúdo do Usuário</strong>). Ao enviar Conteúdo do Usuário,
-            você concede ao {siteName} uma licença limitada, não exclusiva e
-            mundial para processar e transmitir esse conteúdo conforme necessário
-            para operar o Serviço e entregar Resultados de Modelo a você.
+            demais materiais que enviar por meio do Serviço (
+            <strong>Conteúdo do Usuário</strong>). Ao enviar Conteúdo do
+            Usuário, você concede ao {siteName} uma licença limitada, não
+            exclusiva e mundial para processar e transmitir esse conteúdo
+            conforme necessário para operar o Serviço e entregar Resultados de
+            Modelo a você.
           </p>
 
           <SectionSubheader>Resultados de Modelo</SectionSubheader>
           <p>
-            As respostas e outros conteúdos gerados pelo Serviço ({" "}
-            <strong>Resultados de Modelo</strong>) são produzidos por provedores de
-            modelos terceirizados como OpenAI, Anthropic e xAI. Sujeito aos termos e
-            políticas aplicáveis de cada provedor,{" "}
+            As respostas e outros conteúdos gerados pelo Serviço (
+            <strong>Resultados de Modelo</strong>) são produzidos por provedores
+            de modelos terceirizados como OpenAI, Anthropic e xAI. Sujeito aos
+            termos e políticas aplicáveis de cada provedor,{" "}
             <strong>
               você é o proprietário ou licenciado para utilizar os Resultados de
               Modelo
             </strong>{" "}
             na mesma medida em que seria se os tivesse obtido diretamente desse
-            provedor. O {siteName} não reivindica propriedade sobre os Resultados de
-            Modelo e se isenta de quaisquer garantias quanto à originalidade,
-            precisão ou adequação a qualquer finalidade.
+            provedor. O {siteName} não reivindica propriedade sobre os
+            Resultados de Modelo e se isenta de quaisquer garantias quanto à
+            originalidade, precisão ou adequação a qualquer finalidade.
           </p>
 
           <SectionSubheader>Direitos de Terceiros</SectionSubheader>
@@ -316,67 +328,68 @@ const TermsPagePtBR: NextPage = () => {
             Nada nestes Termos transfere quaisquer direitos de propriedade
             intelectual dos provedores de modelos ou de terceiros. Você é
             responsável por assegurar que o uso que faz de qualquer Resultado de
-            Modelo esteja em conformidade com todas as leis e direitos de terceiros,
-            incluindo leis de direitos autorais e privacidade.
+            Modelo esteja em conformidade com todas as leis e direitos de
+            terceiros, incluindo leis de direitos autorais e privacidade.
           </p>
         </section>
 
         <section>
           <SectionHeader num={7}>Taxas e Pagamentos</SectionHeader>
           <p>
-            O {siteName} pode oferecer planos de assinatura ou níveis de uso pagos
-            ({" "}
-            <strong>Planos Pagos</strong>) que proporcionam limites maiores de
-            mensagens ou acesso a modelos e recursos adicionais. Os preços, limites e
-            recursos disponíveis para cada plano serão descritos em nosso site ou
-            dentro do Serviço.
+            O {siteName} pode oferecer planos de assinatura ou níveis de uso
+            pagos ( <strong>Planos Pagos</strong>) que proporcionam limites
+            maiores de mensagens ou acesso a modelos e recursos adicionais. Os
+            preços, limites e recursos disponíveis para cada plano serão
+            descritos em nosso site ou dentro do Serviço.
           </p>
           <p>
             Todos os pagamentos são processados com segurança pela{" "}
-            <strong>Stripe, Inc.</strong> ou suas afiliadas. Ao adquirir um Plano
-            Pago, você autoriza o {siteName} e a Stripe a cobrarem o método de
-            pagamento informado pelos valores, tributos e cobranças recorrentes (se
-            houver). Você deve manter suas informações de pagamento atualizadas e
-            corretas.
+            <strong>Stripe, Inc.</strong> ou suas afiliadas. Ao adquirir um
+            Plano Pago, você autoriza o {siteName} e a Stripe a cobrarem o
+            método de pagamento informado pelos valores, tributos e cobranças
+            recorrentes (se houver). Você deve manter suas informações de
+            pagamento atualizadas e corretas.
           </p>
           <p>
-            As taxas são <strong>não reembolsáveis</strong>, exceto quando exigido
-            por lei. Salvo indicação em contrário, as assinaturas são renovadas
-            automaticamente ao final de cada período de cobrança, com o valor vigente
-            à época, até que você cancele. Você pode cancelar a qualquer momento nas
-            configurações da conta; o cancelamento passa a valer ao final do ciclo de
-            cobrança em vigor.
+            As taxas são <strong>não reembolsáveis</strong>, exceto quando
+            exigido por lei. Salvo indicação em contrário, as assinaturas são
+            renovadas automaticamente ao final de cada período de cobrança, com
+            o valor vigente à época, até que você cancele. Você pode cancelar a
+            qualquer momento nas configurações da conta; o cancelamento passa a
+            valer ao final do ciclo de cobrança em vigor.
           </p>
           <p>
             Podemos alterar nossos preços, estrutura de cobrança ou planos
             disponíveis a qualquer momento. Quaisquer mudanças serão aplicadas a
-            novas assinaturas ou renovações após a data de vigência. Impostos (incluindo
-            IVA ou tributos sobre vendas, quando aplicável) podem ser adicionados às
-            cobranças com base no endereço de cobrança informado.
+            novas assinaturas ou renovações após a data de vigência. Impostos
+            (incluindo IVA ou tributos sobre vendas, quando aplicável) podem ser
+            adicionados às cobranças com base no endereço de cobrança informado.
           </p>
           <p>
             O {siteName} não é responsável por erros, atrasos ou problemas de
-            segurança causados por processadores de pagamento de terceiros. O uso que
-            você faz dos serviços da Stripe também está sujeito aos{" "}
-            <strong>termos e à política de privacidade da própria Stripe.</strong>
+            segurança causados por processadores de pagamento de terceiros. O
+            uso que você faz dos serviços da Stripe também está sujeito aos{" "}
+            <strong>
+              termos e à política de privacidade da própria Stripe.
+            </strong>
           </p>
         </section>
 
         <section>
           <SectionHeader num={8}>Encerramento e Suspensão</SectionHeader>
           <p>
-            Você pode parar de usar o {siteName} a qualquer momento encerrando sua
-            conta ou deixando de utilizar o Serviço.
+            Você pode parar de usar o {siteName} a qualquer momento encerrando
+            sua conta ou deixando de utilizar o Serviço.
           </p>
           <p>
-            Podemos suspender ou encerrar seu acesso ao Serviço, com ou sem aviso,
-            se acreditarmos que:
+            Podemos suspender ou encerrar seu acesso ao Serviço, com ou sem
+            aviso, se acreditarmos que:
           </p>
           <ItemList>
             <li>você violou estes Termos ou a legislação aplicável;</li>
             <li>
-              seu uso pode prejudicar o {siteName}, outros usuários ou um provedor
-              de modelo; ou
+              seu uso pode prejudicar o {siteName}, outros usuários ou um
+              provedor de modelo; ou
             </li>
             <li>
               a continuidade do acesso deixou de ser comercial ou tecnicamente
@@ -385,10 +398,10 @@ const TermsPagePtBR: NextPage = () => {
           </ItemList>
           <p>
             Após o encerramento, seu direito de usar o Serviço terminará
-            imediatamente, e poderemos excluir ou desabilitar o acesso à sua conta e
-            aos dados associados. O {siteName} não é obrigado a manter ou fornecer
-            acesso a quaisquer dados após o encerramento, exceto quando exigido por
-            lei.
+            imediatamente, e poderemos excluir ou desabilitar o acesso à sua
+            conta e aos dados associados. O {siteName} não é obrigado a manter
+            ou fornecer acesso a quaisquer dados após o encerramento, exceto
+            quando exigido por lei.
           </p>
         </section>
 
@@ -396,7 +409,9 @@ const TermsPagePtBR: NextPage = () => {
           <SectionHeader num={9}>Isenção de Garantias</SectionHeader>
           <p>
             O Serviço e todos os Resultados de Modelo são fornecidos{" "}
-            <strong>"no estado em que se encontram" e "conforme disponíveis"</strong>
+            <strong>
+              "no estado em que se encontram" e "conforme disponíveis"
+            </strong>
             , sem garantias de qualquer tipo, expressas ou implícitas, incluindo
             garantias de precisão, confiabilidade, adequação a uma finalidade
             específica ou ausência de infrações.
@@ -410,8 +425,9 @@ const TermsPagePtBR: NextPage = () => {
           </p>
           <p>
             Para mais informações sobre as capacidades e limitações dos modelos
-            individuais, recomendamos revisar a documentação e os avisos publicados
-            pelos respectivos provedores (como OpenAI, Anthropic ou xAI).
+            individuais, recomendamos revisar a documentação e os avisos
+            publicados pelos respectivos provedores (como OpenAI, Anthropic ou
+            xAI).
           </p>
         </section>
 
@@ -423,46 +439,47 @@ const TermsPagePtBR: NextPage = () => {
               o {siteName} e suas afiliadas, diretores, funcionários e agentes
             </strong>{" "}
             não serão responsáveis por danos indiretos, incidentais, especiais,
-            consequenciais ou punitivos, nem por perda de lucros, dados ou fundo de
-            comércio, decorrentes do uso do Serviço ou de quaisquer Resultados de
-            Modelo, mesmo que tenhamos sido alertados sobre a possibilidade de tais
-            danos.
+            consequenciais ou punitivos, nem por perda de lucros, dados ou fundo
+            de comércio, decorrentes do uso do Serviço ou de quaisquer
+            Resultados de Modelo, mesmo que tenhamos sido alertados sobre a
+            possibilidade de tais danos.
           </p>
           <p>
-            Nossa responsabilidade total por todas as reivindicações relacionadas ao
-            Serviço não excederá o maior valor entre{" "}
+            Nossa responsabilidade total por todas as reivindicações
+            relacionadas ao Serviço não excederá o maior valor entre{" "}
             <strong>
-              (a) o montante pago por você ao {siteName} pelo acesso ao Serviço nos
-              três (3) meses anteriores ao evento que deu origem à reivindicação, ou
-              (b) cem dólares dos Estados Unidos (US$ 100)
+              (a) o montante pago por você ao {siteName} pelo acesso ao Serviço
+              nos três (3) meses anteriores ao evento que deu origem à
+              reivindicação, ou (b) cem dólares dos Estados Unidos (US$ 100)
             </strong>
             .
           </p>
           <p>
-            Essas limitações se aplicam independentemente da teoria jurídica em que a
-            reivindicação se baseia e mesmo que qualquer recurso deixe de cumprir sua
-            finalidade essencial.
+            Essas limitações se aplicam independentemente da teoria jurídica em
+            que a reivindicação se baseia e mesmo que qualquer recurso deixe de
+            cumprir sua finalidade essencial.
           </p>
         </section>
 
         <section>
           <SectionHeader num={11}>Indenização</SectionHeader>
           <p>
-            Você concorda em <strong>defender, indenizar e isentar de
-            responsabilidade</strong> o {siteName}, suas afiliadas, diretores,
-            funcionários e agentes de quaisquer reivindicações, responsabilidades,
-            danos, perdas e despesas (incluindo honorários advocatícios razoáveis)
-            decorrentes de ou relacionados a:
+            Você concorda em{" "}
+            <strong>defender, indenizar e isentar de responsabilidade</strong> o{" "}
+            {siteName}, suas afiliadas, diretores, funcionários e agentes de
+            quaisquer reivindicações, responsabilidades, danos, perdas e
+            despesas (incluindo honorários advocatícios razoáveis) decorrentes
+            de ou relacionados a:
           </p>
           <ItemList>
             <li>seu uso do Serviço ou de qualquer Resultado de Modelo;</li>
             <li>
-              sua violação destes Termos ou de qualquer lei, regulamento ou direito
-              de terceiros; ou
+              sua violação destes Termos ou de qualquer lei, regulamento ou
+              direito de terceiros; ou
             </li>
             <li>
-              qualquer disputa entre você e um terceiro resultante de sua conduta ou
-              conteúdo.
+              qualquer disputa entre você e um terceiro resultante de sua
+              conduta ou conteúdo.
             </li>
           </ItemList>
           <p>
@@ -477,59 +494,63 @@ const TermsPagePtBR: NextPage = () => {
             Resolução de Disputas e Lei Aplicável
           </SectionHeader>
           <p>
-            Estes Termos e qualquer disputa ou reivindicação deles decorrente ou a
-            eles relacionada serão regidos e interpretados de acordo com as leis do{" "}
-            <strong>Estado de Delaware, Estados Unidos</strong>, sem considerar seus
-            princípios de conflito de leis.
+            Estes Termos e qualquer disputa ou reivindicação deles decorrente ou
+            a eles relacionada serão regidos e interpretados de acordo com as
+            leis do <strong>Estado de Delaware, Estados Unidos</strong>, sem
+            considerar seus princípios de conflito de leis.
           </p>
 
           <SectionSubheader>Resolução Informal</SectionSubheader>
           <p>
-            Antes de iniciar procedimentos formais, você concorda em tentar resolver
-            qualquer disputa informalmente, entrando em contato conosco pelo email{" "}
+            Antes de iniciar procedimentos formais, você concorda em tentar
+            resolver qualquer disputa informalmente, entrando em contato conosco
+            pelo email{" "}
             <a href={`mailto:${supportEmail}`} className="underline">
               {supportEmail}
             </a>
-            . Tentaremos solucionar a disputa dentro de{" "}
-            <strong>30 dias</strong> a partir do recebimento do seu email. Se não
-            conseguirmos resolver nesse período, você ou o {siteName} poderão iniciar
-            arbitragem conforme descrito abaixo.
+            . Tentaremos solucionar a disputa dentro de <strong>30 dias</strong>{" "}
+            a partir do recebimento do seu email. Se não conseguirmos resolver
+            nesse período, você ou o {siteName} poderão iniciar arbitragem
+            conforme descrito abaixo.
           </p>
 
           <SectionSubheader>Arbitragem Vinculante</SectionSubheader>
           <p>
-            Qualquer disputa, reivindicação ou controvérsia decorrente destes Termos
-            ou do Serviço que não possa ser resolvida informalmente será resolvida
-            <strong>exclusivamente por arbitragem vinculante</strong>, administrada
-            pela{" "}
-            <strong>American Arbitration Association (AAA)</strong> de acordo com as{" "}
-            <strong>Regras de Arbitragem Comercial</strong> então vigentes. A
-            arbitragem será conduzida em <strong>inglês</strong>, por um único árbitro,
-            em <strong>Delaware, Estados Unidos</strong>, ou por videoconferência, se a
-            participação presencial for impraticável. A decisão do árbitro será final
-            e vinculante, e a sentença poderá ser registrada em qualquer tribunal com
-            jurisdição competente.
+            Qualquer disputa, reivindicação ou controvérsia decorrente destes
+            Termos ou do Serviço que não possa ser resolvida informalmente será
+            resolvida
+            <strong>exclusivamente por arbitragem vinculante</strong>,
+            administrada pela{" "}
+            <strong>American Arbitration Association (AAA)</strong> de acordo
+            com as <strong>Regras de Arbitragem Comercial</strong> então
+            vigentes. A arbitragem será conduzida em <strong>inglês</strong>,
+            por um único árbitro, em <strong>Delaware, Estados Unidos</strong>,
+            ou por videoconferência, se a participação presencial for
+            impraticável. A decisão do árbitro será final e vinculante, e a
+            sentença poderá ser registrada em qualquer tribunal com jurisdição
+            competente.
           </p>
 
           <SectionSubheader>Renúncia a Ações Coletivas</SectionSubheader>
           <p>
             Você e o {siteName} concordam que todas as disputas serão conduzidas{" "}
-            <strong>apenas de forma individual</strong>, e não em ações coletivas,
-            consolidadas ou representativas. Você não pode participar como membro ou
-            representante de classe em qualquer processo dessa natureza.
+            <strong>apenas de forma individual</strong>, e não em ações
+            coletivas, consolidadas ou representativas. Você não pode participar
+            como membro ou representante de classe em qualquer processo dessa
+            natureza.
           </p>
 
           <SectionSubheader>Opção de Exclusão</SectionSubheader>
           <p>
-            Se não desejar ficar vinculado às disposições de arbitragem e renúncia a
-            ações coletivas, você pode optar pela exclusão enviando notificação
-            escrita para{" "}
+            Se não desejar ficar vinculado às disposições de arbitragem e
+            renúncia a ações coletivas, você pode optar pela exclusão enviando
+            notificação escrita para{" "}
             <a href={`mailto:${supportEmail}`} className="underline">
               {supportEmail}
             </a>{" "}
-            dentro de <strong>30 dias</strong> a partir da primeira aceitação destes
-            Termos. Sua opção de exclusão não afetará outras disposições destes
-            Termos.
+            dentro de <strong>30 dias</strong> a partir da primeira aceitação
+            destes Termos. Sua opção de exclusão não afetará outras disposições
+            destes Termos.
           </p>
         </section>
 
@@ -540,17 +561,17 @@ const TermsPagePtBR: NextPage = () => {
 
           <SectionSubheader>Alterações a Estes Termos</SectionSubheader>
           <p>
-            Podemos atualizar estes Termos periodicamente. Quando isso acontecer,
-            publicaremos a versão revisada nesta página e atualizaremos a data de
-            "última atualização". As alterações entram em vigor quando publicadas. O
-            uso contínuo do Serviço após quaisquer mudanças significa que você aceita
-            os Termos revisados.
+            Podemos atualizar estes Termos periodicamente. Quando isso
+            acontecer, publicaremos a versão revisada nesta página e
+            atualizaremos a data de "última atualização". As alterações entram
+            em vigor quando publicadas. O uso contínuo do Serviço após quaisquer
+            mudanças significa que você aceita os Termos revisados.
           </p>
 
           <SectionSubheader>Contato</SectionSubheader>
           <p>
-            Se tiver dúvidas sobre estes Termos ou sobre o Serviço, entre em contato
-            conosco em:
+            Se tiver dúvidas sobre estes Termos ou sobre o Serviço, entre em
+            contato conosco em:
           </p>
           <p className="mt-2">
             <strong>AI Tech LLC</strong>
@@ -573,14 +594,14 @@ const TermsPagePtBR: NextPage = () => {
 
           <SectionSubheader>Políticas dos Provedores</SectionSubheader>
           <p>
-            O {siteName} conecta você a modelos operados por provedores terceiros. O
-            uso que você faz desses modelos também está sujeito aos termos e
-            políticas dos respectivos provedores.
+            O {siteName} conecta você a modelos operados por provedores
+            terceiros. O uso que você faz desses modelos também está sujeito aos
+            termos e políticas dos respectivos provedores.
           </p>
           <p>
             Tais políticas podem mudar independentemente do {siteName}. Você é
-            responsável por revisá-las e cumpri-las sempre que utilizar os modelos
-            correspondentes.
+            responsável por revisá-las e cumpri-las sempre que utilizar os
+            modelos correspondentes.
           </p>
         </section>
       </main>

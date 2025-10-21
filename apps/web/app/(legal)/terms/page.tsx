@@ -282,15 +282,15 @@ const TermsPage: NextPage = async () => {
         <section>
           <SectionHeader num={6}>Intellectual Property</SectionHeader>
 
-          <SectionSubheader>Vibezone Materials</SectionSubheader>
+          <SectionSubheader>{siteName} Materials</SectionSubheader>
           <p>
             All software, design, text, images, logos, and other materials
             forming part of the {siteName} Service (
-            <strong>Vibezone Materials</strong>) are owned by or licensed to{" "}
+            <strong>{siteName} Materials</strong>) are owned by or licensed to{" "}
             <strong>AI Tech LLC</strong>. Except for the limited right to use
             the Service as permitted under these Terms, no rights are
             transferred to you. You may not copy, modify, distribute, or create
-            derivative works from Vibezone Materials without our prior written
+            derivative works from {siteName} Materials without our prior written
             consent.
           </p>
 
