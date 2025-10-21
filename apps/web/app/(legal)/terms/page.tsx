@@ -2,9 +2,10 @@ import type { Metadata, NextPage } from "next";
 
 import { siteDomain, siteName } from "@/lib/branding";
 import { ArrowUpRightIcon } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { ItemList, SectionHeader, SectionSubheader } from "../text";
+import PagePtBr from "./page-pt-BR";
 
 const title = `Terms of Service | ${siteName}`;
 
@@ -27,6 +28,12 @@ export const metadata: Metadata = {
 };
 
 const TermsPage: NextPage = async () => {
+  const locale = await getLocale();
+
+  if (locale === "pt-BR") {
+    return <PagePtBr />;
+  }
+
   const t = await getTranslations("Legal");
   const nameFull =
     siteDomain === "multipla.ia.br" ? "Multipla.ia.br" : "Vibezone.ai";

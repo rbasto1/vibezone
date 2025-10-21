@@ -1,5 +1,5 @@
 import type { Metadata, NextPage } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import type { ProviderPrivacyInfo } from "@/generated/providers-privacy";
 import { providersPrivacy } from "@/generated/providers-privacy";
@@ -7,6 +7,7 @@ import { siteDomain, siteName } from "@/lib/branding";
 import { ArrowUpRightIcon } from "lucide-react";
 import Link from "next/link";
 import { ItemList, SectionHeader, SectionSubheader } from "../text";
+import PagePtBr from "./page-pt-BR";
 
 const title = `Privacy Policy | ${siteName}`;
 
@@ -29,6 +30,12 @@ export const metadata: Metadata = {
 };
 
 const PrivacyPage: NextPage = async () => {
+  const locale = await getLocale();
+
+  if (locale === "pt-BR") {
+    return <PagePtBr />;
+  }
+
   const t = await getTranslations("Legal");
   const nameFull =
     siteDomain === "multipla.ia.br" ? "Multipla.ia.br" : "Vibezone.ai";
