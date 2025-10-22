@@ -39,7 +39,7 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
           variant="outline"
           size="icon"
           className="ml-2 md:hidden ld:hidden"
-          onClick={handleNewChat}
+          onClick={() => handleNewChat({})}
         >
           <MessageCirclePlusIcon className="h-4 w-4" />
         </Button>

@@ -248,35 +248,7 @@ export async function listChats({
   cursor,
   limit = CHAT_LIST_PAGE_SIZE,
 }: ListChatsInput) {
-  const filters = [
-    eq(projects.userId, userId),
-    isNull(projects.deletedAt),
-    isNull(chats.deletedAt),
-    eq(chats.isArchived, false),
-  ];
-
-  if (cursor) {
-    const separatorIndex = cursor.lastIndexOf(":");
-    if (separatorIndex > 0) {
-      const timestampStr = cursor.slice(0, separatorIndex);
-      const id = cursor.slice(separatorIndex + 1);
-      const cursorDate =
-        timestampStr && !Number.isNaN(Date.parse(timestampStr))
-          ? new Date(timestampStr)
-          : null;
-
-      if (cursorDate) {
-        filters.push(
-          id.length > 0
-            ? or(
-                lt(chats.lastMessageAt, cursorDate),
-                and(eq(chats.lastMessageAt, cursorDate), gt(chats.id, id))
-              )
-            : lt(chats.lastMessageAt, cursorDate)
-        );
-      }
-    }
-  }
+  const [cursorDate, cursorId] = parseCursor(cursor);
 
   const result = await db
     .select({
@@ -294,7 +266,22 @@ export async function listChats({
     })
     .from(chats)
     .innerJoin(projects, eq(projects.id, chats.projectId))
-    .where(and(...filters))
+    .where(
+      and(
+        eq(projects.userId, userId),
+        isNull(projects.deletedAt),
+        isNull(chats.deletedAt),
+        eq(chats.isArchived, false),
+        cursorDate
+          ? cursorId
+            ? or(
+                lt(chats.lastMessageAt, cursorDate),
+                and(eq(chats.lastMessageAt, cursorDate), gt(chats.id, cursorId))
+              )
+            : lt(chats.lastMessageAt, cursorDate)
+          : undefined
+      )
+    )
     .orderBy(desc(chats.lastMessageAt), asc(chats.id))
     .limit(limit + 1);
 
@@ -318,6 +305,24 @@ export async function listChats({
     })),
     next,
   };
+}
+
+function parseCursor(cursor: string | undefined) {
+  if (!cursor) return [null, null] as const;
+
+  const separatorIndex = cursor.lastIndexOf(":");
+  if (separatorIndex <= 0) return [null, null] as const;
+
+  const timestampStr = cursor.slice(0, separatorIndex);
+  const id = cursor.slice(separatorIndex + 1);
+  const cursorDate =
+    timestampStr && !Number.isNaN(Date.parse(timestampStr))
+      ? new Date(timestampStr)
+      : null;
+
+  if (!cursorDate) return [null, null] as const;
+
+  return [cursorDate, id] as const;
 }
 
 const WorkerCompleteResponseSchema = z.object({

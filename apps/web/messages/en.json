@@ -179,20 +179,116 @@
     "empty": "No chats matched your search.",
     "error": "Unable to search right now. Try again later.",
     "retry": "Retry",
-    "loadError": "We couldn’t load this chat. Please try again."
+    "loadError": "We couldn’t load this chat. Please try again.",
+    "filter": {
+      "label": "Project",
+      "allProjects": "All projects",
+      "clear": "Reset"
+    }
   },
   "ThreadList": {
     "newChat": "New Chat",
     "searchChats": "Search chats",
     "loginRequired": "Please sign up or log in to save and load your chats",
     "loading": "Loading chats...",
-    "empty": "No chats yet"
+    "empty": "No chats yet",
+    "defaultProjectLabel": "Default",
+    "noProjects": "No projects yet",
+    "projectCount": "{count, plural, one {# chat} other {# chats}}",
+    "projectEmpty": "No chats in this project yet",
+    "actions": {
+      "createProject": "New project"
+    },
+    "projectMenu": {
+      "edit": "Edit project",
+      "create": "New project",
+      "delete": "Delete project",
+      "deleteDisabled": "You cannot delete the General project"
+    },
+    "toasts": {
+      "projectCreated": "\"{name}\" created",
+      "projectUpdated": "\"{name}\" updated",
+      "projectDeleted": "\"{name}\" deleted"
+    },
+    "errors": {
+      "createChat": "Unable to start a new chat.",
+      "moveChat": "Could not move the chat."
+    }
   },
   "ThreadListItem": {
     "loading": "Loading...",
     "untitled": "New Chat",
     "rename": "Rename",
-    "delete": "Delete"
+    "delete": "Delete",
+    "move": "Move to project",
+    "currentProject": "Current project",
+    "currentProjectBadge": "Current",
+    "noOtherProjects": "No other projects",
+    "createProject": "Create project",
+    "moveError": "Unable to move this chat."
+  },
+  "ProjectModal": {
+    "createTitle": "Create project",
+    "createDescription": "Group related chats together and choose a color and instructions for the project.",
+    "editTitle": "Edit project",
+    "editDescription": "Update the project name, color, or instructions.",
+    "fields": {
+      "name": {
+        "label": "Name",
+        "placeholder": "Project name"
+      },
+      "color": "Color",
+      "instructions": {
+        "label": "Instructions",
+        "placeholder": "Add optional project-specific instructions…",
+        "helper": "These instructions are sent with every chat in this project."
+      }
+    },
+    "errors": {
+      "nameRequired": "Please enter a project name.",
+      "generic": "Something went wrong."
+    },
+    "cancel": "Cancel",
+    "create": "Create",
+    "save": "Save",
+    "colors": {
+      "#ef4444": "Red",
+      "#f97316": "Orange",
+      "#facc15": "Amber",
+      "#22c55e": "Green",
+      "#2dd4bf": "Teal",
+      "#3b82f6": "Blue",
+      "#6366f1": "Indigo",
+      "#a855f7": "Purple",
+      "#ec4899": "Pink",
+      "#64748b": "Slate",
+      "#6b7280": "Gray"
+    }
+  },
+  "ProjectDeleteModal": {
+    "title": "Delete \"{name}\"?",
+    "description": "Choose what to do with the chats inside this project.",
+    "options": {
+      "move": {
+        "title": "Move chats to another project",
+        "description": "Keep every chat by moving them into a different project.",
+        "targetLabel": "Move chats to:",
+        "defaultBadge": "Default"
+      },
+      "delete": {
+        "title": "Delete chats",
+        "description": "Permanently delete all chats in this project."
+      }
+    },
+    "errors": {
+      "selectTarget": "Select a project to move the chats.",
+      "generic": "Something went wrong."
+    },
+    "cancel": "Cancel",
+    "actions": {
+      "move": "Move chats",
+      "delete": "Delete project"
+    }
   },
   "ThreadWelcome": {
     "greeting": "Hello there!",

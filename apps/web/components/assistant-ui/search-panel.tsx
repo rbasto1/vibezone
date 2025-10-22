@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircleIcon, Loader2Icon } from "lucide-react";
+import { AlertCircleIcon, ChevronDownIcon, Loader2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useCallback,
@@ -15,9 +15,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentChat } from "@/hooks/use-chat";
 import { useChatActions } from "@/hooks/use-chat-actions";
+import { useProjectsValue } from "@/hooks/use-projects";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { CHAT_LIST_PAGE_SIZE } from "@/lib/constants";
 import { trpc, type RouterOutputs } from "@/lib/trpc/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SearchResultItem } from "./search-result-item";
 
 type SearchResult = RouterOutputs["chats"]["searchChats"]["results"][number];
@@ -34,11 +42,15 @@ export const SearchPanel = () => {
   const setUIState = useUIStateSetter();
   const [, setCurrentChat] = useCurrentChat();
   const { loadChatById } = useChatActions();
+  const projects = useProjectsValue();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null
+  );
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -63,8 +75,9 @@ export const SearchPanel = () => {
     () => ({
       query: debouncedQuery,
       limit: CHAT_LIST_PAGE_SIZE,
+      projectId: selectedProjectId ?? undefined,
     }),
-    [debouncedQuery]
+    [debouncedQuery, selectedProjectId]
   );
 
   const searchQuery = trpc.chats.searchChats.useInfiniteQuery(searchVariables, {
@@ -80,6 +93,14 @@ export const SearchPanel = () => {
         ? (searchQuery.data?.pages.flatMap((page) => page.results) ?? [])
         : [],
     [queryEnabled, searchQuery.data]
+  );
+
+  const selectedProject = useMemo(
+    () =>
+      selectedProjectId
+        ? projects.find((project) => project.id === selectedProjectId) ?? null
+        : null,
+    [projects, selectedProjectId]
   );
 
   const isInitialLoading = queryEnabled && searchQuery.isLoading;
@@ -153,6 +174,8 @@ export const SearchPanel = () => {
           id: result.chatId,
           createdAt: new Date(),
           addedToList: true,
+          projectId: result.projectId,
+          title: result.title,
           fetchedTitlePanelId: "loaded-from-db",
         });
 
@@ -202,6 +225,66 @@ export const SearchPanel = () => {
           aria-label={t("placeholder")}
         />
       </div>
+
+      {projects.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {t("filter.label")}
+          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                {selectedProject ? (
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: selectedProject.color }}
+                    aria-hidden="true"
+                  />
+                ) : null}
+                <span className="text-xs font-medium">
+                  {selectedProject
+                    ? selectedProject.name
+                    : t("filter.allProjects")}
+                </span>
+                <ChevronDownIcon className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuItem onClick={() => setSelectedProjectId(null)}>
+                {t("filter.allProjects")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {projects.map((project) => (
+                <DropdownMenuItem
+                  key={project.id}
+                  onClick={() => setSelectedProjectId(project.id)}
+                  className="flex items-center gap-2"
+                >
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: project.color }}
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{project.name}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {selectedProject && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedProjectId(null)}
+            >
+              {t("filter.clear")}
+            </Button>
+          )}
+        </div>
+      )}
 
       {loadError && (
         <div className="flex items-start gap-2 rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -261,6 +344,8 @@ export const SearchPanel = () => {
                     result.snippetCreatedAt ?? result.lastMessageAt
                   )}
                   query={debouncedQuery}
+                  projectName={result.projectName}
+                  projectColor={result.projectColor}
                   isLoading={loadingChatId === result.chatId}
                   onSelect={() => handleSelectChat(result)}
                 />

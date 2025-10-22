@@ -30,7 +30,6 @@ export const projectsRouter = t.router({
       const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
 
-      const now = new Date();
       const trimmedInstructions =
         input.instructions?.trim().length === 0
           ? null
@@ -46,8 +45,6 @@ export const projectsRouter = t.router({
             name: input.name.trim(),
             color: input.color,
             instructions: trimmedInstructions,
-            createdAt: now,
-            updatedAt: now,
           })
           .returning({ id: projects.id });
 
@@ -171,7 +168,7 @@ export const projectsRouter = t.router({
       const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
 
-      const chatRecord = await db.query.chats.findFirst({
+      const chatRecordPromise = db.query.chats.findFirst({
         where: eq(chats.id, input.chatId),
         with: {
           project: {
@@ -179,6 +176,19 @@ export const projectsRouter = t.router({
           },
         },
       });
+
+      const targetProjectPromise = db.query.projects.findFirst({
+        where: and(
+          eq(projects.id, input.targetProjectId),
+          eq(projects.userId, user.id),
+          isNull(projects.deletedAt)
+        ),
+      });
+
+      const [chatRecord, targetProject] = await Promise.all([
+        chatRecordPromise,
+        targetProjectPromise,
+      ]);
 
       if (
         !chatRecord ||
@@ -191,14 +201,6 @@ export const projectsRouter = t.router({
           message: "Chat not found",
         });
       }
-
-      const targetProject = await db.query.projects.findFirst({
-        where: and(
-          eq(projects.id, input.targetProjectId),
-          eq(projects.userId, user.id),
-          isNull(projects.deletedAt)
-        ),
-      });
 
       if (!targetProject) {
         throw new TRPCError({

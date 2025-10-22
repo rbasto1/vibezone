@@ -7,6 +7,7 @@ import {
 } from "@/store/thread-messages";
 import { useSetAtom } from "jotai";
 import { useCallback } from "react";
+import { useCurrentChatSetter } from "./use-chat";
 import { usePanelsConfigSetter, usePanelsStateSetter } from "./use-panels";
 
 export type UseChatActionsResult = UseChatActionsSuccess | UseChatActionsError;
@@ -23,6 +24,7 @@ export const useChatActions = () => {
   const setPanelsConfig = usePanelsConfigSetter();
   const setPanelsState = usePanelsStateSetter();
   const setThreadMessages = useSetAtom(threadMessagesAtom);
+  const setCurrentChat = useCurrentChatSetter();
   const utils = trpc.useUtils();
 
   const loadChatById = useCallback(
@@ -32,6 +34,15 @@ export const useChatActions = () => {
           chatId,
         });
         const threads = chatData.threads;
+
+        setCurrentChat((current) => ({
+          ...current,
+          id: chatData.id,
+          title: chatData.title,
+          createdAt: chatData.createdAt ?? current.createdAt,
+          projectId: chatData.project?.id ?? current.projectId ?? null,
+          addedToList: true,
+        }));
 
         const threadMessages: ThreadMessagesState = {};
         const newPanelsConfig = threads.map((thread): PanelConfig => {
@@ -74,6 +85,7 @@ export const useChatActions = () => {
     },
     [
       utils.client.chats.getChatWithThreads,
+      setCurrentChat,
       setPanelsConfig,
       setPanelsState,
       setThreadMessages,

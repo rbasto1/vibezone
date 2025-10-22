@@ -10,6 +10,8 @@ interface SearchResultItemProps {
   snippet: string | null;
   timestamp: Date | null;
   query: string;
+  projectName: string;
+  projectColor: string;
   isLoading?: boolean;
   onSelect: () => void;
 }
@@ -19,6 +21,8 @@ export const SearchResultItem = ({
   snippet,
   timestamp,
   query,
+  projectName,
+  projectColor,
   isLoading = false,
   onSelect,
 }: SearchResultItemProps) => {
@@ -37,23 +41,32 @@ export const SearchResultItem = ({
       onClick={onSelect}
       disabled={isLoading}
       className={cn(
-        "flex w-full flex-col gap-1 rounded-lg border border-transparent px-3 py-2 text-left transition hover:border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer",
-        isLoading && "opacity-70",
-        !snippet && "py-3"
+        "flex w-full flex-col gap-2 rounded-lg border border-transparent px-3 py-2 text-left transition hover:border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer",
+        isLoading && "opacity-70"
       )}
     >
-      <div className="flex items-center gap-2">
-        <p className="text-sm font-medium truncate flex-1">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <span
+          className="inline-flex items-center gap-2"
+          aria-label={projectName}
+        >
+          <span
+            className="h-2.5 w-2.5 rounded-full"
+            style={{ backgroundColor: projectColor }}
+            aria-hidden="true"
+          />
+          <span className="font-medium capitalize">{projectName}</span>
+        </span>
+        <span className="hidden text-muted-foreground sm:inline">/</span>
+        <span className="text-sm font-medium text-foreground">
           {highlightedTitle}
-        </p>
-        {timestamp && (
-          <span className="text-xs text-muted-foreground shrink-0">
-            {timestamp.toLocaleDateString()}
-          </span>
-        )}
-        {isLoading && (
-          <Loader2Icon className="h-4 w-4 animate-spin text-muted-foreground" />
-        )}
+        </span>
+        <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+          {timestamp && <span>{timestamp.toLocaleDateString()}</span>}
+          {isLoading && (
+            <Loader2Icon className="h-4 w-4 animate-spin" />
+          )}
+        </div>
       </div>
       {highlightedSnippet && (
         <p className="text-xs text-muted-foreground leading-snug line-clamp-3">
@@ -99,7 +112,9 @@ function highlightText(text: string, query: string) {
 
   if (searchIndex < text.length) {
     segments.push(
-      <span key={`text-${searchIndex}-end`}>{text.slice(searchIndex)}</span>
+      <span key={`text-${searchIndex}-end`}>
+        {text.slice(searchIndex)}
+      </span>
     );
   }
 
