@@ -21,19 +21,21 @@ import type { ProjectConfig } from "@/store/projects";
 
 interface ThreadListNewProps {
   projects?: ProjectConfig[];
-  defaultProject: ProjectConfig | null;
+  currentProject: ProjectConfig | null;
+  fallbackProject: ProjectConfig | null;
   onNewChat: (project?: ProjectConfig) => void;
 }
 
 export const ThreadListNew: FC<ThreadListNewProps> = ({
   projects,
-  defaultProject,
+  currentProject,
+  fallbackProject,
   onNewChat,
 }) => {
   const t = useTranslations("ThreadList");
   const setUIState = useUIStateSetter();
 
-  if (!projects || !defaultProject) {
+  if (!projects || !fallbackProject) {
     return (
       <Button
         className="data-active:bg-muted hover:bg-muted justify-start"
@@ -46,20 +48,39 @@ export const ThreadListNew: FC<ThreadListNewProps> = ({
     );
   }
 
+  const quickProject = currentProject ?? fallbackProject;
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <div className="flex w-full">
         <Button
-          className="data-active:bg-muted hover:bg-muted justify-between"
+          className="data-active:bg-muted hover:bg-muted justify-start rounded-r-none focus-visible:z-10 flex-1"
           variant="ghost"
+          onClick={() => onNewChat(quickProject ?? undefined)}
         >
+          <MessageCirclePlusIcon className="mr-2" />
           <span className="flex items-center gap-2">
-            <MessageCirclePlusIcon />
             {t("newChat")}
+            {quickProject ? (
+              <span
+                aria-hidden="true"
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: quickProject.color }}
+              />
+            ) : null}
           </span>
-          <ChevronDownIcon className="h-4 w-4" />
         </Button>
-      </DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>
+          <Button
+            aria-label={t("chooseProject")}
+            className="data-active:bg-muted hover:bg-muted rounded-l-none px-2 focus-visible:z-10"
+            size="icon"
+            variant="ghost"
+          >
+            <ChevronDownIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+      </div>
       <DropdownMenuContent align="start" className="w-60">
         <DropdownMenuItem disabled>{t("chooseProject")}</DropdownMenuItem>
         {projects.map((project) => (
