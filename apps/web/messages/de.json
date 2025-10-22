@@ -1,6 +1,7 @@
 {
   "Prompts": {
-    "system": "Sie sind ein hilfreicher Assistent. Der Benutzer spricht Deutsch."
+    "system": "Sie sind ein hilfreicher Assistent. Der Benutzer spricht Deutsch.",
+    "generalProjectName": "Allgemein"
   },
   "AnonQuota": {
     "mobileChip": "{remaining} von {limit}",
@@ -179,20 +180,119 @@
     "empty": "Keine Chats entsprechen deiner Suche.",
     "error": "Suche derzeit nicht möglich. Versuche es später erneut.",
     "retry": "Erneut versuchen",
-    "loadError": "Dieser Chat konnte nicht geladen werden. Bitte versuche es erneut."
+    "loadError": "Dieser Chat konnte nicht geladen werden. Bitte versuche es erneut.",
+    "filter": {
+      "label": "Projekt",
+      "allProjects": "Alle Projekte",
+      "clear": "Zurücksetzen"
+    }
   },
   "ThreadList": {
     "newChat": "Neuer Chat",
     "searchChats": "Chats durchsuchen",
+    "chooseProject": "Projekt auswählen",
     "loginRequired": "Melde dich an oder registriere dich, um Chats zu speichern und zu laden",
     "loading": "Lade Chats...",
-    "empty": "Noch keine Chats"
+    "empty": "Noch keine Chats",
+    "defaultProjectLabel": "Standard",
+    "noProjects": "Noch keine Projekte",
+    "projectCount": "{count, plural, one {# Chat} other {# Chats}}",
+    "projectEmpty": "In diesem Projekt gibt es noch keine Chats",
+    "loadMore": "Mehr laden",
+    "retry": "Erneut versuchen",
+    "actions": {
+      "createProject": "Neues Projekt"
+    },
+    "projectMenu": {
+      "edit": "Projekt bearbeiten",
+      "create": "Neues Projekt",
+      "delete": "Projekt löschen",
+      "deleteDisabled": "Das Projekt \"General\" kann nicht gelöscht werden"
+    },
+    "toasts": {
+      "projectCreated": "„{name}“ erstellt",
+      "projectUpdated": "„{name}“ aktualisiert",
+      "projectDeleted": "„{name}“ gelöscht"
+    },
+    "errors": {
+      "createChat": "Neuer Chat konnte nicht gestartet werden.",
+      "moveChat": "Chat konnte nicht verschoben werden."
+    }
   },
   "ThreadListItem": {
     "loading": "Wird geladen...",
     "untitled": "Neuer Chat",
     "rename": "Umbenennen",
-    "delete": "Löschen"
+    "delete": "Löschen",
+    "move": "In Projekt verschieben",
+    "currentProject": "Aktuelles Projekt",
+    "currentProjectBadge": "Aktuell",
+    "noOtherProjects": "Keine weiteren Projekte",
+    "createProject": "Projekt erstellen",
+    "moveError": "Dieser Chat konnte nicht verschoben werden."
+  },
+  "ProjectModal": {
+    "createTitle": "Projekt erstellen",
+    "createDescription": "Fasse verwandte Chats zusammen und lege Farbe sowie Anweisungen für das Projekt fest.",
+    "editTitle": "Projekt bearbeiten",
+    "editDescription": "Aktualisiere den Projektnamen, die Farbe oder die Anweisungen.",
+    "fields": {
+      "name": {
+        "label": "Name",
+        "placeholder": "Projektname"
+      },
+      "color": "Farbe",
+      "instructions": {
+        "label": "Anweisungen",
+        "placeholder": "Füge optionale projektspezifische Anweisungen hinzu…",
+        "helper": "Diese Anweisungen werden jedem Chat in diesem Projekt mitgegeben."
+      }
+    },
+    "errors": {
+      "nameRequired": "Bitte gib einen Projektnamen ein.",
+      "generic": "Es ist ein Fehler aufgetreten."
+    },
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+    "save": "Speichern",
+    "colors": {
+      "#ef4444": "Rot",
+      "#f97316": "Orange",
+      "#facc15": "Gelb",
+      "#22c55e": "Grün",
+      "#2dd4bf": "Türkis",
+      "#3b82f6": "Blau",
+      "#6366f1": "Indigo",
+      "#a855f7": "Violett",
+      "#ec4899": "Pink",
+      "#64748b": "Schiefer",
+      "#6b7280": "Grau"
+    }
+  },
+  "ProjectDeleteModal": {
+    "title": "„{name}“ löschen?",
+    "description": "Entscheide, was mit den Chats in diesem Projekt passieren soll.",
+    "options": {
+      "move": {
+        "title": "Chats in ein anderes Projekt verschieben",
+        "description": "Bewahre alle Chats, indem du sie in ein anderes Projekt verschiebst.",
+        "targetLabel": "Chats verschieben nach:",
+        "defaultBadge": "Standard"
+      },
+      "delete": {
+        "title": "Chats löschen",
+        "description": "Alle Chats in diesem Projekt dauerhaft löschen."
+      }
+    },
+    "errors": {
+      "selectTarget": "Wähle ein Projekt aus, in das die Chats verschoben werden sollen.",
+      "generic": "Es ist ein Fehler aufgetreten."
+    },
+    "cancel": "Abbrechen",
+    "actions": {
+      "move": "Chats verschieben",
+      "delete": "Projekt löschen"
+    }
   },
   "ThreadWelcome": {
     "greeting": "Hallo!",

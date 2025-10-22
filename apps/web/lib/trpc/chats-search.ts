@@ -1,4 +1,4 @@
-import { chats, db, messages, threads } from "@/db";
+import { chats, db, messages, projects, threads } from "@/db";
 import {
   and,
   asc,
@@ -19,6 +19,7 @@ interface SearchChatsInput {
   query: string;
   cursor?: string;
   limit?: number;
+  projectId?: string;
 }
 
 interface SearchChatsResultItem {
@@ -26,6 +27,10 @@ interface SearchChatsResultItem {
   title: string;
   lastMessageAt: Date;
   createdAt: Date;
+  projectId: string;
+  projectName: string;
+  projectColor: string;
+  projectIsDefault: boolean;
   snippet: string | null;
   snippetCreatedAt: Date | null;
 }
@@ -39,6 +44,7 @@ export async function searchChats({
   userId,
   query,
   cursor,
+  projectId,
   limit = CHAT_LIST_PAGE_SIZE,
 }: SearchChatsInput): Promise<SearchChatsResult> {
   const trimmedQuery = query.trim();
@@ -48,7 +54,8 @@ export async function searchChats({
 
   const searchPattern = `%${trimmedQuery}%`.replace(/\s+/g, "%");
   const baseConditions = [
-    eq(chats.userId, userId),
+    eq(projects.userId, userId),
+    isNull(projects.deletedAt),
     isNull(chats.deletedAt),
     eq(chats.isArchived, false),
     or(
@@ -63,6 +70,10 @@ export async function searchChats({
       )`
     ),
   ];
+
+  if (projectId) {
+    baseConditions.push(eq(projects.id, projectId));
+  }
 
   if (cursor) {
     const separatorIndex = cursor.lastIndexOf(":");
@@ -91,8 +102,13 @@ export async function searchChats({
       title: chats.title,
       lastMessageAt: chats.lastMessageAt,
       createdAt: chats.createdAt,
+      projectId: projects.id,
+      projectName: projects.name,
+      projectColor: projects.color,
+      projectIsDefault: sql<boolean>`${projects.id} = ${userId}`,
     })
     .from(chats)
+    .innerJoin(projects, eq(projects.id, chats.projectId))
     .where(and(...baseConditions))
     .orderBy(desc(chats.lastMessageAt), asc(chats.id))
     .limit(limit + 1);
@@ -146,6 +162,10 @@ export async function searchChats({
       title: chat.title,
       lastMessageAt: chat.lastMessageAt,
       createdAt: chat.createdAt,
+      projectId: chat.projectId,
+      projectName: chat.projectName,
+      projectColor: chat.projectColor,
+      projectIsDefault: chat.projectIsDefault,
       snippet: snippetInfo?.snippet ?? null,
       snippetCreatedAt: snippetInfo?.createdAt ?? null,
     };

@@ -8,6 +8,7 @@ import { modelsRouter } from "../models";
 import { providersRouter } from "../providers";
 import { newsRouter } from "../news";
 import { suggestionGroupsRouter } from "../suggestion-groups";
+import { projectsRouter } from "../projects";
 import { usersRouter } from "../users";
 import { t } from "./initialize";
 
@@ -20,6 +21,7 @@ export const appRouter = t.router({
   users: usersRouter,
   locales: localesRouter,
   news: newsRouter,
+  projects: projectsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -14,16 +14,19 @@ import {
   type PanelConfig,
 } from "@/store/panels";
 import { preferencesAtom, type PreferencesAtom } from "@/store/preferences";
+import { projectsAtom, type ProjectConfig } from "@/store/projects";
 
 type ModelsProviderProps = PropsWithChildren<{
   modelsInitialValue: GetModelsListReturn;
   panelsInitialValue: PanelConfig[];
   preferencesInitialValue: PreferencesAtom;
+  projectsInitialValue: ProjectConfig[];
 }>;
 
 export function StoreProvider({
   panelsInitialValue,
   preferencesInitialValue,
+  projectsInitialValue,
   children,
 }: ModelsProviderProps) {
   const store = useMemo(() => {
@@ -40,17 +43,21 @@ export function StoreProvider({
       )
     );
     s.set(preferencesAtom, preferencesInitialValue);
+    s.set(projectsAtom, projectsInitialValue);
 
     // Initialize chat atom with a new chat ID
+    const defaultProjectId =
+      projectsInitialValue.find((project) => project.isDefault)?.id ?? null;
     s.set(currentChatAtom, {
       id: generateChatId(),
       createdAt: new Date(),
       addedToList: false,
+      projectId: defaultProjectId,
       fetchedTitlePanelId: null,
     });
 
     return s;
-  }, [panelsInitialValue, preferencesInitialValue]);
+  }, [panelsInitialValue, preferencesInitialValue, projectsInitialValue]);
 
   return <JotaiProvider store={store}>{children}</JotaiProvider>;
 }

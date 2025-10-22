@@ -5,9 +5,15 @@ import type {
   MessageMetadata,
   MessageRatingAttachment,
 } from "@/db/json-columns-types";
-import { chats, messageRatings, messages, threads } from "@/db/schema";
+import {
+  chats,
+  messageRatings,
+  messages,
+  projects,
+  threads,
+} from "@/db/schema";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, lte } from "drizzle-orm";
+import { and, desc, eq, isNull, lte } from "drizzle-orm";
 import { z } from "zod";
 import {
   authenticatedProcedure,
@@ -62,17 +68,39 @@ export const messagesRouter = t.router({
         chatId: z.string(),
         threadId: z.string(), // This is the panelId
         modelId: z.string(),
+        projectId: z.string(),
         messages: z.array(MessageSchema),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { chatId, threadId, modelId, messages: inputMessages } = input;
+      const {
+        chatId,
+        threadId,
+        modelId,
+        messages: inputMessages,
+        projectId,
+      } = input;
       const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
 
       try {
+        // Ensure project belongs to user
+        const projectRecord = await db.query.projects.findFirst({
+          where: and(
+            eq(projects.id, projectId),
+            eq(projects.userId, user.id),
+            isNull(projects.deletedAt)
+          ),
+        });
+        if (!projectRecord) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Project not found",
+          });
+        }
+
         // Ensure chat exists
-        const chatPromise = getOrInsertChat(chatId, user.id);
+        const chatPromise = getOrInsertChat(chatId, projectId, user.id);
 
         // Ensure thread exists
         const existingThread = await db.query.threads.findFirst({
@@ -80,6 +108,14 @@ export const messagesRouter = t.router({
         });
 
         if (!existingThread) {
+          const chat = await chatPromise;
+          if (!chat) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to create chat",
+            });
+          }
+
           // Create thread if it doesn't exist
           await db.insert(threads).values({
             id: threadId,
@@ -165,7 +201,12 @@ export const messagesRouter = t.router({
             columns: { chatId: true },
             with: {
               chat: {
-                columns: { userId: true },
+                columns: { projectId: true },
+                with: {
+                  project: {
+                    columns: { userId: true },
+                  },
+                },
               },
             },
           },
@@ -179,7 +220,7 @@ export const messagesRouter = t.router({
         });
       }
 
-      if (messageRecord.thread.chat.userId !== user.id) {
+      if (messageRecord.thread.chat.project?.userId !== user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Access denied",
@@ -340,23 +381,75 @@ export const messagesRouter = t.router({
     }),
 });
 
-async function getOrInsertChat(chatId: string, userId: string) {
+async function getOrInsertChat(
+  chatId: string,
+  projectId: string,
+  userId: string
+) {
+  const existing = await db.query.chats.findFirst({
+    where: eq(chats.id, chatId),
+    with: {
+      project: {
+        columns: { userId: true },
+      },
+    },
+  });
+
+  if (existing) {
+    if (existing.project?.userId !== userId) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Access denied",
+      });
+    }
+
+    if (existing.projectId !== projectId) {
+      await db
+        .update(chats)
+        .set({
+          projectId,
+          updatedAt: new Date(),
+        })
+        .where(eq(chats.id, chatId));
+
+      const updated = await db.query.chats.findFirst({
+        where: eq(chats.id, chatId),
+      });
+      return updated ?? existing;
+    }
+
+    return existing;
+  }
+
   console.info(`Creating new chat ${chatId} for user ${userId}`);
-  const newChat = await db
+  await db
     .insert(chats)
     .values({
       id: chatId,
-      userId,
+      projectId,
       title: "New Chat",
       lastMessageAt: new Date(),
     })
-    .onConflictDoNothing()
-    .returning()
-    .then(
-      (c) => c[0] ?? db.query.chats.findFirst({ where: eq(chats.id, chatId) })
-    );
+    .onConflictDoUpdate({
+      target: chats.id,
+      set: {
+        projectId,
+        updatedAt: new Date(),
+      },
+    });
 
-  return newChat;
+  const created = await db.query.chats.findFirst({
+    where: eq(chats.id, chatId),
+  });
+
+  if (!created) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to load chat",
+    });
+  }
+
+  return created;
 }
 
 const ensureNonEmpty = (value: string): string => {

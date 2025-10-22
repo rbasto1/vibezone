@@ -1,6 +1,7 @@
 {
   "Prompts": {
-    "system": "Você é um assistente prestativo. O usuário fala português do Brasil."
+    "system": "Você é um assistente prestativo. O usuário fala português do Brasil.",
+    "generalProjectName": "Geral"
   },
   "AnonQuota": {
     "mobileChip": "{remaining} de {limit}",
@@ -179,20 +180,119 @@
     "empty": "Nenhum chat correspondeu à sua pesquisa.",
     "error": "Não foi possível pesquisar agora. Tente novamente mais tarde.",
     "retry": "Tentar novamente",
-    "loadError": "Não foi possível carregar este chat. Tente novamente."
+    "loadError": "Não foi possível carregar este chat. Tente novamente.",
+    "filter": {
+      "label": "Projeto",
+      "allProjects": "Todos os projetos",
+      "clear": "Limpar"
+    }
   },
   "ThreadList": {
     "newChat": "Novo chat",
     "searchChats": "Pesquisar chats",
+    "chooseProject": "Escolha o projeto",
     "loginRequired": "Cadastre-se ou faça login para salvar e carregar seus chats",
     "loading": "Carregando chats...",
-    "empty": "Nenhum chat ainda"
+    "empty": "Nenhum chat ainda",
+    "defaultProjectLabel": "Padrão",
+    "noProjects": "Nenhum projeto ainda",
+    "projectCount": "{count, plural, one {# chat} other {# chats}}",
+    "projectEmpty": "Nenhum chat neste projeto ainda",
+    "loadMore": "Carregar mais",
+    "retry": "Tentar novamente",
+    "actions": {
+      "createProject": "Novo projeto"
+    },
+    "projectMenu": {
+      "edit": "Editar projeto",
+      "create": "Novo projeto",
+      "delete": "Excluir projeto",
+      "deleteDisabled": "Você não pode excluir o projeto Geral"
+    },
+    "toasts": {
+      "projectCreated": "\"{name}\" criado",
+      "projectUpdated": "\"{name}\" atualizado",
+      "projectDeleted": "\"{name}\" excluído"
+    },
+    "errors": {
+      "createChat": "Não foi possível iniciar um novo chat.",
+      "moveChat": "Não conseguimos mover o chat."
+    }
   },
   "ThreadListItem": {
     "loading": "Carregando...",
     "untitled": "Novo chat",
     "rename": "Renomear",
-    "delete": "Excluir"
+    "delete": "Excluir",
+    "move": "Mover para o projeto",
+    "currentProject": "Projeto atual",
+    "currentProjectBadge": "Atual",
+    "noOtherProjects": "Nenhum outro projeto",
+    "createProject": "Criar projeto",
+    "moveError": "Não foi possível mover este chat."
+  },
+  "ProjectModal": {
+    "createTitle": "Criar projeto",
+    "createDescription": "Agrupe chats relacionados definindo uma cor e instruções para o projeto.",
+    "editTitle": "Editar projeto",
+    "editDescription": "Atualize o nome, a cor ou as instruções do projeto.",
+    "fields": {
+      "name": {
+        "label": "Nome",
+        "placeholder": "Nome do projeto"
+      },
+      "color": "Cor",
+      "instructions": {
+        "label": "Instruções",
+        "placeholder": "Adicione instruções específicas para o projeto…",
+        "helper": "Essas instruções são enviadas em todo chat deste projeto."
+      }
+    },
+    "errors": {
+      "nameRequired": "Informe um nome para o projeto.",
+      "generic": "Ocorreu um erro."
+    },
+    "cancel": "Cancelar",
+    "create": "Criar",
+    "save": "Salvar",
+    "colors": {
+      "#ef4444": "Vermelho",
+      "#f97316": "Laranja",
+      "#facc15": "Âmbar",
+      "#22c55e": "Verde",
+      "#2dd4bf": "Turquesa",
+      "#3b82f6": "Azul",
+      "#6366f1": "Índigo",
+      "#a855f7": "Roxo",
+      "#ec4899": "Rosa",
+      "#64748b": "Ardósia",
+      "#6b7280": "Cinza"
+    }
+  },
+  "ProjectDeleteModal": {
+    "title": "Excluir \"{name}\"?",
+    "description": "Escolha o que fazer com os chats deste projeto.",
+    "options": {
+      "move": {
+        "title": "Mover chats para outro projeto",
+        "description": "Mantenha todos os chats movendo-os para outro projeto.",
+        "targetLabel": "Mover chats para:",
+        "defaultBadge": "Padrão"
+      },
+      "delete": {
+        "title": "Excluir chats",
+        "description": "Exclua permanentemente todos os chats deste projeto."
+      }
+    },
+    "errors": {
+      "selectTarget": "Selecione um projeto para mover os chats.",
+      "generic": "Ocorreu um erro."
+    },
+    "cancel": "Cancelar",
+    "actions": {
+      "move": "Mover chats",
+      "delete": "Excluir projeto"
+    }
   },
   "ThreadWelcome": {
     "greeting": "Olá!",

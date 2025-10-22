@@ -1,6 +1,6 @@
-import { chats, db, messages, threads } from "@/db";
+import { chats, db, messages, projects, threads } from "@/db";
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, gt, isNull, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { CHAT_LIST_PAGE_SIZE, INTERNAL_SECRET } from "../constants";
 import { searchChats } from "./chats-search";
@@ -15,7 +15,8 @@ export const chatsRouter = t.router({
     .input(
       z.object({
         cursor: z.string().optional(),
-        limit: z.number().min(1).max(100).default(CHAT_LIST_PAGE_SIZE),
+        limit: z.number().min(1).max(100).optional(),
+        projectId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -30,6 +31,7 @@ export const chatsRouter = t.router({
         userId: user.id,
         cursor: input.cursor,
         limit: input.limit,
+        projectId: input.projectId,
       });
     }),
   searchChats: authenticatedProcedure
@@ -38,6 +40,7 @@ export const chatsRouter = t.router({
         query: z.string().min(2),
         cursor: z.string().optional(),
         limit: z.number().min(1).max(50).default(CHAT_LIST_PAGE_SIZE),
+        projectId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -48,6 +51,7 @@ export const chatsRouter = t.router({
         query: input.query,
         cursor: input.cursor,
         limit: input.limit,
+        projectId: input.projectId,
       });
     }),
 
@@ -55,21 +59,26 @@ export const chatsRouter = t.router({
     .input(
       z.object({
         chatId: z.string(),
+        projectId: z.string(),
         title: z.string().nullable(),
         firstUserMessage: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { chatId, title: inputTitle, firstUserMessage } = input;
+      const { chatId, projectId, title: inputTitle, firstUserMessage } = input;
       const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
       const userId = user.id;
 
       const chat = await db.query.chats.findFirst({
-        columns: { id: true, userId: true },
         where: eq(chats.id, chatId),
+        with: {
+          project: {
+            columns: { id: true, userId: true, deletedAt: true },
+          },
+        },
       });
-      if (chat && chat.userId !== userId) {
+      if (chat && chat.project?.userId !== userId) {
         return { success: false, message: "Access denied" } as const;
       }
 
@@ -81,13 +90,29 @@ export const chatsRouter = t.router({
           .set({
             title,
           })
-          .where(and(eq(chats.id, chatId), eq(chats.userId, userId)));
+          .where(eq(chats.id, chatId));
       } else {
+        const project = await db.query.projects.findFirst({
+          columns: { id: true },
+          where: and(
+            eq(projects.id, projectId),
+            eq(projects.userId, userId),
+            isNull(projects.deletedAt)
+          ),
+        });
+
+        if (!project) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Project not found",
+          });
+        }
+
         await db
           .insert(chats)
           .values({
             id: chatId,
-            userId,
+            projectId,
             title,
             lastMessageAt: new Date(),
           })
@@ -115,11 +140,20 @@ export const chatsRouter = t.router({
       const chatRecord = await db.query.chats.findFirst({
         where: and(
           eq(chats.id, chatId),
-          eq(chats.userId, user.id),
           isNull(chats.deletedAt),
           eq(chats.isArchived, false)
         ),
         with: {
+          project: {
+            columns: {
+              id: true,
+              userId: true,
+              instructions: true,
+              name: true,
+              color: true,
+              deletedAt: true,
+            },
+          },
           threads: {
             with: {
               messages: {
@@ -131,7 +165,12 @@ export const chatsRouter = t.router({
         },
       });
 
-      if (!chatRecord) {
+      if (
+        !chatRecord ||
+        !chatRecord.project ||
+        chatRecord.project.userId !== user.id ||
+        chatRecord.project.deletedAt
+      ) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Chat not found",
@@ -153,17 +192,26 @@ export const chatsRouter = t.router({
       if (!user) throw new Error("Assert: auth procedure must have user");
       const userId = user.id;
 
-      // Verify chat belongs to user and archive it
-      const result = await db
+      const chatRecord = await db.query.chats.findFirst({
+        where: eq(chats.id, chatId),
+        with: {
+          project: {
+            columns: { userId: true },
+          },
+        },
+      });
+
+      if (!chatRecord || chatRecord.project?.userId !== userId) {
+        return { success: false, message: "Access denied" };
+      }
+
+      await db
         .update(chats)
         .set({
           isArchived: true,
           updatedAt: new Date(),
         })
-        .where(and(eq(chats.id, chatId), eq(chats.userId, userId)));
-      if (!result) {
-        return { success: false, message: "Access denied" };
-      }
+        .where(eq(chats.id, chatId));
 
       return { success: true };
     }),
@@ -173,50 +221,53 @@ interface ListChatsInput {
   userId: string;
   cursor?: string;
   limit?: number;
+  projectId?: string;
 }
 
 export async function listChats({
   userId,
   cursor,
-  limit = CHAT_LIST_PAGE_SIZE,
+  limit: limitParam,
+  projectId,
 }: ListChatsInput) {
-  let whereCondition = and(
-    eq(chats.userId, userId),
-    isNull(chats.deletedAt),
-    eq(chats.isArchived, false)
-  );
+  const [cursorDate, cursorId] = parseCursor(cursor);
+  const limit = limitParam ?? (cursor ? CHAT_LIST_PAGE_SIZE : 5);
 
-  // Parse cursor if provided
-  if (cursor) {
-    const separatorIndex = cursor.lastIndexOf(":");
-    if (separatorIndex > 0) {
-      const timestampStr = cursor.slice(0, separatorIndex);
-      const id = cursor.slice(separatorIndex + 1);
-      const cursorDate =
-        timestampStr && !Number.isNaN(Date.parse(timestampStr))
-          ? new Date(timestampStr)
-          : null;
-
-      if (cursorDate) {
-        const baseCondition = lt(chats.lastMessageAt, cursorDate);
-        const cursorCondition =
-          id.length > 0
+  const result = await db
+    .select({
+      id: chats.id,
+      title: chats.title,
+      lastMessageAt: chats.lastMessageAt,
+      createdAt: chats.createdAt,
+      project: {
+        id: projects.id,
+        name: projects.name,
+        color: projects.color,
+        instructions: projects.instructions,
+        isDefault: sql<boolean>`${projects.id} = ${userId}`,
+      },
+    })
+    .from(chats)
+    .innerJoin(projects, eq(projects.id, chats.projectId))
+    .where(
+      and(
+        eq(projects.userId, userId),
+        isNull(projects.deletedAt),
+        isNull(chats.deletedAt),
+        eq(chats.isArchived, false),
+        projectId ? eq(chats.projectId, projectId) : undefined,
+        cursorDate
+          ? cursorId
             ? or(
-                baseCondition,
-                and(eq(chats.lastMessageAt, cursorDate), gt(chats.id, id))
+                lt(chats.lastMessageAt, cursorDate),
+                and(eq(chats.lastMessageAt, cursorDate), gt(chats.id, cursorId))
               )
-            : baseCondition;
-
-        whereCondition = and(whereCondition, cursorCondition);
-      }
-    }
-  }
-
-  const result = await db.query.chats.findMany({
-    where: whereCondition,
-    orderBy: (chat, { desc, asc }) => [desc(chat.lastMessageAt), asc(chat.id)],
-    limit: limit + 1, // Get one extra to check if there are more
-  });
+            : lt(chats.lastMessageAt, cursorDate)
+          : undefined
+      )
+    )
+    .orderBy(desc(chats.lastMessageAt), asc(chats.id))
+    .limit(limit + 1);
 
   const hasMore = result.length > limit;
   const chatsData = hasMore ? result.slice(0, limit) : result;
@@ -234,9 +285,28 @@ export async function listChats({
       title: chat.title,
       lastMessageAt: chat.lastMessageAt,
       createdAt: chat.createdAt,
+      project: chat.project,
     })),
     next,
   };
+}
+
+function parseCursor(cursor: string | undefined) {
+  if (!cursor) return [null, null] as const;
+
+  const separatorIndex = cursor.lastIndexOf(":");
+  if (separatorIndex <= 0) return [null, null] as const;
+
+  const timestampStr = cursor.slice(0, separatorIndex);
+  const id = cursor.slice(separatorIndex + 1);
+  const cursorDate =
+    timestampStr && !Number.isNaN(Date.parse(timestampStr))
+      ? new Date(timestampStr)
+      : null;
+
+  if (!cursorDate) return [null, null] as const;
+
+  return [cursorDate, id] as const;
 }
 
 const WorkerCompleteResponseSchema = z.object({

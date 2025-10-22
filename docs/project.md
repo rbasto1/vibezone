@@ -19,7 +19,7 @@
 ## Improvements
 
 - [x] Add Terms of Use
-- [ ] Translate Privacy Policy and Terms of Use
+- [x] Translate Privacy Policy and Terms of Use
 - [x] Sending an empty message with attachments should be possible
 - [x] Add "What's New" startup modal
 - [x] Rating system
@@ -28,6 +28,7 @@
 - [x] Attachments should be stored as links to files
 - [x] Allow selection of reasoning effort if any model accepts it
 - [x] Allow pasting attachments with Ctrl-V
+- [ ] Archive vs delete chats
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format
 - [x] Composer text area should grow with text

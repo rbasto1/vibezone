@@ -3,7 +3,7 @@ import "server-only";
 import { currentUser } from "@clerk/nextjs/server";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { generateId } from "ai";
-import { and, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense, type PropsWithChildren } from "react";
 
@@ -13,16 +13,23 @@ import { Toaster } from "@/components/providers/toast-provider";
 import { db } from "@/db";
 import type { Model } from "@/db/schema";
 import {
+  chats,
   models,
   newsArticles,
   preferences as preferencesTable,
+  projects as projectsTable,
 } from "@/db/schema";
 import { models as modelsList } from "@/generated/models";
-import { MAX_PANELS, NEWS_WINDOW_MS } from "@/lib/constants";
+import {
+  DEFAULT_PROJECT_COLOR,
+  MAX_PANELS,
+  NEWS_WINDOW_MS,
+} from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
 import type { PanelConfig } from "@/store/panels";
 import type { PreferencesAtom } from "@/store/preferences";
+import type { ProjectConfig } from "@/store/projects";
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import { PageLoader } from "./page-loader";
 
@@ -34,12 +41,15 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const userId = authUser?.id;
   const preferencesPromise = ensurePreferences(userId);
 
-  const statePromise = getServerCaller().then((caller) =>
-    prefetch(caller, [
-      caller.chats.listChats.prefetch({}),
-      caller.users.favorites.prefetch(),
-    ])
-  );
+  const statePromise = userId
+    ? getServerCaller().then((caller) =>
+        prefetch(caller, [
+          caller.chats.listChats.prefetchInfinite({ projectId: userId }),
+          caller.projects.list.prefetch(),
+          caller.users.favorites.prefetch(),
+        ])
+      )
+    : null;
 
   let lastModels: string[] = [];
   const hiddenProviders = new Set<string>();
@@ -62,12 +72,17 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     }
   }
 
-  const [preferences, locale] = await Promise.all([
+  const t = await tPromise;
+  await ensureGeneralProject(userId, t("generalProjectName"));
+
+  const projectsInitialValuePromise = loadProjects(userId);
+
+  const [preferences, locale, projectsInitialValue] = await Promise.all([
     preferencesPromise,
     localePromise,
+    projectsInitialValuePromise,
   ]);
   const recentNewsPromise = getRecentNews(preferences?.lastNewsSeenAt, locale);
-  const t = await tPromise;
 
   const changedPrompt = !!preferences?.preferenceSystemPromptChangedAt;
   const preferencesInitialValue: PreferencesAtom = preferences
@@ -129,6 +144,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           modelsInitialValue={modelsList}
           panelsInitialValue={initialPanels}
           preferencesInitialValue={preferencesInitialValue}
+          projectsInitialValue={projectsInitialValue}
         >
           {children}
           <WhatsNewModal
@@ -202,6 +218,50 @@ const buildInitialMessages = (
   ];
 };
 
+async function loadProjects(
+  userId: string | null | undefined
+): Promise<ProjectConfig[]> {
+  if (!userId) return [];
+
+  const rows = await db
+    .select({
+      id: projectsTable.id,
+      name: projectsTable.name,
+      color: projectsTable.color,
+      instructions: projectsTable.instructions,
+      isDefault: sql<boolean>`${projectsTable.id} = ${userId}`,
+      createdAt: projectsTable.createdAt,
+    })
+    .from(projectsTable)
+    .leftJoin(
+      chats,
+      and(
+        eq(chats.projectId, projectsTable.id),
+        isNull(chats.deletedAt),
+        eq(chats.isArchived, false)
+      )
+    )
+    .where(
+      and(eq(projectsTable.userId, userId), isNull(projectsTable.deletedAt))
+    )
+    .groupBy(
+      projectsTable.id,
+      projectsTable.name,
+      projectsTable.color,
+      projectsTable.instructions,
+      projectsTable.createdAt
+    )
+    .orderBy(asc(projectsTable.createdAt));
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    color: row.color,
+    instructions: row.instructions,
+    isDefault: row.isDefault,
+  }));
+}
+
 async function ensurePreferences(userId: string | null | undefined) {
   if (!userId) return null;
 
@@ -218,6 +278,45 @@ async function ensurePreferences(userId: string | null | undefined) {
   }
 
   return row;
+}
+
+async function ensureGeneralProject(
+  userId: string | null | undefined,
+  generalProjectName: string
+) {
+  if (!userId) return null;
+
+  const existing = await db.query.projects.findFirst({
+    where: eq(projectsTable.id, userId),
+  });
+
+  if (existing && !existing.deletedAt) {
+    return existing;
+  }
+
+  const [project] = await db
+    .insert(projectsTable)
+    .values({
+      id: userId,
+      userId,
+      name: generalProjectName,
+      color: DEFAULT_PROJECT_COLOR,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+    })
+    .onConflictDoUpdate({
+      target: projectsTable.id,
+      set: {
+        name: generalProjectName,
+        color: DEFAULT_PROJECT_COLOR,
+        deletedAt: null,
+        updatedAt: new Date(),
+      },
+    })
+    .returning();
+
+  return project ?? null;
 }
 
 async function getRecentNews(

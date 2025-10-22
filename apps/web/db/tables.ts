@@ -65,6 +65,27 @@ export const preferences = pgTable("preferences", {
   updatedAt: timestampTzNowUpdated("updated_at"),
 });
 
+export const projects = pgTable(
+  "projects",
+  {
+    id: text("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()::text`),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userStats.id),
+    name: text("name").notNull(),
+    color: text("color").notNull(),
+    instructions: text("instructions"),
+    createdAt: timestampTzNow("created_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
+    deletedAt: timestampTz("deleted_at"),
+  },
+  (table) => [
+    uniqueIndex("projects_user_id_name_unique").on(table.userId, table.name),
+  ]
+);
+
 export const newsArticles = pgTable("news_articles", {
   id: uuid("id").defaultRandom().primaryKey(),
   title: jsonb("title").notNull().$type<Record<string, string>>(),
@@ -236,7 +257,9 @@ export const usersModels = pgTable(
 
 export const chats = pgTable("chats", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
+  projectId: text("project_id")
+    .notNull()
+    .references(() => projects.id),
   title: text("title").notNull(),
   isArchived: boolean("is_archived").notNull().default(false),
   lastMessageAt: timestampTz("last_message_at").notNull(),

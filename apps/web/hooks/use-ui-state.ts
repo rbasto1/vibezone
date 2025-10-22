@@ -1,3 +1,4 @@
+import type { ProjectConfig } from "@/store/projects";
 import { atom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback } from "react";
 
@@ -5,12 +6,16 @@ export interface UIState {
   suggestionsUsed: boolean;
   panelOpen: "preferences" | "search" | null;
   detailsModelId?: string;
+  deleteProject?: ProjectConfig;
+  editProject?: ProjectConfig;
+  createProject: boolean;
 }
 
 // Global UI state atom
 const uiStateAtom = atom<UIState>({
   suggestionsUsed: false,
   panelOpen: null,
+  createProject: false,
 });
 
 export const useUIStateValue = () => {
