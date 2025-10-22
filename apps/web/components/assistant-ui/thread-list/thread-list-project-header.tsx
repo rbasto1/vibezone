@@ -5,6 +5,7 @@ import {
   FolderIcon,
   FolderPlusIcon,
   MoreVerticalIcon,
+  Trash2Icon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
@@ -102,7 +103,8 @@ export const ThreadListProjectHeader: FC<ThreadListProjectHeaderProps> = ({
                 {t("projectMenu.deleteDisabled")}
               </span>
             ) : (
-              <span className="text-sm text-destructive">
+              <span className="flex items-center gap-2 text-sm text-destructive">
+                <Trash2Icon className="h-4 w-4" />
                 {t("projectMenu.delete")}
               </span>
             )}
