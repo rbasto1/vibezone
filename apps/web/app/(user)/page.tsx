@@ -9,6 +9,8 @@ import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 import { AssistantHeader } from "@/components/assistant-ui/assistant-header";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ModelInfoModal } from "@/components/assistant-ui/model-info-modal";
+import { ProjectDeleteModal } from "@/components/assistant-ui/project-delete-modal";
+import { ProjectModal } from "@/components/assistant-ui/project-modal";
 import { ResponsePanel } from "@/components/assistant-ui/response-panel";
 import { SearchPanel } from "@/components/assistant-ui/search-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
@@ -241,6 +243,13 @@ const Assistant: FC = () => {
             }
           }}
         />
+      )}
+      {uiState.createProject && <ProjectModal mode="create" />}
+      {uiState.editProject && (
+        <ProjectModal mode="edit" project={uiState.editProject} />
+      )}
+      {uiState.deleteProject && (
+        <ProjectDeleteModal project={uiState.deleteProject} />
       )}
     </SidebarProvider>
   );

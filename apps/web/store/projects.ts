@@ -5,7 +5,6 @@ export interface ProjectConfig {
   name: string;
   color: string;
   instructions: string | null;
-  chatCount: number;
   isDefault: boolean;
 }
 

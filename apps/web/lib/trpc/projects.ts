@@ -3,7 +3,7 @@ import "server-only";
 import { db } from "@/db";
 import { chats, projects } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { authenticatedProcedure, t } from "./server/initialize";
 
@@ -89,8 +89,9 @@ export const projectsRouter = t.router({
 
   update: authenticatedProcedure
     .input(
-      projectInputSchema.extend({
-        projectId: z.string(),
+      z.object({
+        id: z.string(),
+        data: projectInputSchema,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -99,7 +100,7 @@ export const projectsRouter = t.router({
 
       const target = await db.query.projects.findFirst({
         where: and(
-          eq(projects.id, input.projectId),
+          eq(projects.id, input.id),
           eq(projects.userId, user.id),
           isNull(projects.deletedAt)
         ),
@@ -112,49 +113,36 @@ export const projectsRouter = t.router({
         });
       }
 
-      const trimmedInstructions =
-        input.instructions?.trim().length === 0
-          ? null
-          : (input.instructions?.trim() ?? null);
-
-      try {
-        await db
-          .update(projects)
-          .set({
-            name: input.name.trim(),
-            color: input.color,
-            instructions: trimmedInstructions,
-            updatedAt: new Date(),
-          })
-          .where(eq(projects.id, input.projectId));
-      } catch (error) {
-        if (
-          error &&
-          typeof error === "object" &&
-          "code" in error &&
-          (error as { code?: string }).code === "23505"
-        ) {
+      const { name, color, instructions } = input.data;
+      const updated = await db
+        .update(projects)
+        .set({
+          name: name.trim(),
+          color,
+          instructions: instructions?.trim() || null,
+        })
+        .where(eq(projects.id, input.id))
+        .returning()
+        .catch((error) => {
+          if (
+            error &&
+            typeof error === "object" &&
+            "code" in error &&
+            (error as { code?: string }).code === "23505"
+          ) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "A project with this name already exists",
+            });
+          }
+          console.error("Failed to update project:", error);
           throw new TRPCError({
-            code: "CONFLICT",
-            message: "A project with this name already exists",
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to update project",
           });
-        }
-        console.error("Failed to update project:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update project",
         });
-      }
 
-      const project = await getProjectById(user.id, input.projectId);
-      if (!project) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to load project",
-        });
-      }
-
-      return project;
+      return updated;
     }),
 
   moveChat: authenticatedProcedure
@@ -215,10 +203,7 @@ export const projectsRouter = t.router({
 
       await db
         .update(chats)
-        .set({
-          projectId: targetProject.id,
-          updatedAt: new Date(),
-        })
+        .set({ projectId: targetProject.id })
         .where(eq(chats.id, input.chatId));
 
       return { success: true as const, chatId: chatRecord.id };
@@ -258,72 +243,59 @@ export const projectsRouter = t.router({
         });
       }
 
-      const now = new Date();
+      const deletedAt = new Date();
 
-      await db.transaction(async (tx) => {
-        if (input.strategy === "move") {
-          if (!input.targetProjectId) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: "Target project is required",
-            });
-          }
-
-          if (input.targetProjectId === projectRecord.id) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: "Target project must be different",
-            });
-          }
-
-          const targetProject = await tx.query.projects.findFirst({
-            where: and(
-              eq(projects.id, input.targetProjectId),
-              eq(projects.userId, user.id),
-              isNull(projects.deletedAt)
-            ),
+      if (input.strategy === "move") {
+        if (!input.targetProjectId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Target project is required",
           });
-
-          if (!targetProject) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Target project not found",
-            });
-          }
-
-          await tx
-            .update(chats)
-            .set({
-              projectId: targetProject.id,
-              updatedAt: now,
-            })
-            .where(eq(chats.projectId, projectRecord.id));
-        } else {
-          await tx
-            .update(chats)
-            .set({
-              deletedAt: now,
-              updatedAt: now,
-            })
-            .where(eq(chats.projectId, projectRecord.id));
         }
 
-        await tx
-          .update(projects)
-          .set({
-            deletedAt: now,
-            updatedAt: now,
-          })
-          .where(eq(projects.id, projectRecord.id));
-      });
+        if (input.targetProjectId === projectRecord.id) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Target project must be different",
+          });
+        }
+
+        const targetProject = await db.query.projects.findFirst({
+          where: and(
+            eq(projects.id, input.targetProjectId),
+            eq(projects.userId, user.id),
+            isNull(projects.deletedAt)
+          ),
+        });
+
+        if (!targetProject) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Target project not found",
+          });
+        }
+
+        await db
+          .update(chats)
+          .set({ projectId: targetProject.id })
+          .where(eq(chats.projectId, projectRecord.id));
+      } else {
+        await db
+          .update(chats)
+          .set({ deletedAt })
+          .where(eq(chats.projectId, projectRecord.id));
+      }
+
+      await db
+        .update(projects)
+        .set({ deletedAt })
+        .where(eq(projects.id, projectRecord.id));
 
       return { success: true as const };
     }),
 });
 
 async function selectProjects(userId: string, projectId?: string) {
-  const chatCountField = sql<number>`count(${chats.id})::int`.as("chatCount");
-
   const rows = await db
     .select({
       id: projects.id,
@@ -334,17 +306,8 @@ async function selectProjects(userId: string, projectId?: string) {
       createdAt: projects.createdAt,
       updatedAt: projects.updatedAt,
       isDefault: sql<boolean>`${projects.id} = ${userId}`,
-      chatCount: chatCountField,
     })
     .from(projects)
-    .leftJoin(
-      chats,
-      and(
-        eq(chats.projectId, projects.id),
-        isNull(chats.deletedAt),
-        eq(chats.isArchived, false)
-      )
-    )
     .where(
       and(
         eq(projects.userId, userId),
@@ -352,16 +315,7 @@ async function selectProjects(userId: string, projectId?: string) {
         projectId ? eq(projects.id, projectId) : sql`true`
       )
     )
-    .groupBy(
-      projects.id,
-      projects.userId,
-      projects.name,
-      projects.color,
-      projects.instructions,
-      projects.createdAt,
-      projects.updatedAt
-    )
-    .orderBy(asc(projects.createdAt));
+    .orderBy(projects.name);
 
   return rows.map((row) => ({
     id: row.id,
@@ -370,7 +324,6 @@ async function selectProjects(userId: string, projectId?: string) {
     instructions: row.instructions,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    chatCount: row.chatCount ?? 0,
     isDefault: row.isDefault,
   }));
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type FC } from "react";
 import { useTranslations } from "next-intl";
+import { useState, type FC } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,37 +15,35 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/components/ui/utils";
 import { PROJECT_COLOR_PRESETS } from "@/constants/projects";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useProjectActions } from "@/hooks/use-project-actions";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
 import type { ProjectConfig } from "@/store/projects";
 
 interface ProjectModalProps {
   mode: "create" | "edit";
   project?: ProjectConfig;
-  isSubmitting?: boolean;
-  onSubmit: (values: {
-    name: string;
-    color: string;
-    instructions: string | null;
-  }) => Promise<void>;
-  onClose: () => void;
 }
 
-export const ProjectModal: FC<ProjectModalProps> = ({
-  mode,
-  project,
-  isSubmitting = false,
-  onSubmit,
-  onClose,
-}) => {
+export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
   const t = useTranslations("ProjectModal");
   const tColors = useTranslations("ProjectModal.colors");
+  const isMobile = useIsMobile();
   const [name, setName] = useState(project?.name ?? "");
-  const [color, setColor] = useState(project?.color ?? PROJECT_COLOR_PRESETS[0]);
-  const [instructions, setInstructions] = useState(
-    project?.instructions ?? ""
+  const [color, setColor] = useState(
+    project?.color ?? PROJECT_COLOR_PRESETS[0]
   );
+  const [instructions, setInstructions] = useState(project?.instructions ?? "");
   const [error, setError] = useState<string | null>(null);
+  const setUIState = useUIStateSetter();
+  const { createProject, updateProject } = useProjectActions();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEdit = mode === "edit";
+  if (isEdit && !project) throw new Error("Invalid to edit project");
+
+  const handleClose = () =>
+    setUIState({ createProject: false, editProject: undefined });
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -59,22 +57,44 @@ export const ProjectModal: FC<ProjectModalProps> = ({
     const trimmedInstructions =
       instructions.trim().length > 0 ? instructions.trim() : null;
 
-    onSubmit({
-      name: trimmedName,
-      color,
-      instructions: trimmedInstructions,
-    }).catch((submitError) => {
-      console.error("Failed to submit project form:", submitError);
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : t("errors.generic")
-      );
-    });
+    setIsSubmitting(true);
+    if (project) {
+      void updateProject(project.id, {
+        name: trimmedName,
+        color,
+        instructions: trimmedInstructions,
+      })
+        .then(handleClose)
+        .catch((submitError) => {
+          console.error("Failed to submit project form:", submitError);
+          setError(
+            submitError instanceof Error
+              ? submitError.message
+              : t("errors.generic")
+          );
+        })
+        .finally(() => setIsSubmitting(false));
+    } else {
+      void createProject({
+        name: trimmedName,
+        color,
+        instructions: trimmedInstructions,
+      })
+        .then(handleClose)
+        .catch((submitError) => {
+          console.error("Failed to submit project form:", submitError);
+          setError(
+            submitError instanceof Error
+              ? submitError.message
+              : t("errors.generic")
+          );
+        })
+        .finally(() => setIsSubmitting(false));
+    }
   };
 
   return (
-    <Dialog open onOpenChange={onClose}>
+    <Dialog open onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[480px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -97,7 +117,7 @@ export const ProjectModal: FC<ProjectModalProps> = ({
                 onChange={(event) => setName(event.target.value)}
                 placeholder={t("fields.name.placeholder")}
                 disabled={isSubmitting}
-                autoFocus
+                autoFocus={!isMobile}
               />
             </div>
 
@@ -154,12 +174,16 @@ export const ProjectModal: FC<ProjectModalProps> = ({
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isSubmitting}
             >
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              loading={isSubmitting}
+            >
               {isEdit ? t("save") : t("create")}
             </Button>
           </DialogFooter>

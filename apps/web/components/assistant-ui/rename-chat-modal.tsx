@@ -1,5 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useState, type FC } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,25 +13,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useTranslations } from "next-intl";
-import { useState, type FC } from "react";
+import { useChatActions } from "@/hooks/use-chat-actions";
 
 interface RenameChatModalProps {
   chatId: string;
   currentTitle: string;
-  onRename: (chatId: string, newTitle: string) => Promise<unknown>;
   onClose: () => void;
 }
 
 export const RenameChatModal: FC<RenameChatModalProps> = ({
   chatId,
   currentTitle,
-  onRename,
   onClose,
 }) => {
   const t = useTranslations("RenameChatModal");
   const [newTitle, setNewTitle] = useState(currentTitle);
   const [isRenaming, setIsRenaming] = useState(false);
+  const { renameChat } = useChatActions();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +40,7 @@ export const RenameChatModal: FC<RenameChatModalProps> = ({
 
     setIsRenaming(true);
     try {
-      await onRename(chatId, newTitle.trim());
+      await renameChat(chatId, newTitle.trim());
       onClose();
     } catch (error) {
       console.error("Failed to rename chat:", error);

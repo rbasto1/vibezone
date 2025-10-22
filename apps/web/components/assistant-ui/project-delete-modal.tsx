@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, type FC } from "react";
 import { useTranslations } from "next-intl";
+import { useMemo, useState, type FC } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,14 +13,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/components/ui/utils";
+import { useProjectActions } from "@/hooks/use-project-actions";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { trpc } from "@/lib/trpc/client";
 import type { ProjectConfig } from "@/store/projects";
 
 interface ProjectDeleteModalProps {
   project: ProjectConfig;
-  projects: ProjectConfig[];
-  isSubmitting?: boolean;
-  onConfirm: (options: DeleteProjectOptions) => Promise<void>;
-  onClose: () => void;
 }
 
 export interface DeleteProjectOptions {
@@ -28,27 +27,32 @@ export interface DeleteProjectOptions {
   targetProjectId?: string;
 }
 
+const emptyProjects: ProjectConfig[] = [];
+
 export const ProjectDeleteModal: FC<ProjectDeleteModalProps> = ({
   project,
-  projects,
-  isSubmitting = false,
-  onConfirm,
-  onClose,
 }) => {
   const t = useTranslations("ProjectDeleteModal");
   const [strategy, setStrategy] = useState<"move" | "delete">("move");
-  const [targetProjectId, setTargetProjectId] = useState<string | null>(() => {
+  const setUIState = useUIStateSetter();
+  const { data } = trpc.projects.list.useQuery();
+  const { deleteProject } = useProjectActions();
+  const projects = data ?? emptyProjects;
+  const [targetProjectId, setTargetProjectId] = useState(() => {
     const defaultTarget =
       projects.find((p) => p.isDefault && p.id !== project.id) ??
       projects.find((p) => p.id !== project.id);
-    return defaultTarget?.id ?? null;
+    return defaultTarget?.id;
   });
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const availableTargets = useMemo(
     () => projects.filter((candidate) => candidate.id !== project.id),
     [project.id, projects]
   );
+
+  const handleClose = () => setUIState({ deleteProject: undefined });
 
   const handleConfirm = (event: React.FormEvent) => {
     event.preventDefault();
@@ -56,23 +60,30 @@ export const ProjectDeleteModal: FC<ProjectDeleteModalProps> = ({
       setError(t("errors.selectTarget"));
       return;
     }
-    setError(null);
+    setError(undefined);
 
-    onConfirm({
+    setIsSubmitting(true);
+    void deleteProject(
+      project.id,
       strategy,
-      targetProjectId: strategy === "move" ? targetProjectId ?? undefined : undefined,
-    }).catch((confirmError) => {
-      console.error("Failed to delete project:", confirmError);
-      setError(
-        confirmError instanceof Error
-          ? confirmError.message
-          : t("errors.generic")
-      );
-    });
+      strategy === "move" ? targetProjectId : undefined
+    )
+      .then(handleClose)
+      .catch((confirmError) => {
+        console.error("Failed to delete project:", confirmError);
+        setError(
+          confirmError instanceof Error
+            ? confirmError.message
+            : t("errors.generic")
+        );
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   return (
-    <Dialog open onOpenChange={onClose}>
+    <Dialog open onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[520px]">
         <form onSubmit={handleConfirm}>
           <DialogHeader>
@@ -85,7 +96,7 @@ export const ProjectDeleteModal: FC<ProjectDeleteModalProps> = ({
               <button
                 type="button"
                 className={cn(
-                  "flex w-full flex-col items-start gap-3 rounded-md border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                  "flex w-full flex-col items-start gap-3 rounded-md border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer",
                   strategy === "move"
                     ? "border-ring ring-1 ring-ring"
                     : "border-border hover:border-ring"
@@ -103,7 +114,7 @@ export const ProjectDeleteModal: FC<ProjectDeleteModalProps> = ({
               <button
                 type="button"
                 className={cn(
-                  "flex w-full flex-col items-start gap-3 rounded-md border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                  "flex w-full flex-col items-start gap-3 rounded-md border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 cursor-pointer",
                   strategy === "delete"
                     ? "border-ring ring-1 ring-ring"
                     : "border-border hover:border-ring"
@@ -130,7 +141,7 @@ export const ProjectDeleteModal: FC<ProjectDeleteModalProps> = ({
                     <label
                       key={candidate.id}
                       className={cn(
-                        "flex items-center justify-between rounded-md border px-3 py-2 text-sm transition hover:border-ring",
+                        "flex items-center justify-between rounded-md border px-3 py-2 text-sm transition hover:border-ring cursor-pointer",
                         targetProjectId === candidate.id &&
                           "border-ring ring-1 ring-ring"
                       )}
@@ -151,7 +162,7 @@ export const ProjectDeleteModal: FC<ProjectDeleteModalProps> = ({
                       <input
                         type="radio"
                         name="targetProject"
-                        className="h-4 w-4"
+                        className="h-4 w-4 cursor-pointer"
                         checked={targetProjectId === candidate.id}
                         onChange={() => setTargetProjectId(candidate.id)}
                         disabled={isSubmitting}
@@ -173,7 +184,7 @@ export const ProjectDeleteModal: FC<ProjectDeleteModalProps> = ({
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isSubmitting}
             >
               {t("cancel")}
@@ -182,7 +193,8 @@ export const ProjectDeleteModal: FC<ProjectDeleteModalProps> = ({
               type="submit"
               variant={strategy === "delete" ? "destructive" : "default"}
               disabled={
-                isSubmitting || (strategy === "move" && !availableTargets.length)
+                isSubmitting ||
+                (strategy === "move" && !availableTargets.length)
               }
               loading={isSubmitting}
             >

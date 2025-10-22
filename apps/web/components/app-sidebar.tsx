@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { siteName } from "@/lib/branding";
 import { useTranslations } from "next-intl";
-import { ThreadList } from "./assistant-ui/thread-list";
+import { ThreadList } from "./assistant-ui/thread-list/thread-list";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const t = useTranslations("Sidebar");

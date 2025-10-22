@@ -44,7 +44,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
 
   const statePromise = getServerCaller().then((caller) =>
     prefetch(caller, [
-      caller.chats.listChats.prefetch({}),
+      caller.chats.listChats.prefetchInfinite({}),
       caller.projects.list.prefetch(),
       caller.users.favorites.prefetch(),
     ])
@@ -222,15 +222,12 @@ async function loadProjects(
 ): Promise<ProjectConfig[]> {
   if (!userId) return [];
 
-  const chatCountField = sql<number>`count(${chats.id})::int`.as("chatCount");
-
   const rows = await db
     .select({
       id: projectsTable.id,
       name: projectsTable.name,
       color: projectsTable.color,
       instructions: projectsTable.instructions,
-      chatCount: chatCountField,
       isDefault: sql<boolean>`${projectsTable.id} = ${userId}`,
       createdAt: projectsTable.createdAt,
     })
@@ -243,7 +240,9 @@ async function loadProjects(
         eq(chats.isArchived, false)
       )
     )
-    .where(and(eq(projectsTable.userId, userId), isNull(projectsTable.deletedAt)))
+    .where(
+      and(eq(projectsTable.userId, userId), isNull(projectsTable.deletedAt))
+    )
     .groupBy(
       projectsTable.id,
       projectsTable.name,
@@ -258,7 +257,6 @@ async function loadProjects(
     name: row.name,
     color: row.color,
     instructions: row.instructions,
-    chatCount: row.chatCount ?? 0,
     isDefault: row.isDefault,
   }));
 }

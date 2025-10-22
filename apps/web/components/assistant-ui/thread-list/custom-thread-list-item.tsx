@@ -13,7 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
-import type { UseChatActionsResult } from "@/hooks/use-chat-actions";
+import {
+  useChatActions,
+  type UseChatActionsResult,
+} from "@/hooks/use-chat-actions";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import type { ProjectConfig } from "@/store/projects";
 import {
@@ -38,10 +41,6 @@ interface CustomThreadListItemProps {
   movePendingChatId?: string | null;
   movePendingProjectId?: string | null;
   onSelect: () => Promise<UseChatActionsResult | null>;
-  onArchive: (chatId: string) => Promise<unknown>;
-  onRename: (chatId: string, newTitle: string) => Promise<unknown>;
-  onMove: (chatId: string, targetProjectId: string) => Promise<void>;
-  onCreateProject: () => void;
   projects: ProjectConfig[];
 }
 
@@ -55,10 +54,6 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   movePendingChatId,
   movePendingProjectId,
   onSelect,
-  onArchive,
-  onRename,
-  onMove,
-  onCreateProject,
   projects,
 }) => {
   const t = useTranslations("ThreadListItem");
@@ -67,6 +62,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [error, setError] = useState<string>();
   const setUiState = useUIStateSetter();
+  const { archiveChat, moveChat } = useChatActions();
 
   const isMovePending = movePendingChatId === chatId;
   const activeMoveTarget = isMovePending ? movePendingProjectId : null;
@@ -83,10 +79,10 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
     }
   };
 
-  const handleArchive = async (event: React.MouseEvent) => {
+  const handleArchive = (event: React.MouseEvent) => {
     event.stopPropagation();
     setIsArchiving(true);
-    await onArchive(chatId).finally(() => {
+    void archiveChat(chatId).finally(() => {
       setIsArchiving(false);
     });
   };
@@ -100,7 +96,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
     event.stopPropagation();
     if (pendingProjectId || isMovePending) return;
     setPendingProjectId(targetProjectId);
-    onMove(chatId, targetProjectId)
+    void moveChat(chatId, targetProjectId)
       .catch((moveError) => {
         console.error("Failed to move chat:", moveError);
         toast.error(t("moveError"));
@@ -112,7 +108,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
 
   const handleCreateProject = (event: React.MouseEvent) => {
     event.stopPropagation();
-    onCreateProject();
+    setUiState({ createProject: true });
   };
 
   const moveBusy = Boolean(pendingProjectId) || isMovePending;
@@ -173,7 +169,9 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
               <DropdownMenuItem disabled>
                 <span
                   className="mr-2 h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: currentProject?.color ?? "#9ca3af" }}
+                  style={{
+                    backgroundColor: currentProject?.color ?? "#9ca3af",
+                  }}
                   aria-hidden="true"
                 />
                 <span className="flex-1 truncate">
@@ -196,7 +194,8 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
                       aria-hidden="true"
                     />
                     <span className="flex-1 truncate">{project.name}</span>
-                    {pendingProjectId === project.id || activeMoveTarget === project.id ? (
+                    {pendingProjectId === project.id ||
+                    activeMoveTarget === project.id ? (
                       <Loader2Icon className="h-3 w-3 animate-spin text-muted-foreground" />
                     ) : null}
                   </DropdownMenuItem>
@@ -231,7 +230,6 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
         <RenameChatModal
           chatId={chatId}
           currentTitle={title}
-          onRename={onRename}
           onClose={() => setShowRenameModal(false)}
         />
       )}
