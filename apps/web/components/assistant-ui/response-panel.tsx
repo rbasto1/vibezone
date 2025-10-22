@@ -11,6 +11,7 @@ import {
   useCaptchaStateValue,
 } from "@/hooks/use-captcha";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
+import { useChatActions } from "@/hooks/use-chat-actions";
 import { useComposerPromptSetter } from "@/hooks/use-composer-prompt";
 import { usePanelState } from "@/hooks/use-panels";
 import { useStableValue } from "@/hooks/use-stable-value";
@@ -19,7 +20,6 @@ import { useThreadRuntimeControllerSetter } from "@/hooks/use-thread-store";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import { safeParse } from "@/lib/json";
 import { generateFingerprint } from "@/lib/limiting";
-import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import {
   AssistantRuntimeProvider,
@@ -61,7 +61,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   }, [id]);
   const [panelState, setPanelState] = usePanelState(id);
   const setCurrentChat = useCurrentChatSetter();
-  const renameChatMutation = trpc.chats.renameChat.useMutation();
+  const { renameChat } = useChatActions();
   const session = useAuth();
   const sessionToken = useStableValue(session.sessionId ?? undefined);
   const panelNotRegisteredMessage = t("panelNotRegistered");
@@ -178,7 +178,7 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
 
     // use the setter to have access to the current chat
     setCurrentChat((currentChat) => {
-      if (currentChat.fetchedTitlePanelId) {
+      if (currentChat.fetchedTitlePanelId || !currentChat.projectId) {
         // chat was fetched or is being fetched by another panel
         return currentChat;
       }
@@ -197,23 +197,19 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
         }
 
         // our backend will generate the title based on the conversation history
-        void renameChatMutation
-          .mutateAsync({
-            chatId: currentChat.id,
-            title: null,
-            firstUserMessage,
-          })
-          .then((chat) => {
-            if (!chat.success) {
-              console.warn("Failed to rename chat", chat.message);
-              return;
-            }
-            // this happens after the mutation is successful, asynchronously
+        void renameChat({
+          chatId: currentChat.id,
+          firstUserMessage,
+          projectId: currentChat.projectId,
+          title: null,
+        }).then((chat) => {
+          if (chat.success) {
             setCurrentChat((currentChat) => ({
               ...currentChat,
               title: chat.title,
             }));
-          });
+          }
+        });
       }
 
       // make sure not to overwrite the fetched title panel id with empty value

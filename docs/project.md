@@ -28,6 +28,7 @@
 - [x] Attachments should be stored as links to files
 - [x] Allow selection of reasoning effort if any model accepts it
 - [x] Allow pasting attachments with Ctrl-V
+- [ ] Archive vs delete chats
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format
 - [x] Composer text area should grow with text

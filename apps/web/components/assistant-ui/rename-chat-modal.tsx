@@ -17,12 +17,14 @@ import { useChatActions } from "@/hooks/use-chat-actions";
 
 interface RenameChatModalProps {
   chatId: string;
+  projectId: string;
   currentTitle: string;
   onClose: () => void;
 }
 
 export const RenameChatModal: FC<RenameChatModalProps> = ({
   chatId,
+  projectId,
   currentTitle,
   onClose,
 }) => {
@@ -40,7 +42,11 @@ export const RenameChatModal: FC<RenameChatModalProps> = ({
 
     setIsRenaming(true);
     try {
-      await renameChat(chatId, newTitle.trim());
+      await renameChat({
+        chatId,
+        title: newTitle.trim(),
+        projectId,
+      });
       onClose();
     } catch (error) {
       console.error("Failed to rename chat:", error);
@@ -50,8 +56,13 @@ export const RenameChatModal: FC<RenameChatModalProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      onClose();
+    switch (e.key) {
+      case "Escape":
+        onClose();
+        break;
+      case "Enter":
+        void handleSubmit(e);
+        break;
     }
   };
 

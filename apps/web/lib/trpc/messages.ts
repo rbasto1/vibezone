@@ -73,8 +73,13 @@ export const messagesRouter = t.router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { chatId, threadId, modelId, messages: inputMessages, projectId } =
-        input;
+      const {
+        chatId,
+        threadId,
+        modelId,
+        messages: inputMessages,
+        projectId,
+      } = input;
       const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
 
@@ -103,6 +108,14 @@ export const messagesRouter = t.router({
         });
 
         if (!existingThread) {
+          const chat = await chatPromise;
+          if (!chat) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to create chat",
+            });
+          }
+
           // Create thread if it doesn't exist
           await db.insert(threads).values({
             id: threadId,

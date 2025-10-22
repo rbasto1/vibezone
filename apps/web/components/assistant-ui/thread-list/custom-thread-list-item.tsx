@@ -229,6 +229,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
       {showRenameModal && (
         <RenameChatModal
           chatId={chatId}
+          projectId={projectId}
           currentTitle={title}
           onClose={() => setShowRenameModal(false)}
         />

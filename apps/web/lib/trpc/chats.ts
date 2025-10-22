@@ -59,12 +59,13 @@ export const chatsRouter = t.router({
     .input(
       z.object({
         chatId: z.string(),
+        projectId: z.string(),
         title: z.string().nullable(),
         firstUserMessage: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { chatId, title: inputTitle, firstUserMessage } = input;
+      const { chatId, projectId, title: inputTitle, firstUserMessage } = input;
       const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
       const userId = user.id;
@@ -77,16 +78,49 @@ export const chatsRouter = t.router({
           },
         },
       });
-      if (!chat) {
-        return { success: false, message: "Chat not found" } as const;
-      }
-      if (chat.project?.userId !== userId) {
+      if (chat && chat.project?.userId !== userId) {
         return { success: false, message: "Access denied" } as const;
       }
 
       const title = inputTitle ?? (await getChatName(chatId, firstUserMessage));
 
-      await db.update(chats).set({ title }).where(eq(chats.id, chatId));
+      if (chat) {
+        await db
+          .update(chats)
+          .set({
+            title,
+          })
+          .where(eq(chats.id, chatId));
+      } else {
+        const project = await db.query.projects.findFirst({
+          columns: { id: true },
+          where: and(
+            eq(projects.id, projectId),
+            eq(projects.userId, userId),
+            isNull(projects.deletedAt)
+          ),
+        });
+
+        if (!project) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Project not found",
+          });
+        }
+
+        await db
+          .insert(chats)
+          .values({
+            id: chatId,
+            projectId,
+            title,
+            lastMessageAt: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: chats.id,
+            set: { title },
+          });
+      }
 
       return { success: true, title } as const;
     }),

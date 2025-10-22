@@ -60,6 +60,7 @@ export const useChatActions = () => {
       // For now, we only optimistically remove the chat from its current place, and the invalidation
       // will take care of placing it a few seconds later in the new project.
       for (const [queryKey, data] of queries) {
+        if (!data) continue;
         const dataWithoutChat = {
           ...data,
           pages: data.pages.map((page) => ({
@@ -82,6 +83,7 @@ export const useChatActions = () => {
       // For now, we only optimistically remove the chat from its current place, and the invalidation
       // will take care of placing it a few seconds later in the new project.
       for (const [queryKey, data] of queries) {
+        if (!data) continue;
         const dataWithoutChat = {
           ...data,
           pages: data.pages.map((page) => ({
@@ -159,19 +161,38 @@ export const useChatActions = () => {
   );
 
   const renameChat = useCallback(
-    (chatId: string, title: string) => {
-      const queries = optimisticallyRenameChat(chatId, title);
+    (
+      renameChatInput: Parameters<
+        typeof utils.client.chats.renameChat.mutate
+      >[0]
+    ) => {
+      const queries = renameChatInput.title
+        ? optimisticallyRenameChat(
+            renameChatInput.chatId,
+            renameChatInput.title
+          )
+        : null;
       return utils.client.chats.renameChat
-        .mutate({ chatId, title })
+        .mutate(renameChatInput)
+        .then((chat) => {
+          if (!chat.success) {
+            throw new Error(chat.message);
+          }
+          optimisticallyRenameChat(renameChatInput.chatId, chat.title);
+          return chat;
+        })
         .catch((error) => {
           console.error("Failed to rename chat:", error);
           const message =
             error instanceof Error ? error.message : JSON.stringify(error);
           toast.error(`Failed to rename chat: ${message}`);
 
-          for (const [queryKey, data] of queries) {
-            queryClient.setQueryData(queryKey, data);
+          if (queries) {
+            for (const [queryKey, data] of queries) {
+              queryClient.setQueryData(queryKey, data);
+            }
           }
+          return { success: false, message } as const;
         });
     },
     [utils, optimisticallyRenameChat, queryClient]
