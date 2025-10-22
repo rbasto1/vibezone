@@ -21,8 +21,7 @@ export const useModelFavorites = () => {
   const utils = trpc.useUtils();
 
   const favoritesQuery = trpc.users.favorites.useQuery(undefined, {
-    enabled: Boolean(user),
-    staleTime: 60_000,
+    enabled: !!user,
   });
 
   const toggleMutation = trpc.users.toggleFavorite.useMutation({

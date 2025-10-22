@@ -48,9 +48,10 @@ export const ProjectSection: FC<ProjectSectionProps> = ({
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isRefetching,
+    refetch,
   } = trpc.chats.listChats.useInfiniteQuery(queryInput, {
     getNextPageParam: (lastPage) => lastPage.next ?? undefined,
-    refetchInterval: 60 * 1000,
     refetchOnWindowFocus: true,
     retry: 2,
     enabled: !isCollapsed,
@@ -76,7 +77,17 @@ export const ProjectSection: FC<ProjectSectionProps> = ({
       {!isCollapsed && (
         <div className="flex flex-col gap-1">
           {error ? (
-            <div className="text-sm p-2 text-destructive">{error.message}</div>
+            <div className="text-sm p-2 text-destructive flex flex-col gap-2">
+              {error.message}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refetch()}
+                loading={isRefetching}
+              >
+                {t("retry")}
+              </Button>
+            </div>
           ) : showEmptyState ? (
             <div className="rounded-md border border-dashed border-muted px-3 py-2 text-xs text-muted-foreground">
               {t("projectEmpty")}

@@ -198,6 +198,7 @@
     "projectCount": "{count, plural, one {# Chat} other {# Chats}}",
     "projectEmpty": "In diesem Projekt gibt es noch keine Chats",
     "loadMore": "Mehr laden",
+    "retry": "Erneut versuchen",
     "actions": {
       "createProject": "Neues Projekt"
     },
