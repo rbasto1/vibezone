@@ -20,6 +20,7 @@ export const chatsRouter = t.router({
       z.object({
         cursor: z.string().optional(),
         limit: z.number().min(1).max(100).default(CHAT_LIST_PAGE_SIZE),
+        projectId: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -34,6 +35,7 @@ export const chatsRouter = t.router({
         userId: user.id,
         cursor: input.cursor,
         limit: input.limit,
+        projectId: input.projectId,
       });
     }),
   searchChats: authenticatedProcedure
@@ -241,12 +243,14 @@ interface ListChatsInput {
   userId: string;
   cursor?: string;
   limit?: number;
+  projectId?: string;
 }
 
 export async function listChats({
   userId,
   cursor,
   limit = CHAT_LIST_PAGE_SIZE,
+  projectId,
 }: ListChatsInput) {
   const [cursorDate, cursorId] = parseCursor(cursor);
 
@@ -272,6 +276,7 @@ export async function listChats({
         isNull(projects.deletedAt),
         isNull(chats.deletedAt),
         eq(chats.isArchived, false),
+        projectId ? eq(chats.projectId, projectId) : undefined,
         cursorDate
           ? cursorId
             ? or(

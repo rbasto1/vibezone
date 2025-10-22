@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { useNewChatHandler } from "@/hooks/use-new-chat-handler";
 import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
-import type { RouterInputs } from "@/lib/trpc/server/server";
 import type { ProjectConfig } from "@/store/projects";
 import { ThreadListItems } from "./thread-list-items";
 import { ThreadListNew } from "./thread-list-new";
@@ -17,7 +16,6 @@ import { ThreadListSearch } from "./thread-list-search";
 export const ThreadList: FC = () => {
   const t = useTranslations("ThreadList");
   const createChat = useNewChatHandler();
-  const listInput = useMemo<RouterInputs["chats"]["listChats"]>(() => ({}), []);
   const user = useUser();
   const { data: projects } = trpc.projects.list.useQuery(undefined, {
     enabled: !!user,
@@ -53,7 +51,7 @@ export const ThreadList: FC = () => {
         onNewChat={handleCreateChat}
       />
       {user ? (
-        <ThreadListItems listInput={listInput} projects={projects ?? []} />
+        <ThreadListItems projects={projects ?? []} />
       ) : (
         <div className="text-sm text-muted-foreground p-2">
           {t("loginRequired")}
