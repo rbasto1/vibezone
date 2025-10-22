@@ -33,19 +33,7 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({ projects }) => {
   const { loadChatById } = useChatActions();
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
   const setUIState = useUIStateSetter();
-
   const { moveChat } = useChatActions();
-
-  const [collapsedProjects, setCollapsedProjects] = useState<
-    Record<string, boolean>
-  >({});
-
-  const toggleProject = useCallback((projectId: string) => {
-    setCollapsedProjects((prev) => ({
-      ...prev,
-      [projectId]: !prev[projectId],
-    }));
-  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -115,8 +103,6 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({ projects }) => {
             <ProjectSection
               key={project.id}
               project={project}
-              collapsed={!!collapsedProjects[project.id]}
-              onToggleCollapse={() => toggleProject(project.id)}
               onSelectChat={handleSelectChat}
               projects={projects}
               currentChatId={currentChat.id}

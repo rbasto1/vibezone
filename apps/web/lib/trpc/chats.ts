@@ -19,7 +19,7 @@ export const chatsRouter = t.router({
     .input(
       z.object({
         cursor: z.string().optional(),
-        limit: z.number().min(1).max(100).default(CHAT_LIST_PAGE_SIZE),
+        limit: z.number().min(1).max(100).optional(),
         projectId: z.string().optional(),
       })
     )
@@ -249,10 +249,11 @@ interface ListChatsInput {
 export async function listChats({
   userId,
   cursor,
-  limit = CHAT_LIST_PAGE_SIZE,
+  limit: limitParam,
   projectId,
 }: ListChatsInput) {
   const [cursorDate, cursorId] = parseCursor(cursor);
+  const limit = limitParam ?? (cursor ? CHAT_LIST_PAGE_SIZE : 5);
 
   const result = await db
     .select({

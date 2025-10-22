@@ -196,6 +196,7 @@
     "noProjects": "No projects yet",
     "projectCount": "{count, plural, one {# chat} other {# chats}}",
     "projectEmpty": "No chats in this project yet",
+    "loadMore": "Load more",
     "actions": {
       "createProject": "New project"
     },

@@ -4,8 +4,9 @@ import { useDroppable } from "@dnd-kit/core";
 
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import type { UseChatActionsResult } from "@/hooks/use-chat-actions";
 import { trpc } from "@/lib/trpc/client";
 import type { ProjectConfig } from "@/store/projects";
@@ -17,8 +18,6 @@ import { ThreadListProjectHeader } from "./thread-list-project-header";
 
 interface ProjectSectionProps {
   project: ProjectConfig;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
   onSelectChat: (chat: ChatListItem) => Promise<UseChatActionsResult | null>;
   projects: ProjectConfig[];
   currentChatId: string;
@@ -30,8 +29,6 @@ const buildProjectDroppableId = (projectId: string) =>
 
 export const ProjectSection: FC<ProjectSectionProps> = ({
   project,
-  collapsed,
-  onToggleCollapse,
   onSelectChat,
   projects,
   currentChatId,
@@ -41,6 +38,7 @@ export const ProjectSection: FC<ProjectSectionProps> = ({
   const { isOver, setNodeRef } = useDroppable({
     id: buildProjectDroppableId(project.id),
   });
+  const [isCollapsed, setIsCollapsed] = useState(!project.isDefault);
   const queryInput = useMemo(() => ({ projectId: project.id }), [project.id]);
 
   const {
@@ -55,45 +53,13 @@ export const ProjectSection: FC<ProjectSectionProps> = ({
     refetchInterval: 60 * 1000,
     refetchOnWindowFocus: true,
     retry: 2,
-    enabled: !collapsed,
+    enabled: !isCollapsed,
   });
 
   const chats = useMemo(
     () => data?.pages.flatMap((page) => page.chats) ?? [],
     [data]
   );
-
-  const [sentinelElement, setSentinelElement] = useState<HTMLDivElement | null>(
-    null
-  );
-  const handleSentinelRef = useCallback((node: HTMLDivElement | null) => {
-    setSentinelElement(node);
-  }, []);
-
-  useEffect(() => {
-    if (!sentinelElement || collapsed) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          void fetchNextPage();
-        }
-      },
-      { root: null, rootMargin: "200px", threshold: 0 }
-    );
-
-    observer.observe(sentinelElement);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [
-    collapsed,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    sentinelElement,
-  ]);
 
   const showInitialLoading = isLoading && !data;
   const showEmptyState = !showInitialLoading && chats.length === 0 && !error;
@@ -102,19 +68,15 @@ export const ProjectSection: FC<ProjectSectionProps> = ({
     <div ref={setNodeRef} className="flex flex-col gap-2">
       <ThreadListProjectHeader
         project={project}
-        collapsed={collapsed}
-        onToggleCollapse={onToggleCollapse}
+        collapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed((prev) => !prev)}
         isOver={isOver}
       />
 
-      {!collapsed && (
+      {!isCollapsed && (
         <div className="flex flex-col gap-1">
           {error ? (
             <div className="text-sm p-2 text-destructive">{error.message}</div>
-          ) : showInitialLoading ? (
-            <div className="text-sm text-muted-foreground p-2">
-              {t("loading")}
-            </div>
           ) : showEmptyState ? (
             <div className="rounded-md border border-dashed border-muted px-3 py-2 text-xs text-muted-foreground">
               {t("projectEmpty")}
@@ -139,13 +101,20 @@ export const ProjectSection: FC<ProjectSectionProps> = ({
               </DraggableItem>
             ))
           )}
-          {hasNextPage && (
-            <div ref={handleSentinelRef} className="h-16" aria-hidden />
-          )}
-          {isFetchingNextPage && !showInitialLoading && (
-            <div className="text-sm text-muted-foreground p-2 panel-button-glow">
+          {(isFetchingNextPage || isLoading) && (
+            <div className="text-sm text-muted-foreground p-2 panel-button-glow mx-2">
               {t("loading")}
             </div>
+          )}
+          {hasNextPage && !isFetchingNextPage && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="self-start w-full"
+              onClick={() => void fetchNextPage()}
+            >
+              {t("loadMore") + "…"}
+            </Button>
           )}
         </div>
       )}

@@ -42,13 +42,15 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const preferencesPromise = ensurePreferences(userId);
   const generalProjectPromise = ensureGeneralProject(userId);
 
-  const statePromise = getServerCaller().then((caller) =>
-    prefetch(caller, [
-      caller.chats.listChats.prefetchInfinite({}),
-      caller.projects.list.prefetch(),
-      caller.users.favorites.prefetch(),
-    ])
-  );
+  const statePromise = userId
+    ? getServerCaller().then((caller) =>
+        prefetch(caller, [
+          caller.chats.listChats.prefetchInfinite({ projectId: userId }),
+          caller.projects.list.prefetch(),
+          caller.users.favorites.prefetch(),
+        ])
+      )
+    : null;
 
   let lastModels: string[] = [];
   const hiddenProviders = new Set<string>();
