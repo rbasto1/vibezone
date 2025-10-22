@@ -1,6 +1,7 @@
 {
   "Prompts": {
-    "system": "Você é um assistente prestativo. O usuário fala português do Brasil."
+    "system": "Você é um assistente prestativo. O usuário fala português do Brasil.",
+    "generalProjectName": "Geral"
   },
   "AnonQuota": {
     "mobileChip": "{remaining} de {limit}",

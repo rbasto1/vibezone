@@ -40,7 +40,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const authUser = await currentUser();
   const userId = authUser?.id;
   const preferencesPromise = ensurePreferences(userId);
-  const generalProjectPromise = ensureGeneralProject(userId);
 
   const statePromise = userId
     ? getServerCaller().then((caller) =>
@@ -73,7 +72,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     }
   }
 
-  await generalProjectPromise;
+  const t = await tPromise;
+  await ensureGeneralProject(userId, t("generalProjectName"));
 
   const projectsInitialValuePromise = loadProjects(userId);
 
@@ -83,7 +83,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     projectsInitialValuePromise,
   ]);
   const recentNewsPromise = getRecentNews(preferences?.lastNewsSeenAt, locale);
-  const t = await tPromise;
 
   const changedPrompt = !!preferences?.preferenceSystemPromptChangedAt;
   const preferencesInitialValue: PreferencesAtom = preferences
@@ -281,7 +280,10 @@ async function ensurePreferences(userId: string | null | undefined) {
   return row;
 }
 
-async function ensureGeneralProject(userId: string | null | undefined) {
+async function ensureGeneralProject(
+  userId: string | null | undefined,
+  generalProjectName: string
+) {
   if (!userId) return null;
 
   const existing = await db.query.projects.findFirst({
@@ -297,7 +299,7 @@ async function ensureGeneralProject(userId: string | null | undefined) {
     .values({
       id: userId,
       userId,
-      name: "General",
+      name: generalProjectName,
       color: DEFAULT_PROJECT_COLOR,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -306,7 +308,7 @@ async function ensureGeneralProject(userId: string | null | undefined) {
     .onConflictDoUpdate({
       target: projectsTable.id,
       set: {
-        name: "General",
+        name: generalProjectName,
         color: DEFAULT_PROJECT_COLOR,
         deletedAt: null,
         updatedAt: new Date(),

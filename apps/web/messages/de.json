@@ -1,6 +1,7 @@
 {
   "Prompts": {
-    "system": "Sie sind ein hilfreicher Assistent. Der Benutzer spricht Deutsch."
+    "system": "Sie sind ein hilfreicher Assistent. Der Benutzer spricht Deutsch.",
+    "generalProjectName": "Allgemein"
   },
   "AnonQuota": {
     "mobileChip": "{remaining} von {limit}",

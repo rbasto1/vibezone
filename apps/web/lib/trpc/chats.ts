@@ -2,11 +2,7 @@ import { chats, db, messages, projects, threads } from "@/db";
 import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, gt, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import {
-  CHAT_LIST_PAGE_SIZE,
-  DEFAULT_PROJECT_COLOR,
-  INTERNAL_SECRET,
-} from "../constants";
+import { CHAT_LIST_PAGE_SIZE, INTERNAL_SECRET } from "../constants";
 import { searchChats } from "./chats-search";
 import {
   authenticatedProcedure,
@@ -81,68 +77,16 @@ export const chatsRouter = t.router({
           },
         },
       });
-      if (chat && chat.project?.userId !== userId) {
+      if (!chat) {
+        return { success: false, message: "Chat not found" } as const;
+      }
+      if (chat.project?.userId !== userId) {
         return { success: false, message: "Access denied" } as const;
       }
 
       const title = inputTitle ?? (await getChatName(chatId, firstUserMessage));
 
-      if (chat) {
-        await db
-          .update(chats)
-          .set({
-            title,
-          })
-          .where(eq(chats.id, chatId));
-      } else {
-        const generalProject = await db.query.projects.findFirst({
-          where: and(
-            eq(projects.id, userId),
-            eq(projects.userId, userId),
-            isNull(projects.deletedAt)
-          ),
-        });
-
-        const ensuredProject =
-          generalProject ??
-          (await db
-            .insert(projects)
-            .values({
-              id: userId,
-              userId,
-              name: "General",
-              color: DEFAULT_PROJECT_COLOR,
-            })
-            .onConflictDoUpdate({
-              target: projects.id,
-              set: {
-                name: "General",
-                deletedAt: null,
-              },
-            })
-            .returning()
-            .then((rows) => rows[0]));
-
-        if (!ensuredProject) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Default project not found",
-          });
-        }
-
-        await db
-          .insert(chats)
-          .values({
-            id: chatId,
-            projectId: ensuredProject.id,
-            title,
-            lastMessageAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: chats.id,
-            set: { title },
-          });
-      }
+      await db.update(chats).set({ title }).where(eq(chats.id, chatId));
 
       return { success: true, title } as const;
     }),
