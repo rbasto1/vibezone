@@ -20,9 +20,9 @@ import { useUIStateSetter } from "@/hooks/use-ui-state";
 import type { ProjectConfig } from "@/store/projects";
 
 interface ThreadListNewProps {
-  projects: ProjectConfig[];
+  projects?: ProjectConfig[];
   defaultProject: ProjectConfig | null;
-  onNewChat: (project: ProjectConfig) => void;
+  onNewChat: (project?: ProjectConfig) => void;
 }
 
 export const ThreadListNew: FC<ThreadListNewProps> = ({
@@ -33,26 +33,12 @@ export const ThreadListNew: FC<ThreadListNewProps> = ({
   const t = useTranslations("ThreadList");
   const setUIState = useUIStateSetter();
 
-  if (!defaultProject) {
+  if (!projects || !defaultProject) {
     return (
       <Button
         className="data-active:bg-muted hover:bg-muted justify-start"
         variant="ghost"
-        disabled
-      >
-        <MessageCirclePlusIcon />
-        {t("newChat")}
-      </Button>
-    );
-  }
-
-  if (projects.length <= 1) {
-    return (
-      <Button
-        className="data-active:bg-muted hover:bg-muted justify-start"
-        variant="ghost"
-        onClick={() => defaultProject && onNewChat(defaultProject)}
-        disabled={!defaultProject}
+        onClick={() => onNewChat()}
       >
         <MessageCirclePlusIcon />
         {t("newChat")}

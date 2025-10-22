@@ -9,7 +9,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
  */
 export function useNewChat() {
   const setCurrentChat = useCurrentChatSetter();
-  return (projectId: string) => {
+  return (projectId: string | null = null) => {
     // Helper hook to create new chat
     const newChat: ChatConfig = {
       id: generateChatId(),

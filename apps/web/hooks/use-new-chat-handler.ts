@@ -49,10 +49,6 @@ export function useNewChatHandler() {
         : defaultProject;
 
       const targetProjectId = targetProject?.id ?? options?.projectId ?? null;
-      if (!targetProjectId) {
-        console.warn("No project available for new chat");
-        return null;
-      }
 
       const mergedPrompt = mergePrompts(
         systemPrompt,

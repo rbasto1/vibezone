@@ -17,7 +17,6 @@ import { useCurrentChat } from "@/hooks/use-chat";
 import type { UseChatActionsResult } from "@/hooks/use-chat-actions";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { useUser } from "@/lib/auth-client";
 import type { RouterOutputs } from "@/lib/trpc/client";
 import { trpc } from "@/lib/trpc/client";
 import type { RouterInputs } from "@/lib/trpc/server/server";
@@ -43,7 +42,6 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
   const setUIState = useUIStateSetter();
 
-  const user = useUser();
   const {
     data,
     error,
@@ -51,9 +49,7 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    refetch,
   } = trpc.chats.listChats.useInfiniteQuery(listInput, {
-    enabled: !!user,
     getNextPageParam: (lastPage) => lastPage.next ?? undefined,
     refetchInterval: 60 * 1000,
     refetchOnWindowFocus: true,
@@ -76,12 +72,6 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({
   const handleSentinelRef = useCallback((node: HTMLDivElement | null) => {
     setSentinelElement(node);
   }, []);
-
-  useEffect(() => {
-    if (!user || isLoading) return;
-    void refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, refetch]);
 
   const chatsByProject = useMemo(() => {
     const map = new Map<string, ChatListItem[]>();
@@ -195,14 +185,6 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({
     },
     [loadChatById, loadingChatId, setCurrentChat, setUIState]
   );
-
-  if (!user) {
-    return (
-      <div className="text-sm text-muted-foreground p-2">
-        {t("loginRequired")}
-      </div>
-    );
-  }
 
   if (error) {
     return <div className="text-sm p-2 text-destructive">{error.message}</div>;

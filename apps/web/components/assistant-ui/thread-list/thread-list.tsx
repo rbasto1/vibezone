@@ -6,6 +6,7 @@ import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
 import { useNewChatHandler } from "@/hooks/use-new-chat-handler";
+import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import type { RouterInputs } from "@/lib/trpc/server/server";
 import type { ProjectConfig } from "@/store/projects";
@@ -17,14 +18,19 @@ export const ThreadList: FC = () => {
   const t = useTranslations("ThreadList");
   const createChat = useNewChatHandler();
   const listInput = useMemo<RouterInputs["chats"]["listChats"]>(() => ({}), []);
-  const { data: projects } = trpc.projects.list.useQuery();
+  const user = useUser();
+  const { data: projects } = trpc.projects.list.useQuery(undefined, {
+    enabled: !!user,
+  });
 
   const handleCreateChat = useCallback(
-    (project: ProjectConfig) => {
-      const chat = createChat({
-        projectId: project.id,
-        projectInstructions: project.instructions ?? null,
-      });
+    (project?: ProjectConfig) => {
+      const chat = createChat(
+        project && {
+          projectId: project.id,
+          projectInstructions: project.instructions ?? null,
+        }
+      );
       if (!chat) {
         toast.error(t("errors.createChat"));
       }
@@ -40,13 +46,19 @@ export const ThreadList: FC = () => {
 
   return (
     <div className="flex flex-col items-stretch gap-1.5">
-      <ThreadListSearch />
+      <ThreadListSearch loggedIn={!!user} />
       <ThreadListNew
-        projects={projects ?? []}
+        projects={projects}
         defaultProject={defaultProject}
         onNewChat={handleCreateChat}
       />
-      <ThreadListItems listInput={listInput} projects={projects ?? []} />
+      {user ? (
+        <ThreadListItems listInput={listInput} projects={projects ?? []} />
+      ) : (
+        <div className="text-sm text-muted-foreground p-2">
+          {t("loginRequired")}
+        </div>
+      )}
     </div>
   );
 };

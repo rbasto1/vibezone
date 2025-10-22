@@ -6,11 +6,16 @@ import type { FC } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useOpenSignIn } from "@/lib/auth-client";
 
-export const ThreadListSearch: FC = () => {
+interface ThreadListSearchProps {
+  loggedIn: boolean;
+}
+
+export const ThreadListSearch: FC<ThreadListSearchProps> = ({ loggedIn }) => {
   const t = useTranslations("ThreadList");
   const setUIState = useUIStateSetter();
-
+  const openSignIn = useOpenSignIn();
   const handleOpenSearch = () => {
     setUIState({ panelOpen: "search" });
   };
@@ -19,7 +24,7 @@ export const ThreadListSearch: FC = () => {
     <Button
       className="data-active:bg-muted hover:bg-muted justify-start"
       variant="ghost"
-      onClick={handleOpenSearch}
+      onClick={loggedIn ? handleOpenSearch : openSignIn}
     >
       <SearchIcon />
       {t("searchChats")}
