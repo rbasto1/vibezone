@@ -190,6 +190,7 @@
   "ThreadList": {
     "newChat": "New Chat",
     "searchChats": "Search chats",
+    "chooseProject": "Choose project",
     "loginRequired": "Please sign up or log in to save and load your chats",
     "loading": "Loading chats...",
     "empty": "No chats yet",

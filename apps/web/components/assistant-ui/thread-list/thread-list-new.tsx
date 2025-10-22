@@ -61,6 +61,7 @@ export const ThreadListNew: FC<ThreadListNewProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">
+        <DropdownMenuItem disabled>{t("chooseProject")}</DropdownMenuItem>
         {projects.map((project) => (
           <DropdownMenuItem key={project.id} onClick={() => onNewChat(project)}>
             <span
