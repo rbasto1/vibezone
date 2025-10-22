@@ -95,19 +95,23 @@ export const ThreadListProjectHeader: FC<ThreadListProjectHeaderProps> = ({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={handleDeleteProject}
-            disabled={project.isDefault}
-          >
-            {project.isDefault ? (
-              <span className="text-muted-foreground text-sm">
-                {t("projectMenu.deleteDisabled")}
-              </span>
-            ) : (
-              <span className="flex items-center gap-2 text-sm text-destructive">
-                <Trash2Icon className="h-4 w-4" />
-                {t("projectMenu.delete")}
-              </span>
+            onClick={
+              project.isDefault
+                ? (e) => {
+                    e.preventDefault();
+                  }
+                : handleDeleteProject
+            }
+            title={
+              project.isDefault ? t("projectMenu.deleteDisabled") : undefined
+            }
+            className={cn(
+              "flex items-center gap-2 text-sm text-destructive",
+              project.isDefault && "opacity-50 cursor-not-allowed"
             )}
+          >
+            <Trash2Icon className="h-4 w-4" />
+            {t("projectMenu.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
