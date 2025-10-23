@@ -28,15 +28,9 @@ export const useUserMessageSaver = () => {
         !threadCount ||
         pendingUserMessages.length < threadCount
       ) {
-        console.log("Not ready to save:", {
-          projectId,
-          threadCount,
-          count: pendingUserMessages.length,
-        });
         return;
       }
 
-      console.log("Saving user message", pendingUserMessages);
       const threads = pendingUserMessages.map((messageInfo) => {
         return {
           id: messageInfo.threadId,
@@ -47,7 +41,6 @@ export const useUserMessageSaver = () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as any;
 
-      console.log("saving user message...");
       const saveUserMessageMutation = saveUserMessageMutationStable.current;
       void saveUserMessageMutation.mutateAsync(
         {

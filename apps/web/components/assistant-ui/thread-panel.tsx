@@ -3,7 +3,6 @@
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAnonQuotaSetter } from "@/hooks/use-anon-quota";
-import { useAuthSession } from "@/hooks/use-auth-session";
 import { canReason } from "@/hooks/use-capabilities";
 import {
   captchaToken,
@@ -45,7 +44,7 @@ interface ResponsePanelProps {
 // have to hack our way out
 const panelGlobalContext: Record<string, PanelConfig> = {};
 
-export const ResponsePanel: FC<ResponsePanelProps> = ({
+export const ThreadPanel: FC<ResponsePanelProps> = ({
   panel,
   className,
   isFocused = false,
@@ -62,16 +61,13 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const [panelState, setPanelState] = usePanelState(id);
   const setCurrentChat = useCurrentChatSetter();
   const { renameChat } = useChatActions();
-  const sessionId = useAuthSession();
-  const sessionToken = useStableValue(sessionId ?? undefined);
-  const panelNotRegisteredMessage = t("panelNotRegistered");
-  const transportErrorMessage = t("transportError");
+  // const sessionId = useAuthSession();
+  const sessionId = "test";
   const userPreferences = useUserPreferencesValue();
   const plugins = useRef({
     web: userPreferences.pluginWeb,
     reason: userPreferences.reasoningEffort,
   });
-  const panelCanReason = canReason(panel.model);
   const setAnonQuota = useAnonQuotaSetter();
   const setCaptchaFailed = useCaptchaFailed();
   const setCaptchaRequested = useCaptchaRequested();
@@ -79,8 +75,13 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const setGlobalPrompt = useComposerPromptSetter();
   const setRuntimeController = useThreadRuntimeControllerSetter();
   const runtimeRef = useRef<AssistantRuntime | null>(null);
+
+  const sessionToken = useStableValue(sessionId ?? undefined);
   const modelId = useStableValue(panel.model);
 
+  const panelCanReason = canReason(panel.model);
+  const panelNotRegisteredMessage = t("panelNotRegistered");
+  const transportErrorMessage = t("transportError");
   const reasoningEffort =
     userPreferences.reasoningEffort === "none"
       ? "low"
