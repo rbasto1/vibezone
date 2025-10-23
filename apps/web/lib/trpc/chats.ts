@@ -326,7 +326,7 @@ const UserMessageContentSchema = z.array(
   z.object({ type: z.literal("text"), text: z.string().nonempty() })
 );
 
-async function getChatName(chatId: string, firstUserMessage?: string) {
+export async function getChatName(chatId: string, firstUserMessage?: string) {
   const userQuery = firstUserMessage ?? (await getChatFirstUserMessage(chatId));
   if (typeof userQuery !== "string") {
     return userQuery.error;

@@ -3,6 +3,7 @@
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAnonQuotaSetter } from "@/hooks/use-anon-quota";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { canReason } from "@/hooks/use-capabilities";
 import {
   captchaToken,
@@ -25,7 +26,6 @@ import {
   AssistantRuntimeProvider,
   type AssistantRuntime,
 } from "@assistant-ui/react";
-import { useAuth } from "@clerk/nextjs";
 import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -62,8 +62,8 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const [panelState, setPanelState] = usePanelState(id);
   const setCurrentChat = useCurrentChatSetter();
   const { renameChat } = useChatActions();
-  const session = useAuth();
-  const sessionToken = useStableValue(session.sessionId ?? undefined);
+  const sessionId = useAuthSession();
+  const sessionToken = useStableValue(sessionId ?? undefined);
   const panelNotRegisteredMessage = t("panelNotRegistered");
   const transportErrorMessage = t("transportError");
   const userPreferences = useUserPreferencesValue();

@@ -50,7 +50,9 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
 
         <ThreadPrimitive.Messages
           components={{
-            UserMessage,
+            UserMessage: () => (
+              <UserMessage threadId={panel.id} modelId={panel.model} />
+            ),
             AssistantMessage,
           }}
         />
