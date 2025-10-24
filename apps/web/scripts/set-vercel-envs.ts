@@ -195,6 +195,7 @@ async function setEnvForProject(
       "warn",
       `🗑️ ${v.key} exists in Vercel but we have deleted it from turbo.json`
     );
+    await deleteVariable(baseUrl, vercelAuth, v.id);
   }
 }
 

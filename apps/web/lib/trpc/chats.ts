@@ -138,10 +138,16 @@ export const chatsRouter = t.router({
 
       // Get the chat
       const chatRecord = await db.query.chats.findFirst({
+        columns: {
+          createdAt: false,
+          updatedAt: false,
+          deletedAt: false,
+        },
         where: and(
           eq(chats.id, chatId),
           isNull(chats.deletedAt),
-          eq(chats.isArchived, false)
+          eq(chats.isArchived, false),
+          isNull(projects.deletedAt)
         ),
         with: {
           project: {
@@ -151,12 +157,16 @@ export const chatsRouter = t.router({
               instructions: true,
               name: true,
               color: true,
-              deletedAt: true,
             },
           },
           threads: {
             with: {
               messages: {
+                columns: {
+                  createdAt: false,
+                  updatedAt: false,
+                  deletedAt: false,
+                },
                 orderBy: [asc(messages.createdAt)],
               },
             },
@@ -165,12 +175,7 @@ export const chatsRouter = t.router({
         },
       });
 
-      if (
-        !chatRecord ||
-        !chatRecord.project ||
-        chatRecord.project.userId !== user.id ||
-        chatRecord.project.deletedAt
-      ) {
+      if (!chatRecord?.project || chatRecord.project.userId !== user.id) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Chat not found",
@@ -326,7 +331,7 @@ const UserMessageContentSchema = z.array(
   z.object({ type: z.literal("text"), text: z.string().nonempty() })
 );
 
-async function getChatName(chatId: string, firstUserMessage?: string) {
+export async function getChatName(chatId: string, firstUserMessage?: string) {
   const userQuery = firstUserMessage ?? (await getChatFirstUserMessage(chatId));
   if (typeof userQuery !== "string") {
     return userQuery.error;

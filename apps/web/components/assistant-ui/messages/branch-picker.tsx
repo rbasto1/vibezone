@@ -1,6 +1,6 @@
 "use client";
 
-import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { TooltipIconButton } from "@/components/assistant-ui/messages/tooltip-icon-button";
 import { cn } from "@/components/ui/utils";
 import { BranchPickerPrimitive } from "@assistant-ui/react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";

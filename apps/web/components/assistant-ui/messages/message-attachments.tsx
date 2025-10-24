@@ -1,13 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/components/ui/utils";
-import { useAttachmentSrc } from "@/hooks/use-attachments";
 import type {
   Attachment,
   FileMessagePart,
@@ -21,8 +13,17 @@ import { FileImageIcon, FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
 import { FaRegFilePdf } from "react-icons/fa";
-import { Button } from "../ui/button";
-import { AttachmentPreviewDialog } from "./attachment-preview";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/components/ui/utils";
+import { useAttachmentSrc } from "@/hooks/use-attachments";
+import { AttachmentPreviewDialog } from "../attachment-preview";
 
 const ATTACHMENT_TAG_REGEX =
   /^<attachment name="([^"]+)">\n([\s\S]*)\n<\/attachment>$/;

@@ -54,7 +54,7 @@ export const GlobalComposer: FC = () => {
     const total = uploading.reduce((sum, attachment) => {
       const progress =
         attachment.status.type === "running"
-          ? attachment.status.progress ?? 0
+          ? (attachment.status.progress ?? 0)
           : 0;
       return sum + progress;
     }, 0);
@@ -192,8 +192,7 @@ export const GlobalComposer: FC = () => {
     for (const [threadId, controller] of controllerEntries) {
       try {
         const appendMessage: CreateAppendMessage = {
-          runConfig: { custom: { thisIscustom: true } },
-          metadata: { custom: { thisIsMyMetadata: true } },
+          metadata: undefined, // this is ignored by the framework
           role: "user",
           content: [{ type: "text", text: msg }],
           attachments: completeAttachments,
@@ -223,7 +222,6 @@ export const GlobalComposer: FC = () => {
               }
             : {
                 running: true,
-                dirty: false,
                 hasMessages: false,
               };
           return acc;

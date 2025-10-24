@@ -20,7 +20,7 @@ export const usePanelsConfigValue = () => {
 export const usePanelStateValue = (id: string) => {
   const panelStates = useAtomValue(panelStateAtom);
   return (
-    panelStates[id] || { running: false, dirty: false, hasMessages: false }
+    panelStates[id] || { running: false, hasMessages: false }
   );
 };
 
@@ -60,7 +60,6 @@ export const usePanelStateSetter = (id: string) => {
             ? updater(
                 panelState[id] || {
                   running: false,
-                  dirty: false,
                   hasMessages: false,
                 }
               )

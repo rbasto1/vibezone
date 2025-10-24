@@ -3,6 +3,7 @@
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAnonQuotaSetter } from "@/hooks/use-anon-quota";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { canReason } from "@/hooks/use-capabilities";
 import {
   captchaToken,
@@ -11,7 +12,6 @@ import {
   useCaptchaStateValue,
 } from "@/hooks/use-captcha";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
-import { useChatActions } from "@/hooks/use-chat-actions";
 import { useComposerPromptSetter } from "@/hooks/use-composer-prompt";
 import { usePanelState } from "@/hooks/use-panels";
 import { useStableValue } from "@/hooks/use-stable-value";
@@ -25,7 +25,6 @@ import {
   AssistantRuntimeProvider,
   type AssistantRuntime,
 } from "@assistant-ui/react";
-import { useAuth } from "@clerk/nextjs";
 import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -45,7 +44,7 @@ interface ResponsePanelProps {
 // have to hack our way out
 const panelGlobalContext: Record<string, PanelConfig> = {};
 
-export const ResponsePanel: FC<ResponsePanelProps> = ({
+export const ThreadPanel: FC<ResponsePanelProps> = ({
   panel,
   className,
   isFocused = false,
@@ -61,17 +60,12 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   }, [id]);
   const [panelState, setPanelState] = usePanelState(id);
   const setCurrentChat = useCurrentChatSetter();
-  const { renameChat } = useChatActions();
-  const session = useAuth();
-  const sessionToken = useStableValue(session.sessionId ?? undefined);
-  const panelNotRegisteredMessage = t("panelNotRegistered");
-  const transportErrorMessage = t("transportError");
+  const sessionId = useAuthSession();
   const userPreferences = useUserPreferencesValue();
   const plugins = useRef({
     web: userPreferences.pluginWeb,
     reason: userPreferences.reasoningEffort,
   });
-  const panelCanReason = canReason(panel.model);
   const setAnonQuota = useAnonQuotaSetter();
   const setCaptchaFailed = useCaptchaFailed();
   const setCaptchaRequested = useCaptchaRequested();
@@ -79,8 +73,13 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
   const setGlobalPrompt = useComposerPromptSetter();
   const setRuntimeController = useThreadRuntimeControllerSetter();
   const runtimeRef = useRef<AssistantRuntime | null>(null);
+
+  const sessionToken = useStableValue(sessionId ?? undefined);
   const modelId = useStableValue(panel.model);
 
+  const panelCanReason = canReason(panel.model);
+  const panelNotRegisteredMessage = t("panelNotRegistered");
+  const transportErrorMessage = t("transportError");
   const reasoningEffort =
     userPreferences.reasoningEffort === "none"
       ? "low"
@@ -165,16 +164,8 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
     setPanelState((currentState) => ({
       ...currentState,
       running: false,
+      hasMessages: true,
     }));
-
-    // give it a time and then save the messages, no need to rush all panels at the same time
-    setTimeout(() => {
-      setPanelState((currentState) => ({
-        ...currentState,
-        dirty: true,
-        hasMessages: true,
-      }));
-    }, 2000);
 
     // use the setter to have access to the current chat
     setCurrentChat((currentChat) => {
@@ -195,21 +186,6 @@ export const ResponsePanel: FC<ResponsePanelProps> = ({
           console.warn("No first user message found");
           return currentChat;
         }
-
-        // our backend will generate the title based on the conversation history
-        void renameChat({
-          chatId: currentChat.id,
-          firstUserMessage,
-          projectId: currentChat.projectId,
-          title: null,
-        }).then((chat) => {
-          if (chat.success) {
-            setCurrentChat((currentChat) => ({
-              ...currentChat,
-              title: chat.title,
-            }));
-          }
-        });
       }
 
       // make sure not to overwrite the fetched title panel id with empty value

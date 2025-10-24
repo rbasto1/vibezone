@@ -5,16 +5,18 @@ import type {
   MessageMetadata,
   MessageRatingAttachment,
 } from "@/db/json-columns-types";
+import type { NewMessage } from "@/db/schema";
 import {
-  chats,
-  messageRatings,
-  messages,
-  projects,
-  threads,
+  chats as chatsTable,
+  messageRatings as messageRatingsTable,
+  messages as messagesTable,
+  projects as projectsTable,
+  threads as threadsTable,
 } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, isNull, lte } from "drizzle-orm";
 import { z } from "zod";
+import { getChatName } from "./chats";
 import {
   authenticatedProcedure,
   publicProcedure,
@@ -53,8 +55,20 @@ export const MessageStatusSchema = z.object({
 
 export const MessageSchema = z.object({
   id: z.string(),
+  parentId: z.string().nullable().optional(),
+  branchNumber: z.number().optional(),
   role: z.enum(["user", "assistant", "system"]),
-  content: z.unknown(),
+  content: z.array(
+    z
+      .object({
+        type: z.string(),
+        text: z.string().optional(),
+        filename: z.string().optional(),
+        mimeType: z.string().optional(),
+        data: z.string().optional(),
+      })
+      .loose()
+  ),
   attachments: z.array(z.any()).optional().readonly(),
   metadata: MessageMetadataSchema.optional(),
   status: MessageStatusSchema.optional(),
@@ -62,6 +76,101 @@ export const MessageSchema = z.object({
 });
 
 export const messagesRouter = t.router({
+  saveUserMessage: authenticatedProcedure
+    .input(
+      z.object({
+        chatId: z.string(),
+        projectId: z.string(),
+        threads: z.array(
+          z.object({
+            id: z.string(),
+            modelId: z.string(),
+            message: MessageSchema,
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { chatId, threads, projectId } = input;
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
+
+      const firstThread = threads[0];
+      if (!firstThread) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No threads provided",
+        });
+      }
+
+      // Ensure project belongs to user
+      const projectRecord = await db.query.projects.findFirst({
+        where: and(
+          eq(projectsTable.id, projectId),
+          eq(projectsTable.userId, user.id),
+          isNull(projectsTable.deletedAt)
+        ),
+      });
+      if (!projectRecord) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found",
+        });
+      }
+
+      // Ensure chat exists
+      const firstUserMessage = firstThread.message.content[0]?.text;
+      const chat = await getOrInsertChat(
+        chatId,
+        projectId,
+        user.id,
+        typeof firstUserMessage === "string" ? firstUserMessage : undefined
+      );
+      if (!chat) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create chat",
+        });
+      }
+
+      // Ensure threads exists
+      await db
+        .insert(threadsTable)
+        .values(
+          threads.map((t) => ({
+            id: t.id,
+            chatId,
+            lastModelId: t.modelId,
+            lastMessageAt: new Date(),
+          }))
+        )
+        .onConflictDoNothing();
+
+      await db
+        .insert(messagesTable)
+        .values(
+          threads.map(
+            (t) =>
+              ({
+                id: t.message.id,
+                threadId: t.id,
+                modelId: t.modelId,
+                parentId: t.message.parentId,
+                branchNumber: t.message.branchNumber,
+                role: t.message.role,
+                content: t.message.content,
+                attachments: t.message.attachments,
+                metadata: t.message.metadata,
+                status: t.message.status,
+                createdAt: t.message.createdAt,
+              }) satisfies NewMessage
+          )
+        )
+        .onConflictDoNothing();
+
+      return { success: true, chat } as const;
+    }),
+
   saveMessages: authenticatedProcedure
     .input(
       z.object({
@@ -83,78 +192,30 @@ export const messagesRouter = t.router({
       const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
 
-      try {
-        // Ensure project belongs to user
-        const projectRecord = await db.query.projects.findFirst({
-          where: and(
-            eq(projects.id, projectId),
-            eq(projects.userId, user.id),
-            isNull(projects.deletedAt)
-          ),
+      // Ensure project belongs to user
+      const projectRecord = await db.query.projects.findFirst({
+        where: and(
+          eq(projectsTable.id, projectId),
+          eq(projectsTable.userId, user.id),
+          isNull(projectsTable.deletedAt)
+        ),
+      });
+      if (!projectRecord) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Project not found",
         });
-        if (!projectRecord) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Project not found",
-          });
-        }
+      }
 
-        // Ensure chat exists
-        const chatPromise = getOrInsertChat(chatId, projectId, user.id);
+      // Ensure chat exists
+      const chatPromise = getOrInsertChat(chatId, projectId, user.id);
 
-        // Ensure thread exists
-        const existingThread = await db.query.threads.findFirst({
-          where: eq(threads.id, threadId),
-        });
+      // Ensure thread exists
+      const existingThread = await db.query.threads.findFirst({
+        where: eq(threadsTable.id, threadId),
+      });
 
-        if (!existingThread) {
-          const chat = await chatPromise;
-          if (!chat) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to create chat",
-            });
-          }
-
-          // Create thread if it doesn't exist
-          await db.insert(threads).values({
-            id: threadId,
-            chatId,
-            lastModelId: modelId,
-            lastMessageAt: new Date(),
-          });
-        }
-
-        // Insert messages into database (use upsert to handle duplicates)
-        const messagesToInsert = inputMessages.map((msg) => ({
-          id: msg.id,
-          threadId,
-          modelId,
-          role: msg.role,
-          content: msg.content,
-          attachments: msg.attachments || null,
-          metadata: msg.metadata || null,
-          status: msg.status || null,
-          createdAt: msg.createdAt || new Date(),
-        }));
-
-        // Use upsert to handle potential duplicates
-        for (const message of messagesToInsert) {
-          await db
-            .insert(messages)
-            .values(message)
-            .onConflictDoUpdate({
-              target: messages.id,
-              set: {
-                content: message.content,
-                attachments: message.attachments,
-                metadata: message.metadata,
-                status: message.status,
-                updatedAt: new Date(),
-              },
-            });
-        }
-
+      if (!existingThread) {
         const chat = await chatPromise;
         if (!chat) {
           throw new TRPCError({
@@ -163,14 +224,53 @@ export const messagesRouter = t.router({
           });
         }
 
-        return { success: true, count: messagesToInsert.length, chat } as const;
-      } catch (error) {
-        console.error("Failed to save messages:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to save messages",
+        // Create thread if it doesn't exist
+        await db.insert(threadsTable).values({
+          id: threadId,
+          chatId,
+          lastModelId: modelId,
+          lastMessageAt: new Date(),
         });
       }
+
+      // Insert messages into database (use upsert to handle duplicates)
+      const messagesToInsert = inputMessages.map((msg) => ({
+        id: msg.id,
+        threadId,
+        modelId,
+        parentId: msg.parentId,
+        branchNumber: msg.branchNumber,
+        role: msg.role,
+        content: msg.content,
+        attachments: msg.attachments,
+        metadata: msg.metadata,
+        status: msg.status,
+        createdAt: msg.createdAt,
+      }));
+
+      // Use upsert to handle potential duplicates
+      for (const message of messagesToInsert) {
+        await db.insert(messagesTable).values(message).onConflictDoNothing();
+        // .onConflictDoUpdate({
+        //   target: messagesTable.id,
+        //   set: {
+        //     content: message.content,
+        //     attachments: message.attachments,
+        //     metadata: message.metadata,
+        //     status: message.status,
+        //   },
+        // });
+      }
+
+      const chat = await chatPromise;
+      if (!chat) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create chat",
+        });
+      }
+
+      return { success: true, count: messagesToInsert.length, chat } as const;
     }),
 
   rateMessage: authenticatedProcedure
@@ -187,7 +287,7 @@ export const messagesRouter = t.router({
       const { messageId, rate } = input;
 
       const messageRecord = await db.query.messages.findFirst({
-        where: eq(messages.id, messageId),
+        where: eq(messagesTable.id, messageId),
         columns: {
           role: true,
           metadata: true,
@@ -252,18 +352,18 @@ export const messagesRouter = t.router({
       }
 
       await db
-        .update(messages)
+        .update(messagesTable)
         .set({ metadata: nextMetadata })
-        .where(eq(messages.id, messageId));
+        .where(eq(messagesTable.id, messageId));
 
       if (rate) {
         const promptMessage = await db.query.messages.findFirst({
           where: and(
-            eq(messages.threadId, messageRecord.threadId),
-            eq(messages.role, "user"),
-            lte(messages.createdAt, messageRecord.createdAt)
+            eq(messagesTable.threadId, messageRecord.threadId),
+            eq(messagesTable.role, "user"),
+            lte(messagesTable.createdAt, messageRecord.createdAt)
           ),
-          orderBy: [desc(messages.createdAt)],
+          orderBy: [desc(messagesTable.createdAt)],
           columns: {
             content: true,
           },
@@ -281,7 +381,7 @@ export const messagesRouter = t.router({
         );
 
         await db
-          .insert(messageRatings)
+          .insert(messageRatingsTable)
           .values({
             messageId,
             prompt: promptText,
@@ -290,13 +390,13 @@ export const messagesRouter = t.router({
             attachments,
           })
           .onConflictDoUpdate({
-            target: messageRatings.messageId,
+            target: messageRatingsTable.messageId,
             set: { rate },
           });
       } else {
         await db
-          .delete(messageRatings)
-          .where(eq(messageRatings.messageId, messageId));
+          .delete(messageRatingsTable)
+          .where(eq(messageRatingsTable.messageId, messageId));
       }
 
       return {
@@ -333,16 +433,18 @@ export const messagesRouter = t.router({
             message: "Rating ID is required",
           });
         }
-        await db.delete(messageRatings).where(eq(messageRatings.id, ratingId));
+        await db
+          .delete(messageRatingsTable)
+          .where(eq(messageRatingsTable.id, ratingId));
         return { success: true as const, ratingId: null };
       }
 
       if (ratingId) {
         const updated = await db
-          .update(messageRatings)
+          .update(messageRatingsTable)
           .set({ rate })
-          .where(eq(messageRatings.id, ratingId))
-          .returning({ id: messageRatings.id });
+          .where(eq(messageRatingsTable.id, ratingId))
+          .returning({ id: messageRatingsTable.id });
 
         const record = updated[0];
         if (!record) {
@@ -363,14 +465,14 @@ export const messagesRouter = t.router({
       }
 
       const inserted = await db
-        .insert(messageRatings)
+        .insert(messageRatingsTable)
         .values({
           prompt,
           response,
           attachments: attachments ?? [],
           rate,
         })
-        .returning({ id: messageRatings.id });
+        .returning({ id: messageRatingsTable.id });
 
       const newRatingId = inserted[0]?.id ?? null;
 
@@ -384,10 +486,11 @@ export const messagesRouter = t.router({
 async function getOrInsertChat(
   chatId: string,
   projectId: string,
-  userId: string
+  userId: string,
+  firstUserMessage?: string
 ) {
   const existing = await db.query.chats.findFirst({
-    where: eq(chats.id, chatId),
+    where: eq(chatsTable.id, chatId),
     with: {
       project: {
         columns: { userId: true },
@@ -405,15 +508,12 @@ async function getOrInsertChat(
 
     if (existing.projectId !== projectId) {
       await db
-        .update(chats)
-        .set({
-          projectId,
-          updatedAt: new Date(),
-        })
-        .where(eq(chats.id, chatId));
+        .update(chatsTable)
+        .set({ projectId })
+        .where(eq(chatsTable.id, chatId));
 
       const updated = await db.query.chats.findFirst({
-        where: eq(chats.id, chatId),
+        where: eq(chatsTable.id, chatId),
       });
       return updated ?? existing;
     }
@@ -421,17 +521,20 @@ async function getOrInsertChat(
     return existing;
   }
 
-  console.info(`Creating new chat ${chatId} for user ${userId}`);
+  const title = firstUserMessage
+    ? await getChatName(chatId, firstUserMessage)
+    : "New Chat";
+
   await db
-    .insert(chats)
+    .insert(chatsTable)
     .values({
       id: chatId,
       projectId,
-      title: "New Chat",
+      title,
       lastMessageAt: new Date(),
     })
     .onConflictDoUpdate({
-      target: chats.id,
+      target: chatsTable.id,
       set: {
         projectId,
         updatedAt: new Date(),
@@ -439,7 +542,7 @@ async function getOrInsertChat(
     });
 
   const created = await db.query.chats.findFirst({
-    where: eq(chats.id, chatId),
+    where: eq(chatsTable.id, chatId),
   });
 
   if (!created) {

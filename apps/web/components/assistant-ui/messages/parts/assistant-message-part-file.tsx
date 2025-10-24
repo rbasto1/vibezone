@@ -1,20 +1,22 @@
 "use client";
 
+import { useMessagePartFile } from "@assistant-ui/react";
 import { ArrowDownToLine } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/utils";
 import { createObjectUrl } from "@/lib/object-url";
-import { useMessagePartFile } from "@assistant-ui/react";
 import { Image } from "./assistant-message-part-image";
-import { useTranslations } from "next-intl";
 
 export const File: FC = () => {
   const t = useTranslations("AssistantMessageFile");
   const filePart = useMessagePartFile();
-  const isImage = filePart.mimeType === "image";
+  const isImage =
+    typeof filePart.mimeType === "string" &&
+    filePart.mimeType.toLowerCase().startsWith("image/");
   const [objectUrl, setObjectUrl] = useState<string>();
 
   useEffect(() => {

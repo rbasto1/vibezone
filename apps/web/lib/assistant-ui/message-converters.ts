@@ -25,19 +25,15 @@ const convertUIPartToThreadPart = (
       } as ThreadMessageLike["content"][number];
     case "file": {
       const mediaType = part.mediaType ?? "application/octet-stream";
-      if (part.url && mediaType.startsWith("image/")) {
-        return {
-          type: "image",
-          image: part.url,
-          filename: part.filename ?? "image",
-        } as ThreadMessageLike["content"][number];
-      }
       if (!part.url) return null;
+
       return {
         type: "file",
         data: part.url,
         mimeType: mediaType,
-        filename: part.filename ?? "attachment",
+        filename:
+          part.filename ??
+          (mediaType.startsWith("image/") ? "image" : "attachment"),
       } as ThreadMessageLike["content"][number];
     }
     default:
@@ -197,7 +193,9 @@ export const sliceUiMessagesUntil = <UI_MESSAGE extends UIMessage = UIMessage>(
 };
 
 // Helper function to convert database messages to ThreadMessageLike format
-export const toThreadMessageLike = (msg: Message): ThreadMessageLike => {
+export const toThreadMessageLike = (
+  msg: Pick<Message, "id" | "role" | "content" | "status" | "metadata">
+): ThreadMessageLike => {
   const role = (msg.role ?? "system") as "user" | "assistant" | "system";
 
   const contentArrayRaw = Array.isArray(msg.content)
@@ -221,13 +219,15 @@ export const toThreadMessageLike = (msg: Message): ThreadMessageLike => {
     id: msg.id,
     role,
     content: contentArray,
-    attachments: Array.isArray(msg.attachments)
-      ? (msg.attachments as ThreadMessageLike["attachments"])
-      : undefined,
+    attachments: undefined,
     metadata: msg.metadata?.custom
-      ? { custom: msg.metadata.custom }
+      ? {
+          custom: {
+            ...msg.metadata.custom,
+            saved: true,
+          },
+        }
       : undefined,
-    createdAt: msg.createdAt ? new Date(msg.createdAt) : undefined,
     ...(status ? { status } : {}),
   };
 
@@ -288,12 +288,12 @@ const convertContentPart = (
             : typeof candidate.name === "string"
               ? candidate.name
               : "attachment";
-      return {
-        type: "file",
+        return {
+          type: "file",
           data,
           mimeType,
           filename,
-      } as ThreadMessageLike["content"][number];
+        } as ThreadMessageLike["content"][number];
       }
     default:
       return null;

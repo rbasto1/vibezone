@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser as useClerkUser } from "@clerk/nextjs";
-import { type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import type { FrontendUser } from "@/lib/auth-context";
 import { AuthContext } from "@/lib/auth-context";
@@ -26,7 +26,10 @@ export const AuthProvider = ({
       ? serverUser
       : clerkUser;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const contextUser = useMemo(() => user ?? null, [user?.id ?? null]);
+
   return (
-    <AuthContext.Provider value={user ?? null}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={contextUser}>{children}</AuthContext.Provider>
   );
 };

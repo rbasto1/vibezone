@@ -1,20 +1,45 @@
-import { MessagePrimitive } from "@assistant-ui/react";
+import { MessagePrimitive, useMessage } from "@assistant-ui/react";
 import { motion } from "framer-motion";
 import { StarIcon } from "lucide-react";
-import type { FC } from "react";
+import { useEffect, type FC } from "react";
+
+import { useAssistantMessageSaver } from "@/hooks/use-assistant-message-saver";
 
 import { AssistantActionBar } from "./assistant-action-bar";
-import { Audio } from "./assistant-message-part-audio";
-import { File } from "./assistant-message-part-file";
-import { Image } from "./assistant-message-part-image";
-import { Reasoning } from "./assistant-message-part-reasoning";
-import { Source } from "./assistant-message-part-source";
 import { BranchPicker } from "./branch-picker";
 import { MarkdownText } from "./markdown-text";
 import { MessageError } from "./message-error";
+import { Audio } from "./parts/assistant-message-part-audio";
+import { File } from "./parts/assistant-message-part-file";
+import { Image } from "./parts/assistant-message-part-image";
+import { Reasoning } from "./parts/assistant-message-part-reasoning";
+import { Source } from "./parts/assistant-message-part-source";
 import { ToolFallback } from "./tool-fallback";
 
-export const AssistantMessage: FC = () => {
+interface AssistantMessageProps {
+  threadId: string;
+  modelId: string;
+}
+
+export const AssistantMessage: FC<AssistantMessageProps> = ({
+  threadId,
+  modelId,
+}) => {
+  const message = useMessage();
+  const saveAssistantMessage = useAssistantMessageSaver();
+
+  useEffect(() => {
+    if (
+      message.metadata.custom?.saved ||
+      message.id.startsWith("__optimistic__") ||
+      message.status?.type === "running"
+    ) {
+      return;
+    }
+    saveAssistantMessage(message, threadId, modelId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message.id, message.status?.type, threadId, modelId]);
+
   return (
     <MessagePrimitive.Root asChild>
       <motion.div

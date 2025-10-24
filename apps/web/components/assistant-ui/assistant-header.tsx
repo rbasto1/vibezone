@@ -6,7 +6,7 @@ import { useCallback, useMemo, type FC } from "react";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar/sidebar-trigger";
 import { UserMenu } from "@/components/user-menu";
 import { useCurrentChatValue } from "@/hooks/use-chat";
 import { useNewChatHandler } from "@/hooks/use-new-chat-handler";

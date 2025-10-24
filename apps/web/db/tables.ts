@@ -290,12 +290,14 @@ export const messages = pgTable("messages", {
   modelId: text("last_model_id")
     .notNull()
     .references(() => models.id),
+  parentId: text("parent_id"),
+  branchNumber: integer("branch_number"),
   role: text("role").notNull(), // "user" | "assistant"
   content: jsonb("content").notNull(), // Store the full content array
   attachments: jsonb("attachments"), // Store attachments array
   metadata: jsonb("metadata").$type<MessageMetadata>(), // Store metadata object
   status: jsonb("status").$type<MessageStatus>(), // Store status object (for assistant messages)
-  createdAt: timestampTz("created_at").notNull(),
+  createdAt: timestampTzNow("created_at").notNull(),
   updatedAt: timestampTzNowUpdated("updated_at"),
   deletedAt: timestampTz("deleted_at"),
 });

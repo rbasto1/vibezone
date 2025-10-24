@@ -1,15 +1,30 @@
-import { MessagePrimitive } from "@assistant-ui/react";
+import { MessagePrimitive, useMessage } from "@assistant-ui/react";
 import { motion } from "framer-motion";
-import type { FC } from "react";
+import { useEffect, type FC } from "react";
 
+import { usePendingUserMessagesAppender } from "@/store/pending-user-messages";
 import { BranchPicker } from "./branch-picker";
 import { UserMessageAttachments } from "./message-attachments";
 import { TextWithAttachments } from "./text-with-attachments";
 import { UserActionBar } from "./user-action-bar";
 
-export const UserMessage: FC = () => {
+interface UserMessageProps {
+  threadId: string;
+  modelId: string;
+}
+
+export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
   const branchingEnabled = false;
-  const EmptyPart: FC = () => null;
+
+  const message = useMessage();
+  const appendPendingUserMessage = usePendingUserMessagesAppender();
+
+  useEffect(() => {
+    if (message.metadata.custom?.saved) return; // loaded from the db
+    appendPendingUserMessage(message, threadId, modelId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message.id]);
+
   return (
     <MessagePrimitive.Root asChild>
       <motion.div
@@ -40,3 +55,5 @@ export const UserMessage: FC = () => {
     </MessagePrimitive.Root>
   );
 };
+
+const EmptyPart: FC = () => null;

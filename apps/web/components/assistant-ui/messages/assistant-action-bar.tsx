@@ -3,9 +3,9 @@
 import { ActionBarPrimitive, MessagePrimitive } from "@assistant-ui/react";
 import type { FC } from "react";
 
-import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { TooltipIconButton } from "@/components/assistant-ui/messages/tooltip-icon-button";
 import { CheckIcon, CopyIcon, RefreshCwIcon } from "lucide-react";
-import { AssistantMessageRateControl } from "./assistant-message-rate-control";
+import { AssistantMessageRateControl } from "./parts/assistant-message-rate-control";
 
 export const AssistantActionBar: FC = () => {
   return (

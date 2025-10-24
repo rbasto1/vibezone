@@ -9,6 +9,7 @@ export interface UIState {
   deleteProject?: ProjectConfig;
   editProject?: ProjectConfig;
   createProject: boolean;
+  focusPanelId?: string;
 }
 
 // Global UI state atom
@@ -25,7 +26,11 @@ export const useUIStateValue = () => {
 export const useUIStateSetter = () => {
   const set = useSetAtom(uiStateAtom);
   return useCallback(
-    (change: Partial<UIState>) => {
+    (change: Partial<UIState> | ((s: UIState) => Partial<UIState>)) => {
+      if (typeof change === "function") {
+        set((s) => ({ ...s, ...change(s) }));
+        return;
+      }
       set((s) => ({ ...s, ...change }));
     },
     [set]

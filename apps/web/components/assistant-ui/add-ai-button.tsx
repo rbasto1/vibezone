@@ -58,7 +58,7 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
     setPanelsState((prev) => {
       const newPanels = {
         ...prev,
-        [id]: { running: false, dirty: false, hasMessages: false },
+        [id]: { running: false, hasMessages: false },
       };
       return newPanels;
     });

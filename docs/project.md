@@ -15,6 +15,7 @@
 - [ ] Reloading chats loses the multiple generations (refreshes)
 - [x] Code blocks rendering as download items
 - [x] PDF attachments not rendering
+- [ ] Deleting a chat that is currently open should start a new chat
 
 ## Improvements
 
@@ -33,7 +34,7 @@
 - [ ] Export chats to OpenAI format
 - [x] Composer text area should grow with text
 - [ ] Add analytics (Posthog?)
-- [ ] Projects (group threads) - paying only
+- [x] Projects (group threads) - paying only
 - [x] Add a "do not show again" option to the warning about discarding a panel
 - [ ] Add Python project to calculate usage of non-OpenRouter models
 - [x] Allow setting order of groups
