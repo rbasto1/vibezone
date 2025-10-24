@@ -107,6 +107,7 @@ export const useUserMessageSaver = () => {
         toast.error(
           "Error saving messages (too many threads). Please refresh the page."
         );
+        clearPendingUserMessages();
         return;
       }
 
@@ -128,12 +129,12 @@ export const useUserMessageSaver = () => {
           threads,
         })
         .then((result) => {
-          clearPendingUserMessages();
           syncThreadLists(result.chat);
         })
         .catch((error) => {
           console.error("onError: failed to save user message:", error);
-        });
+        })
+        .finally(clearPendingUserMessages);
     },
     [
       isLoggedIn,

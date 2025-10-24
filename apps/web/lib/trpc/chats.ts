@@ -138,6 +138,11 @@ export const chatsRouter = t.router({
 
       // Get the chat
       const chatRecord = await db.query.chats.findFirst({
+        columns: {
+          createdAt: false,
+          updatedAt: false,
+          deletedAt: false,
+        },
         where: and(
           eq(chats.id, chatId),
           isNull(chats.deletedAt),
@@ -157,6 +162,12 @@ export const chatsRouter = t.router({
           threads: {
             with: {
               messages: {
+                columns: {
+                  createdAt: false,
+                  updatedAt: false,
+                  deletedAt: false,
+                  attachments: false,
+                },
                 orderBy: [asc(messages.createdAt)],
               },
             },

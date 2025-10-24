@@ -25,19 +25,13 @@ const convertUIPartToThreadPart = (
       } as ThreadMessageLike["content"][number];
     case "file": {
       const mediaType = part.mediaType ?? "application/octet-stream";
-      if (part.url && mediaType.startsWith("image/")) {
-        return {
-          type: "image",
-          image: part.url,
-          filename: part.filename ?? "image",
-        } as ThreadMessageLike["content"][number];
-      }
       if (!part.url) return null;
+
       return {
         type: "file",
         data: part.url,
         mimeType: mediaType,
-        filename: part.filename ?? "attachment",
+        filename: part.filename ?? (mediaType.startsWith("image/") ? "image" : "attachment"),
       } as ThreadMessageLike["content"][number];
     }
     default:
