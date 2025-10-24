@@ -39,8 +39,8 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
     <ThreadPrimitive.Root
       // aui-thread-root
       className={cn(
-        "bg-background flex h-full flex-col",
-        isActive && "matrix-streaming"
+        "bg-background flex h-full flex-col border-0",
+        isActive && "border-green-500 border-b-2 border-l-2 border-r-2"
       )}
       style={{
         ["--thread-max-width" as string]: "48rem",
