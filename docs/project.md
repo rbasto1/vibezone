@@ -15,6 +15,7 @@
 - [ ] Reloading chats loses the multiple generations (refreshes)
 - [x] Code blocks rendering as download items
 - [x] PDF attachments not rendering
+- [ ] Deleting a chat that is currently open should start a new chat
 
 ## Improvements
 

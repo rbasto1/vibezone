@@ -146,7 +146,8 @@ export const chatsRouter = t.router({
         where: and(
           eq(chats.id, chatId),
           isNull(chats.deletedAt),
-          eq(chats.isArchived, false)
+          eq(chats.isArchived, false),
+          isNull(projects.deletedAt)
         ),
         with: {
           project: {
@@ -156,7 +157,6 @@ export const chatsRouter = t.router({
               instructions: true,
               name: true,
               color: true,
-              deletedAt: true,
             },
           },
           threads: {
@@ -166,7 +166,6 @@ export const chatsRouter = t.router({
                   createdAt: false,
                   updatedAt: false,
                   deletedAt: false,
-                  attachments: false,
                 },
                 orderBy: [asc(messages.createdAt)],
               },
@@ -176,12 +175,7 @@ export const chatsRouter = t.router({
         },
       });
 
-      if (
-        !chatRecord ||
-        !chatRecord.project ||
-        chatRecord.project.userId !== user.id ||
-        chatRecord.project.deletedAt
-      ) {
+      if (!chatRecord?.project || chatRecord.project.userId !== user.id) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Chat not found",

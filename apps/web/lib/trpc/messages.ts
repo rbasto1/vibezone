@@ -59,10 +59,15 @@ export const MessageSchema = z.object({
   branchNumber: z.number().optional(),
   role: z.enum(["user", "assistant", "system"]),
   content: z.array(
-    z.object({
-      type: z.string(),
-      text: z.string().optional(),
-    })
+    z
+      .object({
+        type: z.string(),
+        text: z.string().optional(),
+        filename: z.string().optional(),
+        mimeType: z.string().optional(),
+        data: z.string().optional(),
+      })
+      .loose()
   ),
   attachments: z.array(z.any()).optional().readonly(),
   metadata: MessageMetadataSchema.optional(),

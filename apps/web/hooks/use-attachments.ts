@@ -8,6 +8,7 @@ import type {
   Attachment,
   AttachmentAdapter,
   CompleteAttachment,
+  FileMessagePart,
   ImageMessagePart,
   PendingAttachment,
 } from "@assistant-ui/react";
@@ -222,11 +223,22 @@ export const useAttachmentSrc = (attachment: Attachment) => {
   const { file, src } = useMemo(() => {
     if (attachment.type !== "image") return {};
     if (attachment.file) return { file: attachment.file };
-    const src = attachment.content?.filter(
+    const imagePart = attachment.content?.find(
       (c): c is ImageMessagePart => c.type === "image"
-    )[0]?.image;
-    if (!src) return {};
-    return { src };
+    );
+    if (imagePart?.image) {
+      return { src: imagePart.image };
+    }
+    const filePart = attachment.content?.find(
+      (c): c is FileMessagePart =>
+        c.type === "file" &&
+        typeof c.data === "string" &&
+        (c.mimeType?.startsWith("image/") ?? true)
+    );
+    if (filePart?.data) {
+      return { src: filePart.data };
+    }
+    return {};
   }, [attachment]);
 
   return useFileSrc(file) ?? src;
