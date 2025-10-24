@@ -3,6 +3,7 @@
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAnonQuotaSetter } from "@/hooks/use-anon-quota";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { canReason } from "@/hooks/use-capabilities";
 import {
   captchaToken,
@@ -61,8 +62,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
   const [panelState, setPanelState] = usePanelState(id);
   const setCurrentChat = useCurrentChatSetter();
   const { renameChat } = useChatActions();
-  // const sessionId = useAuthSession();
-  const sessionId = "test";
+  const sessionId = useAuthSession();
   const userPreferences = useUserPreferencesValue();
   const plugins = useRef({
     web: userPreferences.pluginWeb,

@@ -15,13 +15,13 @@ interface UserMessageProps {
 
 export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
   const branchingEnabled = false;
-  const EmptyPart: FC = () => null;
 
   const message = useMessage();
   const appendPendingUserMessage = usePendingUserMessagesAppender();
 
   useEffect(() => {
     if (message.metadata.custom?.saved) return; // loaded from the db
+    console.log("saw user message id", message.id);
     appendPendingUserMessage(message, threadId, modelId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message.id]);
@@ -56,3 +56,5 @@ export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
     </MessagePrimitive.Root>
   );
 };
+
+const EmptyPart: FC = () => null;

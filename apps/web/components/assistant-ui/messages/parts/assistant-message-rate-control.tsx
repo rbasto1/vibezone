@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import type { FC, MouseEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 
-import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { TooltipIconButton } from "@/components/assistant-ui/messages/tooltip-icon-button";
 import { cn } from "@/components/ui/utils";
 import type {
   MessageMetadataCustom,
