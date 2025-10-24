@@ -14,11 +14,20 @@ import type {
 } from "@assistant-ui/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { ClientUploadedFileData } from "uploadthing/types";
 
+export const MAX_ATTACHMENTS = 8;
+
 export const useAppendAttachments = () => {
-  const { adapter } = useAtomValue(attachmentsAtom);
+  const { adapter, attachments } = useAtomValue(attachmentsAtom);
+  const t = useTranslations("ComposerAddAttachment");
+  const attachmentCount = attachments.length;
+  const limitMessage = useMemo(
+    () => t("maxAttachmentsTooltip", { max: MAX_ATTACHMENTS }),
+    [t]
+  );
   const set = useSetAtom(attachmentsAtom);
 
   const extractUploadMeta = useCallback(
@@ -133,7 +142,22 @@ export const useAppendAttachments = () => {
 
   const appendAttachments = useCallback(
     async (list: FileList) => {
-      for (const file of list) {
+      const currentCount = attachmentCount;
+      if (currentCount >= MAX_ATTACHMENTS) {
+        toast.warning(limitMessage);
+        return;
+      }
+
+      const availableSlots = MAX_ATTACHMENTS - currentCount;
+      const files = Array.from(list).slice(0, availableSlots);
+      const droppedCount = list.length - files.length;
+
+      if (!files.length) {
+        toast.warning(limitMessage);
+        return;
+      }
+
+      for (const file of files) {
         const attachment = await getAttachmentForFile(adapter, file);
         if (!attachment) {
           continue;
@@ -144,8 +168,12 @@ export const useAppendAttachments = () => {
         }));
         void finalizeAttachment(attachment as PendingAttachment);
       }
+
+      if (droppedCount > 0) {
+        toast.warning(limitMessage);
+      }
     },
-    [adapter, finalizeAttachment, set]
+    [adapter, attachmentCount, finalizeAttachment, limitMessage, set]
   );
 
   return appendAttachments;

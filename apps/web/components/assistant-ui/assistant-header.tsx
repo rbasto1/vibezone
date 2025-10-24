@@ -3,11 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, type FC } from "react";
 
-import { LanguageToggle } from "@/components/language-toggle";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar/sidebar-trigger";
-import { UserMenu } from "@/components/user-menu";
 import { useCurrentChatValue } from "@/hooks/use-chat";
 import { useNewChatHandler } from "@/hooks/use-new-chat-handler";
 import { useProjectsValue } from "@/hooks/use-projects";
@@ -88,12 +85,8 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
           <MessageCirclePlusIcon className="h-4 w-4" />
         </Button>
 
-        <ThemeToggle />
-        <LanguageToggle />
-
         <div className="flex items-center gap-2">
           {showMobileQuotaChip ? <AnonMobileQuotaLabel /> : <div />}
-          <UserMenu />
         </div>
       </div>
     </header>

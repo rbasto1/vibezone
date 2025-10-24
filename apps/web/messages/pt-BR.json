@@ -412,7 +412,8 @@
     "imageCapabilityPlural": "Os seguintes modelos não são capazes de interpretar imagens:",
     "pdfCapabilitySingle": "O seguinte modelo não é capaz de ler arquivos PDF:",
     "pdfCapabilityPlural": "Os seguintes modelos não são capazes de ler arquivos PDF:",
-    "selectedModels": "Modelos selecionados"
+    "selectedModels": "Modelos selecionados",
+    "maxAttachmentsTooltip": "Você atingiu o limite de {max} arquivos anexados em uma única mensagem."
   },
   "IncompatibleAttachmentsModal": {
     "title": "Anexos Incompatíveis",
