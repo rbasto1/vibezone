@@ -113,7 +113,6 @@ export const useChatActions = () => {
           ...current,
           id: chatData.id,
           title: chatData.title,
-          createdAt: chatData.createdAt ?? current.createdAt,
           projectId: chatData.project?.id ?? current.projectId ?? null,
           addedToList: true,
         }));

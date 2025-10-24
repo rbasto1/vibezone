@@ -31,7 +31,9 @@ const convertUIPartToThreadPart = (
         type: "file",
         data: part.url,
         mimeType: mediaType,
-        filename: part.filename ?? (mediaType.startsWith("image/") ? "image" : "attachment"),
+        filename:
+          part.filename ??
+          (mediaType.startsWith("image/") ? "image" : "attachment"),
       } as ThreadMessageLike["content"][number];
     }
     default:
@@ -191,7 +193,9 @@ export const sliceUiMessagesUntil = <UI_MESSAGE extends UIMessage = UIMessage>(
 };
 
 // Helper function to convert database messages to ThreadMessageLike format
-export const toThreadMessageLike = (msg: Message): ThreadMessageLike => {
+export const toThreadMessageLike = (
+  msg: Pick<Message, "id" | "role" | "content" | "status" | "metadata">
+): ThreadMessageLike => {
   const role = (msg.role ?? "system") as "user" | "assistant" | "system";
 
   const contentArrayRaw = Array.isArray(msg.content)
@@ -215,9 +219,7 @@ export const toThreadMessageLike = (msg: Message): ThreadMessageLike => {
     id: msg.id,
     role,
     content: contentArray,
-    attachments: Array.isArray(msg.attachments)
-      ? (msg.attachments as ThreadMessageLike["attachments"])
-      : undefined,
+    attachments: undefined,
     metadata: msg.metadata?.custom
       ? {
           custom: {
@@ -226,7 +228,6 @@ export const toThreadMessageLike = (msg: Message): ThreadMessageLike => {
           },
         }
       : undefined,
-    createdAt: msg.createdAt ? new Date(msg.createdAt) : undefined,
     ...(status ? { status } : {}),
   };
 
