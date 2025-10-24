@@ -136,7 +136,6 @@ export const useChatActions = () => {
             (acc, panel) => {
               acc[panel.id] = {
                 running: false,
-                dirty: false,
                 hasMessages: true,
               };
               return acc;

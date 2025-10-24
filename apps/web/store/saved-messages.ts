@@ -7,9 +7,10 @@ export function useSavedMessagesValue() {
 }
 
 export function useSavedMessagesAppend() {
-  return useCallback((messageIds: string[]) => {
-    messageIds.forEach((id) => savedMessagesSet.add(id));
-  }, []);
+  return useCallback(
+    (messageId: string) => savedMessagesSet.add(messageId),
+    []
+  );
 }
 
 export function useSavedMessages() {

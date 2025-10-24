@@ -32,7 +32,7 @@ export function usePendingUserMessagesAppender() {
   return useCallback(
     (message: MessageState, threadId: string, modelId: string) => {
       if (savedMessages.has(message.id)) return;
-      appendSavedMessages([message.id]);
+      appendSavedMessages(message.id);
       set((prev) => {
         if (prev.some((m) => m.message.id === message.id)) {
           return prev;

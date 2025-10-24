@@ -222,7 +222,6 @@ export const GlobalComposer: FC = () => {
               }
             : {
                 running: true,
-                dirty: false,
                 hasMessages: false,
               };
           return acc;

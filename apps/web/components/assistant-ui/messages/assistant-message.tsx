@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { StarIcon } from "lucide-react";
 import { useEffect, type FC } from "react";
 
+import { useAssistantMessageSaver } from "@/hooks/use-assistant-message-saver";
+
 import { AssistantActionBar } from "./assistant-action-bar";
 import { BranchPicker } from "./branch-picker";
 import { MarkdownText } from "./markdown-text";
@@ -24,11 +26,7 @@ export const AssistantMessage: FC<AssistantMessageProps> = ({
   modelId,
 }) => {
   const message = useMessage();
-
-  useEffect(() => {
-    if (message.metadata.custom?.saved) return; // loaded from the db
-    console.log("AssistantMessage id changed", message.id);
-  }, [message.id]);
+  const saveAssistantMessage = useAssistantMessageSaver();
 
   useEffect(() => {
     if (
@@ -38,12 +36,9 @@ export const AssistantMessage: FC<AssistantMessageProps> = ({
     ) {
       return;
     }
-    console.log(
-      "AssistantMessage message mutated",
-      message.id,
-      message.status?.type
-    );
-  }, [message]);
+    saveAssistantMessage(message, threadId, modelId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message.id, message.status?.type, threadId, modelId]);
 
   return (
     <MessagePrimitive.Root asChild>

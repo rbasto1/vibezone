@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { type FC, type PropsWithChildren, useMemo } from "react";
 
 import { cn } from "@/components/ui/utils";
-import { useMessageSaver } from "@/hooks/use-message-saver";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantMessage } from "./messages/assistant-message";
@@ -23,9 +22,6 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
   const isActive = thread.isRunning;
   const preferences = useUserPreferencesValue();
   const autoScroll = preferences.autoScroll;
-
-  // Use the message saver hook to automatically save messages
-  useMessageSaver(panel);
 
   const threadMessageComponents = useMemo(
     () => ({

@@ -166,16 +166,8 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
     setPanelState((currentState) => ({
       ...currentState,
       running: false,
+      hasMessages: true,
     }));
-
-    // give it a time and then save the messages, no need to rush all panels at the same time
-    setTimeout(() => {
-      setPanelState((currentState) => ({
-        ...currentState,
-        dirty: true,
-        hasMessages: true,
-      }));
-    }, 2000);
 
     // use the setter to have access to the current chat
     setCurrentChat((currentChat) => {

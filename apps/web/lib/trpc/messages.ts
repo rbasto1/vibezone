@@ -228,6 +228,8 @@ export const messagesRouter = t.router({
         id: msg.id,
         threadId,
         modelId,
+        parentId: msg.parentId,
+        branchNumber: msg.branchNumber,
         role: msg.role,
         content: msg.content,
         attachments: msg.attachments,

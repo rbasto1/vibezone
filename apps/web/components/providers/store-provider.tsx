@@ -36,7 +36,7 @@ export function StoreProvider({
       panelStateAtom,
       panelsInitialValue.slice(0, INITIAL_PANEL_COUNT).reduce(
         (acc, p) => {
-          acc[p.id] = { running: false, dirty: false, hasMessages: false };
+          acc[p.id] = { running: false, hasMessages: false };
           return acc;
         },
         {} as Record<string, PanelState>
