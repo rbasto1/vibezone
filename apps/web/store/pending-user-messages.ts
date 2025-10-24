@@ -1,4 +1,4 @@
-import { atom, useAtom, useSetAtom } from "jotai";
+import { atom, useSetAtom } from "jotai";
 
 import { useUserMessageSaver } from "@/hooks/use-user-message-saver";
 import type { MessageState } from "@assistant-ui/react";
@@ -13,11 +13,7 @@ export interface PendingUserMessageInfo {
 
 export type PendingUserMessagesAtom = PendingUserMessageInfo[];
 
-export const pendingUserMessagesAtom = atom<PendingUserMessagesAtom>([]);
-
-export function usePendingUserMessages() {
-  return useAtom(pendingUserMessagesAtom);
-}
+const pendingUserMessagesAtom = atom<PendingUserMessagesAtom>([]);
 
 export function usePendingUserMessagesClear() {
   const set = useSetAtom(pendingUserMessagesAtom);

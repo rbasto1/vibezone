@@ -21,7 +21,6 @@ export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
 
   useEffect(() => {
     if (message.metadata.custom?.saved) return; // loaded from the db
-    console.log("saw user message id", message.id);
     appendPendingUserMessage(message, threadId, modelId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message.id]);

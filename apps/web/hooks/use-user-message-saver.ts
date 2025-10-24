@@ -5,6 +5,7 @@ import type { PendingUserMessageInfo } from "@/store/pending-user-messages";
 import { usePendingUserMessagesClear } from "@/store/pending-user-messages";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { toast } from "sonner";
 import { useCurrentChatValue } from "./use-chat";
 import { usePanelsConfigValue } from "./use-panels";
 import { useProjectsValue } from "./use-projects";
@@ -86,10 +87,7 @@ export const useUserMessageSaver = () => {
         };
       };
 
-      utils.chats.listChats.setInfiniteData(
-        { projectId: project.id },
-        updater
-      );
+      utils.chats.listChats.setInfiniteData({ projectId: project.id }, updater);
       utils.chats.listChats.setInfiniteData({ projectId: undefined }, updater);
     },
     [projects, utils]
@@ -105,6 +103,12 @@ export const useUserMessageSaver = () => {
       ) {
         return;
       }
+      if (pendingUserMessages.length > threadCount) {
+        toast.error(
+          "Error saving messages (too many threads). Please refresh the page."
+        );
+        return;
+      }
 
       const threads = pendingUserMessages.map((messageInfo) => {
         return {
@@ -117,21 +121,19 @@ export const useUserMessageSaver = () => {
       }) as any;
 
       const saveUserMessageMutation = saveUserMessageMutationStable.current;
-      void saveUserMessageMutation.mutateAsync(
-        {
+      void saveUserMessageMutation
+        .mutateAsync({
           chatId,
           projectId,
           threads,
-        },
-        {
-          onSuccess: (result) => {
-            clearPendingUserMessages();
-            syncThreadLists(result.chat);
-          },
-        }
-      ).catch((error) => {
-        console.error("Failed to save user message:", error);
-      });
+        })
+        .then((result) => {
+          clearPendingUserMessages();
+          syncThreadLists(result.chat);
+        })
+        .catch((error) => {
+          console.error("onError: failed to save user message:", error);
+        });
     },
     [
       isLoggedIn,

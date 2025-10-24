@@ -58,7 +58,12 @@ export const MessageSchema = z.object({
   parentId: z.string().nullable().optional(),
   branchNumber: z.number().optional(),
   role: z.enum(["user", "assistant", "system"]),
-  content: z.unknown(),
+  content: z.array(
+    z.object({
+      type: z.string(),
+      text: z.string().optional(),
+    })
+  ),
   attachments: z.array(z.any()).optional().readonly(),
   metadata: MessageMetadataSchema.optional(),
   status: MessageStatusSchema.optional(),
@@ -109,7 +114,7 @@ export const messagesRouter = t.router({
       }
 
       // Ensure chat exists
-      const firstUserMessage = firstThread.message.content;
+      const firstUserMessage = firstThread.message.content[0]?.text;
       const chat = await getOrInsertChat(
         chatId,
         projectId,
@@ -499,10 +504,7 @@ async function getOrInsertChat(
     if (existing.projectId !== projectId) {
       await db
         .update(chatsTable)
-        .set({
-          projectId,
-          updatedAt: new Date(),
-        })
+        .set({ projectId })
         .where(eq(chatsTable.id, chatId));
 
       const updated = await db.query.chats.findFirst({
@@ -518,7 +520,6 @@ async function getOrInsertChat(
     ? await getChatName(chatId, firstUserMessage)
     : "New Chat";
 
-  console.info(`Creating new chat ${chatId} for user ${userId}`);
   await db
     .insert(chatsTable)
     .values({

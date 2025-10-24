@@ -12,7 +12,6 @@ import {
   useCaptchaStateValue,
 } from "@/hooks/use-captcha";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
-import { useChatActions } from "@/hooks/use-chat-actions";
 import { useComposerPromptSetter } from "@/hooks/use-composer-prompt";
 import { usePanelState } from "@/hooks/use-panels";
 import { useStableValue } from "@/hooks/use-stable-value";
@@ -61,7 +60,6 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
   }, [id]);
   const [panelState, setPanelState] = usePanelState(id);
   const setCurrentChat = useCurrentChatSetter();
-  const { renameChat } = useChatActions();
   const sessionId = useAuthSession();
   const userPreferences = useUserPreferencesValue();
   const plugins = useRef({
@@ -188,21 +186,6 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
           console.warn("No first user message found");
           return currentChat;
         }
-
-        // our backend will generate the title based on the conversation history
-        void renameChat({
-          chatId: currentChat.id,
-          firstUserMessage,
-          projectId: currentChat.projectId,
-          title: null,
-        }).then((chat) => {
-          if (chat.success) {
-            setCurrentChat((currentChat) => ({
-              ...currentChat,
-              title: chat.title,
-            }));
-          }
-        });
       }
 
       // make sure not to overwrite the fetched title panel id with empty value
