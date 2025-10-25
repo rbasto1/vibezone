@@ -314,11 +314,16 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
   return (
     <div
       className={cn(
-        "group relative flex flex-col border rounded-lg overflow-hidden h-full transition-all duration-300",
-        isFocused && "ring-1 ring-primary/40 shadow-lg",
+        "group relative flex flex-col overflow-hidden h-full transition-all duration-300",
         className
       )}
     >
+      <PanelHeader panel={panel} onStop={running ? handleStop : undefined} />
+      <div className="flex-1 min-h-0">
+        <AssistantRuntimeProvider runtime={runtime}>
+          <Thread panel={panel} error={error} />
+        </AssistantRuntimeProvider>
+      </div>
       {onToggleFocus && (
         <button
           type="button"
@@ -334,12 +339,6 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
           <FocusIcon className="h-4 w-4" />
         </button>
       )}
-      <PanelHeader panel={panel} onStop={running ? handleStop : undefined} />
-      <div className="flex-1 min-h-0">
-        <AssistantRuntimeProvider runtime={runtime}>
-          <Thread panel={panel} error={error} />
-        </AssistantRuntimeProvider>
-      </div>
     </div>
   );
 };

@@ -19,10 +19,10 @@ import { cn } from "@/components/ui/utils";
 import type { Attachment } from "@assistant-ui/react";
 import type { LucideIcon } from "lucide-react";
 import { FileImageIcon, FileTextIcon, XIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { FaRegFilePdf } from "react-icons/fa";
 import type { IconType } from "react-icons/lib";
 import { AttachmentPreviewDialog } from "./attachment-preview";
-import { useTranslations } from "next-intl";
 
 interface AttachmentChipProps {
   attachment: Attachment;
@@ -76,10 +76,7 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
   const uploadProgress =
     attachment.status.type === "running" &&
     attachment.status.reason === "uploading"
-      ? Math.max(
-          0,
-          Math.min(100, Math.round(attachment.status.progress ?? 0))
-        )
+      ? Math.max(0, Math.min(100, Math.round(attachment.status.progress ?? 0)))
       : attachment.status.type === "complete"
         ? 100
         : null;
@@ -98,17 +95,17 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
       <TooltipTrigger asChild>
         <Chip
           className={cn(
-            "relative max-w-[12rem] cursor-default select-none overflow-hidden",
+            "relative max-w-[12rem] cursor-default select-none overflow-hidden h-8",
             className
           )}
         >
-          {uploadProgress !== null && uploadProgress < 100 ? (
+          {uploadProgress !== null && uploadProgress < 100 && (
             <span
               className="absolute inset-y-0 left-0 z-0 h-full bg-primary/15 transition-[width] duration-300 ease-out"
               style={{ width: `${uploadProgress}%` }}
               aria-hidden
             />
-          ) : null}
+          )}
           <ChipLeading
             className={cn(
               "relative z-10 bg-background/80",
@@ -120,7 +117,7 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
               className="bg-inherit"
             >
               {previewSrc ? (
-                <span className="flex size-full items-center justify-center overflow-hidden rounded-lg bg-muted">
+                <span className="flex size-6 items-center justify-center overflow-hidden rounded-lg bg-muted">
                   <img
                     src={previewSrc}
                     alt={attachment.name}
@@ -129,7 +126,7 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
                   />
                 </span>
               ) : (
-                <Icon className="size-4" />
+                <Icon className="size-4.5" />
               )}
             </AttachmentPreviewDialog>
           </ChipLeading>
@@ -142,7 +139,6 @@ const AttachmentChip: React.FC<AttachmentChipProps> = ({
             <ChipDismissButton
               aria-label={t("remove", { name: attachment.name ?? "" })}
               onClick={handleRemove}
-              className="hover:bg-destructive/15"
             >
               <XIcon className="size-4" />
             </ChipDismissButton>

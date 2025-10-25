@@ -20,10 +20,10 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
 import {
+  MAX_ATTACHMENTS,
   useAppendAttachments,
   useAttachmentsValue,
   useRemoveAttachment,
-  MAX_ATTACHMENTS,
 } from "@/hooks/use-attachments";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
@@ -71,7 +71,13 @@ const formatModelNames = (
   return names.map((name) => `• ${name}`).join("\n");
 };
 
-export const ComposerAddAttachment: FC = () => {
+interface ComposerAddAttachmentProps {
+  className?: string;
+}
+
+export const ComposerAddAttachment: FC<ComposerAddAttachmentProps> = ({
+  className,
+}) => {
   const t = useTranslations("ComposerAddAttachment");
   const openSignIn = useOpenSignIn();
   const panels = usePanelsConfigValue();
@@ -160,7 +166,10 @@ ${formatModelNames(attachmentsCapabilities.pdf.blockingModels, t)}`;
       variant="ghost"
       size="icon"
       type="button"
-      className="aui-composer-add-attachment size-[34px] rounded-full p-1 text-xs font-semibold hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30"
+      className={cn(
+        "h-8 w-8 rounded-full text-xs font-semibold hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30",
+        className
+      )}
       aria-label="Add Attachment"
       disabled={maxAttachmentsReached}
     >
@@ -179,9 +188,7 @@ ${formatModelNames(attachmentsCapabilities.pdf.blockingModels, t)}`;
       {maxAttachmentsReached ? (
         <Tooltip delayDuration={100}>
           <TooltipTrigger asChild>
-            <span className="inline-flex">
-              {dropdownTrigger}
-            </span>
+            <span className="inline-flex">{dropdownTrigger}</span>
           </TooltipTrigger>
           <TooltipContent side="top">
             {t("maxAttachmentsTooltip", { max: MAX_ATTACHMENTS })}

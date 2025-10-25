@@ -133,7 +133,7 @@ export const ReasoningSliderTrigger = () => {
             onClick={() => setShowReasoningSlider((prev) => !prev)}
             disabled={!anyModelHasReasoning}
             aria-label={t("label")}
-            className="size-[34px] rounded-full p-1 hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30"
+            className="h-8 w-8 rounded-full p-1 hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30"
           >
             <BrainIcon className="size-5" />
           </Button>

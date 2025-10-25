@@ -118,7 +118,7 @@ export const GlobalComposerTextarea = forwardRef<
     }
 
     textarea.style.height = "auto";
-    textarea.style.height = `${textarea.scrollHeight}px`;
+    textarea.style.height = `${textarea.scrollHeight + 2}px`;
   }, []);
 
   useLayoutEffect(() => {
@@ -205,7 +205,7 @@ export const GlobalComposerTextarea = forwardRef<
       placeholder={placeholder}
       name="global-composer"
       autoFocus
-      className="bg-muted border-border dark:border-muted-foreground/15 focus:outline-primary placeholder:text-muted-foreground max-h-[calc(50dvh)] min-h-16 w-full resize-none rounded-t-2xl border-x border-t px-4 pt-2 pb-3 text-base outline-none"
+      className="bg-muted border-border dark:border-muted-foreground/15 focus:outline-primary placeholder:text-muted-foreground max-h-[calc(50dvh)] min-h-[2.5rem] w-full resize-none rounded-t-2xl border-x border-t px-3 py-2 text-base outline-none"
       rows={1}
       value={prompt}
       onChange={(event) => setPrompt(event.target.value)}

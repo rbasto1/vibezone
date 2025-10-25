@@ -4,7 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
-import { ChevronDown, ShieldAlertIcon } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useMemo, useState, type FC } from "react";
 import { Button } from "../ui/button";
 import {
@@ -16,7 +16,6 @@ import { ProviderIcon } from "../ui/providers/provider";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { cn } from "../ui/utils";
 import { ModelDropdownContents } from "./model-dropdown-contents";
-import { FreeTag } from "./tags";
 
 interface ModelDropdownProps {
   panelId: string;
@@ -82,25 +81,21 @@ export const ModelDropdown: FC<ModelDropdownProps> = ({
     );
   }
 
-  const dataRetention = model.isFree || provider?.dataRetention;
-
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           title="Change model"
           variant="outline"
-          className={cn("w-full justify-between gap-2", className)}
+          className={cn(
+            "justify-between gap-2 hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30",
+            className
+          )}
         >
           <span className="flex items-center gap-2 truncate min-w-0">
             {provider && <ProviderIcon providerId={provider.id} />}
             <span className="truncate">{model.name ?? modelId}</span>
-            {model.isFree && <FreeTag />}
-            {dataRetention && (
-              <ShieldAlertIcon className="h-4 w-4 text-red-500" aria-hidden />
-            )}
           </span>
-          <ChevronDown className="h-4 w-4 flex-shrink-0" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuPortal>

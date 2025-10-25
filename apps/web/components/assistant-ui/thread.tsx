@@ -1,8 +1,7 @@
-import { ThreadPrimitive, useThread } from "@assistant-ui/react";
+import { ThreadPrimitive } from "@assistant-ui/react";
 import { motion } from "framer-motion";
 import { type FC, type PropsWithChildren, useMemo } from "react";
 
-import { cn } from "@/components/ui/utils";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantMessage } from "./messages/assistant-message";
@@ -18,8 +17,6 @@ interface ThreadProps extends PropsWithChildren {
 }
 
 export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
-  const thread = useThread();
-  const isActive = thread.isRunning;
   const preferences = useUserPreferencesValue();
   const autoScroll = preferences.autoScroll;
 
@@ -37,17 +34,12 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
 
   return (
     <ThreadPrimitive.Root
-      // aui-thread-root
-      className={cn(
-        "bg-background flex h-full flex-col border-0",
-        isActive && "border-green-500 border-b-2 border-l-2 border-r-2"
-      )}
+      className="bg-background flex h-full flex-col"
       style={{
         ["--thread-max-width" as string]: "48rem",
         ["--thread-padding-x" as string]: "1rem",
       }}
     >
-      {/* aui-thread-viewport */}
       <ThreadPrimitive.Viewport
         className="relative flex min-w-0 flex-1 flex-col gap-6 overflow-y-scroll"
         autoScroll={autoScroll}

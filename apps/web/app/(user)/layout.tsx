@@ -8,6 +8,7 @@ import { Suspense, type PropsWithChildren } from "react";
 import { WhatsNewModal } from "@/components/news/whats-new-modal";
 import { StoreProvider } from "@/components/providers/store-provider";
 import { Toaster } from "@/components/providers/toast-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { models as modelsList } from "@/generated/models";
 import { generateThreadId } from "@/lib/id";
 import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         hiddenProviders: preferences?.preferenceHiddenProviders ?? [],
         skipCloseThreadConfirmation:
           preferences?.preferenceSkipCloseThreadConfirmation ?? false,
+        hideLegal: preferences?.preferenceHideLegal ?? false,
       }
     : {
         pluginWeb: true,
@@ -83,6 +85,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         autoScroll: false,
         hiddenProviders: [],
         skipCloseThreadConfirmation: false,
+        hideLegal: false,
       };
 
   // Load all the state we will pass to the client side store
@@ -119,11 +122,13 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           preferencesInitialValue={preferencesInitialValue}
           projectsInitialValue={projectsInitialValue}
         >
-          {children}
-          <WhatsNewModal
-            items={recentNews}
-            lastNewsSeenAt={preferences?.lastNewsSeenAt ?? null}
-          />
+          <TooltipProvider>
+            {children}
+            <WhatsNewModal
+              items={recentNews}
+              lastNewsSeenAt={preferences?.lastNewsSeenAt ?? null}
+            />
+          </TooltipProvider>
         </StoreProvider>
         <Toaster />
       </HydrationBoundary>

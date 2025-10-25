@@ -15,7 +15,8 @@
     "panelAriaLabel": "Ir para o painel {index}",
     "aiDisclaimer": "IA pode cometer erros. Verifique respostas importantes de forma independente.",
     "privacyPolicy": "Política de Privacidade",
-    "termsOfUse": "Termos de Uso"
+    "termsOfUse": "Termos de Uso",
+    "legalDismissLabel": "Ocultar aviso"
   },
   "AssistantHeader": {
     "addAnotherTooltip": "Adicionar outro chat de IA",
@@ -69,7 +70,9 @@
     "sendFailed": "Falha ao enviar para um painel: {message}",
     "placeholder": "Pergunte a todas as IAs...",
     "stopAllLabel": "Parar todas as respostas de IA",
-    "sendLabel": "Enviar para todas as IAs"
+    "sendLabel": "Enviar para todas as IAs",
+    "settingsLabel": "Configurações do compositor",
+    "projectButtonLabel": "Alterar projeto (atual: {project})"
   },
   "LanguageSwitcher": {
     "trigger": "Alterar idioma",
@@ -367,7 +370,7 @@
     "reasoningEffort": {
       "label": "Esforço de raciocínio",
       "description": "Controle quanto esforço de raciocínio a IA usa quando o modelo selecionado oferece suporte.",
-      "disabledTooltip": "Nenhum modelo permite ajustar o esforço de raciocínio.",
+      "disabledTooltip": "Nenhum modelo selecionado permite ajustar o esforço de raciocínio.",
       "disabledTooltipSingle": "O seguinte modelo não é capaz de ajustar o esforço de raciocínio e não será afetado:",
       "disabledTooltipPlural": "Os seguintes modelos não são capazes de ajustar o esforço de raciocínio e não serão afetados:",
       "selectedModels": "Modelos selecionados",

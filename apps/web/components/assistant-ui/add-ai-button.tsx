@@ -21,16 +21,21 @@ import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
 import { BotIcon } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { ModelDropdownContents } from "./model-dropdown-contents";
 
 interface AddAiButtonProps {
   panelCount: number;
   onAddPanel?: (id: string) => void;
+  compact?: boolean;
+  onTriggerClick?: () => void;
 }
 
 export const AddAiButton: FC<AddAiButtonProps> = ({
   panelCount,
   onAddPanel,
+  compact = false,
+  onTriggerClick,
 }) => {
   const t = useTranslations("AssistantHeader");
   const setLastModels = trpc.users.setLastModels.useMutation();
@@ -75,44 +80,76 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
       return newPanels;
     });
     onAddPanel?.(id);
+    setChooseModelOpen(false);
   };
+
+  const triggerVariant = compact ? "ghost" : "outline";
+  const triggerSize = compact ? "icon" : "default";
+  const triggerClassName = cn(
+    compact
+      ? "h-8 w-8 rounded-full border border-transparent hover:border-border hover:bg-accent/40"
+      : "hover:border-[var(--matrix-green)]",
+    canAddMore
+      ? compact
+        ? ""
+        : "hover:bg-accent"
+      : "opacity-60 cursor-not-allowed"
+  );
+
+  const renderTriggerButton = ({
+    className,
+    iconMargin,
+    showLabel,
+  }: {
+    className?: string;
+    iconMargin?: string;
+    showLabel?: boolean;
+  } = {}) => (
+    <Button
+      variant={triggerVariant}
+      size={triggerSize}
+      className={cn(triggerClassName, className)}
+      disabled={!canAddMore}
+      aria-label={addButtonAriaLabel}
+      type="button"
+      onClick={() => {
+        onTriggerClick?.();
+      }}
+    >
+      <BotIcon
+        className={cn(
+          "h-4 w-4 stroke-[var(--matrix-green)]",
+          compact ? "" : (iconMargin ?? "mr-1")
+        )}
+      />
+      {(showLabel ?? !compact) ? (
+        addButtonLabel
+      ) : (
+        <span className="sr-only">{addButtonLabel}</span>
+      )}
+    </Button>
+  );
 
   return (
     <DropdownMenu open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            "hover:border-[var(--matrix-green)]",
-            canAddMore ? "hover:bg-accent" : "opacity-60 cursor-not-allowed"
-          )}
-          disabled={!canAddMore}
-          title={addButtonTitle}
-          aria-label={addButtonAriaLabel}
-        >
-          <BotIcon className="mr-1 h-4 w-4 stroke-[var(--matrix-green)]" />
-          {addButtonLabel}
-        </Button>
-      </DropdownMenuTrigger>
+      <Tooltip delayDuration={100}>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            {renderTriggerButton()}
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{addButtonTitle}</TooltipContent>
+      </Tooltip>
       <DropdownMenuPortal>
         {chooseModelOpen &&
           (isMobile ? (
             <Sheet open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
               <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    canAddMore
-                      ? "hover:bg-accent"
-                      : "opacity-60 cursor-not-allowed"
-                  )}
-                  disabled={!canAddMore}
-                  title={addButtonTitle}
-                  aria-label={addButtonAriaLabel}
-                >
-                  <BotIcon className="mr-2 h-4 w-4 stroke-[var(--matrix-green)]" />
-                  {addButtonLabel}
-                </Button>
+                {renderTriggerButton({
+                  className: compact ? "" : undefined,
+                  iconMargin: compact ? undefined : "mr-2",
+                  showLabel: true,
+                })}
               </SheetTrigger>
               <SheetContent
                 side="bottom"

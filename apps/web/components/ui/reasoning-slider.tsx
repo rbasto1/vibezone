@@ -33,9 +33,12 @@ export const ReasoningSlider: React.FC<ReasoningSliderProps> = ({
   }, [onSave]);
 
   return (
-    <div className="absolute bottom-8 -left-[50%] bg-background border rounded p-2 shadow-lg">
-      <div className="flex flex-col items-center gap-2">
-        <span className="text-xs">{t("high")}</span>
+    <div className="absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 rounded-md border bg-background p-3 shadow-lg">
+      <div className="flex w-40 flex-col gap-2">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{t("low")}</span>
+          <span>{t("high")}</span>
+        </div>
         <input
           type="range"
           min="1"
@@ -46,9 +49,8 @@ export const ReasoningSlider: React.FC<ReasoningSliderProps> = ({
             const effort = value <= 1 ? "low" : value === 2 ? "medium" : "high";
             onReasoningEffortChange(effort);
           }}
-          className="w-12 h-12 -rotate-90"
+          className="w-full accent-primary"
         />
-        <span className="text-xs">{t("low")}</span>
       </div>
     </div>
   );

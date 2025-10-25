@@ -114,6 +114,7 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
               <Input
                 id="project-name"
                 value={name}
+                maxLength={60}
                 onChange={(event) => setName(event.target.value)}
                 placeholder={t("fields.name.placeholder")}
                 disabled={isSubmitting}

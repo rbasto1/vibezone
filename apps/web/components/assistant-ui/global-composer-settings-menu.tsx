@@ -1,0 +1,80 @@
+"use client";
+
+import { AddAiButton } from "@/components/assistant-ui/add-ai-button";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ReasoningSliderTrigger } from "@/components/ui/reasoning-slider-trigger";
+import { cn } from "@/components/ui/utils";
+import { Settings2Icon } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useCallback, useState, type FC } from "react";
+
+interface GlobalComposerSettingsMenuProps {
+  panelCount: number;
+  onAddPanel?: (id: string) => void;
+  className?: string;
+}
+
+export const GlobalComposerSettingsMenu: FC<
+  GlobalComposerSettingsMenuProps
+> = ({ panelCount, onAddPanel, className }) => {
+  const t = useTranslations("GlobalComposer");
+  const [open, setOpen] = useState(false);
+  const [selectorOpen, setSelectorOpen] = useState(false);
+
+  const handleAddPanel = useCallback(
+    (id: string) => {
+      onAddPanel?.(id);
+      setSelectorOpen(false);
+      setOpen(false);
+    },
+    [onAddPanel]
+  );
+
+  return (
+    <DropdownMenu
+      open={open || selectorOpen}
+      onOpenChange={(next) => {
+        if (!next && selectorOpen) {
+          setSelectorOpen(false);
+        }
+        setOpen(next);
+      }}
+    >
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-8 w-8 rounded-full text-xs font-semibold hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30",
+            className
+          )}
+          aria-label={t("settingsLabel")}
+          type="button"
+        >
+          <Settings2Icon className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        forceMount
+        className="flex min-w-0 flex-col items-center gap-1.5 overflow-visible p-2"
+      >
+        <ReasoningSliderTrigger />
+        <AddAiButton
+          panelCount={panelCount}
+          onAddPanel={handleAddPanel}
+          compact
+          onTriggerClick={() => {
+            // Keep track of selector visibility so we can keep the dropdown mounted
+            setSelectorOpen(true);
+          }}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
