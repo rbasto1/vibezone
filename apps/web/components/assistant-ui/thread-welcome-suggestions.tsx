@@ -6,11 +6,11 @@ import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { useModelsValue } from "@/hooks/use-models";
 
 export interface ThreadWelcomeSuggestionsProps {
-  onSelect: (modelIds: string[]) => void;
+  onSelectGroup: (groupId: string) => void;
 }
 
 export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
-  onSelect,
+  onSelectGroup,
 }) => {
   const { groups } = useModelsValue();
   const locale = useLocale();
@@ -30,7 +30,6 @@ export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
         icon: <DynamicIcon iconName={group.icon} size={32} />,
         title: translation.title,
         label: translation.label,
-        models: group.models,
       };
     });
   return (
@@ -47,7 +46,7 @@ export const ThreadWelcomeSuggestions: FC<ThreadWelcomeSuggestionsProps> = ({
           <button
             key={s.key}
             className="dark:hover:bg-accent/60 h-full w-full flex flex-col gap-2 rounded-xl border px-4 py-3.5 text-left text-sm cursor-pointer"
-            onClick={() => onSelect(s.models)}
+            onClick={() => onSelectGroup(s.key)}
           >
             <div className="flex items-center gap-2">
               <div className="flex-shrink-0">{s.icon}</div>

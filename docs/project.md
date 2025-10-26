@@ -16,6 +16,7 @@
 - [x] Code blocks rendering as download items
 - [x] PDF attachments not rendering
 - [ ] Deleting a chat that is currently open should start a new chat
+- [ ] Code block from assistant rendering without body
 
 ## Improvements
 
@@ -42,7 +43,7 @@
 - [x] Add `api_created_at` to models and use our import date for created_at
 - [ ] Add auto-translation button to admin (model descriptions, news)
 - [x] Schedule daily usage calculation
-- [ ] Use `useMessage` for saving messages instead of thread message list
+- [x] Use `useMessage` for saving messages instead of thread message list
 - [ ] Add cleanup of attachments never sent or older than 30 days for free users
 
 ## MVP (done)

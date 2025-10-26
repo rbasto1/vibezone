@@ -4,16 +4,22 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
 import { ProviderIcon } from "@/components/ui/providers/provider";
 import { cn } from "@/components/ui/utils";
-import type { ProviderTier } from "@/db";
 import { useModelFavorites } from "@/hooks/use-model-favorites";
 import { useModelsValue } from "@/hooks/use-models";
 import { useOpenSignIn, useUser } from "@/lib/auth-client";
 import { modelMap } from "@/lib/model-map";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
+import { modelSelectionStateAtom } from "@/store/model-selection-state";
 import { Star, X } from "lucide-react";
+import { useAtom } from "jotai";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { capabilityOptions, tierOptions } from "./model-dropdown-constants";
+import {
+  capabilityOptions,
+  tierOptions,
+  type CapabilityOptionId,
+  type TierOptionId,
+} from "./model-dropdown-constants";
 import { ModelDropdownItem } from "./model-dropdown-item";
 import { ModelDropdownSearch } from "./model-dropdown-search";
 import { ModelDropdownSuggestionGroup } from "./model-dropdown-suggestion-group";
@@ -22,7 +28,7 @@ interface ModelDropdownContentsProps {
   onSelect: (providerId: string, modelId: string) => void;
   currentModelId?: string;
   onClose?: () => void;
-  variant?: "dropdown" | "sheet";
+  variant?: "dropdown" | "sheet" | "modal";
 }
 
 export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
@@ -51,19 +57,15 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     [providers]
   );
 
-  // Exclusive selection between tiers and suggestion groups
-  const [selectedTier, setSelectedTier] = useState<ProviderTier | null>(
-    () =>
-      providers.find((p) => p.id === currentModelId?.split("/")[0])?.tier ??
-      tierOptions[0]?.id ??
-      null
+  const [modelSelectionState, setModelSelectionState] = useAtom(
+    modelSelectionStateAtom
   );
-  const [selectedSuggestionGroup, setSelectedSuggestionGroup] =
-    useState<string>();
-  const [selectedCapabilities, setSelectedCapabilities] = useState(
-    new Set<(typeof capabilityOptions)[number]["id"]>()
-  );
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const {
+    selectedTier,
+    selectedSuggestionGroup,
+    selectedCapabilities,
+    showFavoritesOnly,
+  } = modelSelectionState;
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,11 +75,15 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
 
   useEffect(() => {
     if (!showFavoritesToggle && showFavoritesOnly) {
-      setShowFavoritesOnly(false);
+      setModelSelectionState((prev) => {
+        if (!prev.showFavoritesOnly) return prev;
+        return { ...prev, showFavoritesOnly: false };
+      });
     }
-  }, [showFavoritesOnly, showFavoritesToggle]);
+  }, [showFavoritesOnly, showFavoritesToggle, setModelSelectionState]);
 
   const isSheet = variant === "sheet";
+  const isModal = variant === "modal";
 
   // Ensure we always show something even if no providers in the default tier
   useEffect(() => {
@@ -94,7 +100,12 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       const next = tierOptions.find(({ id }) =>
         providers.some((p) => p.tier === id)
       )?.id;
-      if (next && next !== selectedTier) setSelectedTier(next);
+      if (next && next !== selectedTier) {
+        setModelSelectionState((prev) => ({
+          ...prev,
+          selectedTier: next,
+        }));
+      }
     }
   }, [
     providers,
@@ -102,35 +113,44 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     selectedSuggestionGroup,
     searchQuery,
     showFavoritesOnly,
+    setModelSelectionState,
   ]);
 
-  const toggleCapability = (cap: (typeof capabilityOptions)[number]["id"]) => {
-    setSelectedCapabilities((prev) => {
-      const next = new Set(prev);
-      if (next.has(cap)) next.delete(cap);
-      else next.add(cap);
-      return next;
+  const toggleCapability = (cap: CapabilityOptionId) => {
+    setModelSelectionState((prev) => {
+      const nextCapabilities = new Set(prev.selectedCapabilities);
+      if (nextCapabilities.has(cap)) {
+        nextCapabilities.delete(cap);
+      } else {
+        nextCapabilities.add(cap);
+      }
+      return {
+        ...prev,
+        selectedCapabilities: nextCapabilities,
+      };
     });
   };
 
   const toggleFavoritesOnly = useCallback(() => {
-    setShowFavoritesOnly((prev) => {
-      const next = !prev;
-      if (next) {
-        setSelectedSuggestionGroup(undefined);
-      }
-      return next;
+    setModelSelectionState((prev) => {
+      const nextShowFavoritesOnly = !prev.showFavoritesOnly;
+      return {
+        ...prev,
+        showFavoritesOnly: nextShowFavoritesOnly,
+        selectedSuggestionGroup: nextShowFavoritesOnly
+          ? undefined
+          : prev.selectedSuggestionGroup,
+      };
     });
-  }, [setSelectedSuggestionGroup]);
+  }, [setModelSelectionState]);
 
-  const handleTierSelect = (
-    tier: "leaders" | "challengers" | "specialists"
-  ) => {
-    if (showFavoritesOnly) {
-      setShowFavoritesOnly(false);
-    }
-    setSelectedTier(tier);
-    setSelectedSuggestionGroup(undefined);
+  const handleTierSelect = (tier: TierOptionId) => {
+    setModelSelectionState((prev) => ({
+      ...prev,
+      showFavoritesOnly: false,
+      selectedTier: tier,
+      selectedSuggestionGroup: undefined,
+    }));
     setSearchQuery("");
   };
 
@@ -142,10 +162,11 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
 
   // Handler for suggestion group selection
   const handleSuggestionGroupSelect = (groupId: string) => {
-    if (showFavoritesOnly) {
-      setShowFavoritesOnly(false);
-    }
-    setSelectedSuggestionGroup(groupId);
+    setModelSelectionState((prev) => ({
+      ...prev,
+      showFavoritesOnly: false,
+      selectedSuggestionGroup: groupId,
+    }));
     setSearchQuery("");
   };
 
@@ -269,8 +290,36 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       return providers.filter((p) => providerIds.has(p.id));
     }
 
-    return selectedTier ? providers.filter((p) => p.tier === selectedTier) : [];
+    const filtered = selectedTier
+      ? providers.filter((p) => p.tier === selectedTier)
+      : [];
+
+    if (!currentModelId) {
+      return filtered;
+    }
+
+    const currentProviderId = currentModelId.split("/")[0];
+    if (!currentProviderId) {
+      return filtered;
+    }
+
+    const alreadyIncluded = filtered.some(
+      (provider) => provider.id === currentProviderId
+    );
+    if (alreadyIncluded) {
+      return filtered;
+    }
+
+    const currentProvider = providers.find(
+      (provider) => provider.id === currentProviderId
+    );
+    if (!currentProvider) {
+      return filtered;
+    }
+
+    return [currentProvider, ...filtered];
   }, [
+    currentModelId,
     models,
     providers,
     searchQuery,
@@ -795,9 +844,16 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     </div>
   );
 
-  if (isSheet) {
+  if (isSheet || isModal) {
     return (
-      <div className="flex h-full flex-col overflow-hidden p-3">{body}</div>
+      <div
+        className={cn(
+          "flex h-full flex-col overflow-hidden",
+          isSheet ? "p-3" : "p-4"
+        )}
+      >
+        {body}
+      </div>
     );
   }
 
