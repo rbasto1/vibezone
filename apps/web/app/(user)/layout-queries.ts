@@ -81,7 +81,7 @@ export function getDefaultModels() {
   defaultModelsCache ??= modelsList.models
     .filter((m) => !!m.priority)
     .toSorted((a, b) => (a.priority ?? 0) - (b.priority ?? 0))
-    .slice(0, MAX_PANELS);
+    .slice(0, 1);
   return defaultModelsCache;
 }
 

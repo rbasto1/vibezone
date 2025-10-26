@@ -62,3 +62,6 @@ export const capabilityOptions = [
     color: "text-zinc-600 dark:text-zinc-400",
   },
 ];
+
+export type TierOptionId = (typeof tierOptions)[number]["id"];
+export type CapabilityOptionId = (typeof capabilityOptions)[number]["id"];

@@ -65,15 +65,7 @@ export const GlobalComposerSettingsMenu: FC<
         className="flex min-w-0 flex-col items-center gap-1.5 overflow-visible p-2"
       >
         <ReasoningSliderTrigger />
-        <AddAiButton
-          panelCount={panelCount}
-          onAddPanel={handleAddPanel}
-          compact
-          onTriggerClick={() => {
-            // Keep track of selector visibility so we can keep the dropdown mounted
-            setSelectorOpen(true);
-          }}
-        />
+        <AddAiButton panelCount={panelCount} onAddPanel={handleAddPanel} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

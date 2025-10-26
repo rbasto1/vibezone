@@ -3,12 +3,8 @@ import type { FC } from "react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuPortal,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/components/ui/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -27,15 +23,11 @@ import { ModelDropdownContents } from "./model-dropdown-contents";
 interface AddAiButtonProps {
   panelCount: number;
   onAddPanel?: (id: string) => void;
-  compact?: boolean;
-  onTriggerClick?: () => void;
 }
 
 export const AddAiButton: FC<AddAiButtonProps> = ({
   panelCount,
   onAddPanel,
-  compact = false,
-  onTriggerClick,
 }) => {
   const t = useTranslations("AssistantHeader");
   const setLastModels = trpc.users.setLastModels.useMutation();
@@ -83,92 +75,57 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
     setChooseModelOpen(false);
   };
 
-  const triggerVariant = compact ? "ghost" : "outline";
-  const triggerSize = compact ? "icon" : "default";
   const triggerClassName = cn(
-    compact
-      ? "h-8 w-8 rounded-full border border-transparent hover:border-border hover:bg-accent/40"
-      : "hover:border-[var(--matrix-green)]",
-    canAddMore
-      ? compact
-        ? ""
-        : "hover:bg-accent"
-      : "opacity-60 cursor-not-allowed"
+    "h-8 w-8 rounded-full border border-transparent hover:border-border hover:bg-accent/40",
+    canAddMore ? "" : "opacity-60 cursor-not-allowed"
   );
 
-  const renderTriggerButton = ({
-    className,
-    iconMargin,
-    showLabel,
-  }: {
-    className?: string;
-    iconMargin?: string;
-    showLabel?: boolean;
-  } = {}) => (
-    <Button
-      variant={triggerVariant}
-      size={triggerSize}
-      className={cn(triggerClassName, className)}
-      disabled={!canAddMore}
-      aria-label={addButtonAriaLabel}
-      type="button"
-      onClick={() => {
-        onTriggerClick?.();
-      }}
-    >
-      <BotIcon
-        className={cn(
-          "h-4 w-4 stroke-[var(--matrix-green)]",
-          compact ? "" : (iconMargin ?? "mr-1")
-        )}
-      />
-      {(showLabel ?? !compact) ? (
-        addButtonLabel
-      ) : (
-        <span className="sr-only">{addButtonLabel}</span>
-      )}
-    </Button>
-  );
+  const handleTriggerClick = () => {
+    if (!canAddMore) return;
+    setChooseModelOpen(true);
+  };
 
   return (
-    <DropdownMenu open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
+    <>
       <Tooltip delayDuration={100}>
         <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            {renderTriggerButton()}
-          </DropdownMenuTrigger>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={triggerClassName}
+            disabled={!canAddMore}
+            aria-label={addButtonAriaLabel}
+            type="button"
+            onClick={handleTriggerClick}
+          >
+            <BotIcon className="h-4 w-4 stroke-[var(--matrix-green)]" />
+            <span className="sr-only">{addButtonLabel}</span>
+          </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">{addButtonTitle}</TooltipContent>
       </Tooltip>
-      <DropdownMenuPortal>
-        {chooseModelOpen &&
-          (isMobile ? (
-            <Sheet open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
-              <SheetTrigger asChild>
-                {renderTriggerButton({
-                  className: compact ? "" : undefined,
-                  iconMargin: compact ? undefined : "mr-2",
-                  showLabel: true,
-                })}
-              </SheetTrigger>
-              <SheetContent
-                side="bottom"
-                className="h-[100dvh] w-screen gap-0 p-0"
-              >
-                <ModelDropdownContents
-                  onSelect={handleAddPanel}
-                  onClose={() => setChooseModelOpen(false)}
-                  variant="sheet"
-                />
-              </SheetContent>
-            </Sheet>
-          ) : (
+
+      {isMobile ? (
+        <Sheet open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
+          <SheetContent side="bottom" className="h-[100dvh] w-screen gap-0 p-0">
             <ModelDropdownContents
               onSelect={handleAddPanel}
               onClose={() => setChooseModelOpen(false)}
+              variant="sheet"
             />
-          ))}
-      </DropdownMenuPortal>
-    </DropdownMenu>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
+          <DialogContent className="max-w-[min(1200px,95vw)] w-[min(1200px,95vw)] h-[min(85vh,720px)] p-0 overflow-hidden">
+            <ModelDropdownContents
+              onSelect={handleAddPanel}
+              onClose={() => setChooseModelOpen(false)}
+              variant="modal"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 };

@@ -1,23 +1,35 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { type FC } from "react";
+import { useSetAtom } from "jotai";
+import { type FC, useState } from "react";
 
 import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
+import { ModelDropdownContents } from "@/components/assistant-ui/model-dropdown-contents";
 import { ThreadPanel } from "@/components/assistant-ui/thread-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
 import { ClientOnly } from "@/components/ui/client-only";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/components/ui/utils";
 import { useFocusPanelIdValue } from "@/hooks/use-focus-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { usePanelsConfig, usePanelsStateValue } from "@/hooks/use-panels";
+import {
+  usePanelsConfig,
+  usePanelsStateSetter,
+  usePanelsStateValue,
+} from "@/hooks/use-panels";
+import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useUIState } from "@/hooks/use-ui-state";
-import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
-import { useOpenSignIn, useUser } from "@/lib/auth-client";
+import { useUser } from "@/lib/auth-client";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { modelMap } from "@/lib/model-map";
+import {
+  createDefaultModelSelectionState,
+  modelSelectionStateAtom,
+} from "@/store/model-selection-state";
 import type { PanelConfig } from "@/store/panels";
 import { AppFooter } from "./app-footer";
 
@@ -30,50 +42,65 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
   const t = useTranslations("Assistant");
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelsState = usePanelsStateValue();
+  const setPanelsState = usePanelsStateSetter();
   const focusPanelId = useFocusPanelIdValue();
   const [uiState, setUIState] = useUIState();
   const isMobile = useIsMobile();
-  const preferences = useUserPreferencesValue();
-  const hiddenProviders = preferences.hiddenProviders;
   const user = useUser();
-  const openSignIn = useOpenSignIn();
+  const saveLastModels = useSaveLastModels();
+  const setModelSelectionState = useSetAtom(modelSelectionStateAtom);
+  const [isSuggestionPickerOpen, setSuggestionPickerOpen] = useState(false);
 
   const panelCount = Math.min(Math.max(panelsConfig.length, 1), MAX_PANELS);
   const showTabs = isMobile && panelsConfig.length > 1;
   const hideAnonBanner = !!user || (isMobile && uiState.suggestionsUsed);
   const canToggleFocus = !isMobile && panelsConfig.length > 1;
 
-  const handleSelectModelsGroup = (modelIds: string[]) => {
-    // If anonymous, filter out premium/included models
-    const allowedModelIds = user
-      ? modelIds
-      : modelIds.filter((id) => {
-          const m = modelMap.get(id);
-          return (
-            m &&
-            !m.isPremium &&
-            !m.isIncluded &&
-            !hiddenProviders.some((providerId) => providerId === m.providerId)
-          );
-        });
+  const handleSuggestionClick = (groupId: string) => {
+    setModelSelectionState(() => {
+      const next = createDefaultModelSelectionState();
+      next.selectedSuggestionGroup = groupId;
+      return next;
+    });
+    setSuggestionPickerOpen(true);
+  };
 
-    if (!allowedModelIds.length) {
-      openSignIn();
-      return;
-    }
-
-    setPanelsConfig(
-      allowedModelIds.slice(0, 3).map((modelId, order): PanelConfig => {
-        const provider = modelId.split(":")[0];
-        if (!provider) throw new Error("Assert: this can't happen");
-        return {
-          id: generateThreadId(order),
-          provider,
+  const handleSuggestionModelSelect = (providerId: string, modelId: string) => {
+    setPanelsConfig((prevPanels) => {
+      if (!prevPanels.length) {
+        const newPanelId = generateThreadId(0);
+        const newPanel: PanelConfig = {
+          id: newPanelId,
+          provider: providerId,
           model: modelId,
         };
-      })
-    );
-    // Mark suggestions as used to hide them
+        saveLastModels([newPanel]);
+        setPanelsState((currentState) => ({
+          ...currentState,
+          [newPanelId]:
+            currentState[newPanelId] ?? {
+              running: false,
+              hasMessages: false,
+            },
+        }));
+        onAddPanel?.(newPanelId);
+        return [newPanel];
+      }
+
+      const nextPanels = prevPanels.map((panel, index) =>
+        index === 0
+          ? {
+              ...panel,
+              provider: providerId,
+              model: modelId,
+            }
+          : panel
+      );
+      saveLastModels(nextPanels);
+      return nextPanels;
+    });
+
+    setSuggestionPickerOpen(false);
     setUIState({ suggestionsUsed: true });
   };
 
@@ -180,11 +207,37 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
         )}
         {/* Global suggestions under panels - only show if not used */}
         {!uiState.suggestionsUsed && (
-          <ThreadWelcomeSuggestions onSelect={handleSelectModelsGroup} />
+          <ThreadWelcomeSuggestions onSelectGroup={handleSuggestionClick} />
         )}
         {/* Global composer below panels */}
         <GlobalComposer onAddPanel={onAddPanel} />
       </div>
+      {isMobile ? (
+        <Sheet open={isSuggestionPickerOpen} onOpenChange={setSuggestionPickerOpen}>
+          <SheetContent
+            side="bottom"
+            className="h-[100dvh] w-screen gap-0 p-0"
+          >
+            <ModelDropdownContents
+              onSelect={handleSuggestionModelSelect}
+              currentModelId={panelsConfig[0]?.model}
+              onClose={() => setSuggestionPickerOpen(false)}
+              variant="sheet"
+            />
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={isSuggestionPickerOpen} onOpenChange={setSuggestionPickerOpen}>
+          <DialogContent className="max-w-[min(1200px,95vw)] w-[min(1200px,95vw)] h-[min(85vh,720px)] p-0 overflow-hidden">
+            <ModelDropdownContents
+              onSelect={handleSuggestionModelSelect}
+              currentModelId={panelsConfig[0]?.model}
+              onClose={() => setSuggestionPickerOpen(false)}
+              variant="modal"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
       <AppFooter isLoggedIn={!!user} />
     </div>
   );
