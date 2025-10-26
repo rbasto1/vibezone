@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
 import {
+  MAX_ATTACHMENTS,
   useAppendAttachments,
   useAttachmentsValue,
   useRemoveAttachment,
@@ -70,10 +71,17 @@ const formatModelNames = (
   return names.map((name) => `• ${name}`).join("\n");
 };
 
-export const ComposerAddAttachment: FC = () => {
+interface ComposerAddAttachmentProps {
+  className?: string;
+}
+
+export const ComposerAddAttachment: FC<ComposerAddAttachmentProps> = ({
+  className,
+}) => {
   const t = useTranslations("ComposerAddAttachment");
   const openSignIn = useOpenSignIn();
   const panels = usePanelsConfigValue();
+  const attachments = useAttachmentsValue();
   const panelModelIds = useMemo(
     () => panels.map((panel) => panel.model),
     [panels]
@@ -81,6 +89,7 @@ export const ComposerAddAttachment: FC = () => {
   const { models } = useModelsValue({ includeModels: panelModelIds });
   const user = useUser();
   const isLoggedIn = !!user;
+  const maxAttachmentsReached = attachments.length >= MAX_ATTACHMENTS;
 
   const attachmentsCapabilities = useMemo(() => {
     const modelsMap = new Map(models.map((model) => [model.id, model]));
@@ -152,19 +161,42 @@ ${formatModelNames(attachmentsCapabilities.pdf.blockingModels, t)}`;
     },
   ];
 
+  const triggerButton = (
+    <Button
+      variant="ghost"
+      size="icon"
+      type="button"
+      className={cn(
+        "h-8 w-8 rounded-full text-xs font-semibold hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30",
+        className
+      )}
+      aria-label="Add Attachment"
+      disabled={maxAttachmentsReached}
+    >
+      <PlusIcon className="aui-attachment-add-icon size-5 stroke-[1.5px]" />
+    </Button>
+  );
+
+  const dropdownTrigger = (
+    <DropdownMenuTrigger asChild disabled={maxAttachmentsReached}>
+      {triggerButton}
+    </DropdownMenuTrigger>
+  );
+
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          type="button"
-          className="aui-composer-add-attachment size-[34px] rounded-full p-1 text-xs font-semibold hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30"
-          aria-label="Add Attachment"
-        >
-          <PlusIcon className="aui-attachment-add-icon size-5 stroke-[1.5px]" />
-        </Button>
-      </DropdownMenuTrigger>
+      {maxAttachmentsReached ? (
+        <Tooltip delayDuration={100}>
+          <TooltipTrigger asChild>
+            <span className="inline-flex">{dropdownTrigger}</span>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {t("maxAttachmentsTooltip", { max: MAX_ATTACHMENTS })}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        dropdownTrigger
+      )}
       <DropdownMenuContent align="start" className="w-56">
         {menuItems.map((item) => {
           const content = (

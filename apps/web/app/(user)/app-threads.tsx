@@ -1,8 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Link from "next/link";
-import type { FC } from "react";
+import { type FC } from "react";
 
 import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
@@ -20,19 +19,22 @@ import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { modelMap } from "@/lib/model-map";
 import type { PanelConfig } from "@/store/panels";
+import { AppFooter } from "./app-footer";
 
 interface AppThreadsProps {
   hide: boolean;
+  onAddPanel?: (id: string) => void;
 }
 
-export const AppThreads: FC<AppThreadsProps> = ({ hide }) => {
+export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
   const t = useTranslations("Assistant");
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelsState = usePanelsStateValue();
   const focusPanelId = useFocusPanelIdValue();
   const [uiState, setUIState] = useUIState();
   const isMobile = useIsMobile();
-  const { hiddenProviders } = useUserPreferencesValue();
+  const preferences = useUserPreferencesValue();
+  const hiddenProviders = preferences.hiddenProviders;
   const user = useUser();
   const openSignIn = useOpenSignIn();
 
@@ -78,11 +80,11 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide }) => {
   return (
     <div
       className={cn(
-        "flex-1 overflow-hidden p-3 flex flex-col gap-3",
+        "flex-1 overflow-hidden px-3 flex flex-col gap-0",
         hide && "hidden"
       )}
     >
-      <div className="flex flex-col gap-3 flex-1 min-h-0">
+      <div className="flex flex-col gap-1 flex-1 min-h-0">
         {showTabs && (
           <div className="-mx-1 px-1">
             <div
@@ -120,9 +122,7 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide }) => {
                       )}
                       aria-pressed={isActive}
                       aria-selected={isActive}
-                      aria-label={t("panelAriaLabel", {
-                        index: index + 1,
-                      })}
+                      aria-label={t("panelAriaLabel", { index: index + 1 })}
                       role="tab"
                     >
                       <span className="text">{label}</span>
@@ -183,17 +183,9 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide }) => {
           <ThreadWelcomeSuggestions onSelect={handleSelectModelsGroup} />
         )}
         {/* Global composer below panels */}
-        <GlobalComposer />
+        <GlobalComposer onAddPanel={onAddPanel} />
       </div>
-      <div className="flex justify-center text-xs gap-4 [&>a]:underline">
-        <span>{t("aiDisclaimer")}</span>
-        <Link href="/privacy" prefetch={false}>
-          {t("privacyPolicy")}
-        </Link>
-        <Link href="/terms" prefetch={false}>
-          {t("termsOfUse")}
-        </Link>
-      </div>
+      <AppFooter isLoggedIn={!!user} />
     </div>
   );
 };

@@ -9,6 +9,7 @@ export interface PreferencesAtom {
   hiddenProviders: string[];
   reasoningEffort: ReasoningEffort;
   skipCloseThreadConfirmation: boolean;
+  hideLegal: boolean;
 }
 
 export const preferencesAtom = atom<PreferencesAtom>({
@@ -19,4 +20,5 @@ export const preferencesAtom = atom<PreferencesAtom>({
   hiddenProviders: [],
   reasoningEffort: "low",
   skipCloseThreadConfirmation: false,
+  hideLegal: false,
 });

@@ -15,7 +15,8 @@
     "panelAriaLabel": "Switch to panel {index}",
     "aiDisclaimer": "AI can make mistakes. Always check important responses independently.",
     "privacyPolicy": "Privacy Policy",
-    "termsOfUse": "Terms of Use"
+    "termsOfUse": "Terms of Use",
+    "legalDismissLabel": "Hide disclaimer"
   },
   "AssistantHeader": {
     "addAnotherTooltip": "Add another AI chat",
@@ -69,7 +70,9 @@
     "sendFailed": "Send failed for a panel: {message}",
     "placeholder": "Ask all of the AIs...",
     "stopAllLabel": "Stop all AI responses",
-    "sendLabel": "Send to all AIs"
+    "sendLabel": "Send to all AIs",
+    "settingsLabel": "Composer settings",
+    "projectButtonLabel": "Change project (current: {project})"
   },
   "LanguageSwitcher": {
     "trigger": "Change language",
@@ -367,7 +370,7 @@
     "reasoningEffort": {
       "label": "Reasoning effort",
       "description": "Control how much reasoning effort the AI uses when the selected model supports it.",
-      "disabledTooltip": "No models allow reasoning effort to be adjusted.",
+      "disabledTooltip": "None of the selected models allow reasoning effort to be adjusted.",
       "disabledTooltipSingle": "The following model is not capable of reasoning effort adjustment and will not be affected:",
       "disabledTooltipPlural": "The following models are not capable of reasoning effort adjustment and will not be affected:",
       "selectedModels": "Selected models",
@@ -412,7 +415,8 @@
     "imageCapabilityPlural": "The following models are not capable of interpreting images:",
     "pdfCapabilitySingle": "The following model is not capable of reading PDF files:",
     "pdfCapabilityPlural": "The following models are not capable of reading PDF files:",
-    "selectedModels": "Selected models"
+    "selectedModels": "Selected models",
+    "maxAttachmentsTooltip": "You have reached the attachment limit of {max} files for a single message."
   },
   "IncompatibleAttachmentsModal": {
     "title": "Incompatible Attachments",

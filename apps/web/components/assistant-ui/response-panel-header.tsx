@@ -1,11 +1,9 @@
 "use client";
 
-import { InfoIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { StopButton } from "@/components/ui/stop-button";
 import { cn } from "@/components/ui/utils";
 import {
@@ -14,9 +12,9 @@ import {
   usePanelStateValue,
 } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
-import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import type { PanelConfig } from "@/store/panels";
+import { CloseIconButton } from "../ui/close-icon-button";
 import { ConfirmCloseModal } from "./confirm-close-modal";
 import { ModelDropdown } from "./model-dropdown";
 import { ModelFavoriteButton } from "./model-favorite-button";
@@ -38,9 +36,6 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const preferences = useUserPreferencesValue();
 
   const [showConfirmClose, setShowConfirmClose] = useState(false);
-  const setUIState = useUIStateSetter();
-
-  const infoLabel = t("infoShowDetails");
 
   const handleRemoveClick = () => {
     if (panelState.hasMessages && !preferences.skipCloseThreadConfirmation) {
@@ -73,49 +68,39 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   return (
     <div
       className={cn(
-        "flex items-center justify-between px-3 py-2 border-b bg-muted/40 gap-2 border-0",
-        isActive && "border-green-500 border-t-2 border-l-2 border-r-2"
+        "flex items-center justify-between px-3 py-2 gap-2 fixed z-50",
+        isActive && "panel-button-glow"
       )}
     >
-      <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="flex items-center gap-2">
         <ModelDropdown
           panelId={panelId}
           modelId={modelId}
-          className="h-8 text-sm"
+          className="flex items-center gap-2 min-w-0 flex-1 h-8 text-sm"
         />
-      </div>
-      <div className="flex items-center gap-1">
-        {onStop && (
-          <StopButton
-            onClick={onStop}
-            aria-label={stopLabel}
-            title={stopLabel}
-          />
-        )}
-        <ModelFavoriteButton modelId={modelId} size="md" />
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          className="w-8 h-8"
-          onClick={() => setUIState({ detailsModelId: modelId })}
-          title={infoLabel}
-          aria-label={infoLabel}
-        >
-          <InfoIcon className="h-4 w-4" />
-        </Button>
-        <button
-          className={cn(
-            "p-1 rounded hover:bg-muted cursor-pointer",
-            canClose ? "opacity-100" : "opacity-40 cursor-not-allowed"
+        <div className="flex items-center gap-1">
+          {onStop && (
+            <StopButton
+              onClick={onStop}
+              aria-label={stopLabel}
+              title={stopLabel}
+              className="opacity-0 group-hover:opacity-100"
+            />
           )}
-          onClick={handleRemoveClick}
-          aria-label={closeAria}
-          title={closeTooltip}
-          disabled={!canClose}
-        >
-          <XIcon className="h-4 w-4" />
-        </button>
+          <ModelFavoriteButton
+            modelId={modelId}
+            size="md"
+            className="opacity-0 group-hover:opacity-100"
+          />
+          {canClose && (
+            <CloseIconButton
+              onClick={handleRemoveClick}
+              aria-label={closeAria}
+              title={closeTooltip}
+              buttonClassName="opacity-0 group-hover:opacity-100"
+            />
+          )}
+        </div>
       </div>
       {showConfirmClose && (
         <ConfirmCloseModal

@@ -59,6 +59,9 @@ export const preferences = pgTable("preferences", {
   )
     .default(false)
     .notNull(),
+  preferenceHideLegal: boolean("preference_hide_legal")
+    .default(false)
+    .notNull(),
   lastNewsSeenAt: timestampTz("last_news_seen_at"),
 
   createdAt: timestampTzNow("created_at"),

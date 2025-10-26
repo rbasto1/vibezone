@@ -6,7 +6,6 @@ import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { ReasoningSliderTrigger } from "@/components/ui/reasoning-slider-trigger";
 import { StopButton } from "@/components/ui/stop-button";
 import { ANON_DAILY_LIMIT, useAnonRemaining } from "@/hooks/use-anon-quota";
 import {
@@ -30,6 +29,8 @@ import type { CreateAppendMessage } from "@assistant-ui/react";
 import { ComposerAddAttachment } from "./add-attachment";
 import { AttachmentChip } from "./attachment-chip";
 import { Captcha } from "./captcha";
+import { GlobalComposerProjectButton } from "./global-composer-project-button";
+import { GlobalComposerSettingsMenu } from "./global-composer-settings-menu";
 import type { GlobalComposerTextareaHandle } from "./global-composer-textarea";
 import { GlobalComposerTextarea } from "./global-composer-textarea";
 import {
@@ -37,7 +38,11 @@ import {
   type IncompatibleAttachment,
 } from "./incompatible-attachments-modal";
 
-export const GlobalComposer: FC = () => {
+type GlobalComposerProps = {
+  onAddPanel?: (id: string) => void;
+};
+
+export const GlobalComposer: FC<GlobalComposerProps> = ({ onAddPanel }) => {
   const t = useTranslations("GlobalComposer");
   const removeAttachment = useRemoveAttachment();
   const attachments = useAttachmentsValue();
@@ -303,25 +308,33 @@ export const GlobalComposer: FC = () => {
           onSubmit={handleSubmit}
         />
         {/* Footer with attach and send, styled like thread composer */}
-        <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-start justify-between rounded-b-2xl border-x border-b p-2 cursor-text">
-          <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-2">
-            <ReasoningSliderTrigger />
-            <ComposerAddAttachment />
+        <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center gap-1.5 rounded-b-2xl border-x border-b px-2 py-1 cursor-text">
+          <ComposerAddAttachment className="shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {attachments.map((a) => (
               <AttachmentChip
-                key={`${a.id}`}
+                key={a.id}
                 attachment={a}
                 onRemove={() => removeAttachment(a)}
               />
             ))}
           </div>
-
+          <div className="shrink-0">
+            <GlobalComposerProjectButton />
+          </div>
+          <div className="shrink-0">
+            <GlobalComposerSettingsMenu
+              panelCount={panels.length}
+              onAddPanel={onAddPanel}
+            />
+          </div>
           {onStopAll ? (
             <StopButton
               onClick={onStopAll}
               aria-label={stopAllLabel}
               title={stopAllLabel}
-              className="self-start"
+              type="button"
+              className="size-8 shrink-0"
             />
           ) : (
             <Button
@@ -337,15 +350,14 @@ export const GlobalComposer: FC = () => {
                   ? `${sendLabel} ${uploadProgress}%`
                   : sendLabel
               }
-              className="self-start"
+              className="h-8 w-8 shrink-0 rounded-full"
               disabled={pendingAttachments}
+              type="button"
             >
               {uploadProgress !== null ? (
-                <span className="min-w-[2.5rem] text-sm font-semibold">
-                  {uploadProgress}%
-                </span>
+                <span className="text-xs font-semibold">{uploadProgress}%</span>
               ) : (
-                <ArrowUpIcon className="size-5" />
+                <ArrowUpIcon className="h-4 w-4" />
               )}
             </Button>
           )}

@@ -10,7 +10,7 @@ import { authenticatedProcedure, t } from "./server/initialize";
 const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
 
 const projectInputSchema = z.object({
-  name: z.string().min(1).max(120),
+  name: z.string().min(1).max(60),
   color: z.string().regex(HEX_COLOR_REGEX, "Invalid color"),
   instructions: z.string().max(20000).optional().nullable(),
 });
