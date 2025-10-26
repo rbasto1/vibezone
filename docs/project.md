@@ -16,7 +16,7 @@
 - [x] Code blocks rendering as download items
 - [x] PDF attachments not rendering
 - [ ] Deleting a chat that is currently open should start a new chat
-- [ ] Code block from assistant rendering without body
+- [x] Kotlin code not rendering
 
 ## Improvements
 
