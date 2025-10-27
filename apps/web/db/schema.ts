@@ -2,6 +2,7 @@ import { providerTiers } from "@/db/enums";
 
 import {
   chatRelations,
+  dataExportsRelations,
   localesRelations,
   messageRatingsRelations,
   messagesRelations,
@@ -20,6 +21,7 @@ import {
 
 import {
   chats,
+  dataExports,
   locales,
   messageRatings,
   messages,
@@ -42,6 +44,8 @@ import {
 export {
   chatRelations,
   chats,
+  dataExports,
+  dataExportsRelations,
   locales,
   localesRelations,
   messageRatings,
@@ -109,6 +113,8 @@ export type Chat = typeof chats.$inferSelect;
 export type NewChat = typeof chats.$inferInsert;
 export type Usage = typeof usage.$inferSelect;
 export type NewUsage = typeof usage.$inferInsert;
+export type DataExport = typeof dataExports.$inferSelect;
+export type NewDataExport = typeof dataExports.$inferInsert;
 export type Locale = typeof locales.$inferSelect;
 export type NewLocale = typeof locales.$inferInsert;
 export type ModelTranslation = typeof modelTranslations.$inferSelect;

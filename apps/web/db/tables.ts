@@ -350,3 +350,23 @@ export const usage = pgTable(
     index("usage_created_at_idx").on(table.createdAt),
   ]
 );
+
+export const dataExports = pgTable(
+  "data_exports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userStats.id),
+    createdAt: timestampTzNow("created_at"),
+    expiresAt: timestampTz("expires_at").notNull(),
+    chatCount: integer("chat_count").notNull(),
+    fileCount: integer("file_count").notNull(),
+    fileSizeBytes: integer("file_size_bytes").notNull(),
+    filename: text("filename").notNull(),
+  },
+  (table) => [
+    index("data_exports_user_id_idx").on(table.userId, table.createdAt),
+    index("data_exports_expires_at_idx").on(table.expiresAt),
+  ]
+);

@@ -20,6 +20,8 @@
 
 ## Improvements
 
+- [ ] Instructions list with toggle
+- [ ] Preferences: enter / shift-enter to send
 - [x] Add Terms of Use
 - [x] Translate Privacy Policy and Terms of Use
 - [x] Sending an empty message with attachments should be possible
