@@ -17,6 +17,7 @@ import {
   useChatActions,
   type UseChatActionsResult,
 } from "@/hooks/use-chat-actions";
+import { useNewChatHandler } from "@/hooks/use-new-chat-handler";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import type { ProjectConfig } from "@/store/projects";
 import {
@@ -57,12 +58,13 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   projects,
 }) => {
   const t = useTranslations("ThreadListItem");
-  const [isArchiving, setIsArchiving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [pendingProjectId, setPendingProjectId] = useState<string | null>(null);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [error, setError] = useState<string>();
   const setUiState = useUIStateSetter();
-  const { archiveChat, moveChat } = useChatActions();
+  const { deleteChat, moveChat } = useChatActions();
+  const startNewChat = useNewChatHandler();
 
   const isMovePending = movePendingChatId === chatId;
   const activeMoveTarget = isMovePending ? movePendingProjectId : null;
@@ -79,12 +81,11 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
     }
   };
 
-  const handleArchive = (event: React.MouseEvent) => {
+  const handleDelete = (event: React.MouseEvent) => {
     event.stopPropagation();
-    setIsArchiving(true);
-    void archiveChat(chatId).finally(() => {
-      setIsArchiving(false);
-    });
+    setIsDeleting(true);
+    void deleteChat(chatId).finally(() => setIsDeleting(false));
+    startNewChat({ projectId });
   };
 
   const handleRename = (event: React.MouseEvent) => {
@@ -215,8 +216,8 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={handleArchive} disabled={isArchiving}>
-            {isArchiving ? (
+          <DropdownMenuItem onClick={handleDelete} disabled={isDeleting}>
+            {isDeleting ? (
               <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <TrashIcon className="mr-2 h-4 w-4" />

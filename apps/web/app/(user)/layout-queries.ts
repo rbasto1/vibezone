@@ -124,8 +124,7 @@ export async function loadProjects(
       chats,
       and(
         eq(chats.projectId, projectsTable.id),
-        isNull(chats.deletedAt),
-        eq(chats.isArchived, false)
+        isNull(chats.deletedAt)
       )
     )
     .where(

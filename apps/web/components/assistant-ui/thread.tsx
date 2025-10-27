@@ -41,7 +41,7 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
       }}
     >
       <ThreadPrimitive.Viewport
-        className="relative flex min-w-0 flex-1 flex-col gap-6 overflow-y-scroll"
+        className="relative flex min-w-0 flex-1 flex-col gap-6 overflow-y-scroll pt-12"
         autoScroll={autoScroll}
       >
         <ThreadIfEmpty empty>

@@ -15,7 +15,7 @@
 - [ ] Reloading chats loses the multiple generations (refreshes)
 - [x] Code blocks rendering as download items
 - [x] PDF attachments not rendering
-- [ ] Deleting a chat that is currently open should start a new chat
+- [x] Deleting a chat that is currently open should start a new chat
 - [x] Kotlin code not rendering
 
 ## Improvements
@@ -30,7 +30,7 @@
 - [x] Attachments should be stored as links to files
 - [x] Allow selection of reasoning effort if any model accepts it
 - [x] Allow pasting attachments with Ctrl-V
-- [ ] Archive vs delete chats
+- [x] Archive vs delete chats
 - [ ] Import chats from OpenAI format
 - [ ] Export chats to OpenAI format
 - [x] Composer text area should grow with text

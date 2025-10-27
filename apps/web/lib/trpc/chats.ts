@@ -146,7 +146,6 @@ export const chatsRouter = t.router({
         where: and(
           eq(chats.id, chatId),
           isNull(chats.deletedAt),
-          eq(chats.isArchived, false),
           isNull(projects.deletedAt)
         ),
         with: {
@@ -185,7 +184,7 @@ export const chatsRouter = t.router({
       return chatRecord;
     }),
 
-  archiveChat: authenticatedProcedure
+  deleteChat: authenticatedProcedure
     .input(
       z.object({
         chatId: z.string(),
@@ -212,10 +211,7 @@ export const chatsRouter = t.router({
 
       await db
         .update(chats)
-        .set({
-          isArchived: true,
-          updatedAt: new Date(),
-        })
+        .set({ deletedAt: new Date() })
         .where(eq(chats.id, chatId));
 
       return { success: true };
@@ -259,7 +255,6 @@ export async function listChats({
         eq(projects.userId, userId),
         isNull(projects.deletedAt),
         isNull(chats.deletedAt),
-        eq(chats.isArchived, false),
         projectId ? eq(chats.projectId, projectId) : undefined,
         cursorDate
           ? cursorId
