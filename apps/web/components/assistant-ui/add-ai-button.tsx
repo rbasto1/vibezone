@@ -98,7 +98,7 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
             type="button"
             onClick={handleTriggerClick}
           >
-            <BotIcon className="h-4 w-4 stroke-[var(--matrix-green)]" />
+            <BotIcon className="h-4 w-4" />
             <span className="sr-only">{addButtonLabel}</span>
           </Button>
         </TooltipTrigger>

@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
+import { useCurrentChatValue } from "@/hooks/use-chat";
 import {
   useChatActions,
   type UseChatActionsResult,
@@ -64,6 +65,7 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   const [error, setError] = useState<string>();
   const setUiState = useUIStateSetter();
   const { deleteChat, moveChat } = useChatActions();
+  const currentChat = useCurrentChatValue();
   const startNewChat = useNewChatHandler();
 
   const isMovePending = movePendingChatId === chatId;
@@ -84,8 +86,10 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
   const handleDelete = (event: React.MouseEvent) => {
     event.stopPropagation();
     setIsDeleting(true);
+    if (currentChat?.id === chatId) {
+      startNewChat({ projectId });
+    }
     void deleteChat(chatId).finally(() => setIsDeleting(false));
-    startNewChat({ projectId });
   };
 
   const handleRename = (event: React.MouseEvent) => {

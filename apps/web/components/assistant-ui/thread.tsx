@@ -50,11 +50,9 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
 
         <ThreadPrimitive.Messages components={threadMessageComponents} />
 
-        {/* Show error message if there's an error */}
         {error && <ThreadError error={error} />}
 
         <ThreadIfEmpty empty={false}>
-          {/* aui-thread-viewport-spacer */}
           <motion.div className="min-h-6 min-w-6 shrink-0" />
         </ThreadIfEmpty>
 
