@@ -264,7 +264,6 @@ export const chats = pgTable("chats", {
     .notNull()
     .references(() => projects.id),
   title: text("title").notNull(),
-  isArchived: boolean("is_archived").notNull().default(false),
   lastMessageAt: timestampTz("last_message_at").notNull(),
   createdAt: timestampTzNow("created_at"),
   updatedAt: timestampTzNowUpdated("updated_at"),

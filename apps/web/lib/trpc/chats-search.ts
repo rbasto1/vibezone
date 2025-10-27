@@ -57,7 +57,6 @@ export async function searchChats({
     eq(projects.userId, userId),
     isNull(projects.deletedAt),
     isNull(chats.deletedAt),
-    eq(chats.isArchived, false),
     or(
       ilike(chats.title, searchPattern),
       sql<boolean>`EXISTS (

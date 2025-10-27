@@ -91,8 +91,7 @@ export const usersRouter = t.router({
         and(
           eq(chats.projectId, projects.id),
           gte(chats.lastMessageAt, lastSevenDays),
-          isNull(chats.deletedAt),
-          eq(chats.isArchived, false)
+          isNull(chats.deletedAt)
         )
       )
       .leftJoin(

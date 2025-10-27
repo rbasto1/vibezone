@@ -196,23 +196,34 @@ export const useChatActions = () => {
     [utils, optimisticallyRenameChat, queryClient]
   );
 
-  const archiveChat = useCallback(
-    (chatId: string) => {
+  const deleteChat = useCallback(
+    (chatId: string): Promise<UseChatActionsResult> => {
       const queries = optimisticallyHideChat(chatId);
-      return utils.client.chats.archiveChat
+      return utils.client.chats.deleteChat
         .mutate({ chatId })
+        .then((response) => {
+          if (!response.success) {
+            const message = response.message ?? "Please try again in a moment.";
+            toast.error(`Failed to delete chat: ${message}`);
+            for (const [queryKey, data] of queries) {
+              queryClient.setQueryData(queryKey, data);
+            }
+            return { success: false, error: message } as const;
+          }
+          return { success: true, error: undefined } as const;
+        })
         .catch((error) => {
-          console.error("Failed to archive chat:", error);
+          console.error("Failed to delete chat:", error);
           const message =
             error instanceof Error ? error.message : JSON.stringify(error);
-          toast.error(`Failed to archive chat: ${message}`);
-
+          toast.error(`Failed to delete chat: ${message}`);
           for (const [queryKey, data] of queries) {
             queryClient.setQueryData(queryKey, data);
           }
+          return { success: false, error: message } as const;
         });
     },
-    [utils, optimisticallyHideChat, queryClient]
+    [optimisticallyHideChat, queryClient, utils]
   );
 
   const moveChat = useCallback(
@@ -239,7 +250,7 @@ export const useChatActions = () => {
   return {
     loadChatById,
     renameChat,
-    archiveChat,
+    deleteChat,
     moveChat,
   };
 };

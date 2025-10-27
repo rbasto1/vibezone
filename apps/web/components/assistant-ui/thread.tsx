@@ -41,7 +41,7 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
       }}
     >
       <ThreadPrimitive.Viewport
-        className="relative flex min-w-0 flex-1 flex-col gap-6 overflow-y-scroll"
+        className="relative flex min-w-0 flex-1 flex-col gap-6 overflow-y-scroll pt-12"
         autoScroll={autoScroll}
       >
         <ThreadIfEmpty empty>
@@ -50,11 +50,9 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
 
         <ThreadPrimitive.Messages components={threadMessageComponents} />
 
-        {/* Show error message if there's an error */}
         {error && <ThreadError error={error} />}
 
         <ThreadIfEmpty empty={false}>
-          {/* aui-thread-viewport-spacer */}
           <motion.div className="min-h-6 min-w-6 shrink-0" />
         </ThreadIfEmpty>
 
