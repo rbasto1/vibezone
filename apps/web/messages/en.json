@@ -357,38 +357,39 @@
     "signOut": "Sign out"
   },
   "UserPreferences": {
-  "title": "Preferences",
-  "description": "Customize how {siteName} behaves for you.",
-  "tabs": {
-    "general": "General",
-    "instructions": "Instructions",
-    "providers": "Providers",
-    "myData": "My data"
-  },
-  "myData": {
-    "description": "Request export files or import data directly into {siteName}.",
-    "import": {
-      "button": "Import data",
-      "title": "Import data",
-      "instructions": "Select an OpenAI-compatible export (.zip) to import your chats into {siteName}. If you're exporting from ChatGPT, generate this file under Settings > Data controls > Export Data.",
-      "selectFile": "Select a .zip file",
-      "submit": "Start import",
-      "inProgress": "Importing…",
-      "success": "Import finished. Your chats are ready.",
-      "error": "Import failed: {message}",
-      "done": "Close"
+    "title": "Preferences",
+    "description": "Customize how {siteName} behaves for you.",
+    "tabs": {
+      "general": "General",
+      "instructions": "Instructions",
+      "providers": "Providers",
+      "myData": "My data"
     },
-    "export": {
-      "button": "Export data",
-      "title": "Request data export",
-      "instructions": "Your account details and chats will be included in the export. The data will be sent to your registered email in a downloadable file. The download link will expire 24 hours after you receive it. Processing may take some time. To proceed, click \"Confirm export\" below.",
-      "cancel": "Cancel",
-      "submit": "Confirm export",
-      "inProgress": "Preparing…",
-      "success": "We’ll email your export once it’s ready.",
-      "error": "Export request failed: {message}"
-    }
-  },
+    "myData": {
+      "description": "Request export files or import data directly into {siteName}.",
+      "import": {
+        "button": "Import data",
+        "title": "Import data",
+        "instructions": "Select an OpenAI-compatible export (.zip) to import your chats into {siteName}. If you're exporting from ChatGPT, generate this file under Settings > Data controls > Export Data.",
+        "selectFile": "Select a .zip file",
+        "submit": "Start import",
+        "uploading": "Uploading file…",
+        "inProgress": "Importing…",
+        "success": "Import finished. Your chats are ready.",
+        "error": "Import failed: {message}",
+        "done": "Close"
+      },
+      "export": {
+        "button": "Export data",
+        "title": "Request data export",
+        "instructions": "Your account details and chats will be included in the export. The data will be sent to your registered email in a downloadable file. The download link will expire 24 hours after you receive it. Processing may take some time. To proceed, click \"Confirm export\" below.",
+        "cancel": "Cancel",
+        "submit": "Confirm export",
+        "inProgress": "Preparing…",
+        "success": "We’ll email your export once it’s ready.",
+        "error": "Export request failed: {message}"
+      }
+    },
     "autoScroll": {
       "label": "Auto-scroll",
       "description": "Automatically keep the conversation at the latest reply."

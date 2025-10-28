@@ -357,38 +357,39 @@
     "signOut": "Abmelden"
   },
   "UserPreferences": {
-  "title": "Einstellungen",
-  "description": "Passe an, wie sich {siteName} für dich verhält.",
-  "tabs": {
-    "general": "Allgemein",
-    "instructions": "Anweisungen",
-    "providers": "Anbieter",
-    "myData": "Meine Daten"
-  },
-  "myData": {
-    "description": "Fordere Exporte an oder importiere Daten direkt in {siteName}.",
-    "import": {
-      "button": "Daten importieren",
-      "title": "Daten importieren",
-      "instructions": "Wähle einen OpenAI-kompatiblen Export (.zip), um deine Unterhaltungen in {siteName} zu importieren. Wenn du aus ChatGPT exportierst, erstelle diese Datei unter Einstellungen > Datenkontrollen > Daten exportieren.",
-      "selectFile": "Wähle eine .zip-Datei",
-      "submit": "Import starten",
-      "inProgress": "Import läuft …",
-      "success": "Import abgeschlossen. Deine Chats sind verfügbar.",
-      "error": "Import fehlgeschlagen: {message}",
-      "done": "Schließen"
+    "title": "Einstellungen",
+    "description": "Passe an, wie sich {siteName} für dich verhält.",
+    "tabs": {
+      "general": "Allgemein",
+      "instructions": "Anweisungen",
+      "providers": "Anbieter",
+      "myData": "Meine Daten"
     },
-    "export": {
-      "button": "Daten exportieren",
-      "title": "Datenexport anfordern",
-      "instructions": "Deine Kontodaten und Chats werden in den Export aufgenommen. Die Daten werden an deine registrierte E-Mail-Adresse als downloadbare Datei gesendet. Der Download-Link läuft 24 Stunden nach Erhalt ab. Die Verarbeitung kann etwas dauern. Klicke unten auf „Export bestätigen“, um fortzufahren.",
-      "cancel": "Abbrechen",
-      "submit": "Export bestätigen",
-      "inProgress": "Wird vorbereitet …",
-      "success": "Wir senden dir den Export per E-Mail, sobald er bereit ist.",
-      "error": "Exportanfrage fehlgeschlagen: {message}"
-    }
-  },
+    "myData": {
+      "description": "Fordere Exporte an oder importiere Daten direkt in {siteName}.",
+      "import": {
+        "button": "Daten importieren",
+        "title": "Daten importieren",
+        "instructions": "Wähle einen OpenAI-kompatiblen Export (.zip), um deine Unterhaltungen in {siteName} zu importieren. Wenn du aus ChatGPT exportierst, erstelle diese Datei unter Einstellungen > Datenkontrollen > Daten exportieren.",
+        "selectFile": "Wähle eine .zip-Datei",
+        "submit": "Import starten",
+        "uploading": "Datei wird hochgeladen …",
+        "inProgress": "Import läuft …",
+        "success": "Import abgeschlossen. Deine Chats sind verfügbar.",
+        "error": "Import fehlgeschlagen: {message}",
+        "done": "Schließen"
+      },
+      "export": {
+        "button": "Daten exportieren",
+        "title": "Datenexport anfordern",
+        "instructions": "Deine Kontodaten und Chats werden in den Export aufgenommen. Die Daten werden an deine registrierte E-Mail-Adresse als downloadbare Datei gesendet. Der Download-Link läuft 24 Stunden nach Erhalt ab. Die Verarbeitung kann etwas dauern. Klicke unten auf „Export bestätigen“, um fortzufahren.",
+        "cancel": "Abbrechen",
+        "submit": "Export bestätigen",
+        "inProgress": "Wird vorbereitet …",
+        "success": "Wir senden dir den Export per E-Mail, sobald er bereit ist.",
+        "error": "Exportanfrage fehlgeschlagen: {message}"
+      }
+    },
     "autoScroll": {
       "label": "Automatisches Scrollen",
       "description": "Hält den Chat automatisch bei der neuesten Antwort."
