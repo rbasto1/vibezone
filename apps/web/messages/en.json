@@ -382,12 +382,28 @@
       "export": {
         "button": "Export data",
         "title": "Request data export",
-        "instructions": "Your account details and chats will be included in the export. The data will be sent to your registered email in a downloadable file. The download link will expire 24 hours after you receive it. Processing may take some time. To proceed, click \"Confirm export\" below.",
+        "instructions": "Your account details and chats will be included in the export. The data will be sent to your registered email in a downloadable file. The download link will expire 24 hours after you receive it. Processing may take some time.",
+        "modalHint": "To proceed, click \"Confirm export\" below.",
         "cancel": "Cancel",
         "submit": "Confirm export",
         "inProgress": "Preparing…",
         "success": "We’ll email your export once it’s ready.",
         "error": "Export request failed: {message}"
+      },
+      "delete": {
+        "title": "Delete all chat data",
+        "description": "Remove every chat from your account. Export your data first if you need a copy.",
+        "button": "Delete all my chat data",
+        "modal": {
+          "title": "Delete all chat data?",
+          "description": "This action removes every chat associated with your account. It cannot be undone. Make sure you have exported a copy if you still need your chat history.",
+          "confirm": "Yes, delete everything",
+          "cancel": "Cancel",
+          "inProgress": "Deleting…",
+          "success": "All chats have been deleted.",
+          "error": "Failed to delete chats: {message}",
+          "genericError": "Unexpected error, please try again."
+        }
       }
     },
     "autoScroll": {

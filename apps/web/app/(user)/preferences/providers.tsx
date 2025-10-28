@@ -102,7 +102,7 @@ export const PreferencesProvidersTab: FC<PreferencesProvidersTabProps> = ({
               onChange={(event) => setProviderInput(event.target.value)}
               placeholder={t("hiddenProviders.placeholder")}
             />
-            <div className="max-h-56 overflow-y-auto border-t">
+            <div className="max-h-106 overflow-y-auto border-t">
               {matchingProviders.length ? (
                 <div className="grid divide-y divide-border/60 md:grid-cols-2 md:divide-y-0 md:divide-x lg:grid-cols-4">
                   {matchingProviders.map((provider) => (

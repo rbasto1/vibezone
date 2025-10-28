@@ -73,8 +73,9 @@ export const PreferencesDataExportModal = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("myData.export.title")}</DialogTitle>
-          <DialogDescription>
-            {t("myData.export.instructions", { siteName })}
+          <DialogDescription className="space-y-2">
+            <p>{t("myData.export.instructions", { siteName })}</p>
+            <p>{t("myData.export.modalHint")}</p>
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">

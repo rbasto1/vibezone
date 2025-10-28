@@ -976,6 +976,8 @@ async function insertChatsInBatches(
           set: {
             title: sql`excluded.title`,
             lastMessageAt: sql`excluded.last_message_at`,
+            deletedAt: null,
+            projectId: records[0]?.projectId, // all chats are imported into the default project
           },
         }),
   });

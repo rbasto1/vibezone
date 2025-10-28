@@ -7,7 +7,6 @@ import { Suspense, type PropsWithChildren } from "react";
 
 import { WhatsNewModal } from "@/components/news/whats-new-modal";
 import { StoreProvider } from "@/components/providers/store-provider";
-import { Toaster } from "@/components/providers/toast-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { models as modelsList } from "@/generated/models";
 import { generateThreadId } from "@/lib/id";
@@ -47,7 +46,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const { lastModels, hiddenProviders } = await GetUserModels(userId);
 
   const t = await tPromise;
-  await ensureGeneralProject(userId, t("generalProjectName"));
+  await ensureGeneralProject(authUser, t("generalProjectName"));
 
   const projectsInitialValuePromise = loadProjects(userId);
 
@@ -130,7 +129,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
             />
           </TooltipProvider>
         </StoreProvider>
-        <Toaster />
       </HydrationBoundary>
     </Suspense>
   );

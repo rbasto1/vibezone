@@ -11,10 +11,17 @@ import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { siteName } from "@/lib/branding";
 import { trpc } from "@/lib/trpc/client";
+import {
+  Building2Icon,
+  DatabaseBackupIcon,
+  ScrollTextIcon,
+  Settings2Icon,
+} from "lucide-react";
 import { PreferencesDataTab } from "./data";
 import type { ReasoningEffortValue } from "./general";
 import { PreferencesGeneralTab } from "./general";
 import { PreferencesInstructionsTab } from "./instructions";
+import { PreferencesProvidersTab } from "./providers";
 
 const normalizeReasoningEffort = (
   effort: ReasoningEffort
@@ -137,17 +144,33 @@ const PreferencesPage = () => {
       <Tabs defaultValue="general" className="flex flex-col gap-6">
         <TabsList className="border-b border-border flex w-full gap-6 rounded-none bg-transparent p-0">
           {[
-            { value: "general", label: t("tabs.general") },
-            { value: "instructions", label: t("tabs.instructions") },
-            { value: "providers", label: t("tabs.providers") },
-            { value: "my-data", label: t("tabs.myData") },
+            {
+              value: "general",
+              label: t("tabs.general"),
+              Icon: <Settings2Icon />,
+            },
+            {
+              value: "instructions",
+              label: t("tabs.instructions"),
+              Icon: <ScrollTextIcon />,
+            },
+            {
+              value: "providers",
+              label: t("tabs.providers"),
+              Icon: <Building2Icon />,
+            },
+            {
+              value: "my-data",
+              label: t("tabs.myData"),
+              Icon: <DatabaseBackupIcon />,
+            },
           ].map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
               className="rounded-none border-none bg-transparent px-0 pb-2 text-sm font-medium text-muted-foreground transition-colors data-[state=active]:border-b-2 data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
             >
-              {tab.label}
+              {tab.Icon} {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -159,6 +182,11 @@ const PreferencesPage = () => {
           setWebSearch={setWebSearch}
           reasoningEffort={reasoningEffort}
           setReasoningEffort={setReasoningEffort}
+        />
+
+        <PreferencesProvidersTab
+          hiddenProviders={hiddenProviders}
+          setHiddenProviders={setHiddenProviders}
         />
 
         <PreferencesInstructionsTab

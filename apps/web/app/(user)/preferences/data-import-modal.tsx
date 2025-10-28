@@ -196,12 +196,13 @@ export const PreferencesDataImportModal = ({
         <div className="space-y-3">
           <label
             htmlFor="preferences-import-file"
-            className="text-sm font-medium text-foreground"
+            className="text-sm font-medium text-foreground cursor-pointer"
           >
             {t("myData.import.selectFile")}
           </label>
           <Input
             id="preferences-import-file"
+            className="cursor-pointer"
             type="file"
             accept=".zip"
             onChange={(event) =>

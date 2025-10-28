@@ -382,12 +382,28 @@
       "export": {
         "button": "Exportar dados",
         "title": "Solicitar exportação de dados",
-        "instructions": "Os detalhes da sua conta e os chats serão incluídos na exportação. O arquivo será enviado para o seu e-mail cadastrado. O link de download expira 24 horas após o recebimento. O processamento pode levar algum tempo. Para continuar, clique em \"Confirmar exportação\" abaixo.",
+        "instructions": "Os detalhes da sua conta e os chats serão incluídos na exportação. O arquivo será enviado para o seu e-mail cadastrado. O link de download expira 24 horas após o recebimento. O processamento pode levar algum tempo.",
+        "modalHint": "Para continuar, clique em \"Confirmar exportação\" abaixo.",
         "cancel": "Cancelar",
         "submit": "Confirmar exportação",
         "inProgress": "Preparando…",
         "success": "Vamos enviar sua exportação por e-mail assim que estiver pronta.",
         "error": "Falha ao solicitar exportação: {message}"
+      },
+      "delete": {
+        "title": "Excluir todos os dados de chat",
+        "description": "Remove todas as conversas da sua conta. Exporte seus dados antes se precisar de uma cópia.",
+        "button": "Excluir todos os meus dados de chat",
+        "modal": {
+          "title": "Excluir todos os dados de chat?",
+          "description": "Essa ação remove todas as conversas associadas à sua conta. Não é possível desfazer. Certifique-se de ter exportado uma cópia caso ainda precise do histórico.",
+          "confirm": "Sim, excluir tudo",
+          "cancel": "Cancelar",
+          "inProgress": "Excluindo…",
+          "success": "Todos os chats foram excluídos.",
+          "error": "Falha ao excluir os chats: {message}",
+          "genericError": "Erro inesperado, tente novamente."
+        }
       }
     },
     "autoScroll": {

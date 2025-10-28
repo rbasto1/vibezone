@@ -11,6 +11,7 @@ import {
   newsArticles,
   preferences as preferencesTable,
   projects as projectsTable,
+  userStats as userStatsTable,
 } from "@/db/schema";
 import { models as modelsList } from "@/generated/models";
 import {
@@ -20,6 +21,7 @@ import {
 } from "@/lib/constants";
 import type { ProjectConfig } from "@/store/projects";
 import type { ThreadMessageLike } from "@assistant-ui/react";
+import type { User } from "@clerk/nextjs/server";
 
 export async function GetUserModels(userId: string | undefined) {
   let lastModels: string[] = [];
@@ -122,10 +124,7 @@ export async function loadProjects(
     .from(projectsTable)
     .leftJoin(
       chats,
-      and(
-        eq(chats.projectId, projectsTable.id),
-        isNull(chats.deletedAt)
-      )
+      and(eq(chats.projectId, projectsTable.id), isNull(chats.deletedAt))
     )
     .where(
       and(eq(projectsTable.userId, userId), isNull(projectsTable.deletedAt))
@@ -167,20 +166,47 @@ export async function ensurePreferences(userId: string | null | undefined) {
 }
 
 export async function ensureGeneralProject(
-  userId: string | null | undefined,
+  user: User | undefined | null,
   generalProjectName: string
-) {
-  if (!userId) return null;
+): Promise<void> {
+  if (!user) return;
+  const userId = user.id;
 
   const existing = await db.query.projects.findFirst({
-    where: eq(projectsTable.id, userId),
+    columns: {
+      id: true,
+    },
+    where: and(eq(projectsTable.id, userId), isNull(projectsTable.deletedAt)),
   });
 
-  if (existing && !existing.deletedAt) {
-    return existing;
+  if (existing) {
+    return;
   }
 
-  const [project] = await db
+  const email = user.emailAddresses[0]?.emailAddress;
+  if (!email) {
+    console.error("User logged in without email", user);
+    return;
+  }
+  await db
+    .insert(userStatsTable)
+    .values({
+      id: userId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email,
+      createdAt: new Date(user.createdAt),
+      lastSignInAt: new Date(),
+      lastActiveAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: userStatsTable.id,
+      set: {
+        lastActiveAt: new Date(),
+      },
+    });
+
+  await db
     .insert(projectsTable)
     .values({
       id: userId,
@@ -195,14 +221,9 @@ export async function ensureGeneralProject(
       target: projectsTable.id,
       set: {
         name: generalProjectName,
-        color: DEFAULT_PROJECT_COLOR,
         deletedAt: null,
-        updatedAt: new Date(),
       },
-    })
-    .returning();
-
-  return project ?? null;
+    });
 }
 
 export async function getRecentNews(
