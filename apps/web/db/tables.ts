@@ -27,7 +27,7 @@ export const userStats = pgTable("user_stats", {
   id: text("id").primaryKey(),
   firstName: text("first_name"),
   lastName: text("last_name"),
-  email: text("email").notNull().unique(),
+  email: text("email").notNull(),
   imageUrl: text("image_url"),
 
   createdAt: timestampTz("created_at").notNull(),
