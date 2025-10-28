@@ -87,7 +87,7 @@ export const SyntaxHighlighter: FC<SyntaxHighlighterProps> = ({
         className
       )}
     >
-      {code.trim()}
+      {code}
     </ShikiHighlighter>
   );
 };

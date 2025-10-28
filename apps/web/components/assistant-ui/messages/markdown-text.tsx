@@ -1,6 +1,12 @@
 "use client";
 
 import type { CodeHeaderProps } from "@assistant-ui/react-markdown";
+import {
+  MarkdownTextPrimitive,
+  unstable_memoizeMarkdownComponents as memoizeMarkdownComponents,
+  useIsMarkdownCodeBlock,
+} from "@assistant-ui/react-markdown";
+import "@assistant-ui/react-markdown/styles/dot.css";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import type { FC } from "react";
 import { memo, useState } from "react";
@@ -10,12 +16,6 @@ import remarkMath from "remark-math";
 
 import { TooltipIconButton } from "@/components/assistant-ui/messages/tooltip-icon-button";
 import { cn } from "@/components/ui/utils";
-import {
-  MarkdownTextPrimitive,
-  unstable_memoizeMarkdownComponents as memoizeMarkdownComponents,
-  useIsMarkdownCodeBlock,
-} from "@assistant-ui/react-markdown";
-import "@assistant-ui/react-markdown/styles/dot.css";
 import { SyntaxHighlighter } from "../shiki-highlighter";
 
 const MarkdownTextImpl = () => {
@@ -23,7 +23,7 @@ const MarkdownTextImpl = () => {
     <MarkdownTextPrimitive
       remarkPlugins={[remarkGfm, remarkMath]}
       rehypePlugins={[rehypeKatex]}
-      className="aui-md"
+      className="aui-md max-w-[var(--thread-max-width)]"
       preprocess={normalizeCustomMathTags}
       components={defaultComponents}
     />
