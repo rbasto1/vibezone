@@ -59,8 +59,6 @@ interface DbThreadWithMessages extends Thread {
       | "attachments"
       | "metadata"
       | "status"
-      | "parentId"
-      | "branchNumber"
       | "createdAt"
     >
   >;
@@ -225,8 +223,6 @@ async function loadThreadsForUser(userId: string) {
               attachments: true,
               metadata: true,
               status: true,
-              parentId: true,
-              branchNumber: true,
               createdAt: true,
             },
             orderBy: [asc(messages.createdAt)],

@@ -35,8 +35,8 @@
 - [x] Allow selection of reasoning effort if any model accepts it
 - [x] Allow pasting attachments with Ctrl-V
 - [x] Archive vs delete chats
-- [ ] Import chats from OpenAI format
-- [ ] Export chats to OpenAI format
+- [x] Import chats from OpenAI format
+- [x] Export chats to OpenAI format
 - [x] Composer text area should grow with text
 - [ ] Add analytics (Posthog?)
 - [x] Projects (group threads) - paying only
@@ -49,6 +49,7 @@
 - [x] Schedule daily usage calculation
 - [x] Use `useMessage` for saving messages instead of thread message list
 - [ ] Add cleanup of attachments never sent or older than 30 days for free users
+- [ ] Importing same OpenAI history for different users will create conflicts with IDs
 
 ## MVP (done)
 
