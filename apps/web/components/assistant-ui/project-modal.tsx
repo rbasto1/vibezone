@@ -1,7 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState, type FC } from "react";
+import { useMemo, useState, type FC } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,11 +15,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/components/ui/utils";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { PROJECT_COLOR_PRESETS } from "@/constants/projects";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProjectActions } from "@/hooks/use-project-actions";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
+import {
+  useInstructionsSetter,
+  useInstructionsValue,
+} from "@/hooks/use-instructions";
 import type { ProjectConfig } from "@/store/projects";
+import { trpc } from "@/lib/trpc/client";
+import { useTranslations as useGlobalTranslations } from "next-intl";
 
 interface ProjectModalProps {
   mode: "create" | "edit";
@@ -28,16 +36,20 @@ interface ProjectModalProps {
 export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
   const t = useTranslations("ProjectModal");
   const tColors = useTranslations("ProjectModal.colors");
+  const tInstructions = useGlobalTranslations("ProjectModal.instructions");
   const isMobile = useIsMobile();
   const [name, setName] = useState(project?.name ?? "");
   const [color, setColor] = useState(
     project?.color ?? PROJECT_COLOR_PRESETS[0]
   );
-  const [instructions, setInstructions] = useState(project?.instructions ?? "");
   const [error, setError] = useState<string | null>(null);
   const setUIState = useUIStateSetter();
   const { createProject, updateProject } = useProjectActions();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const setInstructionEntries = useInstructionsSetter();
+  const instructionsValue = useInstructionsValue();
+  const toggleInstruction = trpc.instructions.setActive.useMutation();
+  const [pendingToggleId, setPendingToggleId] = useState<string | null>(null);
 
   const isEdit = mode === "edit";
   if (isEdit && !project) throw new Error("Invalid to edit project");
@@ -54,15 +66,11 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
     }
 
     setError(null);
-    const trimmedInstructions =
-      instructions.trim().length > 0 ? instructions.trim() : null;
-
     setIsSubmitting(true);
     if (project) {
       void updateProject(project.id, {
         name: trimmedName,
         color,
-        instructions: trimmedInstructions,
       })
         .then(handleClose)
         .catch((submitError) => {
@@ -78,7 +86,6 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
       void createProject({
         name: trimmedName,
         color,
-        instructions: trimmedInstructions,
       })
         .then(handleClose)
         .catch((submitError) => {
@@ -91,6 +98,41 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
         })
         .finally(() => setIsSubmitting(false));
     }
+  };
+
+  const projectInstructions = useMemo(() => {
+    if (!project) return [];
+    return instructionsValue
+      .filter((instruction) => instruction.projectId === project.id)
+      .sort((a, b) => a.order - b.order);
+  }, [instructionsValue, project]);
+
+  const handleInstructionToggle = (instructionId: string, next: boolean) => {
+    setPendingToggleId(instructionId);
+    setInstructionEntries((current) =>
+      current.map((item) =>
+        item.id === instructionId ? { ...item, isActive: next } : item
+      )
+    );
+
+    toggleInstruction.mutate(
+      { id: instructionId, isActive: next },
+      {
+        onError: (error: unknown) => {
+          const message =
+            error instanceof Error
+              ? error.message
+              : tInstructions("errors.toggle");
+          toast.error(message);
+          setInstructionEntries((current) =>
+            current.map((item) =>
+              item.id === instructionId ? { ...item, isActive: !next } : item
+            )
+          );
+        },
+        onSettled: () => setPendingToggleId(null),
+      }
+    );
   };
 
   return (
@@ -144,25 +186,48 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label
-                className="text-sm font-medium"
-                htmlFor="project-instructions"
-              >
-                {t("fields.instructions.label")}
-              </label>
-              <textarea
-                id="project-instructions"
-                className="min-h-[160px] w-full rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                value={instructions}
-                onChange={(event) => setInstructions(event.target.value)}
-                placeholder={t("fields.instructions.placeholder")}
-                disabled={isSubmitting}
-                maxLength={20000}
-              />
-              <span className="text-xs text-muted-foreground">
-                {t("fields.instructions.helper")}
-              </span>
+            <div className="flex flex-col gap-3">
+              <div className="space-y-1">
+                <div className="text-sm font-medium">
+                  {tInstructions("title")}
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  {tInstructions("helper")}
+                </p>
+              </div>
+              {projectInstructions.length === 0 ? (
+                <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                  {tInstructions("empty")}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {projectInstructions.map((instruction) => (
+                    <div
+                      key={instruction.id}
+                      className="flex items-center justify-between gap-2 rounded-md border bg-background px-3 py-2"
+                    >
+                      <div>
+                        <div className="text-sm font-medium">
+                          {instruction.title}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {instruction.content}
+                        </p>
+                      </div>
+                      <ToggleSwitch
+                        checked={instruction.isActive}
+                        onChange={(checked) =>
+                          handleInstructionToggle(instruction.id, checked)
+                        }
+                        disabled={
+                          pendingToggleId === instruction.id || isSubmitting
+                        }
+                        label={tInstructions("toggleLabel")}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             {error && (
               <div className="rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-sm text-destructive">

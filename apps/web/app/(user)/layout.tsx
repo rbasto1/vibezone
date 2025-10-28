@@ -10,6 +10,7 @@ import { StoreProvider } from "@/components/providers/store-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { models as modelsList } from "@/generated/models";
 import { generateThreadId } from "@/lib/id";
+import { composeInstructionPrompt } from "@/lib/instructions";
 import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
 import type { PanelConfig } from "@/store/panels";
 import type { PreferencesAtom } from "@/store/preferences";
@@ -21,6 +22,7 @@ import {
   getDefaultModels,
   getRecentNews,
   getUserPreferredModels,
+  loadInstructions,
   loadProjects,
 } from "./layout-queries";
 import { PageLoader } from "./page-loader";
@@ -49,15 +51,18 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   await ensureGeneralProject(authUser, t("generalProjectName"));
 
   const projectsInitialValuePromise = loadProjects(userId);
+  const instructionsInitialValuePromise = loadInstructions(userId);
 
-  const [preferences, locale, projectsInitialValue] = await Promise.all([
-    preferencesPromise,
-    localePromise,
-    projectsInitialValuePromise,
-  ]);
+  const [preferences, locale, projectsInitialValue, instructionsInitialValue] =
+    await Promise.all([
+      preferencesPromise,
+      localePromise,
+      projectsInitialValuePromise,
+      instructionsInitialValuePromise,
+    ]);
   const recentNewsPromise = getRecentNews(preferences?.lastNewsSeenAt, locale);
 
-  const changedPrompt = !!preferences?.preferenceSystemPromptChangedAt;
+  const baseSystemPrompt = t("system");
   const preferencesInitialValue: PreferencesAtom = preferences
     ? {
         pluginWeb: preferences?.preferenceWebSearch,
@@ -66,10 +71,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           | "low"
           | "medium"
           | "high",
-        systemPrompt: changedPrompt
-          ? (preferences?.preferenceSystemPrompt ?? null)
-          : t("system"),
-        changedPrompt,
         autoScroll: preferences?.preferenceAutoScroll,
         hiddenProviders: preferences?.preferenceHiddenProviders ?? [],
         skipCloseThreadConfirmation:
@@ -79,8 +80,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     : {
         pluginWeb: true,
         reasoningEffort: "low",
-        systemPrompt: t("system"),
-        changedPrompt: false,
         autoScroll: false,
         hiddenProviders: [],
         skipCloseThreadConfirmation: false,
@@ -95,15 +94,22 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const fallbackModels = getDefaultModels();
 
   const modelListForPanels = userModelList ?? fallbackModels;
+  const defaultProjectId =
+    projectsInitialValue.find((project) => project.isDefault)?.id ??
+    projectsInitialValue[0]?.id ??
+    null;
+  const initialPrompt = composeInstructionPrompt(
+    baseSystemPrompt,
+    instructionsInitialValue,
+    defaultProjectId
+  );
 
   const initialPanels = modelListForPanels.map(
     (r, order): PanelConfig => ({
       id: generateThreadId(order),
       provider: r.providerId,
       model: r.id,
-      initialMessages: buildInitialMessages(
-        preferencesInitialValue.systemPrompt
-      ),
+      initialMessages: buildInitialMessages(initialPrompt),
     })
   );
 
@@ -120,6 +126,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           panelsInitialValue={initialPanels}
           preferencesInitialValue={preferencesInitialValue}
           projectsInitialValue={projectsInitialValue}
+          instructionsInitialValue={instructionsInitialValue}
         >
           <TooltipProvider>
             {children}

@@ -236,19 +236,23 @@
   },
   "ProjectModal": {
     "createTitle": "Projekt erstellen",
-    "createDescription": "Fasse verwandte Chats zusammen und lege Farbe sowie Anweisungen für das Projekt fest.",
+    "createDescription": "Fasse verwandte Chats zusammen und lege eine Farbe für das Projekt fest.",
     "editTitle": "Projekt bearbeiten",
-    "editDescription": "Aktualisiere den Projektnamen, die Farbe oder die Anweisungen.",
+    "editDescription": "Aktualisiere den Projektnamen oder die Farbe.",
     "fields": {
       "name": {
         "label": "Name",
         "placeholder": "Projektname"
       },
-      "color": "Farbe",
-      "instructions": {
-        "label": "Anweisungen",
-        "placeholder": "Füge optionale projektspezifische Anweisungen hinzu…",
-        "helper": "Diese Anweisungen werden jedem Chat in diesem Projekt mitgegeben."
+      "color": "Farbe"
+    },
+    "instructions": {
+      "title": "Projektanweisungen",
+      "helper": "Verwalte Anweisungen in den Einstellungen. Unten kannst du die projektspezifischen Anweisungen umschalten.",
+      "empty": "Diesem Projekt sind noch keine Anweisungen zugeordnet.",
+      "toggleLabel": "Anweisung umschalten",
+      "errors": {
+        "toggle": "Anweisung konnte nicht aktualisiert werden."
       }
     },
     "errors": {
@@ -438,10 +442,41 @@
       "empty": "Es sind keine Anbieter ausgeblendet.",
       "any": "alle Anbieter"
     },
-    "systemPrompt": {
-      "label": "Standardanweisungen",
-      "description": "Diese Anweisungen werden zu Beginn jeder Unterhaltung gesendet.",
-      "placeholder": "Füge Kontext oder Vorgaben hinzu, die die KI standardmäßig beachten soll."
+    "instructions": {
+      "title": "Anweisungen verwalten",
+      "description": "Erstelle wiederverwendbare Anweisungen, die vor jeder Antwort ausgeführt werden. Weise sie einem Projekt zu oder setze sie global ein.",
+      "form": {
+        "title": {
+          "label": "Titel der Anweisung",
+          "placeholder": "z. B. Freundlicher Ton oder Links einfügen"
+        },
+        "project": {
+          "label": "Gilt für",
+          "placeholder": "Projekt auswählen",
+          "all": "Alle Projekte"
+        },
+        "content": {
+          "label": "Anweisungstext",
+          "placeholder": "Beschreibe die Vorgaben, denen der Assistent folgen soll."
+        },
+        "submit": "Anweisung hinzufügen"
+      },
+      "errors": {
+        "generic": "Etwas ist schiefgelaufen.",
+        "missingFields": "Bitte gib einen Titel und einen Anweisungstext ein."
+      },
+      "toast": {
+        "createError": "Anweisung konnte nicht erstellt werden: {message}",
+        "toggleError": "Anweisung konnte nicht aktualisiert werden: {message}",
+        "deleteError": "Anweisung konnte nicht gelöscht werden: {message}",
+        "reorderError": "Anweisungen konnten nicht neu angeordnet werden: {message}"
+      },
+      "list": {
+        "title": "Vorhandene Anweisungen",
+        "helper": "Zum Neuordnen ziehen. Aktive Anweisungen werden vor jedem Gespräch gesendet.",
+        "empty": "Noch keine Anweisungen vorhanden. Lege oben eine neue an.",
+        "deletedProject": "Projekt nicht mehr verfügbar"
+      }
     },
     "actions": {
       "cancel": "Abbrechen",

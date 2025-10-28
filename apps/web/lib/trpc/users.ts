@@ -268,7 +268,6 @@ export const usersRouter = t.router({
       z.object({
         autoScroll: z.boolean().optional(),
         hiddenProviders: z.array(z.string()).optional(),
-        systemPrompt: z.string().max(4000).nullable().optional(),
         webSearch: z.boolean().optional(),
         reasoningEffort: z.enum(["none", "low", "medium", "high"]).optional(),
         skipCloseThreadConfirmation: z.boolean().optional(),
@@ -314,10 +313,6 @@ export const usersRouter = t.router({
       const updatePayload: Partial<Preferences> = {
         preferenceAutoScroll: input.autoScroll,
         preferenceHiddenProviders: sanitizedHiddenProviders,
-        preferenceSystemPrompt: input.systemPrompt,
-        preferenceSystemPromptChangedAt: input.systemPrompt
-          ? new Date()
-          : undefined,
         preferenceWebSearch: input.webSearch,
         preferenceReasoningEffort: input.reasoningEffort,
         preferenceSkipCloseThreadConfirmation:
@@ -343,7 +338,6 @@ export const usersRouter = t.router({
         preferences: {
           autoScroll: input.autoScroll,
           hiddenProviders: sanitizedHiddenProviders,
-          systemPrompt: input.systemPrompt,
           webSearch: input.webSearch,
           reasoningEffort: input.reasoningEffort,
           skipCloseThreadConfirmation: input.skipCloseThreadConfirmation,

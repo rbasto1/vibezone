@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS projects (
   user_id TEXT NOT NULL REFERENCES user_stats(id),
   name TEXT NOT NULL,
   color TEXT NOT NULL,
-  instructions TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at TIMESTAMPTZ
@@ -14,13 +13,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS projects_user_id_name_unique
   ON projects (user_id, name)
   WHERE deleted_at IS NULL;
 
-INSERT INTO projects (id, user_id, name, color, instructions)
+INSERT INTO projects (id, user_id, name, color)
 SELECT
   us.id,
   us.id,
   'General',
-  '#64748B',
-  NULL
+  '#64748B'
 FROM user_stats AS us
 ON CONFLICT (id) DO NOTHING;
 

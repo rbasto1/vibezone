@@ -41,26 +41,20 @@ const PreferencesPage = () => {
   const initialReasoningEffort = normalizeReasoningEffort(
     preferences.reasoningEffort
   );
-  const initialChangedPrompt = preferences.changedPrompt;
-  const initialSystemPrompt = initialChangedPrompt
-    ? (preferences.systemPrompt ?? "")
-    : "";
 
   const [autoScroll, setAutoScroll] = useState(initialAutoScroll);
   const [webSearch, setWebSearch] = useState(initialWebSearch);
   const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffortValue>(
     initialReasoningEffort
   );
-  const [systemPrompt, setSystemPrompt] = useState(initialSystemPrompt);
 
   useEffect(() => {
     setAutoScroll(preferences.autoScroll);
     setWebSearch(preferences.pluginWeb);
     setReasoningEffort(normalizeReasoningEffort(preferences.reasoningEffort));
-    setSystemPrompt(initialSystemPrompt);
     const initialHidden = new Set(preferences.hiddenProviders ?? []);
     setHiddenProviders(initialHidden);
-  }, [preferences, setUIState, initialSystemPrompt]);
+  }, [preferences, setUIState]);
 
   const currentHiddenProviders = Array.from(hiddenProviders).sort();
   const hasHiddenChanged =
@@ -73,7 +67,6 @@ const PreferencesPage = () => {
     autoScroll !== initialAutoScroll ||
     webSearch !== initialWebSearch ||
     reasoningEffort !== initialReasoningEffort ||
-    systemPrompt !== initialSystemPrompt ||
     hasHiddenChanged;
 
   const updatePreferences = trpc.users.updatePreferences.useMutation({
@@ -86,8 +79,6 @@ const PreferencesPage = () => {
         ...prev,
         pluginWeb: initialWebSearch,
         reasoningEffort: initialReasoningEffort,
-        systemPrompt: initialSystemPrompt,
-        changedPrompt: initialChangedPrompt,
         autoScroll: initialAutoScroll,
         hiddenProviders: initialHiddenProviders,
       }));
@@ -105,15 +96,11 @@ const PreferencesPage = () => {
       webSearch,
       reasoningEffort,
       hiddenProviders: hiddenList,
-      systemPrompt,
     });
     setPreferences((prev) => ({
       ...prev,
       pluginWeb: webSearch,
       reasoningEffort,
-      systemPrompt,
-      changedPrompt:
-        initialChangedPrompt || systemPrompt !== initialSystemPrompt,
       autoScroll,
       hiddenProviders: hiddenList,
     }));
@@ -189,10 +176,7 @@ const PreferencesPage = () => {
           setHiddenProviders={setHiddenProviders}
         />
 
-        <PreferencesInstructionsTab
-          systemPrompt={systemPrompt}
-          setSystemPrompt={setSystemPrompt}
-        />
+        <PreferencesInstructionsTab />
 
         <PreferencesDataTab />
       </Tabs>

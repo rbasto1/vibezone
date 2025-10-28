@@ -49,7 +49,6 @@ export const useUserMessageSaver = () => {
           id: project.id,
           name: project.name,
           color: project.color,
-          instructions: project.instructions,
           isDefault: project.isDefault,
         },
       } satisfies ListChatsOutput["chats"][number];

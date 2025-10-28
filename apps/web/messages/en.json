@@ -236,19 +236,23 @@
   },
   "ProjectModal": {
     "createTitle": "Create project",
-    "createDescription": "Group related chats together and choose a color and instructions for the project.",
+    "createDescription": "Group related chats together and choose a color for the project.",
     "editTitle": "Edit project",
-    "editDescription": "Update the project name, color, or instructions.",
+    "editDescription": "Update the project name or color.",
     "fields": {
       "name": {
         "label": "Name",
         "placeholder": "Project name"
       },
-      "color": "Color",
-      "instructions": {
-        "label": "Instructions",
-        "placeholder": "Add optional project-specific instructions…",
-        "helper": "These instructions are sent with every chat in this project."
+      "color": "Color"
+    },
+    "instructions": {
+      "title": "Project instructions",
+      "helper": "Manage instructions from Preferences. Toggle the project-specific ones below.",
+      "empty": "No instructions are assigned to this project yet.",
+      "toggleLabel": "Toggle instruction",
+      "errors": {
+        "toggle": "Could not update instruction."
       }
     },
     "errors": {
@@ -438,10 +442,41 @@
       "empty": "No providers are hidden yet.",
       "any": "all providers"
     },
-    "systemPrompt": {
-      "label": "Default instructions",
-      "description": "These instructions are sent at the start of every conversation.",
-      "placeholder": "Add any context or instructions you want the AI to follow by default."
+    "instructions": {
+      "title": "Manage instructions",
+      "description": "Create reusable prompts that run before every assistant response. Target them to a project or keep them global.",
+      "form": {
+        "title": {
+          "label": "Instruction title",
+          "placeholder": "e.g. Friendly tone, or Include links"
+        },
+        "project": {
+          "label": "Applies to",
+          "placeholder": "Select a project",
+          "all": "All projects"
+        },
+        "content": {
+          "label": "Instruction details",
+          "placeholder": "Write the guidance you want the assistant to follow."
+        },
+        "submit": "Add instruction"
+      },
+      "errors": {
+        "generic": "Something went wrong.",
+        "missingFields": "Please provide a title and some instruction text."
+      },
+      "toast": {
+        "createError": "Unable to create instruction: {message}",
+        "toggleError": "Unable to update instruction: {message}",
+        "deleteError": "Unable to delete instruction: {message}",
+        "reorderError": "Unable to reorder instructions: {message}"
+      },
+      "list": {
+        "title": "Existing instructions",
+        "helper": "Drag to reorder. Active instructions are sent together before each conversation.",
+        "empty": "No instructions yet. Add one above to get started.",
+        "deletedProject": "Project no longer available"
+      }
     },
     "actions": {
       "cancel": "Cancel",
