@@ -1,9 +1,3 @@
-import {
-  applyUploadMetaToAttachment,
-  type UploadMeta,
-} from "@/lib/attachments/storage";
-import { uploadFiles } from "@/lib/uploadthing/client";
-import { attachmentsAtom } from "@/store/attachments";
 import type {
   Attachment,
   AttachmentAdapter,
@@ -13,10 +7,17 @@ import type {
   PendingAttachment,
 } from "@assistant-ui/react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { ClientUploadedFileData } from "uploadthing/types";
+
+import {
+  applyUploadMetaToAttachment,
+  type UploadMeta,
+} from "@/lib/attachments/storage";
+import { uploadFiles } from "@/lib/uploadthing/client";
+import { attachmentsAtom } from "@/store/attachments";
 
 export const MAX_ATTACHMENTS = 8;
 
@@ -36,7 +37,7 @@ export const useAppendAttachments = () => {
       file: File
     ): UploadMeta | null => {
       const serverData = uploaded.serverData ?? null;
-      const fileUrl = serverData?.fileUrl ?? uploaded.url ?? "";
+      const fileUrl = serverData?.fileUrl ?? uploaded.ufsUrl ?? "";
       if (!fileUrl) return null;
 
       return {

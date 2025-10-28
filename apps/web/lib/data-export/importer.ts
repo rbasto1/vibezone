@@ -1,24 +1,15 @@
-import { randomUUID } from "node:crypto";
-
+import { eq } from "drizzle-orm";
 import JSZip from "jszip";
+import { randomUUID } from "node:crypto";
 import { UTApi } from "uploadthing/server";
 
-import {
-  chats,
-  db,
-  messages,
-  models,
-  projects,
-  threads,
-  type NewMessage,
-} from "@/db";
+import { chats, db, messages, projects, threads, type NewMessage } from "@/db";
+import type { MessageMetadata } from "@/db/json-columns-types";
 import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 import type {
   Conversation,
   ConversationNodeMessageContent,
 } from "@/lib/openai/export-types";
-import type { MessageMetadata } from "@/db/json-columns-types";
-import { and, asc, eq, isNull } from "drizzle-orm";
 
 interface ImportStreamOptions {
   userId: string;
@@ -60,6 +51,18 @@ type MessageContentPart =
 
 type MessageContent = MessageContentPart[];
 
+const openaiSlugToOpenRouterId: Record<string, string> = {
+  "gpt-5": "openai/gpt-5",
+  "gpt-4o-mini": "openai/gpt-4o-mini",
+  "gpt-4o": "openai/gpt-4o",
+  "gpt-4": "openai/gpt-4",
+  "gpt-4o-canmore": "openai/gpt-4o",
+  "o4-mini": "openai/o4-mini",
+  "gpt-5-thinking": "openai/gpt-5",
+  "gpt-4-1": "openai/gpt-4.1",
+};
+const fallbackModelId = "openai/gpt-5";
+
 const encoder = new TextEncoder();
 
 export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
@@ -90,45 +93,29 @@ export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
         const conversationsJson = await conversationsEntry.async("string");
         const conversations: Conversation[] = JSON.parse(conversationsJson);
 
-        const attachmentFiles = zip
-          .file(/^file-/)
+        const attachmentEntries = zip
+          .file(/(^|\/)file-[^/]+$/)
           .filter((entry) => !entry.dir);
 
         const attachments = new Map<string, AttachmentEntry>();
-        for (const entry of attachmentFiles) {
+        for (const entry of attachmentEntries) {
+          const resolved = resolveAttachmentPointer(entry.name);
+          if (!resolved) continue;
+          if (attachments.has(resolved.pointer)) continue;
           const buffer = (await entry.async("nodebuffer")) as Buffer;
-          const pointer = stripExtension(entry.name);
+          const detectedMime = determineMimeFromFilename(resolved.filename);
+          const sanitizedName = sanitizeFileName(
+            resolved.filename || `${resolved.pointer}.bin`
+          );
           const record: AttachmentEntry = {
             buffer,
-            filename: sanitizeFileName(entry.name),
-            mimeType: determineMimeFromFilename(entry.name),
+            filename: sanitizedName,
+            mimeType: detectedMime,
           };
-          attachments.set(pointer, record);
-          const alternate = pointer.includes("-")
-            ? pointer.replace(/-/g, "_")
-            : pointer.replace(/_/g, "-");
-          if (!attachments.has(alternate)) {
-            attachments.set(alternate, record);
-          }
-        }
-        const nestedAttachmentFiles = zip
-          .file(/\/file-[^/]+$/)
-          .filter((entry) => !entry.dir);
-        for (const entry of nestedAttachmentFiles) {
-          const baseName = entry.name.slice(entry.name.lastIndexOf("/") + 1);
-          if (!baseName.startsWith("file-")) continue;
-          const pointer = stripExtension(baseName);
-          if (attachments.has(pointer)) continue;
-          const buffer = (await entry.async("nodebuffer")) as Buffer;
-          const record: AttachmentEntry = {
-            buffer,
-            filename: sanitizeFileName(baseName),
-            mimeType: determineMimeFromFilename(baseName),
-          };
-          attachments.set(pointer, record);
-          const alternate = pointer.includes("-")
-            ? pointer.replace(/-/g, "_")
-            : pointer.replace(/_/g, "-");
+          attachments.set(resolved.pointer, record);
+          const alternate = resolved.pointer.includes("-")
+            ? resolved.pointer.replace(/-/g, "_")
+            : resolved.pointer.replace(/_/g, "-");
           if (!attachments.has(alternate)) {
             attachments.set(alternate, record);
           }
@@ -183,7 +170,6 @@ async function importConversations({
   }
 
   const utapi = new UTApi();
-  const { modelBySlug, fallbackModelId } = await loadModelLookup();
   const projectId = await ensureGeneralProject(userId);
 
   const uploadedAttachments = new Map<string, UploadedAttachment | null>();
@@ -207,8 +193,6 @@ async function importConversations({
         conversation,
         attachments,
         uploadedAttachments,
-        modelBySlug,
-        fallbackModelId,
         utapi,
       });
     } catch (error) {
@@ -227,8 +211,6 @@ async function importConversation({
   conversation,
   attachments,
   uploadedAttachments,
-  modelBySlug,
-  fallbackModelId,
   utapi,
 }: {
   userId: string;
@@ -236,8 +218,6 @@ async function importConversation({
   conversation: Conversation;
   attachments: Map<string, AttachmentEntry>;
   uploadedAttachments: Map<string, UploadedAttachment | null>;
-  modelBySlug: Map<string, string>;
-  fallbackModelId: string;
   utapi: UTApi;
 }) {
   const threadId = conversation.conversation_id ?? conversation.id;
@@ -294,11 +274,7 @@ async function importConversation({
     return null;
   };
 
-  const modelId = selectModelId(
-    conversation.default_model_slug,
-    modelBySlug,
-    fallbackModelId
-  );
+  const modelId = selectModelId(conversation.default_model_slug);
 
   const newMessages: NewMessage[] = [];
   const orderCreated: Date[] = [];
@@ -306,17 +282,34 @@ async function importConversation({
   for (const node of sortedNodes) {
     const message = node.message;
     const messageId = message.id ?? randomUUID();
-    const role = (message.author?.role ?? "assistant") as
-      | "assistant"
-      | "user"
-      | "system";
+    const rawMetadata =
+      message.metadata && typeof message.metadata === "object"
+        ? (message.metadata as Record<string, unknown>)
+        : {};
+    let role: "assistant" | "user" | "system";
+    const authorRole = message.author?.role;
+    if (
+      authorRole === "assistant" ||
+      authorRole === "user" ||
+      authorRole === "system"
+    ) {
+      role = authorRole;
+    } else {
+      role = "assistant";
+    }
+    const forceSystem =
+      rawMetadata["is_user_system_message"] === true ||
+      rawMetadata["is_visually_hidden_from_conversation"] === true;
+    if (forceSystem) {
+      role = "system";
+    }
     const createdAt = message.create_time
       ? new Date(message.create_time * 1000)
-      : new Date();
+      : new Date(0);
 
     const result = await convertConversationContent({
       content: message.content,
-      metadata: message.metadata,
+      metadata: rawMetadata,
       attachments,
       uploadedAttachments,
       utapi,
@@ -422,17 +415,15 @@ async function convertConversationContent({
     };
 
     record["id"] =
-      typeof record["id"] === "string" && record["id"]
-        ? record["id"]
-        : pointer;
+      typeof record["id"] === "string" && record["id"] ? record["id"] : pointer;
     record["name"] =
       typeof record["name"] === "string" && record["name"]
         ? record["name"]
-        : overrideName ?? uploaded.filename;
+        : (overrideName ?? uploaded.filename);
     record["mime_type"] =
       typeof record["mime_type"] === "string" && record["mime_type"]
         ? record["mime_type"]
-        : overrideMime ?? uploaded.mimeType;
+        : (overrideMime ?? uploaded.mimeType);
     const sizeValue = record["size"];
     const resolvedSize =
       typeof sizeValue === "number" && Number.isFinite(sizeValue)
@@ -575,9 +566,7 @@ async function convertConversationContent({
       .join("\n\n");
     appendText(payload);
   } else if (content.content_type === "system_error") {
-    const payload = [content.name, content.text]
-      .filter(Boolean)
-      .join("\n\n");
+    const payload = [content.name, content.text].filter(Boolean).join("\n\n");
     appendText(payload);
   } else if (content.content_type === "reasoning_recap") {
     appendText(content.content);
@@ -817,46 +806,41 @@ async function ensureGeneralProject(userId: string) {
   return userId;
 }
 
-async function loadModelLookup() {
-  const rows = await db
-    .select({
-      id: models.id,
-      canonicalSlug: models.canonicalSlug,
-    })
-    .from(models)
-    .where(and(isNull(models.deletedAt), eq(models.isChat, true)))
-    .orderBy(asc(models.createdAt));
-
-  if (rows.length === 0) {
-    throw new Error("No chat models available to associate imported messages");
-  }
-
-  const modelBySlug = new Map<string, string>();
-  for (const row of rows) {
-    if (row.canonicalSlug) {
-      modelBySlug.set(row.canonicalSlug, row.id);
-    }
-    modelBySlug.set(row.id, row.id);
-  }
-
-  const fallbackModelId = rows[0]!.id;
-  return { modelBySlug, fallbackModelId };
+function selectModelId(slug: string | null): string {
+  if (!slug) return fallbackModelId;
+  return openaiSlugToOpenRouterId[slug] ?? fallbackModelId;
 }
 
-function selectModelId(
-  slug: string | undefined,
-  modelBySlug: Map<string, string>,
-  fallback: string
-) {
-  if (slug) {
-    const candidate = modelBySlug.get(slug);
-    if (candidate) return candidate;
-    const lower = slug.toLowerCase();
-    for (const [key, value] of modelBySlug.entries()) {
-      if (key.toLowerCase() === lower) return value;
-    }
+function resolveAttachmentPointer(entryName: string) {
+  const baseSegment = entryName.slice(entryName.lastIndexOf("/") + 1);
+  if (!baseSegment.length) {
+    return null;
   }
-  return fallback;
+
+  const pointerMatch = /^file-[^-]+/.exec(baseSegment);
+  if (pointerMatch) {
+    const pointer = pointerMatch[0];
+    let remainder = baseSegment.slice(pointer.length);
+    if (remainder.startsWith("-")) {
+      remainder = remainder.slice(1);
+    }
+    if (!remainder.length || remainder.startsWith(".")) {
+      remainder = `${pointer}${remainder}`;
+    }
+    return {
+      pointer,
+      filename: remainder,
+    };
+  }
+
+  const pointer = stripExtension(baseSegment);
+  if (!pointer.length) {
+    return null;
+  }
+  return {
+    pointer,
+    filename: baseSegment,
+  };
 }
 
 function stripExtension(filename: string) {

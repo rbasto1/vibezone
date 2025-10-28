@@ -8,21 +8,21 @@ export interface Conversation {
   current_node: string;
   plugin_ids: null;
   conversation_id: string;
-  conversation_template_id?: string;
-  gizmo_id?: string;
-  gizmo_type?: string;
+  conversation_template_id: string | null;
+  gizmo_id: string | null;
+  gizmo_type: "snorlax" | "gpt" | null;
   is_archived: boolean;
   is_starred: null;
   safe_urls: string[];
   blocked_urls: unknown[];
-  default_model_slug?: string;
+  default_model_slug: string | null;
   conversation_origin: null;
   is_read_only: null;
-  voice?: string;
-  async_status?: number;
+  voice: string | null;
+  async_status: 2 | 4 | null;
   disabled_tool_ids: unknown[];
-  is_do_not_remember?: boolean;
-  memory_scope: string;
+  is_do_not_remember: boolean | null;
+  memory_scope: "global_enabled" | "project_enabled";
   context_scopes: null;
   sugar_item_id: null;
   sugar_item_visible: boolean;
@@ -32,8 +32,8 @@ export interface Conversation {
 
 export interface ConversationNode {
   id: string;
-  message?: ConversationNodeMessage;
-  parent?: string;
+  message: ConversationNodeMessage | null;
+  parent: string | null;
   children: string[];
 }
 
@@ -41,22 +41,33 @@ export interface ConversationNodeMessage {
   id: string;
   author: {
     role: string;
-    name?: string;
+    name: string | null;
     metadata: {
-      sonicberry_model_id: string;
-      real_author: string;
-      source: string;
+      sonicberry_model_id?: string;
+      real_author?: string;
+      source?: string;
     };
   };
-  create_time?: number;
-  update_time?: number;
+  create_time: number | null;
+  update_time: number | null;
   content: ConversationNodeMessageContent;
-  status: string;
-  end_turn?: boolean;
-  weight: number;
+  status: "finished_successfully" | "in_progress";
+  end_turn: boolean | null;
+  weight: 0 | 1;
   metadata: Record<string, unknown>;
-  recipient: string;
-  channel?: string;
+  recipient:
+    | "all"
+    | "web.search"
+    | "file_search.msearch"
+    | "bio"
+    | "assistant"
+    | "web"
+    | "web.run"
+    | "python"
+    | "web.open_url"
+    | "browser"
+    | "myfiles_browser";
+  channel: "final" | null;
 }
 
 export type ConversationNodeMessageContent =

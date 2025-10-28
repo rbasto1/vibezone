@@ -277,8 +277,9 @@ async function buildConversation({
   const rootId = `${thread.id}-root`;
   mapping[rootId] = {
     id: rootId,
-    parent: undefined,
+    parent: null,
     children: [],
+    message: null,
   };
 
   const messages = thread.messages;
@@ -341,12 +342,17 @@ async function buildConversation({
     conversation_origin: null,
     disabled_tool_ids: [],
     is_do_not_remember: false,
-    memory_scope: "conversation",
+    memory_scope: "global_enabled",
     context_scopes: null,
     sugar_item_id: null,
     sugar_item_visible: true,
     is_study_mode: false,
     owner: null,
+    conversation_template_id: null,
+    gizmo_id: null,
+    gizmo_type: null,
+    voice: null,
+    async_status: null,
   };
 
   return { conversation, attachmentMap };
@@ -450,6 +456,7 @@ async function convertMessageToConversation({
     id: message.id,
     author: {
       role,
+      name: null,
       metadata: {
         sonicberry_model_id: lastModelId ?? "",
         real_author: role,
@@ -459,11 +466,12 @@ async function convertMessageToConversation({
     create_time: createdSeconds,
     update_time: createdSeconds,
     content,
-    status: "finished",
+    status: "finished_successfully",
     end_turn: role === "assistant",
     weight: 1,
     metadata: metadataCopy,
     recipient: role === "assistant" ? "all" : "assistant",
+    channel: null,
   } satisfies Conversation["mapping"][string]["message"];
 }
 

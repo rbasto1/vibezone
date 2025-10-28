@@ -17,6 +17,7 @@
 - [x] PDF attachments not rendering
 - [x] Deleting a chat that is currently open should start a new chat
 - [x] Kotlin code not rendering
+- [ ] SyntaxHighlight code block has horizontal scrollbar, but "code block" doesn't
 
 ## Improvements
 
