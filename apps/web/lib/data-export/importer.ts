@@ -294,12 +294,16 @@ async function importConversation({
       authorRole === "system"
     ) {
       role = authorRole;
+    } else if (authorRole === "tool") {
+      role = "system";
     } else {
       role = "assistant";
     }
     const forceSystem =
       rawMetadata["is_user_system_message"] === true ||
-      rawMetadata["is_visually_hidden_from_conversation"] === true;
+      rawMetadata["is_visually_hidden_from_conversation"] === true ||
+      authorRole === "tool" ||
+      message.recipient !== "all";
     if (forceSystem) {
       role = "system";
     }
