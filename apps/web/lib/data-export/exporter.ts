@@ -6,8 +6,16 @@ import { Resend } from "resend";
 import { UTApi } from "uploadthing/server";
 
 import type { Message, Thread } from "@/db";
-import { chats, dataExports, db, messages, threads, userStats } from "@/db";
-import { asc, eq, isNull } from "drizzle-orm";
+import {
+  chats as chatsTable,
+  dataExports as dataExportsTable,
+  db,
+  messages as messagesTable,
+  projects as projectsTable,
+  threads as threadsTable,
+  userStats as userStatsTable,
+} from "@/db";
+import { and, asc, eq, isNull } from "drizzle-orm";
 
 import { siteDomain, siteName } from "@/lib/branding";
 import { html as buildChatHtml } from "@/lib/openai/export-html";
@@ -111,7 +119,7 @@ async function executeDataExport({
   jobId,
 }: QueueDataExportOptions & { jobId: string }) {
   const user = await db.query.userStats.findFirst({
-    where: eq(userStats.id, userId),
+    where: eq(userStatsTable.id, userId),
   });
 
   if (!user) {
@@ -166,7 +174,7 @@ async function executeDataExport({
     );
   }
 
-  await db.insert(dataExports).values({
+  await db.insert(dataExportsTable).values({
     id: jobId,
     userId,
     createdAt: new Date(),
@@ -192,40 +200,42 @@ async function executeDataExport({
 }
 
 async function loadThreadsForUser(userId: string) {
-  const rows = await db.query.chats.findMany({
-    where: isNull(chats.deletedAt),
+  const projectRows = await db.query.projects.findMany({
+    where: and(
+      eq(projectsTable.userId, userId),
+      isNull(projectsTable.deletedAt)
+    ),
     columns: {
       id: true,
-      title: true,
     },
     with: {
-      project: {
-        columns: {
-          userId: true,
-        },
-      },
-      threads: {
-        columns: {
-          id: true,
-          chatId: true,
-          lastModelId: true,
-          lastMessageAt: true,
-          createdAt: true,
-        },
-        orderBy: [asc(threads.createdAt)],
+      chats: {
+        where: isNull(chatsTable.deletedAt),
         with: {
-          messages: {
-            where: isNull(messages.deletedAt),
+          threads: {
             columns: {
               id: true,
-              role: true,
-              content: true,
-              attachments: true,
-              metadata: true,
-              status: true,
+              chatId: true,
+              lastModelId: true,
+              lastMessageAt: true,
               createdAt: true,
             },
-            orderBy: [asc(messages.createdAt)],
+            orderBy: [asc(threadsTable.createdAt)],
+            with: {
+              messages: {
+                where: isNull(messagesTable.deletedAt),
+                columns: {
+                  id: true,
+                  role: true,
+                  content: true,
+                  attachments: true,
+                  metadata: true,
+                  status: true,
+                  createdAt: true,
+                },
+                orderBy: [asc(messagesTable.createdAt)],
+              },
+            },
           },
         },
       },
@@ -237,8 +247,8 @@ async function loadThreadsForUser(userId: string) {
     thread: DbThreadWithMessages;
   }> = [];
 
+  const rows = projectRows.flatMap((project) => project.chats);
   for (const chat of rows) {
-    if (chat.project?.userId !== userId) continue;
     const chatTitle = chat.title ?? "Conversation";
     for (const thread of chat.threads) {
       if (!thread.messages.length) continue;
@@ -683,7 +693,7 @@ async function createExportArchive({
   conversations: Conversation[];
   assets: Record<string, string>;
   attachments: ExportAttachment[];
-  user: typeof userStats.$inferSelect;
+  user: typeof userStatsTable.$inferSelect;
 }) {
   const archive = archiver("zip", { zlib: { level: 9 } });
   const stream = new PassThrough();
