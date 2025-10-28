@@ -17,9 +17,13 @@
 - [x] PDF attachments not rendering
 - [x] Deleting a chat that is currently open should start a new chat
 - [x] Kotlin code not rendering
+- [ ] SyntaxHighlight code block has horizontal scrollbar, but "code block" doesn't
 
 ## Improvements
 
+- [ ] Instructions list with toggle
+- [ ] Preferences: enter / shift-enter to send
+- [ ] Data mgmt: delete all my chats
 - [x] Add Terms of Use
 - [x] Translate Privacy Policy and Terms of Use
 - [x] Sending an empty message with attachments should be possible
@@ -31,8 +35,8 @@
 - [x] Allow selection of reasoning effort if any model accepts it
 - [x] Allow pasting attachments with Ctrl-V
 - [x] Archive vs delete chats
-- [ ] Import chats from OpenAI format
-- [ ] Export chats to OpenAI format
+- [x] Import chats from OpenAI format
+- [x] Export chats to OpenAI format
 - [x] Composer text area should grow with text
 - [ ] Add analytics (Posthog?)
 - [x] Projects (group threads) - paying only
@@ -45,6 +49,7 @@
 - [x] Schedule daily usage calculation
 - [x] Use `useMessage` for saving messages instead of thread message list
 - [ ] Add cleanup of attachments never sent or older than 30 days for free users
+- [ ] Importing same OpenAI history for different users will create conflicts with IDs
 
 ## MVP (done)
 

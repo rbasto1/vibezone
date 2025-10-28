@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 
 import type { MessageMetadata } from "@/db/json-columns-types";
+import type { UploadMeta } from "@/lib/attachments/storage";
 import { sanitizeAttachmentText } from "@/lib/attachments/storage";
 import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
@@ -12,7 +13,6 @@ import type {
   MessageState,
   TextMessagePart,
 } from "@assistant-ui/react";
-import type { UploadMeta } from "@/lib/attachments/storage";
 import type { ClientUploadedFileData } from "uploadthing/types";
 
 import { useCurrentChatValue } from "./use-chat";
@@ -55,12 +55,14 @@ const uploadDataUrl = async (
 ): Promise<UploadedFileInfo> => {
   const file = dataUrlToFile(dataUrl, fallbackName);
   const results = await uploadFiles("messageAttachment", { files: [file] });
-  const uploaded = results?.[0] as ClientUploadedFileData<UploadMeta> | undefined;
+  const uploaded = results?.[0] as
+    | ClientUploadedFileData<UploadMeta>
+    | undefined;
   if (!uploaded) {
     throw new Error("Upload failed");
   }
 
-  const url = uploaded.serverData?.fileUrl ?? uploaded.url;
+  const url = uploaded.serverData?.fileUrl ?? uploaded.ufsUrl;
   if (!url) {
     throw new Error("Upload URL missing");
   }
@@ -77,7 +79,10 @@ const sanitizeImagePart = async (part: ImageMessagePart) => {
   if (typeof source !== "string" || !source.startsWith("data:")) {
     return part;
   }
-  const uploaded = await uploadDataUrl(source, part.filename ?? DEFAULT_IMAGE_NAME);
+  const uploaded = await uploadDataUrl(
+    source,
+    part.filename ?? DEFAULT_IMAGE_NAME
+  );
   return {
     ...part,
     image: uploaded.url,
@@ -90,11 +95,15 @@ const sanitizeFilePart = async (part: FileMessagePart) => {
   if (typeof source !== "string" || !source.startsWith("data:")) {
     return part;
   }
-  const uploaded = await uploadDataUrl(source, part.filename ?? DEFAULT_FILE_NAME);
+  const uploaded = await uploadDataUrl(
+    source,
+    part.filename ?? DEFAULT_FILE_NAME
+  );
   return {
     ...part,
     data: uploaded.url,
-    mimeType: part.mimeType ?? uploaded.contentType ?? "application/octet-stream",
+    mimeType:
+      part.mimeType ?? uploaded.contentType ?? "application/octet-stream",
     filename: part.filename ?? uploaded.name,
   };
 };
@@ -107,10 +116,7 @@ const sanitizeTextPart = async (part: TextMessagePart) => {
   const content = body?.trim() ?? "";
   if (!content.startsWith("data:")) return part;
 
-  const uploaded = await uploadDataUrl(
-    content,
-    rawName || DEFAULT_FILE_NAME
-  );
+  const uploaded = await uploadDataUrl(content, rawName || DEFAULT_FILE_NAME);
 
   return {
     ...part,

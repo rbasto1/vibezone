@@ -12,7 +12,7 @@ import { useFocusPanelIdValue } from "@/hooks/use-focus-panel";
 import { useUIState } from "@/hooks/use-ui-state";
 import { AppSidebarLoader } from "./app-sidebar-loader";
 import { AppThreads } from "./app-threads";
-import PreferencesPage from "./preferences";
+import PreferencesPage from "./preferences/tabs";
 
 const Assistant: FC = () => {
   const [uiState, setUIState] = useUIState();

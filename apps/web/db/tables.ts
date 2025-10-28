@@ -25,8 +25,8 @@ import type {
 
 export const userStats = pgTable("user_stats", {
   id: text("id").primaryKey(),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   email: text("email").notNull().unique(),
   imageUrl: text("image_url"),
 
@@ -217,10 +217,10 @@ export const suggestionGroupTranslations = pgTable(
   {
     suggestionGroupId: text("suggestion_group_id")
       .notNull()
-      .references(() => suggestionGroups.id),
+      .references(() => suggestionGroups.id, { onDelete: "cascade" }),
     localeId: text("locale_id")
       .notNull()
-      .references(() => locales.id),
+      .references(() => locales.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     label: text("label").notNull(),
     createdAt: timestampTzNow("created_at"),
@@ -236,10 +236,10 @@ export const modelSupportedParameters = pgTable(
   {
     modelId: text("model_id")
       .notNull()
-      .references(() => models.id),
+      .references(() => models.id, { onDelete: "cascade" }),
     supportedParameterId: text("supported_parameter_id")
       .notNull()
-      .references(() => supportedParameters.id),
+      .references(() => supportedParameters.id, { onDelete: "cascade" }),
   },
   (table) => [
     primaryKey({ columns: [table.modelId, table.supportedParameterId] }),
@@ -252,7 +252,7 @@ export const usersModels = pgTable(
     userId: text("user_id").notNull(),
     modelId: text("model_id")
       .notNull()
-      .references(() => models.id),
+      .references(() => models.id, { onDelete: "cascade" }),
     favoritedAt: timestampTz("favorited_at"),
   },
   (table) => [primaryKey({ columns: [table.userId, table.modelId] })]
@@ -274,7 +274,7 @@ export const threads = pgTable("threads", {
   id: text("id").primaryKey(),
   chatId: text("chat_id")
     .notNull()
-    .references(() => chats.id),
+    .references(() => chats.id, { onDelete: "cascade" }),
   lastModelId: text("last_model_id")
     .notNull()
     .references(() => models.id),
@@ -288,10 +288,10 @@ export const messages = pgTable("messages", {
   id: text("id").primaryKey(),
   threadId: text("thread_id")
     .notNull()
-    .references(() => threads.id),
+    .references(() => threads.id, { onDelete: "cascade" }),
   modelId: text("last_model_id")
     .notNull()
-    .references(() => models.id),
+    .references(() => models.id, { onDelete: "cascade" }),
   parentId: text("parent_id"),
   branchNumber: integer("branch_number"),
   role: text("role").notNull(), // "user" | "assistant"
@@ -308,7 +308,9 @@ export const messageRatings = pgTable(
   "message_ratings",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    messageId: text("message_id").references(() => messages.id),
+    messageId: text("message_id").references(() => messages.id, {
+      onDelete: "cascade",
+    }),
     prompt: text("prompt").notNull(),
     response: text("response").notNull(),
     rate: text("rate").$type<MessageRate>().notNull(),
@@ -348,5 +350,25 @@ export const usage = pgTable(
     index("usage_user_key_idx").on(table.userKey, table.createdAt),
     index("usage_model_id_idx").on(table.modelId, table.createdAt),
     index("usage_created_at_idx").on(table.createdAt),
+  ]
+);
+
+export const dataExports = pgTable(
+  "data_exports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userStats.id),
+    createdAt: timestampTzNow("created_at"),
+    expiresAt: timestampTz("expires_at").notNull(),
+    chatCount: integer("chat_count").notNull(),
+    fileCount: integer("file_count").notNull(),
+    fileSizeBytes: integer("file_size_bytes").notNull(),
+    filename: text("filename").notNull(),
+  },
+  (table) => [
+    index("data_exports_user_id_idx").on(table.userId, table.createdAt),
+    index("data_exports_expires_at_idx").on(table.expiresAt),
   ]
 );

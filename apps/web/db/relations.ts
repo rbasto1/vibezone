@@ -16,6 +16,7 @@ import {
   usage,
   usersModels,
   userStats,
+  dataExports,
 } from "./tables";
 
 export const modelsRelations = relations(models, ({ one, many }) => ({
@@ -152,3 +153,10 @@ export const suggestionGroupTranslationsRelations = relations(
     }),
   })
 );
+
+export const dataExportsRelations = relations(dataExports, ({ one }) => ({
+  user: one(userStats, {
+    fields: [dataExports.userId],
+    references: [userStats.id],
+  }),
+}));

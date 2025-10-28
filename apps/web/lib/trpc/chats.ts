@@ -216,6 +216,48 @@ export const chatsRouter = t.router({
 
       return { success: true };
     }),
+  deleteAllChats: authenticatedProcedure.mutation(async ({ ctx }) => {
+    const user = ctx.user;
+    if (!user) throw new Error("Assert: auth procedure must have user");
+
+    const deletedAt = new Date();
+
+    await db
+      .update(messages)
+      .set({ deletedAt })
+      .where(
+        and(
+          isNull(messages.deletedAt),
+          sql<boolean>`EXISTS (
+              SELECT 1
+              FROM ${threads} AS t
+              INNER JOIN ${chats} AS c ON c.id = t.chat_id
+              INNER JOIN ${projects} AS p ON p.id = c.project_id
+              WHERE t.id = ${messages.threadId}
+                AND p.user_id = ${user.id}
+                AND p.deleted_at IS NULL
+            )`
+        )
+      );
+
+    await db
+      .update(chats)
+      .set({ deletedAt })
+      .where(
+        and(
+          isNull(chats.deletedAt),
+          sql<boolean>`EXISTS (
+              SELECT 1
+              FROM ${projects} AS p
+              WHERE p.id = ${chats.projectId}
+                AND p.user_id = ${user.id}
+                AND p.deleted_at IS NULL
+            )`
+        )
+      );
+
+    return { success: true } as const;
+  }),
 });
 
 interface ListChatsInput {
