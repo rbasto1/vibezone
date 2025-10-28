@@ -1,9 +1,18 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import JSZip from "jszip";
 import { randomUUID } from "node:crypto";
 import { UTApi } from "uploadthing/server";
 
-import { chats, db, messages, projects, threads, type NewMessage } from "@/db";
+import {
+  chats,
+  db,
+  messages,
+  projects,
+  threads,
+  type NewChat,
+  type NewMessage,
+  type NewThread,
+} from "@/db";
 import type { MessageMetadata } from "@/db/json-columns-types";
 import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 import type {
@@ -35,6 +44,12 @@ interface UploadedAttachment {
   mimeType: string;
   filename: string;
   size: number;
+}
+
+interface PreparedConversationRecords {
+  chat: NewChat;
+  thread: NewThread;
+  messages: NewMessage[];
 }
 
 const bufferToArrayBuffer = (buffer: Buffer): ArrayBuffer => {
@@ -74,7 +89,7 @@ export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
       };
 
       try {
-        push({ type: "progress", progress: 5, message: "Validating archive" });
+        push({ type: "progress", progress: 2, message: "Validating archive" });
 
         if (!file.name.toLowerCase().endsWith(".zip")) {
           throw new Error("Only .zip archives are supported");
@@ -83,7 +98,7 @@ export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
         const fileBuffer = Buffer.from(await file.arrayBuffer());
         const zip = await JSZip.loadAsync(fileBuffer);
 
-        push({ type: "progress", progress: 15, message: "Reading archive" });
+        push({ type: "progress", progress: 6, message: "Reading archive" });
 
         const conversationsEntry = zip.file("conversations.json");
         if (!conversationsEntry || conversationsEntry.dir) {
@@ -123,7 +138,7 @@ export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
 
         push({
           type: "progress",
-          progress: 35,
+          progress: 9,
           message: "Preparing import",
         });
 
@@ -153,232 +168,6 @@ export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
     },
   });
 };
-
-async function importConversations({
-  userId,
-  conversations,
-  attachments,
-  push,
-}: {
-  userId: string;
-  conversations: Conversation[];
-  attachments: Map<string, AttachmentEntry>;
-  push: (payload: ImportProgressPayload) => void;
-}) {
-  if (!conversations.length) {
-    return;
-  }
-
-  const utapi = new UTApi();
-  const projectId = await ensureGeneralProject(userId);
-
-  const uploadedAttachments = new Map<string, UploadedAttachment | null>();
-  const total = conversations.length;
-
-  for (let index = 0; index < conversations.length; index++) {
-    const conversation = conversations[index];
-    if (!conversation) continue;
-    const title = conversation.title ?? "Conversation";
-    const progress = 40 + Math.round((index / total) * 40);
-    push({
-      type: "progress",
-      progress,
-      message: `Importing "${title}"`,
-    });
-
-    try {
-      await importConversation({
-        userId,
-        projectId,
-        conversation,
-        attachments,
-        uploadedAttachments,
-        utapi,
-      });
-    } catch (error) {
-      console.error(
-        `[data-import] Skipped conversation ${conversation.id ?? "unknown"}:`,
-        error
-      );
-    }
-  }
-
-  push({ type: "progress", progress: 90, message: "Finalizing" });
-}
-
-async function importConversation({
-  projectId,
-  conversation,
-  attachments,
-  uploadedAttachments,
-  utapi,
-}: {
-  userId: string;
-  projectId: string;
-  conversation: Conversation;
-  attachments: Map<string, AttachmentEntry>;
-  uploadedAttachments: Map<string, UploadedAttachment | null>;
-  utapi: UTApi;
-}) {
-  const threadId = conversation.conversation_id ?? conversation.id;
-  if (!threadId) {
-    throw new Error("Conversation id missing");
-  }
-
-  const existingThread = await db.query.threads.findFirst({
-    where: eq(threads.id, threadId),
-    columns: { id: true },
-  });
-
-  if (existingThread) {
-    return;
-  }
-
-  const mapping = conversation.mapping ?? {};
-  const nodesWithMessages = Object.values(mapping).filter(
-    (
-      node
-    ): node is (typeof mapping)[string] & {
-      message: NonNullable<(typeof node)["message"]>;
-    } => Boolean(node?.message)
-  );
-
-  if (!nodesWithMessages.length) {
-    return;
-  }
-
-  const sortedNodes = [...nodesWithMessages].sort((a, b) => {
-    const aTime = a.message.create_time ?? 0;
-    const bTime = b.message.create_time ?? 0;
-    if (aTime === bTime) return 0;
-    return aTime < bTime ? -1 : 1;
-  });
-
-  const parentCache = new Map<string, string | null>();
-  const resolveParentMessageId = (nodeId: string): string | null => {
-    if (parentCache.has(nodeId)) {
-      return parentCache.get(nodeId) ?? null;
-    }
-    let current = mapping[nodeId]?.parent;
-    while (current) {
-      const parentNode = mapping[current];
-      if (!parentNode) break;
-      if (parentNode.message) {
-        const parentMessageId = parentNode.message.id;
-        parentCache.set(nodeId, parentMessageId);
-        return parentMessageId;
-      }
-      current = parentNode.parent;
-    }
-    parentCache.set(nodeId, null);
-    return null;
-  };
-
-  const modelId = selectModelId(conversation.default_model_slug);
-
-  const newMessages: NewMessage[] = [];
-  const orderCreated: Date[] = [];
-
-  for (const node of sortedNodes) {
-    const message = node.message;
-    const messageId = message.id ?? randomUUID();
-    const rawMetadata =
-      message.metadata && typeof message.metadata === "object"
-        ? (message.metadata as Record<string, unknown>)
-        : {};
-    let role: "assistant" | "user" | "system";
-    const authorRole = message.author?.role;
-    if (
-      authorRole === "assistant" ||
-      authorRole === "user" ||
-      authorRole === "system"
-    ) {
-      role = authorRole;
-    } else if (authorRole === "tool") {
-      role = "system";
-    } else {
-      role = "assistant";
-    }
-    const forceSystem =
-      rawMetadata["is_user_system_message"] === true ||
-      rawMetadata["is_visually_hidden_from_conversation"] === true ||
-      authorRole === "tool" ||
-      message.recipient !== "all";
-    if (forceSystem) {
-      role = "system";
-    }
-    const createdAt = message.create_time
-      ? new Date(message.create_time * 1000)
-      : new Date(0);
-
-    const result = await convertConversationContent({
-      content: message.content,
-      metadata: rawMetadata,
-      attachments,
-      uploadedAttachments,
-      utapi,
-    });
-
-    if (!result.parts.length) {
-      continue;
-    }
-
-    const parentId = resolveParentMessageId(node.id);
-
-    const newMessage: NewMessage = {
-      id: messageId,
-      threadId,
-      modelId,
-      parentId,
-      branchNumber: 0,
-      role,
-      content: result.parts,
-      attachments: null,
-      metadata: result.metadata as unknown as MessageMetadata,
-      status:
-        role === "assistant" ? { type: "complete", reason: "stop" } : undefined,
-      createdAt,
-    };
-
-    newMessages.push(newMessage);
-    orderCreated.push(createdAt);
-  }
-
-  if (!newMessages.length) {
-    return;
-  }
-
-  const lastMessageAt = [...orderCreated]
-    .sort((a, b) => a.getTime() - b.getTime())
-    .pop()!;
-  const chatId = conversation.id ?? threadId;
-  const chatTitle = conversation.title ?? "Conversation";
-
-  await db
-    .insert(chats)
-    .values({
-      id: chatId,
-      projectId,
-      title: chatTitle,
-      lastMessageAt,
-    })
-    .onConflictDoUpdate({
-      target: chats.id,
-      set: { title: chatTitle, lastMessageAt },
-    });
-
-  await db
-    .insert(threads)
-    .values({
-      id: threadId,
-      chatId,
-      lastModelId: modelId,
-      lastMessageAt,
-    })
-    .onConflictDoNothing();
-
-  await db.insert(messages).values(newMessages).onConflictDoNothing();
-}
 
 async function convertConversationContent({
   content,
@@ -886,4 +675,383 @@ function determineMimeFromFilename(filename: string) {
     ".zip": "application/zip",
   };
   return lookup[ext] ?? "application/octet-stream";
+}
+async function importConversations({
+  userId,
+  conversations,
+  attachments,
+  push,
+}: {
+  userId: string;
+  conversations: Conversation[];
+  attachments: Map<string, AttachmentEntry>;
+  push: (payload: ImportProgressPayload) => void;
+}) {
+  if (conversations.length === 0) {
+    return;
+  }
+
+  const utapi = new UTApi();
+  const projectId = await ensureGeneralProject(userId);
+
+  const contexts: Array<{
+    conversation: Conversation;
+    threadId: string;
+  }> = [];
+
+  for (const conversation of conversations) {
+    if (!conversation) continue;
+    const threadId = conversation.conversation_id ?? conversation.id;
+    if (!threadId) continue;
+    contexts.push({ conversation, threadId });
+  }
+
+  if (!contexts.length) {
+    return;
+  }
+
+  const uniqueThreadIds = Array.from(
+    new Set(contexts.map((ctx) => ctx.threadId))
+  );
+  let existingThreadIds = new Set<string>();
+  if (uniqueThreadIds.length > 0) {
+    const existing = await db
+      .select({ id: threads.id })
+      .from(threads)
+      .where(inArray(threads.id, uniqueThreadIds));
+    existingThreadIds = new Set(existing.map((row) => row.id));
+  }
+
+  const uploadedAttachments = new Map<string, UploadedAttachment | null>();
+  const chatMap = new Map<string, NewChat>();
+  const threadMap = new Map<string, NewThread>();
+  const messageRecords: NewMessage[] = [];
+
+  push({
+    type: "progress",
+    progress: 10,
+    message: "Analyzing conversations",
+  });
+
+  for (const [index, context] of contexts.entries()) {
+    const { conversation, threadId } = context;
+    const title = conversation.title ?? "Conversation";
+    const progress = 10 + Math.round(((index + 1) / contexts.length) * 40);
+    push({
+      type: "progress",
+      progress,
+      message: `Processing "${title}"`,
+    });
+
+    if (existingThreadIds.has(threadId)) {
+      continue;
+    }
+
+    try {
+      const prepared = await prepareConversationRecords({
+        projectId,
+        conversation,
+        attachments,
+        uploadedAttachments,
+        utapi,
+      });
+
+      if (!prepared) {
+        continue;
+      }
+
+      const existingChat = chatMap.get(prepared.chat.id);
+      if (
+        !existingChat ||
+        existingChat.lastMessageAt < prepared.chat.lastMessageAt
+      ) {
+        chatMap.set(prepared.chat.id, prepared.chat);
+      }
+
+      if (!threadMap.has(prepared.thread.id)) {
+        threadMap.set(prepared.thread.id, prepared.thread);
+      }
+
+      messageRecords.push(...prepared.messages);
+    } catch (error) {
+      console.error(
+        `[data-import] Skipped conversation ${conversation.id ?? "unknown"}:`,
+        error
+      );
+    }
+  }
+
+  const chatsToInsert = Array.from(chatMap.values());
+  const threadsToInsert = Array.from(threadMap.values());
+
+  if (chatsToInsert.length) {
+    await insertChatsInBatches(chatsToInsert, push);
+  }
+
+  if (threadsToInsert.length) {
+    await insertThreadsInBatches(threadsToInsert, push);
+  }
+
+  if (messageRecords.length) {
+    await insertMessagesInBatches(messageRecords, push);
+  }
+
+  push({
+    type: "progress",
+    progress: 98,
+    message: "Finalizing import",
+  });
+}
+
+async function prepareConversationRecords({
+  projectId,
+  conversation,
+  attachments,
+  uploadedAttachments,
+  utapi,
+}: {
+  projectId: string;
+  conversation: Conversation;
+  attachments: Map<string, AttachmentEntry>;
+  uploadedAttachments: Map<string, UploadedAttachment | null>;
+  utapi: UTApi;
+}): Promise<PreparedConversationRecords | null> {
+  const threadId = conversation.conversation_id ?? conversation.id;
+  if (!threadId) {
+    throw new Error("Conversation id missing");
+  }
+
+  const mapping = conversation.mapping ?? {};
+  const nodesWithMessages = Object.values(mapping).filter(
+    (
+      node
+    ): node is (typeof mapping)[string] & {
+      message: NonNullable<(typeof node)["message"]>;
+    } => Boolean(node?.message)
+  );
+
+  if (!nodesWithMessages.length) {
+    return null;
+  }
+
+  const sortedNodes = [...nodesWithMessages].sort((a, b) => {
+    const aTime = a.message.create_time ?? 0;
+    const bTime = b.message.create_time ?? 0;
+    if (aTime === bTime) return 0;
+    return aTime < bTime ? -1 : 1;
+  });
+
+  const parentCache = new Map<string, string | null>();
+  const resolveParentMessageId = (nodeId: string): string | null => {
+    if (parentCache.has(nodeId)) {
+      return parentCache.get(nodeId) ?? null;
+    }
+    let current = mapping[nodeId]?.parent;
+    while (current) {
+      const parentNode = mapping[current];
+      if (!parentNode) break;
+      if (parentNode.message) {
+        const parentMessageId = parentNode.message.id;
+        parentCache.set(nodeId, parentMessageId);
+        return parentMessageId;
+      }
+      current = parentNode.parent;
+    }
+    parentCache.set(nodeId, null);
+    return null;
+  };
+
+  const modelId = selectModelId(conversation.default_model_slug);
+
+  const newMessages: NewMessage[] = [];
+  const orderCreated: Date[] = [];
+
+  for (const node of sortedNodes) {
+    const message = node.message;
+    const messageId = message.id ?? randomUUID();
+    const rawMetadata =
+      message.metadata && typeof message.metadata === "object"
+        ? (message.metadata as Record<string, unknown>)
+        : {};
+    let role: "assistant" | "user" | "system" = "assistant";
+    const authorRole = message.author?.role;
+    if (
+      authorRole === "assistant" ||
+      authorRole === "user" ||
+      authorRole === "system"
+    ) {
+      role = authorRole;
+    } else if (authorRole === "tool") {
+      role = "system";
+    }
+    const forceSystem =
+      rawMetadata["is_user_system_message"] === true ||
+      rawMetadata["is_visually_hidden_from_conversation"] === true ||
+      authorRole === "tool" ||
+      (typeof message.recipient === "string" && message.recipient !== "all");
+    if (forceSystem) {
+      role = "system";
+    }
+    const createdAt = message.create_time
+      ? new Date(message.create_time * 1000)
+      : new Date(0);
+
+    const result = await convertConversationContent({
+      content: message.content,
+      metadata: rawMetadata,
+      attachments,
+      uploadedAttachments,
+      utapi,
+    });
+
+    if (!result.parts.length) {
+      continue;
+    }
+
+    const parentId = resolveParentMessageId(node.id);
+
+    const newMessage: NewMessage = {
+      id: messageId,
+      threadId,
+      modelId,
+      parentId,
+      branchNumber: 0,
+      role,
+      content: result.parts,
+      attachments: null,
+      metadata: result.metadata as unknown as MessageMetadata,
+      status:
+        role === "assistant" ? { type: "complete", reason: "stop" } : undefined,
+      createdAt,
+    };
+
+    newMessages.push(newMessage);
+    orderCreated.push(createdAt);
+  }
+
+  if (!newMessages.length) {
+    return null;
+  }
+
+  const lastMessageAt = [...orderCreated]
+    .sort((a, b) => a.getTime() - b.getTime())
+    .pop()!;
+  const chatId = conversation.id ?? threadId;
+  const chatTitle = conversation.title ?? "Conversation";
+
+  return {
+    chat: {
+      id: chatId,
+      projectId,
+      title: chatTitle,
+      lastMessageAt,
+    },
+    thread: {
+      id: threadId,
+      chatId,
+      lastModelId: modelId,
+      lastMessageAt,
+    },
+    messages: newMessages,
+  };
+}
+
+async function insertChatsInBatches(
+  records: NewChat[],
+  push: (payload: ImportProgressPayload) => void
+) {
+  await insertInBatches({
+    items: records,
+    chunkSize: 100,
+    startProgress: 55,
+    endProgress: 65,
+    message: "Saving chats",
+    push,
+    insert: (chunk) =>
+      db
+        .insert(chats)
+        .values(chunk)
+        .onConflictDoUpdate({
+          target: chats.id,
+          set: {
+            title: sql`excluded.title`,
+            lastMessageAt: sql`excluded.last_message_at`,
+          },
+        }),
+  });
+}
+
+async function insertThreadsInBatches(
+  records: NewThread[],
+  push: (payload: ImportProgressPayload) => void
+) {
+  await insertInBatches({
+    items: records,
+    chunkSize: 100,
+    startProgress: 65,
+    endProgress: 75,
+    message: "Saving threads",
+    push,
+    insert: (chunk) => db.insert(threads).values(chunk).onConflictDoNothing(),
+  });
+}
+
+async function insertMessagesInBatches(
+  records: NewMessage[],
+  push: (payload: ImportProgressPayload) => void
+) {
+  await insertInBatches({
+    items: records,
+    chunkSize: 50,
+    startProgress: 75,
+    endProgress: 95,
+    message: "Saving messages",
+    push,
+    insert: (chunk) => db.insert(messages).values(chunk).onConflictDoNothing(),
+  });
+}
+
+async function insertInBatches<T>({
+  items,
+  chunkSize,
+  startProgress,
+  endProgress,
+  message,
+  push,
+  insert,
+}: {
+  items: T[];
+  chunkSize: number;
+  startProgress: number;
+  endProgress: number;
+  message: string;
+  push: (payload: ImportProgressPayload) => void;
+  insert: (chunk: T[]) => Promise<unknown>;
+}) {
+  if (!items.length) {
+    return;
+  }
+
+  push({
+    type: "progress",
+    progress: startProgress,
+    message,
+  });
+
+  const total = items.length;
+  let processed = 0;
+
+  for (let index = 0; index < items.length; index += chunkSize) {
+    const chunk = items.slice(index, index + chunkSize);
+    await insert(chunk);
+    processed += chunk.length;
+    const range = endProgress - startProgress;
+    const progress =
+      startProgress + Math.round((processed / total) * (range > 0 ? range : 0));
+    push({
+      type: "progress",
+      progress: Math.min(progress, endProgress),
+      message,
+    });
+  }
 }
