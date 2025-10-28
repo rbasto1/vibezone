@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import unzipper from "unzipper";
+import JSZip from "jszip";
 import { UTApi } from "uploadthing/server";
 
 import {
@@ -78,35 +78,52 @@ export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
         }
 
         const fileBuffer = Buffer.from(await file.arrayBuffer());
-        const zip = await unzipper.Open.buffer(fileBuffer);
+        const zip = await JSZip.loadAsync(fileBuffer);
 
         push({ type: "progress", progress: 15, message: "Reading archive" });
 
-        const conversationsEntry = zip.files.find(
-          (entry) => entry.path === "conversations.json"
-        );
-
-        if (!conversationsEntry) {
+        const conversationsEntry = zip.file("conversations.json");
+        if (!conversationsEntry || conversationsEntry.dir) {
           throw new Error("conversations.json not found in archive");
         }
 
-        const conversationsJson = await conversationsEntry.buffer();
-        const conversations: Conversation[] = JSON.parse(
-          conversationsJson.toString("utf8")
-        );
+        const conversationsJson = await conversationsEntry.async("string");
+        const conversations: Conversation[] = JSON.parse(conversationsJson);
 
-        const attachmentFiles = zip.files.filter((entry) =>
-          entry.path.startsWith("file-")
-        );
+        const attachmentFiles = zip
+          .file(/^file-/)
+          .filter((entry) => !entry.dir);
 
         const attachments = new Map<string, AttachmentEntry>();
         for (const entry of attachmentFiles) {
-          const buffer = await entry.buffer();
-          const pointer = stripExtension(entry.path);
+          const buffer = (await entry.async("nodebuffer")) as Buffer;
+          const pointer = stripExtension(entry.name);
           const record: AttachmentEntry = {
             buffer,
-            filename: sanitizeFileName(entry.path),
-            mimeType: determineMimeFromFilename(entry.path),
+            filename: sanitizeFileName(entry.name),
+            mimeType: determineMimeFromFilename(entry.name),
+          };
+          attachments.set(pointer, record);
+          const alternate = pointer.includes("-")
+            ? pointer.replace(/-/g, "_")
+            : pointer.replace(/_/g, "-");
+          if (!attachments.has(alternate)) {
+            attachments.set(alternate, record);
+          }
+        }
+        const nestedAttachmentFiles = zip
+          .file(/\/file-[^/]+$/)
+          .filter((entry) => !entry.dir);
+        for (const entry of nestedAttachmentFiles) {
+          const baseName = entry.name.slice(entry.name.lastIndexOf("/") + 1);
+          if (!baseName.startsWith("file-")) continue;
+          const pointer = stripExtension(baseName);
+          if (attachments.has(pointer)) continue;
+          const buffer = (await entry.async("nodebuffer")) as Buffer;
+          const record: AttachmentEntry = {
+            buffer,
+            filename: sanitizeFileName(baseName),
+            mimeType: determineMimeFromFilename(baseName),
           };
           attachments.set(pointer, record);
           const alternate = pointer.includes("-")
