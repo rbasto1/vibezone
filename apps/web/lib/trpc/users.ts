@@ -1,9 +1,8 @@
 import "server-only";
 
-import { db } from "@/db";
+import { db, preferences, userStats } from "@/db";
 import type { Preferences } from "@/db/schema";
 import { chats, models, projects, usage, usersModels } from "@/db/schema";
-import { preferences, userStats } from "@/db/tables";
 import {
   and,
   count,

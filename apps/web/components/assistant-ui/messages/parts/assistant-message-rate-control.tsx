@@ -6,11 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import { TooltipIconButton } from "@/components/assistant-ui/messages/tooltip-icon-button";
 import { cn } from "@/components/ui/utils";
-import type {
-  MessageMetadataCustom,
-  MessageRate,
-  MessageRatingAttachment,
-} from "@/db/json-columns-types";
 import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import {
@@ -18,6 +13,11 @@ import {
   useThread,
   type ThreadMessageLike,
 } from "@assistant-ui/react";
+import type {
+  MessageMetadataCustom,
+  MessageRate,
+  MessageRatingAttachment,
+} from "@vibezone/database";
 import type { LucideIcon } from "lucide-react";
 import { FrownIcon, SmileIcon, SmilePlusIcon } from "lucide-react";
 import { toast } from "sonner";

@@ -1,10 +1,6 @@
 import "server-only";
 
 import { db } from "@/db";
-import type {
-  MessageMetadata,
-  MessageRatingAttachment,
-} from "@/db/json-columns-types";
 import type { NewMessage } from "@/db/schema";
 import {
   chats as chatsTable,
@@ -14,6 +10,10 @@ import {
   threads as threadsTable,
 } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
+import type {
+  MessageMetadata,
+  MessageRatingAttachment,
+} from "@vibezone/database";
 import { and, desc, eq, isNull, lte } from "drizzle-orm";
 import { z } from "zod";
 import { getChatName } from "./chats";

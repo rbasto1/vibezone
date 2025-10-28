@@ -1,6 +1,5 @@
 import type { NewUserStats } from "@/db";
-import { db } from "@/db";
-import { userStats } from "@/db/tables";
+import { db, userStats } from "@/db";
 import { clerkClient } from "@clerk/nextjs/server";
 
 export const syncUsers = async () => {

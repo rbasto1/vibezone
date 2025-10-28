@@ -3,7 +3,7 @@ import { drizzle, type NeonHttpDatabase } from "drizzle-orm/neon-http";
 
 import type { Env } from "../worker";
 
-import * as schema from "../../../web/db/schema";
+import * as schema from "@vibezone/database/schema";
 
 type Database = NeonHttpDatabase<typeof schema>;
 

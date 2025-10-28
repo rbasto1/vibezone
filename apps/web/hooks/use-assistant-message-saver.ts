@@ -1,6 +1,5 @@
 import { useCallback, useRef } from "react";
 
-import type { MessageMetadata } from "@/db/json-columns-types";
 import type { UploadMeta } from "@/lib/attachments/storage";
 import { sanitizeAttachmentText } from "@/lib/attachments/storage";
 import { useUser } from "@/lib/auth-client";
@@ -13,6 +12,7 @@ import type {
   MessageState,
   TextMessagePart,
 } from "@assistant-ui/react";
+import type { MessageMetadata } from "@vibezone/database";
 import type { ClientUploadedFileData } from "uploadthing/types";
 
 import { useCurrentChatValue } from "./use-chat";
