@@ -4,9 +4,9 @@ import {
   DndContext,
   PointerSensor,
   closestCenter,
-  type DragEndEvent,
   useSensor,
   useSensors,
+  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -18,6 +18,7 @@ import { useMemo, useState, type FC } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -26,11 +27,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TabsContent } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { InstructionItem } from "./instruction-item";
 import { useInstructions } from "@/hooks/use-instructions";
 import { useProjectsValue } from "@/hooks/use-projects";
 import { trpc } from "@/lib/trpc/client";
+import { InstructionItem } from "./instruction-item";
 
 const ALL_PROJECTS_VALUE = "__all__";
 
@@ -42,13 +42,11 @@ export const PreferencesInstructionsTab: FC = () => {
   const [title, setTitle] = useState("");
   const [projectId, setProjectId] = useState<string>(ALL_PROJECTS_VALUE);
   const [content, setContent] = useState("");
-  const [pendingToggleId, setPendingToggleId] = useState<string | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const projectLabels = useMemo(() => {
-    const map = new Map<string, string>();
+  const projectMetadata = useMemo(() => {
+    const map = new Map<string, { name: string; color: string }>();
     projects.forEach((project) => {
-      map.set(project.id, project.name);
+      map.set(project.id, { name: project.name, color: project.color });
     });
     return map;
   }, [projects]);
@@ -64,21 +62,7 @@ export const PreferencesInstructionsTab: FC = () => {
     })
   );
 
-  const createInstruction = trpc.instructions.create.useMutation({
-    onSuccess: (created) => {
-      setInstructions((previous) =>
-        [...previous, created].sort((a, b) => a.order - b.order)
-      );
-      setTitle("");
-      setContent("");
-      setProjectId(ALL_PROJECTS_VALUE);
-    },
-    onError: (error: unknown) => {
-      const message =
-        error instanceof Error ? error.message : t("errors.generic");
-      toast.error(t("toast.createError", { message }));
-    },
-  });
+  const createInstruction = trpc.instructions.create.useMutation();
 
   const toggleInstruction = trpc.instructions.setActive.useMutation();
   const deleteInstruction = trpc.instructions.delete.useMutation();
@@ -100,15 +84,66 @@ export const PreferencesInstructionsTab: FC = () => {
       return;
     }
 
-    createInstruction.mutate({
+    const previousInstructions = instructions.map((item) => ({ ...item }));
+    const previousFormState = {
+      title,
+      content,
+      projectId,
+    };
+
+    const resolvedProjectId =
+      projectId === ALL_PROJECTS_VALUE ? null : projectId;
+    const nextOrder =
+      sortedInstructions.length > 0
+        ? (sortedInstructions[sortedInstructions.length - 1]?.order ?? 0) + 1
+        : 0;
+    const optimisticInstruction = {
+      id: `temp-${Date.now()}`,
       title: trimmedTitle,
       content: trimmedContent,
-      projectId: projectId === ALL_PROJECTS_VALUE ? null : projectId,
-    });
+      projectId: resolvedProjectId,
+      isActive: true,
+      order: nextOrder,
+    };
+
+    setInstructions((current) =>
+      [...current, optimisticInstruction].sort((a, b) => a.order - b.order)
+    );
+    setTitle("");
+    setContent("");
+    setProjectId(ALL_PROJECTS_VALUE);
+
+    createInstruction.mutate(
+      {
+        title: trimmedTitle,
+        content: trimmedContent,
+        projectId: resolvedProjectId,
+      },
+      {
+        onSuccess: (created) => {
+          setInstructions((current) =>
+            current
+              .map((item) =>
+                item.id === optimisticInstruction.id ? created : item
+              )
+              .sort((a, b) => a.order - b.order)
+          );
+        },
+        onError: (error: unknown) => {
+          const message =
+            error instanceof Error ? error.message : t("errors.generic");
+          toast.error(t("toast.createError", { message }));
+          setInstructions(previousInstructions);
+          setTitle(previousFormState.title);
+          setContent(previousFormState.content);
+          setProjectId(previousFormState.projectId);
+        },
+      }
+    );
   };
 
   const handleToggle = (id: string, checked: boolean) => {
-    setPendingToggleId(id);
+    const previousInstructions = instructions.map((item) => ({ ...item }));
     setInstructions((current) =>
       current.map((item) =>
         item.id === id ? { ...item, isActive: checked } : item
@@ -128,21 +163,14 @@ export const PreferencesInstructionsTab: FC = () => {
           const message =
             error instanceof Error ? error.message : t("errors.generic");
           toast.error(t("toast.toggleError", { message }));
-          setInstructions((current) =>
-            current.map((item) =>
-              item.id === id ? { ...item, isActive: !checked } : item
-            )
-          );
+          setInstructions(previousInstructions);
         },
-        onSettled: () => setPendingToggleId(null),
       }
     );
   };
 
   const handleDelete = (id: string) => {
-    const existing = instructions.find((item) => item.id === id);
-    if (!existing) return;
-    setPendingDeleteId(id);
+    const previousInstructions = instructions.map((item) => ({ ...item }));
     setInstructions((current) =>
       current.filter((instruction) => instruction.id !== id)
     );
@@ -153,11 +181,8 @@ export const PreferencesInstructionsTab: FC = () => {
           const message =
             error instanceof Error ? error.message : t("errors.generic");
           toast.error(t("toast.deleteError", { message }));
-          setInstructions((current) =>
-            [...current, existing].sort((a, b) => a.order - b.order)
-          );
+          setInstructions(previousInstructions);
         },
-        onSettled: () => setPendingDeleteId(null),
       }
     );
   };
@@ -189,8 +214,6 @@ export const PreferencesInstructionsTab: FC = () => {
     );
   };
 
-  const isCreating = createInstruction.isPending;
-
   return (
     <TabsContent value="instructions" className="space-y-8">
       <section className="space-y-3">
@@ -212,35 +235,52 @@ export const PreferencesInstructionsTab: FC = () => {
               onChange={(event) => setTitle(event.target.value)}
               maxLength={200}
               placeholder={t("form.title.placeholder")}
-              disabled={isCreating}
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium" htmlFor="instruction-project">
+            <label
+              className="text-sm font-medium"
+              htmlFor="instruction-project"
+            >
               {t("form.project.label")}
             </label>
-            <Select
-              value={projectId}
-              onValueChange={setProjectId}
-              disabled={isCreating}
-            >
-              <SelectTrigger className="w-full" id="instruction-project">
-                <SelectValue placeholder={t("form.project.placeholder")} />
+            <Select value={projectId} onValueChange={setProjectId}>
+              <SelectTrigger
+                className="w-full justify-between"
+                id="instruction-project"
+              >
+                <SelectValue
+                  placeholder={t("form.project.placeholder")}
+                  aria-hidden
+                  className="sr-only"
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL_PROJECTS_VALUE}>
-                  {t("form.project.all")}
+                  <span className="flex items-center gap-2 truncate">
+                    <span className="truncate">{t("form.project.all")}</span>
+                  </span>
                 </SelectItem>
                 {projects.map((project) => (
                   <SelectItem key={project.id} value={project.id}>
-                    {project.name}
+                    <span className="flex items-center gap-2 truncate">
+                      <span
+                        aria-hidden="true"
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: project.color }}
+                      />
+                      <span className="truncate">{project.name}</span>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium" htmlFor="instruction-content">
+            <label
+              className="text-sm font-medium"
+              htmlFor="instruction-content"
+            >
               {t("form.content.label")}
             </label>
             <textarea
@@ -250,13 +290,10 @@ export const PreferencesInstructionsTab: FC = () => {
               onChange={(event) => setContent(event.target.value)}
               placeholder={t("form.content.placeholder")}
               maxLength={20000}
-              disabled={isCreating}
             />
           </div>
           <div className="flex justify-end">
-            <Button type="submit" disabled={isCreating} loading={isCreating}>
-              {t("form.submit")}
-            </Button>
+            <Button type="submit">{t("form.submit")}</Button>
           </div>
         </form>
       </section>
@@ -287,14 +324,17 @@ export const PreferencesInstructionsTab: FC = () => {
                     instruction={instruction}
                     projectLabel={
                       instruction.projectId
-                        ? projectLabels.get(instruction.projectId) ??
-                          t("list.deletedProject")
+                        ? (projectMetadata.get(instruction.projectId)?.name ??
+                          t("list.deletedProject"))
                         : t("form.project.all")
+                    }
+                    projectColor={
+                      instruction.projectId
+                        ? projectMetadata.get(instruction.projectId)?.color
+                        : null
                     }
                     onToggle={handleToggle}
                     onDelete={handleDelete}
-                    togglePending={pendingToggleId === instruction.id}
-                    deletePending={pendingDeleteId === instruction.id}
                   />
                 ))}
               </div>

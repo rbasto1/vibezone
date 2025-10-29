@@ -180,10 +180,6 @@ export const instructions = pgTable(
     deletedAt: timestampTz("deleted_at"),
   },
   (table) => [
-    uniqueIndex("instructions_user_order_unique").on(
-      table.userId,
-      table.order
-    ),
     index("instructions_user_project_idx").on(table.userId, table.projectId),
   ]
 );

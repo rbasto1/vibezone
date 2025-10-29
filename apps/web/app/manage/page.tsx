@@ -25,12 +25,12 @@ interface KpiCard {
 
 import {
   chats,
-  models as modelstable,
+  db,
+  models as modelsTable,
   providers,
   usage,
   userStats,
 } from "@/db";
-import { db } from "@/db/connection";
 import { models } from "@/generated/models";
 import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 
@@ -71,10 +71,10 @@ const ManagePage: NextPage<PageProps<"/manage">> = async () => {
 
   const uniqueProvidersPromise = db
     .select({
-      value: sql<number>`count(distinct ${modelstable.providerId})::int`,
+      value: sql<number>`count(distinct ${modelsTable.providerId})::int`,
     })
     .from(usage)
-    .innerJoin(modelstable, eq(modelstable.id, usage.modelId))
+    .innerJoin(modelsTable, eq(modelsTable.id, usage.modelId))
     .where(gte(usage.createdAt, lastSevenDays));
 
   const chatsModifiedPromise = db
@@ -86,13 +86,13 @@ const ManagePage: NextPage<PageProps<"/manage">> = async () => {
   const topModelPromise = db
     .select({
       modelId: usage.modelId,
-      modelName: modelstable.name,
+      modelName: modelsTable.name,
       total: topModelCount,
     })
     .from(usage)
-    .innerJoin(modelstable, eq(modelstable.id, usage.modelId))
+    .innerJoin(modelsTable, eq(modelsTable.id, usage.modelId))
     .where(and(gte(usage.createdAt, lastSevenDays), isNotNull(usage.modelId)))
-    .groupBy(usage.modelId, modelstable.name)
+    .groupBy(usage.modelId, modelsTable.name)
     .orderBy(desc(topModelCount))
     .limit(1);
 
@@ -104,8 +104,8 @@ const ManagePage: NextPage<PageProps<"/manage">> = async () => {
       total: topProviderCount,
     })
     .from(usage)
-    .innerJoin(modelstable, eq(modelstable.id, usage.modelId))
-    .innerJoin(providers, eq(providers.id, modelstable.providerId))
+    .innerJoin(modelsTable, eq(modelsTable.id, usage.modelId))
+    .innerJoin(providers, eq(providers.id, modelsTable.providerId))
     .where(gte(usage.createdAt, lastSevenDays))
     .groupBy(providers.id, providers.name)
     .orderBy(desc(topProviderCount))

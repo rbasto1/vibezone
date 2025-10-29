@@ -1,9 +1,8 @@
 import "server-only";
 
-import { db } from "@/db";
-import { instructions } from "@/db/schema";
+import { db, instructions as instructionsTable } from "@/db";
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { authenticatedProcedure, t } from "./server/initialize";
@@ -22,18 +21,21 @@ export const instructionsRouter = t.router({
 
     const rows = await db
       .select({
-        id: instructions.id,
-        title: instructions.title,
-        content: instructions.content,
-        projectId: instructions.projectId,
-        isActive: instructions.isActive,
-        order: instructions.order,
+        id: instructionsTable.id,
+        title: instructionsTable.title,
+        content: instructionsTable.content,
+        projectId: instructionsTable.projectId,
+        isActive: instructionsTable.isActive,
+        order: instructionsTable.order,
       })
-      .from(instructions)
+      .from(instructionsTable)
       .where(
-        and(eq(instructions.userId, user.id), isNull(instructions.deletedAt))
+        and(
+          eq(instructionsTable.userId, user.id),
+          isNull(instructionsTable.deletedAt)
+        )
       )
-      .orderBy(asc(instructions.order), asc(instructions.createdAt));
+      .orderBy(asc(instructionsTable.order), asc(instructionsTable.createdAt));
 
     return rows;
   }),
@@ -56,18 +58,21 @@ export const instructionsRouter = t.router({
       const projectId = input.projectId ?? null;
 
       const [lastInstruction] = await db
-        .select({ order: instructions.order })
-        .from(instructions)
+        .select({ order: instructionsTable.order })
+        .from(instructionsTable)
         .where(
-          and(eq(instructions.userId, user.id), isNull(instructions.deletedAt))
+          and(
+            eq(instructionsTable.userId, user.id),
+            isNull(instructionsTable.deletedAt)
+          )
         )
-        .orderBy(desc(instructions.order))
+        .orderBy(desc(instructionsTable.order))
         .limit(1);
 
       const nextOrder = (lastInstruction?.order ?? -1) + 1;
 
       const [created] = await db
-        .insert(instructions)
+        .insert(instructionsTable)
         .values({
           userId: user.id,
           title: trimmedTitle,
@@ -77,12 +82,12 @@ export const instructionsRouter = t.router({
           order: nextOrder,
         })
         .returning({
-          id: instructions.id,
-          title: instructions.title,
-          content: instructions.content,
-          projectId: instructions.projectId,
-          isActive: instructions.isActive,
-          order: instructions.order,
+          id: instructionsTable.id,
+          title: instructionsTable.title,
+          content: instructionsTable.content,
+          projectId: instructionsTable.projectId,
+          isActive: instructionsTable.isActive,
+          order: instructionsTable.order,
         });
 
       if (!created) {
@@ -108,9 +113,9 @@ export const instructionsRouter = t.router({
       const existing = await db.query.instructions.findFirst({
         columns: { id: true, userId: true, isActive: true },
         where: and(
-          eq(instructions.id, input.id),
-          eq(instructions.userId, user.id),
-          isNull(instructions.deletedAt)
+          eq(instructionsTable.id, input.id),
+          eq(instructionsTable.userId, user.id),
+          isNull(instructionsTable.deletedAt)
         ),
       });
 
@@ -133,21 +138,21 @@ export const instructionsRouter = t.router({
       const projectId = input.projectId ?? null;
 
       const [updated] = await db
-        .update(instructions)
+        .update(instructionsTable)
         .set({
           title: trimmedTitle,
           content: trimmedContent,
           projectId,
           isActive: input.isActive ?? existing.isActive,
         })
-        .where(eq(instructions.id, input.id))
+        .where(eq(instructionsTable.id, input.id))
         .returning({
-          id: instructions.id,
-          title: instructions.title,
-          content: instructions.content,
-          projectId: instructions.projectId,
-          isActive: instructions.isActive,
-          order: instructions.order,
+          id: instructionsTable.id,
+          title: instructionsTable.title,
+          content: instructionsTable.content,
+          projectId: instructionsTable.projectId,
+          isActive: instructionsTable.isActive,
+          order: instructionsTable.order,
         });
 
       if (!updated) {
@@ -172,22 +177,22 @@ export const instructionsRouter = t.router({
       if (!user) throw new Error("Assert: auth procedure must have user");
 
       const [updated] = await db
-        .update(instructions)
+        .update(instructionsTable)
         .set({ isActive: input.isActive })
         .where(
           and(
-            eq(instructions.id, input.id),
-            eq(instructions.userId, user.id),
-            isNull(instructions.deletedAt)
+            eq(instructionsTable.id, input.id),
+            eq(instructionsTable.userId, user.id),
+            isNull(instructionsTable.deletedAt)
           )
         )
         .returning({
-          id: instructions.id,
-          title: instructions.title,
-          content: instructions.content,
-          projectId: instructions.projectId,
-          isActive: instructions.isActive,
-          order: instructions.order,
+          id: instructionsTable.id,
+          title: instructionsTable.title,
+          content: instructionsTable.content,
+          projectId: instructionsTable.projectId,
+          isActive: instructionsTable.isActive,
+          order: instructionsTable.order,
         });
 
       if (!updated) {
@@ -215,29 +220,37 @@ export const instructionsRouter = t.router({
       }
 
       const existing = await db
-        .select({ id: instructions.id })
-        .from(instructions)
+        .select({ id: instructionsTable.id })
+        .from(instructionsTable)
         .where(
           and(
-            eq(instructions.userId, user.id),
-            isNull(instructions.deletedAt),
-            inArray(instructions.id, input.instructionIds)
+            eq(instructionsTable.userId, user.id),
+            isNull(instructionsTable.deletedAt),
+            inArray(instructionsTable.id, input.instructionIds)
           )
         );
 
       const validIds = new Set(existing.map((item) => item.id));
       const orderedIds = input.instructionIds.filter((id) => validIds.has(id));
 
-      await db.transaction(async (tx) => {
-        await Promise.all(
-          orderedIds.map((id, index) =>
-            tx
-              .update(instructions)
-              .set({ order: index })
-              .where(eq(instructions.id, id))
-          )
-        );
-      });
+      // We fake an insert to be able to update many rows at once with onConflicDoUpdate
+      await db
+        .insert(instructionsTable)
+        .values(
+          orderedIds.map((id, index) => ({
+            id,
+            order: index,
+            userId: user.id,
+            title: "",
+            content: "",
+          }))
+        )
+        .onConflictDoUpdate({
+          target: instructionsTable.id,
+          set: {
+            order: sql`EXCLUDED.order`,
+          },
+        });
 
       return { success: true } as const;
     }),
@@ -249,16 +262,16 @@ export const instructionsRouter = t.router({
       if (!user) throw new Error("Assert: auth procedure must have user");
 
       const [updated] = await db
-        .update(instructions)
+        .update(instructionsTable)
         .set({ deletedAt: new Date() })
         .where(
           and(
-            eq(instructions.id, input.id),
-            eq(instructions.userId, user.id),
-            isNull(instructions.deletedAt)
+            eq(instructionsTable.id, input.id),
+            eq(instructionsTable.userId, user.id),
+            isNull(instructionsTable.deletedAt)
           )
         )
-        .returning({ id: instructions.id });
+        .returning({ id: instructionsTable.id });
 
       if (!updated) {
         throw new TRPCError({

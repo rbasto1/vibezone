@@ -12,19 +12,17 @@ import type { FC } from "react";
 interface InstructionItemProps {
   instruction: InstructionConfig;
   projectLabel: string;
+  projectColor?: string | null;
   onToggle: (id: string, checked: boolean) => void;
   onDelete: (id: string) => void;
-  togglePending: boolean;
-  deletePending: boolean;
 }
 
 export const InstructionItem: FC<InstructionItemProps> = ({
   instruction,
   projectLabel,
+  projectColor,
   onToggle,
   onDelete,
-  togglePending,
-  deletePending,
 }) => {
   const sortable = useSortable({ id: instruction.id });
   const style = {
@@ -60,15 +58,21 @@ export const InstructionItem: FC<InstructionItemProps> = ({
               <div className="truncate text-sm font-medium">
                 {instruction.title}
               </div>
-              <div className="text-xs text-muted-foreground">
-                {projectLabel}
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {projectColor ? (
+                  <span
+                    aria-hidden="true"
+                    className="h-2 w-2 flex-none rounded-full"
+                    style={{ backgroundColor: projectColor }}
+                  />
+                ) : null}
+                <span className="truncate">{projectLabel}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <ToggleSwitch
                 checked={instruction.isActive}
                 onChange={(checked) => onToggle(instruction.id, checked)}
-                disabled={togglePending}
                 label="Toggle instruction"
               />
               <Button
@@ -76,7 +80,6 @@ export const InstructionItem: FC<InstructionItemProps> = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => onDelete(instruction.id)}
-                disabled={deletePending}
                 aria-label="Delete instruction"
               >
                 <Trash2 className="h-4 w-4" />

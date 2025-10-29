@@ -80,7 +80,6 @@
     "@next/eslint-plugin-next": "^15.5.3",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/archiver": "^7.0.0",
-    "@types/jszip": "^3.4.1",
     "@types/node": "^22.18.1",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.8",

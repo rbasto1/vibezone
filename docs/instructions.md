@@ -13,3 +13,4 @@
   - Filter with `isNull(table.deletedAt)` for active records
 - Use `useState<Type>()` instead of `useState<Type | null>(null)` for simplicity, since useState assumes the type can be undefined when you initialize the state with empty parentheses
 - When running shell commands, prefix any command that could run indefinitely or for too long with `timeout 10s` (adjust as needed)
+- Do not use transactions, since we are using @neondatabase/serverless that doesn't support them
