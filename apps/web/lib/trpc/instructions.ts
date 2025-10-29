@@ -1,6 +1,10 @@
 import "server-only";
 
-import { db, instructions as instructionsTable } from "@/db";
+import {
+  db,
+  instructions as instructionsTable,
+  projects as projectsTable,
+} from "@/db";
 import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -71,6 +75,22 @@ export const instructionsRouter = t.router({
 
       const nextOrder = (lastInstruction?.order ?? -1) + 1;
 
+      const project = projectId
+        ? await db.query.projects.findFirst({
+            columns: { id: true },
+            where: and(
+              eq(projectsTable.id, projectId),
+              eq(projectsTable.userId, user.id)
+            ),
+          })
+        : null;
+      if (projectId && !project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found",
+        });
+      }
+
       const [created] = await db
         .insert(instructionsTable)
         .values({
@@ -111,7 +131,12 @@ export const instructionsRouter = t.router({
       if (!user) throw new Error("Assert: auth procedure must have user");
 
       const existing = await db.query.instructions.findFirst({
-        columns: { id: true, userId: true, isActive: true },
+        columns: {
+          id: true,
+          userId: true,
+          isActive: true,
+          projectId: true,
+        },
         where: and(
           eq(instructionsTable.id, input.id),
           eq(instructionsTable.userId, user.id),
@@ -136,6 +161,21 @@ export const instructionsRouter = t.router({
       }
 
       const projectId = input.projectId ?? null;
+      if (projectId && projectId !== existing.projectId) {
+        const project = await db.query.projects.findFirst({
+          columns: { id: true },
+          where: and(
+            eq(projectsTable.id, projectId),
+            eq(projectsTable.userId, user.id)
+          ),
+        });
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Project not found",
+          });
+        }
+      }
 
       const [updated] = await db
         .update(instructionsTable)

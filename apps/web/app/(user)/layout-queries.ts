@@ -1,7 +1,7 @@
 import "server-only";
 
 import { generateId } from "ai";
-import { and, asc, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 
 import type { Model } from "@/db";
 import {
@@ -114,13 +114,12 @@ export async function loadProjects(
 ): Promise<ProjectConfig[]> {
   if (!userId) return [];
 
-  const rows = await db
+  return await db
     .select({
       id: projectsTable.id,
       name: projectsTable.name,
       color: projectsTable.color,
       isDefault: sql<boolean>`${projectsTable.id} = ${userId}`,
-      createdAt: projectsTable.createdAt,
     })
     .from(projectsTable)
     .leftJoin(
@@ -139,14 +138,7 @@ export async function loadProjects(
       projectsTable.color,
       projectsTable.createdAt
     )
-    .orderBy(asc(projectsTable.createdAt));
-
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    color: row.color,
-    isDefault: row.isDefault,
-  }));
+    .orderBy(projectsTable.createdAt);
 }
 
 export async function loadInstructions(
@@ -154,7 +146,7 @@ export async function loadInstructions(
 ): Promise<InstructionConfig[]> {
   if (!userId) return [];
 
-  const rows = await db
+  return await db
     .select({
       id: instructionsTable.id,
       title: instructionsTable.title,
@@ -170,16 +162,7 @@ export async function loadInstructions(
         isNull(instructionsTable.deletedAt)
       )
     )
-    .orderBy(asc(instructionsTable.order), asc(instructionsTable.createdAt));
-
-  return rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    content: row.content,
-    projectId: row.projectId,
-    isActive: row.isActive,
-    order: row.order,
-  }));
+    .orderBy(instructionsTable.order, instructionsTable.createdAt);
 }
 
 export async function ensurePreferences(userId: string | null | undefined) {
@@ -268,7 +251,7 @@ export async function getRecentNews(
   const oldest = new Date(Date.now() - NEWS_WINDOW_MS);
   const cutoff = !lastSeenAt || lastSeenAt < oldest ? oldest : lastSeenAt;
 
-  const rows = await db
+  return await db
     .select({
       id: newsArticlesTable.id,
       titleText: sql<string>`title->>${locale}`,
@@ -289,6 +272,4 @@ export async function getRecentNews(
       console.error("Failed to load recent news:", error);
       throw error instanceof Error ? error : new Error(String(error));
     });
-
-  return rows;
 }
