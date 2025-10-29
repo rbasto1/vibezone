@@ -1,10 +1,18 @@
+import { env } from "cloudflare:workers";
+import type { VibezoneContext } from "../worker";
+
 export function summarize(obj: unknown): string {
   if (obj === null) {
     return "∅";
   }
   switch (typeof obj) {
-    case "string":
-      return `"string(${obj.length})"`;
+    case "string": {
+      const len = obj.length;
+      if (len <= 16) {
+        return `"${obj}"`;
+      }
+      return `"string(${len})"`;
+    }
     case "undefined":
       return '"undefined"';
     case "bigint":
@@ -46,4 +54,26 @@ export function summarize(obj: unknown): string {
     default:
       return typeof obj;
   }
+}
+
+export function printLogInfo(ctx: VibezoneContext) {
+  const { completionRequest } = ctx;
+  if (env.ENVIRONMENT !== "development") {
+    console.info({
+      message: "Starting stream",
+      model: completionRequest.config.modelId,
+      plugins: completionRequest.config.plugins.join(", "),
+      user: ctx.usageContext?.userId ?? ctx.usageContext?.userKey,
+    });
+    return;
+  }
+
+  console.info(
+    [
+      `🌊 Starting stream`,
+      `Model: ${completionRequest.config.modelId}`,
+      `Plugins: ${completionRequest.config.plugins.join(", ")}`,
+      `Messages: ${summarize(completionRequest.messages)}`,
+    ].join("\n")
+  );
 }
