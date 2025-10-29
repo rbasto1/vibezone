@@ -1,10 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ReasoningEffort } from "@/db";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
@@ -16,6 +15,7 @@ import {
   DatabaseBackupIcon,
   ScrollTextIcon,
   Settings2Icon,
+  XIcon,
 } from "lucide-react";
 import { PreferencesDataTab } from "./data";
 import type { ReasoningEffortValue } from "./general";
@@ -32,78 +32,169 @@ const PreferencesPage = () => {
   const [preferences, setPreferences] = useUserPreferences();
   const setUIState = useUIStateSetter();
 
-  const [hiddenProviders, setHiddenProviders] = useState<Set<string>>(
+  const [hiddenProviders, setHiddenProvidersState] = useState<Set<string>>(
     () => new Set(preferences.hiddenProviders ?? [])
   );
-  const initialHiddenProviders = preferences.hiddenProviders.sort();
-  const initialAutoScroll = preferences.autoScroll;
-  const initialWebSearch = preferences.pluginWeb;
-  const initialReasoningEffort = normalizeReasoningEffort(
-    preferences.reasoningEffort
+  const [autoScroll, setAutoScrollState] = useState(preferences.autoScroll);
+  const [webSearch, setWebSearchState] = useState(preferences.pluginWeb);
+  const [enterKeySends, setEnterKeySendsState] = useState(
+    preferences.enterKeySends
   );
-
-  const [autoScroll, setAutoScroll] = useState(initialAutoScroll);
-  const [webSearch, setWebSearch] = useState(initialWebSearch);
-  const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffortValue>(
-    initialReasoningEffort
+  const [shiftEnterKeySends, setShiftEnterKeySendsState] = useState(
+    preferences.shiftEnterKeySends
   );
-
-  useEffect(() => {
-    setAutoScroll(preferences.autoScroll);
-    setWebSearch(preferences.pluginWeb);
-    setReasoningEffort(normalizeReasoningEffort(preferences.reasoningEffort));
-    const initialHidden = new Set(preferences.hiddenProviders ?? []);
-    setHiddenProviders(initialHidden);
-  }, [preferences, setUIState]);
-
-  const currentHiddenProviders = Array.from(hiddenProviders).sort();
-  const hasHiddenChanged =
-    currentHiddenProviders.length !== initialHiddenProviders.length ||
-    currentHiddenProviders.some(
-      (provider, index) => provider !== initialHiddenProviders[index]
+  const [reasoningEffort, setReasoningEffortState] =
+    useState<ReasoningEffortValue>(
+      normalizeReasoningEffort(preferences.reasoningEffort)
     );
 
-  const hasChanges =
-    autoScroll !== initialAutoScroll ||
-    webSearch !== initialWebSearch ||
-    reasoningEffort !== initialReasoningEffort ||
-    hasHiddenChanged;
+  useEffect(() => {
+    setAutoScrollState(preferences.autoScroll);
+    setWebSearchState(preferences.pluginWeb);
+    setEnterKeySendsState(preferences.enterKeySends);
+    setShiftEnterKeySendsState(preferences.shiftEnterKeySends);
+    setReasoningEffortState(
+      normalizeReasoningEffort(preferences.reasoningEffort)
+    );
+    const initialHidden = new Set(preferences.hiddenProviders ?? []);
+    setHiddenProvidersState(initialHidden);
+  }, [preferences]);
 
-  const updatePreferences = trpc.users.updatePreferences.useMutation({
-    onError: (error: unknown) => {
-      console.error("Error saving preferences:", error);
-      const message =
-        error instanceof Error ? error.message : JSON.stringify(error);
-      toast.error(t("toast.error", { message }));
-      setPreferences((prev) => ({
-        ...prev,
-        pluginWeb: initialWebSearch,
-        reasoningEffort: initialReasoningEffort,
-        autoScroll: initialAutoScroll,
-        hiddenProviders: initialHiddenProviders,
+  const updatePreferences = trpc.users.updatePreferences.useMutation();
+
+  const getErrorMessage = (error: unknown) =>
+    error instanceof Error ? error.message : JSON.stringify(error);
+
+  const handleAutoScrollChange = (value: boolean) => {
+    const previous = autoScroll;
+    setAutoScrollState(value);
+    setPreferences((prev) => ({ ...prev, autoScroll: value }));
+
+    updatePreferences.mutate(
+      { autoScroll: value },
+      {
+        onError: (error: unknown) => {
+          console.error("Error saving preferences:", error);
+          const message = getErrorMessage(error);
+          toast.error(t("toast.error", { message }));
+          setAutoScrollState(previous);
+          setPreferences((prev) => ({ ...prev, autoScroll: previous }));
+        },
+      }
+    );
+  };
+
+  const handleWebSearchChange = (value: boolean) => {
+    const previous = webSearch;
+    setWebSearchState(value);
+    setPreferences((prev) => ({ ...prev, pluginWeb: value }));
+
+    updatePreferences.mutate(
+      { webSearch: value },
+      {
+        onError: (error: unknown) => {
+          console.error("Error saving preferences:", error);
+          const message = getErrorMessage(error);
+          toast.error(t("toast.error", { message }));
+          setWebSearchState(previous);
+          setPreferences((prev) => ({ ...prev, pluginWeb: previous }));
+        },
+      }
+    );
+  };
+
+  const handleEnterKeySendsChange = (value: boolean) => {
+    const previous = enterKeySends;
+    setEnterKeySendsState(value);
+    setPreferences((prev) => ({ ...prev, enterKeySends: value }));
+
+    updatePreferences.mutate(
+      { enterKeySends: value },
+      {
+        onError: (error: unknown) => {
+          console.error("Error saving preferences:", error);
+          const message = getErrorMessage(error);
+          toast.error(t("toast.error", { message }));
+          setEnterKeySendsState(previous);
+          setPreferences((prev) => ({ ...prev, enterKeySends: previous }));
+        },
+      }
+    );
+  };
+
+  const handleShiftEnterKeySendsChange = (value: boolean) => {
+    const previous = shiftEnterKeySends;
+    setShiftEnterKeySendsState(value);
+    setPreferences((prev) => ({ ...prev, shiftEnterKeySends: value }));
+
+    updatePreferences.mutate(
+      { shiftEnterKeySends: value },
+      {
+        onError: (error: unknown) => {
+          console.error("Error saving preferences:", error);
+          const message = getErrorMessage(error);
+          toast.error(t("toast.error", { message }));
+          setShiftEnterKeySendsState(previous);
+          setPreferences((prev) => ({
+            ...prev,
+            shiftEnterKeySends: previous,
+          }));
+        },
+      }
+    );
+  };
+
+  const handleReasoningEffortChange = (value: ReasoningEffortValue) => {
+    const previous = reasoningEffort;
+    setReasoningEffortState(value);
+    setPreferences((prev) => ({ ...prev, reasoningEffort: value }));
+
+    updatePreferences.mutate(
+      { reasoningEffort: value },
+      {
+        onError: (error: unknown) => {
+          console.error("Error saving preferences:", error);
+          const message = getErrorMessage(error);
+          toast.error(t("toast.error", { message }));
+          setReasoningEffortState(previous);
+          setPreferences((prev) => ({ ...prev, reasoningEffort: previous }));
+        },
+      }
+    );
+  };
+
+  const handleHiddenProvidersChange: Dispatch<SetStateAction<Set<string>>> = (
+    value
+  ) => {
+    setHiddenProvidersState((prev) => {
+      const previousSet = new Set(prev);
+      const nextSet = typeof value === "function" ? value(prev) : value;
+      const previousList = Array.from(previousSet).sort();
+      const nextList = Array.from(nextSet).sort();
+
+      setPreferences((prevPrefs) => ({
+        ...prevPrefs,
+        hiddenProviders: nextList,
       }));
-    },
-  });
 
-  const handleSave = () => {
-    const targetHidden = Array.from(hiddenProviders).sort();
-    const hiddenList = targetHidden;
+      updatePreferences.mutate(
+        { hiddenProviders: nextList },
+        {
+          onError: (error: unknown) => {
+            console.error("Error saving preferences:", error);
+            const message = getErrorMessage(error);
+            toast.error(t("toast.error", { message }));
+            setHiddenProvidersState(previousSet);
+            setPreferences((prevPrefs) => ({
+              ...prevPrefs,
+              hiddenProviders: previousList,
+            }));
+          }
+        }
+      );
 
-    setUIState({ panelOpen: null });
-
-    updatePreferences.mutate({
-      autoScroll,
-      webSearch,
-      reasoningEffort,
-      hiddenProviders: hiddenList,
+      return nextSet;
     });
-    setPreferences((prev) => ({
-      ...prev,
-      pluginWeb: webSearch,
-      reasoningEffort,
-      autoScroll,
-      hiddenProviders: hiddenList,
-    }));
   };
 
   return (
@@ -115,17 +206,14 @@ const PreferencesPage = () => {
             {t("description", { siteName })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setUIState({ panelOpen: null })}
-          >
-            {t("actions.cancel")}
-          </Button>
-          <Button onClick={handleSave} disabled={!hasChanges}>
-            {t("actions.save")}
-          </Button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setUIState({ panelOpen: null })}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={t("actions.close")}
+        >
+          <XIcon className="h-5 w-5" />
+        </button>
       </header>
 
       <Tabs defaultValue="general" className="flex flex-col gap-6">
@@ -164,16 +252,20 @@ const PreferencesPage = () => {
 
         <PreferencesGeneralTab
           autoScroll={autoScroll}
-          setAutoScroll={setAutoScroll}
+          setAutoScroll={handleAutoScrollChange}
           webSearch={webSearch}
-          setWebSearch={setWebSearch}
+          setWebSearch={handleWebSearchChange}
+          enterKeySends={enterKeySends}
+          setEnterKeySends={handleEnterKeySendsChange}
+          shiftEnterKeySends={shiftEnterKeySends}
+          setShiftEnterKeySends={handleShiftEnterKeySendsChange}
           reasoningEffort={reasoningEffort}
-          setReasoningEffort={setReasoningEffort}
+          setReasoningEffort={handleReasoningEffortChange}
         />
 
         <PreferencesProvidersTab
           hiddenProviders={hiddenProviders}
-          setHiddenProviders={setHiddenProviders}
+          setHiddenProviders={handleHiddenProvidersChange}
         />
 
         <PreferencesInstructionsTab />

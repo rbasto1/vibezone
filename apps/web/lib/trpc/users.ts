@@ -270,6 +270,8 @@ export const usersRouter = t.router({
         hiddenProviders: z.array(z.string()).optional(),
         webSearch: z.boolean().optional(),
         reasoningEffort: z.enum(["none", "low", "medium", "high"]).optional(),
+        enterKeySends: z.boolean().optional(),
+        shiftEnterKeySends: z.boolean().optional(),
         skipCloseThreadConfirmation: z.boolean().optional(),
         hideLegal: z.boolean().optional(),
       })
@@ -315,6 +317,8 @@ export const usersRouter = t.router({
         preferenceHiddenProviders: sanitizedHiddenProviders,
         preferenceWebSearch: input.webSearch,
         preferenceReasoningEffort: input.reasoningEffort,
+        preferenceEnterKeySends: input.enterKeySends,
+        preferenceShiftEnterKeySends: input.shiftEnterKeySends,
         preferenceSkipCloseThreadConfirmation:
           input.skipCloseThreadConfirmation,
         preferenceHideLegal: input.hideLegal,
@@ -340,6 +344,8 @@ export const usersRouter = t.router({
           hiddenProviders: sanitizedHiddenProviders,
           webSearch: input.webSearch,
           reasoningEffort: input.reasoningEffort,
+          enterKeySends: input.enterKeySends,
+          shiftEnterKeySends: input.shiftEnterKeySends,
           skipCloseThreadConfirmation: input.skipCloseThreadConfirmation,
           hideLegal: input.hideLegal,
           lastModels:

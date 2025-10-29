@@ -418,6 +418,14 @@
       "label": "Websuche",
       "description": "Erlaube der KI, das Web zu durchsuchen, wenn das ausgewählte Modell das unterstützt."
     },
+    "enterKeySends": {
+      "label": "Enter sendet Nachrichten",
+      "description": "Wenn aktiviert, sendet ein Druck auf Enter deine Nachricht. Deaktiviere die Option, damit Enter stattdessen eine neue Zeile einfügt."
+    },
+    "shiftEnterKeySends": {
+      "label": "Shift+Enter sendet Nachrichten",
+      "description": "Aktiviere diese Option, wenn auch Shift+Enter die Nachricht senden soll. Lass sie ausgeschaltet, damit Shift+Enter immer eine neue Zeile einfügt."
+    },
     "reasoningEffort": {
       "label": "Denkaufwand",
       "description": "Steuere, wie viel Denkaufwand die KI verwendet, wenn das ausgewählte Modell das unterstützt.",
@@ -491,6 +499,7 @@
     "actions": {
       "cancel": "Abbrechen",
       "save": "Änderungen speichern",
+      "close": "Schließen",
       "saving": "Speichere..."
     },
     "toast": {

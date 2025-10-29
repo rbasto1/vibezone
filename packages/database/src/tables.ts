@@ -50,6 +50,12 @@ export const preferences = pgTable("preferences", {
   preferenceReasoningEffort: text("preference_reasoning_effort")
     .default("low")
     .notNull(),
+  preferenceEnterKeySends: boolean("preference_enter_key_sends")
+    .default(true)
+    .notNull(),
+  preferenceShiftEnterKeySends: boolean("preference_shift_enter_key_sends")
+    .default(false)
+    .notNull(),
   preferenceSkipCloseThreadConfirmation: boolean(
     "preference_skip_close_thread_confirmation"
   )

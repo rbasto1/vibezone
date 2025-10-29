@@ -21,7 +21,7 @@
 
 ## Improvements
 
-- [ ] Instructions list with toggle
+- [x] Instructions list with toggle
 - [ ] Preferences: enter / shift-enter to send
 - [ ] Data mgmt: delete all my chats
 - [x] Add Terms of Use

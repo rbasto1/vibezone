@@ -17,6 +17,7 @@ import { useComposerPrompt } from "@/hooks/use-composer-prompt";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
 import { useOpenSignIn, useUser } from "@/lib/auth-client";
+import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 
 interface AttachmentCapabilityState {
   allowed: boolean;
@@ -52,6 +53,7 @@ export const GlobalComposerTextarea = forwardRef<
   const openSignIn = useOpenSignIn();
   const user = useUser();
   const isLoggedIn = !!user;
+  const preferences = useUserPreferencesValue();
   const panels = usePanelsConfigValue();
   const panelModelIds = useMemo(
     () => panels.map((panel) => panel.model),
@@ -137,15 +139,24 @@ export const GlobalComposerTextarea = forwardRef<
   );
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (
-      event.key === "Enter" &&
-      !event.shiftKey &&
-      !event.ctrlKey &&
-      !event.metaKey
-    ) {
-      event.preventDefault();
-      void handleSubmit();
+    if (event.key !== "Enter") {
+      return;
     }
+
+    if (event.ctrlKey || event.metaKey || event.altKey) {
+      return;
+    }
+
+    const shouldSend =
+      (!event.shiftKey && preferences.enterKeySends) ||
+      (event.shiftKey && preferences.shiftEnterKeySends);
+
+    if (!shouldSend) {
+      return;
+    }
+
+    event.preventDefault();
+    void handleSubmit();
   };
 
   const handlePaste = useCallback(
