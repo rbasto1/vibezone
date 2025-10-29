@@ -21,7 +21,7 @@
     "drizzle-orm": "^0.44.5"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2"
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@types/node": "^22.18.6",
