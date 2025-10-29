@@ -1,2 +1,2 @@
+export * from "@vibezone/database";
 export * from "./connection";
-export * from "./schema";

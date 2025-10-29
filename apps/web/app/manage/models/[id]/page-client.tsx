@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { QueryAlert } from "@/components/ui/query-alert";
-import type { Model, Provider } from "@/db/schema";
+import type { Model, Provider } from "@/db";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { trpc } from "@/lib/trpc/client";
 import type { FC } from "react";

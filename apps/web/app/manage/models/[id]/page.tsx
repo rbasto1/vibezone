@@ -2,13 +2,13 @@ import "server-only";
 
 import { and, eq, isNull } from "drizzle-orm";
 
-import { db } from "@/db";
 import {
+  db,
   models,
   modelSupportedParameters,
   providers,
   supportedParameters,
-} from "@/db/schema";
+} from "@/db";
 import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { BackLink } from "./back";

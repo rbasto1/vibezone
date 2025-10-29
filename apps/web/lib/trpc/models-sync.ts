@@ -1,27 +1,27 @@
 import "server-only";
 
+import type { TextResult } from "deepl-node";
 import { and, inArray, isNull, sql } from "drizzle-orm";
 
-import { db } from "@/db";
 import type {
   NewModel,
   NewModelTranslation,
   NewProvider,
   NewSupportedParameter,
-} from "@/db/schema";
+} from "@/db";
 import {
+  db,
   models as modelsTable,
   modelSupportedParameters,
   modelTranslations,
   providers as providersTable,
   supportedParameters as supportedParametersTable,
-} from "@/db/schema";
+} from "@/db";
 import type { OpenRouterModel } from "@/lib/open-router/schema";
 import {
   MaritacaAIModelsResponse,
   OpenRouterModelsResponse,
 } from "@/lib/open-router/schema";
-import type { TextResult } from "deepl-node";
 import {
   deepl,
   localeToSourceLanguageCode,

@@ -23,9 +23,14 @@ interface KpiCard {
   subtitle?: string;
 }
 
-import { userStats } from "@/db";
+import {
+  chats,
+  models as modelstable,
+  providers,
+  usage,
+  userStats,
+} from "@/db";
 import { db } from "@/db/connection";
-import { chats, models as modelstable, providers, usage } from "@/db/schema";
 import { models } from "@/generated/models";
 import { and, desc, eq, gte, isNotNull, sql } from "drizzle-orm";
 

@@ -4,14 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "dotenvx run -- next dev --turbopack --port 3022",
-    "build": "pnpm run db:push && next build",
+    "build": "pnpm --filter @vibezone/database db:push && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "i18n-check": "npx @lingual/i18n-check@latest --source en --locales messages",
     "prettier-fix": "prettier --write .",
-    "db:push": "drizzle-kit push --verbose",
-    "db:studio": "drizzle-kit studio",
     "db:update-stage": "dotenvx run -- tsx scripts/update-stage.ts",
     "generate:data-ts": "dotenvx run -- tsx scripts/generate-data-ts.ts",
     "set-vercel-envs": "dotenvx run -- tsx scripts/set-vercel-envs.ts"
@@ -48,7 +46,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "deepl-node": "^1.19.1",
-    "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.5",
     "flourite": "^1.3.0",
     "framer-motion": "^12.23.15",

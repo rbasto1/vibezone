@@ -6,36 +6,14 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "typecheck": "tsc --project tsconfig.json --noEmit"
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "db:push": "drizzle-kit push --verbose",
+    "db:studio": "drizzle-kit studio"
   },
   "exports": {
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    },
-    "./schema": {
-      "types": "./src/schema.ts",
-      "default": "./src/schema.ts"
-    },
-    "./tables": {
-      "types": "./src/tables.ts",
-      "default": "./src/tables.ts"
-    },
-    "./relations": {
-      "types": "./src/relations.ts",
-      "default": "./src/relations.ts"
-    },
-    "./enums": {
-      "types": "./src/enums.ts",
-      "default": "./src/enums.ts"
-    },
-    "./helpers": {
-      "types": "./src/helpers.ts",
-      "default": "./src/helpers.ts"
-    },
-    "./json-columns-types": {
-      "types": "./src/json-columns-types.ts",
-      "default": "./src/json-columns-types.ts"
     },
     "./package.json": "./package.json"
   },
@@ -43,6 +21,8 @@
     "drizzle-orm": "^0.44.5"
   },
   "devDependencies": {
+    "@types/node": "^22.18.6",
+    "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.5"
   }
 }

@@ -1,14 +1,14 @@
 import "server-only";
 
-import { db } from "@/db";
-import type { NewMessage } from "@/db/schema";
+import type { NewMessage } from "@/db";
 import {
   chats as chatsTable,
+  db,
   messageRatings as messageRatingsTable,
   messages as messagesTable,
   projects as projectsTable,
   threads as threadsTable,
-} from "@/db/schema";
+} from "@/db";
 import { TRPCError } from "@trpc/server";
 import type {
   MessageMetadata,

@@ -1,7 +1,6 @@
 import "server-only";
 
-import { db } from "@/db";
-import { locales } from "@/db/schema";
+import { db, locales } from "@/db";
 import { adminProcedure, t } from "@/lib/trpc/server/initialize";
 import { eq } from "drizzle-orm";
 import { z } from "zod";

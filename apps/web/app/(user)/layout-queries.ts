@@ -3,16 +3,16 @@ import "server-only";
 import { generateId } from "ai";
 import { and, asc, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 
-import { db } from "@/db";
-import type { Model } from "@/db/schema";
+import type { Model } from "@/db";
 import {
-  chats,
-  models,
-  newsArticles,
+  chats as chatsTable,
+  db,
+  models as modelsTable,
+  newsArticles as newsArticlesTable,
   preferences as preferencesTable,
   projects as projectsTable,
   userStats as userStatsTable,
-} from "@/db/schema";
+} from "@/db";
 import { models as modelsList } from "@/generated/models";
 import {
   DEFAULT_PROJECT_COLOR,
@@ -55,14 +55,14 @@ export async function getUserPreferredModels(
 
   // Fetch only existing chat models, keep user order and limit to MAX_PANELS
   const candidates = await db
-    .select({ id: models.id, providerId: models.providerId })
-    .from(models)
+    .select({ id: modelsTable.id, providerId: modelsTable.providerId })
+    .from(modelsTable)
     .where(
       and(
-        inArray(models.id, lastModels),
-        isNull(models.deletedAt),
-        isNull(models.hiddenAt),
-        eq(models.isChat, true)
+        inArray(modelsTable.id, lastModels),
+        isNull(modelsTable.deletedAt),
+        isNull(modelsTable.hiddenAt),
+        eq(modelsTable.isChat, true)
       )
     );
   const byId = new Map(candidates.map((m) => [m.id, m]));
@@ -123,8 +123,11 @@ export async function loadProjects(
     })
     .from(projectsTable)
     .leftJoin(
-      chats,
-      and(eq(chats.projectId, projectsTable.id), isNull(chats.deletedAt))
+      chatsTable,
+      and(
+        eq(chatsTable.projectId, projectsTable.id),
+        isNull(chatsTable.deletedAt)
+      )
     )
     .where(
       and(eq(projectsTable.userId, userId), isNull(projectsTable.deletedAt))
@@ -235,21 +238,21 @@ export async function getRecentNews(
 
   const rows = await db
     .select({
-      id: newsArticles.id,
+      id: newsArticlesTable.id,
       titleText: sql<string>`title->>${locale}`,
       bodyText: sql<string>`body->>${locale}`,
-      createdAt: newsArticles.createdAt,
+      createdAt: newsArticlesTable.createdAt,
     })
-    .from(newsArticles)
+    .from(newsArticlesTable)
     .where(
       and(
-        isNull(newsArticles.deletedAt),
-        gt(newsArticles.createdAt, cutoff),
+        isNull(newsArticlesTable.deletedAt),
+        gt(newsArticlesTable.createdAt, cutoff),
         sql<boolean>`title->>${locale} IS NOT NULL`,
         sql<boolean>`body->>${locale} IS NOT NULL`
       )
     )
-    .orderBy(desc(newsArticles.createdAt))
+    .orderBy(desc(newsArticlesTable.createdAt))
     .catch((error) => {
       console.error("Failed to load recent news:", error);
       throw error instanceof Error ? error : new Error(String(error));

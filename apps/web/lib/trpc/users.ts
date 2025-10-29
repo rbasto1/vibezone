@@ -1,8 +1,5 @@
 import "server-only";
 
-import { db, preferences, userStats } from "@/db";
-import type { Preferences } from "@/db/schema";
-import { chats, models, projects, usage, usersModels } from "@/db/schema";
 import {
   and,
   count,
@@ -16,6 +13,18 @@ import {
   sql,
 } from "drizzle-orm";
 import { z } from "zod";
+
+import type { Preferences } from "@/db";
+import {
+  chats,
+  db,
+  models,
+  preferences,
+  projects,
+  usage,
+  usersModels,
+  userStats,
+} from "@/db";
 import { MAX_PANELS } from "../constants";
 import {
   adminProcedure,

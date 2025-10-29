@@ -4,8 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { db } from "@/db";
-import { locales, modelTranslations, models, providers } from "@/db/schema";
+import { db, locales, modelTranslations, models, providers } from "@/db";
 import {
   adminProcedure,
   publicProcedure,

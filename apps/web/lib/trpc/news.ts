@@ -1,14 +1,14 @@
 import "server-only";
 
-import { db } from "@/db";
-import { newsArticles, preferences } from "@/db/schema";
+import { and, desc, eq, isNull, lt, or, sql } from "drizzle-orm";
+import { z } from "zod";
+
+import { db, newsArticles, preferences } from "@/db";
 import {
   adminProcedure,
   authenticatedProcedure,
   t,
 } from "@/lib/trpc/server/initialize";
-import { and, desc, eq, isNull, lt, or, sql } from "drizzle-orm";
-import { z } from "zod";
 
 const translationValueSchema = z.string().trim().min(1);
 
