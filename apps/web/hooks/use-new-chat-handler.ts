@@ -8,18 +8,18 @@ import {
   usePanelsStateSetter,
 } from "@/hooks/use-panels";
 import { useProjectsValue } from "@/hooks/use-projects";
+import { useInstructionsValue } from "@/hooks/use-instructions";
 import { useThreadRuntimeControllersValue } from "@/hooks/use-thread-store";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import { generateThreadId } from "@/lib/id";
 import type { PanelConfig } from "@/store/panels";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import { useSetAtom } from "jotai";
+import { composeInstructionPrompt } from "@/lib/instructions";
 
 interface NewChatOptions {
   projectId?: string | null;
-  projectInstructions?: string | null;
 }
 
 export function useNewChatHandler() {
@@ -29,13 +29,11 @@ export function useNewChatHandler() {
   const setPanelsConfig = usePanelsConfigSetter();
   const setUIState = useUIStateSetter();
   const projects = useProjectsValue();
-  const preferences = useUserPreferencesValue();
+  const instructions = useInstructionsValue();
   const runtimeControllers = useThreadRuntimeControllersValue();
   const setThreadMessages = useSetAtom(threadMessagesAtom);
 
-  const systemPrompt = preferences.changedPrompt
-    ? preferences.systemPrompt
-    : t("Prompts.system");
+  const baseSystemPrompt = t("Prompts.system");
 
   const defaultProject = useMemo(
     () => projects.find((project) => project.isDefault) ?? projects[0] ?? null,
@@ -50,9 +48,10 @@ export function useNewChatHandler() {
 
       const targetProjectId = targetProject?.id ?? options?.projectId ?? null;
 
-      const mergedPrompt = mergePrompts(
-        systemPrompt,
-        options?.projectInstructions ?? targetProject?.instructions ?? null
+      const mergedPrompt = composeInstructionPrompt(
+        baseSystemPrompt,
+        instructions,
+        targetProjectId
       );
 
       const chat = createNewChat(targetProjectId);
@@ -86,13 +85,14 @@ export function useNewChatHandler() {
     [
       createNewChat,
       defaultProject,
+      instructions,
       projects,
       runtimeControllers,
       setPanelsConfig,
       setPanelsState,
       setThreadMessages,
       setUIState,
-      systemPrompt,
+      baseSystemPrompt,
     ]
   );
 }
@@ -115,11 +115,4 @@ const buildSystemMessages = (
       metadata: { custom: {} },
     } satisfies ThreadMessageLike,
   ];
-};
-
-const mergePrompts = (
-  userPrompt: string | null,
-  projectInstructions: string | null
-): string | null => {
-  return [userPrompt, projectInstructions].filter(Boolean).join("\n\n") || null;
 };

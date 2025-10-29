@@ -46,10 +46,6 @@ export const preferences = pgTable("preferences", {
     .default(false)
     .notNull(),
   preferenceHiddenProviders: text("preference_hidden_providers").array(),
-  preferenceSystemPrompt: text("preference_system_prompt"),
-  preferenceSystemPromptChangedAt: timestampTz(
-    "preference_system_prompt_changed_at"
-  ),
   preferenceWebSearch: boolean("preference_web_search").default(true).notNull(),
   preferenceReasoningEffort: text("preference_reasoning_effort")
     .default("low")
@@ -79,7 +75,6 @@ export const projects = pgTable(
       .references(() => userStats.id),
     name: text("name").notNull(),
     color: text("color").notNull(),
-    instructions: text("instructions"),
     createdAt: timestampTzNow("created_at"),
     updatedAt: timestampTzNowUpdated("updated_at"),
     deletedAt: timestampTz("deleted_at"),
@@ -163,6 +158,29 @@ export const models = pgTable(
   },
   (table) => [
     index("models_is_chat_deleted_at_idx").on(table.isChat, table.deletedAt),
+  ]
+);
+
+export const instructions = pgTable(
+  "instructions",
+  {
+    id: text("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()::text`),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userStats.id),
+    projectId: text("project_id").references(() => projects.id),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    order: integer("order").notNull(),
+    createdAt: timestampTzNow("created_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
+    deletedAt: timestampTz("deleted_at"),
+  },
+  (table) => [
+    index("instructions_user_project_idx").on(table.userId, table.projectId),
   ]
 );
 

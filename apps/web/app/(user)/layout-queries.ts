@@ -1,12 +1,13 @@
 import "server-only";
 
 import { generateId } from "ai";
-import { and, asc, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 
 import type { Model } from "@/db";
 import {
   chats as chatsTable,
   db,
+  instructions as instructionsTable,
   models as modelsTable,
   newsArticles as newsArticlesTable,
   preferences as preferencesTable,
@@ -19,6 +20,7 @@ import {
   MAX_PANELS,
   NEWS_WINDOW_MS,
 } from "@/lib/constants";
+import type { InstructionConfig } from "@/store/instructions";
 import type { ProjectConfig } from "@/store/projects";
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import type { User } from "@clerk/nextjs/server";
@@ -112,14 +114,12 @@ export async function loadProjects(
 ): Promise<ProjectConfig[]> {
   if (!userId) return [];
 
-  const rows = await db
+  return await db
     .select({
       id: projectsTable.id,
       name: projectsTable.name,
       color: projectsTable.color,
-      instructions: projectsTable.instructions,
       isDefault: sql<boolean>`${projectsTable.id} = ${userId}`,
-      createdAt: projectsTable.createdAt,
     })
     .from(projectsTable)
     .leftJoin(
@@ -136,18 +136,33 @@ export async function loadProjects(
       projectsTable.id,
       projectsTable.name,
       projectsTable.color,
-      projectsTable.instructions,
       projectsTable.createdAt
     )
-    .orderBy(asc(projectsTable.createdAt));
+    .orderBy(projectsTable.createdAt);
+}
 
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    color: row.color,
-    instructions: row.instructions,
-    isDefault: row.isDefault,
-  }));
+export async function loadInstructions(
+  userId: string | null | undefined
+): Promise<InstructionConfig[]> {
+  if (!userId) return [];
+
+  return await db
+    .select({
+      id: instructionsTable.id,
+      title: instructionsTable.title,
+      content: instructionsTable.content,
+      projectId: instructionsTable.projectId,
+      isActive: instructionsTable.isActive,
+      order: instructionsTable.order,
+    })
+    .from(instructionsTable)
+    .where(
+      and(
+        eq(instructionsTable.userId, userId),
+        isNull(instructionsTable.deletedAt)
+      )
+    )
+    .orderBy(instructionsTable.order, instructionsTable.createdAt);
 }
 
 export async function ensurePreferences(userId: string | null | undefined) {
@@ -236,7 +251,7 @@ export async function getRecentNews(
   const oldest = new Date(Date.now() - NEWS_WINDOW_MS);
   const cutoff = !lastSeenAt || lastSeenAt < oldest ? oldest : lastSeenAt;
 
-  const rows = await db
+  return await db
     .select({
       id: newsArticlesTable.id,
       titleText: sql<string>`title->>${locale}`,
@@ -257,6 +272,4 @@ export async function getRecentNews(
       console.error("Failed to load recent news:", error);
       throw error instanceof Error ? error : new Error(String(error));
     });
-
-  return rows;
 }

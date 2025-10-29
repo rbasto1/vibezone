@@ -13,10 +13,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "auto-fix": "turbo run format --parallel",
-    "db:generate": "turbo run db:generate",
-    "db:push": "turbo run db:push",
-    "db:seed": "turbo run db:seed",
-    "db:studio": "turbo run db:studio"
+    "db:push": "pnpm -F @vibezone/database run db:push",
+    "db:studio": "pnpm -F @vibezone/database run db:studio"
   },
   "packageManager": "pnpm@10.14.0",
   "pnpm": {

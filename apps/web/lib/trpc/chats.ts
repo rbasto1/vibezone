@@ -153,7 +153,6 @@ export const chatsRouter = t.router({
             columns: {
               id: true,
               userId: true,
-              instructions: true,
               name: true,
               color: true,
             },
@@ -286,7 +285,6 @@ export async function listChats({
         id: projects.id,
         name: projects.name,
         color: projects.color,
-        instructions: projects.instructions,
         isDefault: sql<boolean>`${projects.id} = ${userId}`,
       },
     })

@@ -85,7 +85,7 @@ export const messagesRouter = t.router({
           z.object({
             id: z.string(),
             modelId: z.string(),
-            message: MessageSchema,
+            messages: z.array(MessageSchema),
           })
         ),
       })
@@ -103,6 +103,14 @@ export const messagesRouter = t.router({
         });
       }
 
+      const firstUserMessage = firstThread.messages.find(
+        (message) => message.role === "user"
+      );
+
+      const firstUserMessageText = firstUserMessage
+        ? extractTextFromContent(firstUserMessage.content)
+        : undefined;
+
       // Ensure project belongs to user
       const projectRecord = await db.query.projects.findFirst({
         where: and(
@@ -119,12 +127,11 @@ export const messagesRouter = t.router({
       }
 
       // Ensure chat exists
-      const firstUserMessage = firstThread.message.content[0]?.text;
       const chat = await getOrInsertChat(
         chatId,
         projectId,
         user.id,
-        typeof firstUserMessage === "string" ? firstUserMessage : undefined
+        firstUserMessageText ? firstUserMessageText : undefined
       );
       if (!chat) {
         throw new TRPCError({
@@ -149,21 +156,23 @@ export const messagesRouter = t.router({
       await db
         .insert(messagesTable)
         .values(
-          threads.map(
-            (t) =>
-              ({
-                id: t.message.id,
-                threadId: t.id,
-                modelId: t.modelId,
-                parentId: t.message.parentId,
-                branchNumber: t.message.branchNumber,
-                role: t.message.role,
-                content: t.message.content,
-                attachments: t.message.attachments,
-                metadata: t.message.metadata,
-                status: t.message.status,
-                createdAt: t.message.createdAt,
-              }) satisfies NewMessage
+          threads.flatMap((t) =>
+            t.messages.map(
+              (message) =>
+                ({
+                  id: message.id,
+                  threadId: t.id,
+                  modelId: t.modelId,
+                  parentId: message.parentId,
+                  branchNumber: message.branchNumber,
+                  role: message.role,
+                  content: message.content,
+                  attachments: message.attachments,
+                  metadata: message.metadata,
+                  status: message.status,
+                  createdAt: message.createdAt,
+                }) satisfies NewMessage
+            )
           )
         )
         .onConflictDoNothing();

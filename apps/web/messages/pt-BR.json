@@ -236,19 +236,23 @@
   },
   "ProjectModal": {
     "createTitle": "Criar projeto",
-    "createDescription": "Agrupe chats relacionados definindo uma cor e instruções para o projeto.",
+    "createDescription": "Agrupe chats relacionados definindo uma cor para o projeto.",
     "editTitle": "Editar projeto",
-    "editDescription": "Atualize o nome, a cor ou as instruções do projeto.",
+    "editDescription": "Atualize o nome ou a cor do projeto.",
     "fields": {
       "name": {
         "label": "Nome",
         "placeholder": "Nome do projeto"
       },
-      "color": "Cor",
-      "instructions": {
-        "label": "Instruções",
-        "placeholder": "Adicione instruções específicas para o projeto…",
-        "helper": "Essas instruções são enviadas em todo chat deste projeto."
+      "color": "Cor"
+    },
+    "instructions": {
+      "title": "Instruções do projeto",
+      "helper": "Gerencie as instruções na página de Preferências. Ative ou desative abaixo as instruções ligadas a este projeto.",
+      "empty": "Ainda não há instruções associadas a este projeto.",
+      "toggleLabel": "Alternar instrução",
+      "errors": {
+        "toggle": "Não foi possível atualizar a instrução."
       }
     },
     "errors": {
@@ -438,10 +442,51 @@
       "empty": "Nenhum provedor está oculto.",
       "any": "todos os provedores"
     },
-    "systemPrompt": {
-      "label": "Instruções padrão",
-      "description": "Essas instruções são enviadas no início de cada conversa.",
-      "placeholder": "Adicione o contexto ou as orientações que a IA deve seguir por padrão."
+    "instructions": {
+      "title": "Gerenciar instruções",
+      "description": "Crie instruções reutilizáveis executadas antes de cada resposta do assistente. Defina-as para um projeto específico ou mantenha-as globais.",
+      "form": {
+        "title": {
+          "label": "Título da instrução",
+          "placeholder": "ex.: Tom amigável ou Incluir links"
+        },
+        "project": {
+          "label": "Aplica-se a",
+          "placeholder": "Selecione um projeto",
+          "all": "Todos os projetos"
+        },
+        "content": {
+          "label": "Detalhes da instrução",
+          "placeholder": "Descreva as orientações que o assistente deve seguir."
+        },
+        "submit": "Adicionar instrução",
+        "update": "Salvar alterações"
+      },
+      "errors": {
+        "generic": "Algo deu errado.",
+        "missingFields": "Informe um título e o texto da instrução."
+      },
+      "toast": {
+        "createError": "Não foi possível criar a instrução: {message}",
+        "toggleError": "Não foi possível atualizar a instrução: {message}",
+        "deleteError": "Não foi possível excluir a instrução: {message}",
+        "reorderError": "Não foi possível reordenar as instruções: {message}",
+        "updateError": "Não foi possível atualizar a instrução: {message}"
+      },
+      "modal": {
+        "createTitle": "Adicionar instrução",
+        "createDescription": "Defina o que o assistente deve considerar antes de cada resposta.",
+        "editTitle": "Editar instrução",
+        "editDescription": "Atualize o título, o conteúdo ou o projeto associado desta instrução.",
+        "cancel": "Cancelar"
+      },
+      "list": {
+        "title": "Instruções existentes",
+        "helper": "Arraste para reordenar. Apenas instruções ativas são enviadas antes de cada conversa.",
+        "empty": "Ainda não há instruções. Adicione uma acima para começar.",
+        "deletedProject": "Projeto indisponível",
+        "addButton": "Adicionar instrução"
+      }
     },
     "actions": {
       "cancel": "Cancelar",

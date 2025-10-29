@@ -1,6 +1,7 @@
 import { convertToModelMessages, streamText } from "ai";
 import { waitUntil } from "cloudflare:workers";
 import { getAdapterForProvider } from "./lib/gateway";
+import { printLogInfo } from "./lib/log";
 import { persistUsage } from "./lib/usage";
 import { getUsageDO } from "./objects/usage";
 import type { VibezoneContext } from "./worker";
@@ -10,8 +11,7 @@ export async function handleProviderStream(
   headers: Headers
 ): Promise<Response> {
   const { env, completionRequest } = vzContext;
-  const { modelId, providerId, adapterModelId, plugins } =
-    completionRequest.config;
+  const { providerId, adapterModelId, plugins } = completionRequest.config;
   const messages = completionRequest.messages;
 
   const pluginWeb = plugins.includes("web");
@@ -42,12 +42,7 @@ export async function handleProviderStream(
     return stub.fetch("https://internal/credit", { method: "POST" });
   };
 
-  console.info({
-    message: "Starting stream",
-    model: modelId,
-    plugins: plugins.join(", "),
-    user: vzContext.usageContext?.userId ?? vzContext.usageContext?.userKey,
-  });
+  printLogInfo(vzContext);
 
   const result = streamText({
     model: adapter(modelSpecifier),

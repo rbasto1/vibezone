@@ -3,7 +3,9 @@ import type { RouterOutputs } from "@/lib/trpc/client";
 import { trpc } from "@/lib/trpc/client";
 import type { PendingUserMessageInfo } from "@/store/pending-user-messages";
 import { usePendingUserMessagesClear } from "@/store/pending-user-messages";
+import { threadMessagesAtom } from "@/store/thread-messages";
 import type { InfiniteData } from "@tanstack/react-query";
+import { useAtomValue } from "jotai";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useCurrentChatValue } from "./use-chat";
@@ -24,6 +26,7 @@ export const useUserMessageSaver = () => {
   const utils = trpc.useUtils();
   const saveUserMessageMutation = trpc.messages.saveUserMessage.useMutation();
   const saveUserMessageMutationStable = useStableValue(saveUserMessageMutation);
+  const threadMessagesStable = useStableValue(useAtomValue(threadMessagesAtom));
 
   const isLoggedIn = !!user;
   const chatId = chat.id;
@@ -49,7 +52,6 @@ export const useUserMessageSaver = () => {
           id: project.id,
           name: project.name,
           color: project.color,
-          instructions: project.instructions,
           isDefault: project.isDefault,
         },
       } satisfies ListChatsOutput["chats"][number];
@@ -112,10 +114,16 @@ export const useUserMessageSaver = () => {
       }
 
       const threads = pendingUserMessages.map((messageInfo) => {
+        const existingMessages =
+          threadMessagesStable.current[messageInfo.threadId] ?? [];
+        const systemMessages = existingMessages.filter(
+          (message) => message.role === "system"
+        );
+
         return {
           id: messageInfo.threadId,
           modelId: messageInfo.modelId,
-          message: messageInfo.message,
+          messages: [...systemMessages, messageInfo.message],
         };
         // messages has read-only components, for now let's ignore the warning
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,6 +149,7 @@ export const useUserMessageSaver = () => {
       projectId,
       threadCount,
       saveUserMessageMutationStable,
+      threadMessagesStable,
       chatId,
       clearPendingUserMessages,
       syncThreadLists,

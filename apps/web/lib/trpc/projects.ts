@@ -12,7 +12,6 @@ const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
 const projectInputSchema = z.object({
   name: z.string().min(1).max(60),
   color: z.string().regex(HEX_COLOR_REGEX, "Invalid color"),
-  instructions: z.string().max(20000).optional().nullable(),
 });
 
 export const projectsRouter = t.router({
@@ -30,11 +29,6 @@ export const projectsRouter = t.router({
       const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
 
-      const trimmedInstructions =
-        input.instructions?.trim().length === 0
-          ? null
-          : (input.instructions?.trim() ?? null);
-
       let insertedProjectId: string | null = null;
 
       try {
@@ -44,7 +38,6 @@ export const projectsRouter = t.router({
             userId: user.id,
             name: input.name.trim(),
             color: input.color,
-            instructions: trimmedInstructions,
           })
           .returning({ id: projects.id });
 
@@ -113,13 +106,12 @@ export const projectsRouter = t.router({
         });
       }
 
-      const { name, color, instructions } = input.data;
+      const { name, color } = input.data;
       const updated = await db
         .update(projects)
         .set({
           name: name.trim(),
           color,
-          instructions: instructions?.trim() || null,
         })
         .where(eq(projects.id, input.id))
         .returning()
@@ -302,7 +294,6 @@ async function selectProjects(userId: string, projectId?: string) {
       userId: projects.userId,
       name: projects.name,
       color: projects.color,
-      instructions: projects.instructions,
       createdAt: projects.createdAt,
       updatedAt: projects.updatedAt,
       isDefault: sql<boolean>`${projects.id} = ${userId}`,
@@ -321,7 +312,6 @@ async function selectProjects(userId: string, projectId?: string) {
     id: row.id,
     name: row.name,
     color: row.color,
-    instructions: row.instructions,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     isDefault: row.isDefault,

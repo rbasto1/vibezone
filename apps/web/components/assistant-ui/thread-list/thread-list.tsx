@@ -47,7 +47,6 @@ export const ThreadList: FC = () => {
         selectedProject
           ? {
               projectId: selectedProject.id,
-              projectInstructions: selectedProject.instructions ?? null,
             }
           : undefined
       );
