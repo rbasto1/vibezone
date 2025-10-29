@@ -1,15 +1,15 @@
 import "server-only";
 
-import { db } from "@/db";
-import type { NewSuggestionGroup } from "@/db/schema";
-import { suggestionGroups, suggestionGroupTranslations } from "@/db/schema";
+import { and, asc, eq, sql } from "drizzle-orm";
+import { z } from "zod";
+
+import type { NewSuggestionGroup } from "@/db";
+import { db, suggestionGroups, suggestionGroupTranslations } from "@/db";
 import {
   adminProcedure,
   publicProcedure,
   t,
 } from "@/lib/trpc/server/initialize";
-import { and, asc, eq, sql } from "drizzle-orm";
-import { z } from "zod";
 
 export const suggestionGroupsRouter = t.router({
   list: publicProcedure.query(listSuggestionGroups),

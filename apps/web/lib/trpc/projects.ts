@@ -1,10 +1,10 @@
 import "server-only";
 
-import { db } from "@/db";
-import { chats, projects } from "@/db/schema";
-import { TRPCError } from "@trpc/server";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
+
+import { chats, db, projects } from "@/db";
+import { TRPCError } from "@trpc/server";
 import { authenticatedProcedure, t } from "./server/initialize";
 
 const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;

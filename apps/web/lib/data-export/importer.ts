@@ -13,12 +13,12 @@ import {
   type NewMessage,
   type NewThread,
 } from "@/db";
-import type { MessageMetadata } from "@/db/json-columns-types";
 import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
 import type {
   Conversation,
   ConversationNodeMessageContent,
 } from "@/lib/openai/export-types";
+import type { MessageMetadata } from "@vibezone/database";
 
 interface ImportStreamOptions {
   userId: string;

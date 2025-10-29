@@ -1,10 +1,10 @@
 import "server-only";
 
-import { db } from "@/db";
-import { providers, providerTiers } from "@/db/schema";
-import { adminProcedure, t } from "@/lib/trpc/server/initialize";
 import { asc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
+
+import { db, providers, providerTiers } from "@/db";
+import { adminProcedure, t } from "@/lib/trpc/server/initialize";
 
 export async function getProvidersList(showDeleted?: boolean) {
   return await db

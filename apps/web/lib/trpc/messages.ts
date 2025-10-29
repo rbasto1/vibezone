@@ -1,19 +1,19 @@
 import "server-only";
 
-import { db } from "@/db";
-import type {
-  MessageMetadata,
-  MessageRatingAttachment,
-} from "@/db/json-columns-types";
-import type { NewMessage } from "@/db/schema";
+import type { NewMessage } from "@/db";
 import {
   chats as chatsTable,
+  db,
   messageRatings as messageRatingsTable,
   messages as messagesTable,
   projects as projectsTable,
   threads as threadsTable,
-} from "@/db/schema";
+} from "@/db";
 import { TRPCError } from "@trpc/server";
+import type {
+  MessageMetadata,
+  MessageRatingAttachment,
+} from "@vibezone/database";
 import { and, desc, eq, isNull, lte } from "drizzle-orm";
 import { z } from "zod";
 import { getChatName } from "./chats";

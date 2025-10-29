@@ -1,7 +1,8 @@
-import { db, type Model, type Provider } from "@/db";
-import * as schema from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
+
+import * as schema from "@/db";
+import { db, type Model, type Provider } from "@/db";
 
 const providerFields: (keyof Provider)[] = [
   "name",

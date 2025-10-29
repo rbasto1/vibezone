@@ -1,8 +1,8 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 
-import * as schema from "./schema";
-export { schema as vibezoneDbSchema };
+import { schema } from "@vibezone/database";
+export { schema };
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {

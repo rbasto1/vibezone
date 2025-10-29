@@ -1,13 +1,13 @@
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
 
-import { db } from "@/db";
-import type { Provider } from "@/db/schema";
+import type { Provider } from "@/db";
 import {
+  db,
   models as modelsTable,
   providers as providersTable,
   suggestionGroups,
   suggestionGroupTranslations,
-} from "@/db/schema";
+} from "@/db";
 
 export async function listModels() {
   const result = await db.query.models.findMany({

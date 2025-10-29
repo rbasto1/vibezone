@@ -1,0 +1,31 @@
+{
+  "name": "@vibezone/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "db:push": "drizzle-kit push --verbose",
+    "db:studio": "drizzle-kit studio"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "^0.44.5"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.6",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.5"
+  }
+}

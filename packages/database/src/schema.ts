@@ -1,4 +1,4 @@
-import { providerTiers } from "@/db/enums";
+import { providerTiers } from "./enums";
 
 import {
   chatRelations,
@@ -17,7 +17,7 @@ import {
   threadsRelations,
   usageRelations,
   usersModelsRelations,
-} from "@/db/relations";
+} from "./relations";
 
 import {
   chats,
@@ -39,7 +39,7 @@ import {
   usage,
   usersModels,
   userStats,
-} from "@/db/tables";
+} from "./tables";
 
 export {
   chatRelations,

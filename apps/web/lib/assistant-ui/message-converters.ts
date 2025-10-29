@@ -1,3 +1,4 @@
+import type { AppendMessage, ThreadMessageLike } from "@assistant-ui/react";
 import {
   generateId,
   type CreateUIMessage,
@@ -8,8 +9,7 @@ import {
 } from "ai";
 
 import type { Message } from "@/db";
-import type { MessageMetadata } from "@/db/json-columns-types";
-import type { AppendMessage, ThreadMessageLike } from "@assistant-ui/react";
+import type { MessageMetadata } from "@vibezone/database";
 
 const toTextPart = (text: string) => ({ type: "text" as const, text });
 
