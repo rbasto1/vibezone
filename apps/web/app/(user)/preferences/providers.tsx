@@ -1,25 +1,31 @@
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { Dispatch, FC, SetStateAction } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/components/ui/utils";
 import { models as rawModels } from "@/generated/models";
+import { useUserPreferences } from "@/hooks/use-user-preferences";
+import { trpc } from "@/lib/trpc/client";
 
-interface PreferencesProvidersTabProps {
-  hiddenProviders: Set<string>;
-  setHiddenProviders: Dispatch<SetStateAction<Set<string>>>;
-}
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : JSON.stringify(error);
 
-export const PreferencesProvidersTab: FC<PreferencesProvidersTabProps> = ({
-  hiddenProviders,
-  setHiddenProviders,
-}) => {
+export const PreferencesProvidersTab = () => {
   const t = useTranslations("UserPreferences");
+  const [preferences, setPreferences] = useUserPreferences();
+  const updatePreferences = trpc.users.updatePreferences.useMutation();
   const [providerInput, setProviderInput] = useState("");
+  const [hiddenProvidersSet, setHiddenProvidersSet] = useState<Set<string>>(
+    () => new Set(preferences.hiddenProviders ?? [])
+  );
+
+  useEffect(() => {
+    setHiddenProvidersSet(new Set(preferences.hiddenProviders ?? []));
+  }, [preferences.hiddenProviders]);
 
   const providerOptions = useMemo(
     () =>
@@ -28,7 +34,11 @@ export const PreferencesProvidersTab: FC<PreferencesProvidersTabProps> = ({
       ),
     []
   );
-  const currentHiddenProviders = Array.from(hiddenProviders).sort();
+
+  const currentHiddenProviders = useMemo(
+    () => Array.from(hiddenProvidersSet).sort(),
+    [hiddenProvidersSet]
+  );
 
   const trimmedInput = providerInput.trim();
   const matchingProviders = useMemo(() => {
@@ -43,33 +53,64 @@ export const PreferencesProvidersTab: FC<PreferencesProvidersTabProps> = ({
     return query ? base.slice(0, 10) : base;
   }, [providerOptions, trimmedInput]);
 
+  const mutateHiddenProviders = (nextSet: Set<string>, previousSet: Set<string>) => {
+    const nextList = Array.from(nextSet).sort();
+    const previousList = Array.from(previousSet).sort();
+
+    setPreferences((prev) => ({
+      ...prev,
+      hiddenProviders: nextList,
+    }));
+
+    updatePreferences.mutate(
+      { hiddenProviders: nextList },
+      {
+        onError: (error: unknown) => {
+          console.error("Error saving preferences:", error);
+          const message = getErrorMessage(error);
+          toast.error(t("toast.error", { message }));
+          setHiddenProvidersSet(new Set(previousList));
+          setPreferences((prev) => ({
+            ...prev,
+            hiddenProviders: previousList,
+          }));
+        },
+      }
+    );
+  };
+
   const resetProviders = () => {
-    setHiddenProviders(new Set());
+    if (!currentHiddenProviders.length) return;
+    const previousSet = new Set(hiddenProvidersSet);
+    setHiddenProvidersSet(new Set());
     setProviderInput("");
+    mutateHiddenProviders(new Set(), previousSet);
   };
 
   const handleRemoveProvider = (providerId: string) => {
-    setHiddenProviders((prev) => {
-      const next = new Set(prev);
-      next.delete(providerId);
-      if (next.size === 0) {
-        setProviderInput("");
-      }
-      return next;
-    });
+    if (!hiddenProvidersSet.has(providerId)) return;
+    const previousSet = new Set(hiddenProvidersSet);
+    const nextSet = new Set(hiddenProvidersSet);
+    nextSet.delete(providerId);
+    if (nextSet.size === 0) {
+      setProviderInput("");
+    }
+    setHiddenProvidersSet(nextSet);
+    mutateHiddenProviders(nextSet, previousSet);
   };
 
   const handleAddProvider = (providerId: string) => {
-    if (!providerId || hiddenProviders.has(providerId)) return;
+    if (!providerId || hiddenProvidersSet.has(providerId)) return;
     const exists = providerOptions.find(
       (provider) => provider.id === providerId
     );
     if (!exists) return;
-    setHiddenProviders((prev) => {
-      const next = new Set(prev);
-      next.add(providerId);
-      return next;
-    });
+
+    const previousSet = new Set(hiddenProvidersSet);
+    const nextSet = new Set(hiddenProvidersSet);
+    nextSet.add(providerId);
+    setHiddenProvidersSet(nextSet);
+    mutateHiddenProviders(nextSet, previousSet);
   };
 
   return (
@@ -110,7 +151,7 @@ export const PreferencesProvidersTab: FC<PreferencesProvidersTabProps> = ({
                       key={provider.id}
                       type="button"
                       onClick={() => {
-                        if (hiddenProviders.has(provider.id)) {
+                        if (hiddenProvidersSet.has(provider.id)) {
                           handleRemoveProvider(provider.id);
                         } else {
                           handleAddProvider(provider.id);
@@ -118,7 +159,7 @@ export const PreferencesProvidersTab: FC<PreferencesProvidersTabProps> = ({
                       }}
                       className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm font-medium hover:bg-muted/60"
                     >
-                      {hiddenProviders.has(provider.id) ? (
+                      {hiddenProvidersSet.has(provider.id) ? (
                         <EyeOffIcon className="h-4 w-4" />
                       ) : (
                         <EyeIcon className="h-4 w-4 text-muted-foreground" />
@@ -126,7 +167,7 @@ export const PreferencesProvidersTab: FC<PreferencesProvidersTabProps> = ({
                       <span
                         className={cn(
                           "truncate",
-                          hiddenProviders.has(provider.id) && "line-through"
+                          hiddenProvidersSet.has(provider.id) && "line-through"
                         )}
                       >
                         {provider.name}
