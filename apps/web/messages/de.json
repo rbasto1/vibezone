@@ -459,7 +459,8 @@
           "label": "Anweisungstext",
           "placeholder": "Beschreibe die Vorgaben, denen der Assistent folgen soll."
         },
-        "submit": "Anweisung hinzufügen"
+        "submit": "Anweisung hinzufügen",
+        "update": "Änderungen speichern"
       },
       "errors": {
         "generic": "Etwas ist schiefgelaufen.",
@@ -469,13 +470,22 @@
         "createError": "Anweisung konnte nicht erstellt werden: {message}",
         "toggleError": "Anweisung konnte nicht aktualisiert werden: {message}",
         "deleteError": "Anweisung konnte nicht gelöscht werden: {message}",
-        "reorderError": "Anweisungen konnten nicht neu angeordnet werden: {message}"
+        "reorderError": "Anweisungen konnten nicht neu angeordnet werden: {message}",
+        "updateError": "Anweisung konnte nicht aktualisiert werden: {message}"
+      },
+      "modal": {
+        "createTitle": "Anweisung hinzufügen",
+        "createDescription": "Lege fest, was der Assistent vor jeder Antwort beachten soll.",
+        "editTitle": "Anweisung bearbeiten",
+        "editDescription": "Passe Titel, Inhalt oder Projektzuordnung dieser Anweisung an.",
+        "cancel": "Abbrechen"
       },
       "list": {
         "title": "Vorhandene Anweisungen",
         "helper": "Zum Neuordnen ziehen. Aktive Anweisungen werden vor jedem Gespräch gesendet.",
         "empty": "Noch keine Anweisungen vorhanden. Lege oben eine neue an.",
-        "deletedProject": "Projekt nicht mehr verfügbar"
+        "deletedProject": "Projekt nicht mehr verfügbar",
+        "addButton": "Anweisung hinzufügen"
       }
     },
     "actions": {

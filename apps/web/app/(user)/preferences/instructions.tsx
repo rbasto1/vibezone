@@ -18,30 +18,42 @@ import { useMemo, useState, type FC } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { TabsContent } from "@/components/ui/tabs";
 import { useInstructions } from "@/hooks/use-instructions";
 import { useProjectsValue } from "@/hooks/use-projects";
 import { trpc } from "@/lib/trpc/client";
 import { InstructionItem } from "./instruction-item";
+import { InstructionModal, type InstructionDraft } from "./instruction-modal";
 
 const ALL_PROJECTS_VALUE = "__all__";
+
+type ClosedModalState = { open: false };
+type CreateModalState = {
+  open: true;
+  mode: "create";
+  draft: InstructionDraft;
+};
+type EditModalState = {
+  open: true;
+  mode: "edit";
+  instructionId: string;
+  draft: InstructionDraft;
+};
+
+type ModalState = ClosedModalState | CreateModalState | EditModalState;
+
+const EMPTY_DRAFT: InstructionDraft = {
+  title: "",
+  content: "",
+  projectId: null,
+};
 
 export const PreferencesInstructionsTab: FC = () => {
   const t = useTranslations("UserPreferences.instructions");
   const [instructions, setInstructions] = useInstructions();
   const projects = useProjectsValue();
 
-  const [title, setTitle] = useState("");
-  const [projectId, setProjectId] = useState<string>(ALL_PROJECTS_VALUE);
-  const [content, setContent] = useState("");
+  const [modalState, setModalState] = useState<ModalState>({ open: false });
 
   const projectMetadata = useMemo(() => {
     const map = new Map<string, { name: string; color: string }>();
@@ -63,7 +75,7 @@ export const PreferencesInstructionsTab: FC = () => {
   );
 
   const createInstruction = trpc.instructions.create.useMutation();
-
+  const updateInstruction = trpc.instructions.update.useMutation();
   const toggleInstruction = trpc.instructions.setActive.useMutation();
   const deleteInstruction = trpc.instructions.delete.useMutation();
   const reorderInstructions = trpc.instructions.reorder.useMutation({
@@ -74,34 +86,19 @@ export const PreferencesInstructionsTab: FC = () => {
     },
   });
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmedTitle = title.trim();
-    const trimmedContent = content.trim();
-
-    if (!trimmedTitle || !trimmedContent) {
-      toast.error(t("errors.missingFields"));
-      return;
-    }
-
+  const handleCreateSubmit = (values: InstructionDraft) => {
     const previousInstructions = instructions.map((item) => ({ ...item }));
-    const previousFormState = {
-      title,
-      content,
-      projectId,
-    };
-
-    const resolvedProjectId =
-      projectId === ALL_PROJECTS_VALUE ? null : projectId;
+    const currentSorted = sortedInstructions;
     const nextOrder =
-      sortedInstructions.length > 0
-        ? (sortedInstructions[sortedInstructions.length - 1]?.order ?? 0) + 1
+      currentSorted.length > 0
+        ? (currentSorted[currentSorted.length - 1]?.order ?? 0) + 1
         : 0;
+
     const optimisticInstruction = {
       id: `temp-${Date.now()}`,
-      title: trimmedTitle,
-      content: trimmedContent,
-      projectId: resolvedProjectId,
+      title: values.title,
+      content: values.content,
+      projectId: values.projectId,
       isActive: true,
       order: nextOrder,
     };
@@ -109,15 +106,13 @@ export const PreferencesInstructionsTab: FC = () => {
     setInstructions((current) =>
       [...current, optimisticInstruction].sort((a, b) => a.order - b.order)
     );
-    setTitle("");
-    setContent("");
-    setProjectId(ALL_PROJECTS_VALUE);
+    setModalState({ open: false });
 
     createInstruction.mutate(
       {
-        title: trimmedTitle,
-        content: trimmedContent,
-        projectId: resolvedProjectId,
+        title: values.title,
+        content: values.content,
+        projectId: values.projectId,
       },
       {
         onSuccess: (created) => {
@@ -134,9 +129,67 @@ export const PreferencesInstructionsTab: FC = () => {
             error instanceof Error ? error.message : t("errors.generic");
           toast.error(t("toast.createError", { message }));
           setInstructions(previousInstructions);
-          setTitle(previousFormState.title);
-          setContent(previousFormState.content);
-          setProjectId(previousFormState.projectId);
+          setModalState({
+            open: true,
+            mode: "create",
+            draft: {
+              title: values.title,
+              content: values.content,
+              projectId: values.projectId,
+            },
+          });
+        },
+      }
+    );
+  };
+
+  const handleEditSubmit = (
+    instructionId: string,
+    values: InstructionDraft
+  ) => {
+    const previousInstructions = instructions.map((item) => ({ ...item }));
+    setInstructions((current) =>
+      current.map((item) =>
+        item.id === instructionId
+          ? {
+              ...item,
+              title: values.title,
+              content: values.content,
+              projectId: values.projectId,
+            }
+          : item
+      )
+    );
+    setModalState({ open: false });
+
+    updateInstruction.mutate(
+      {
+        id: instructionId,
+        title: values.title,
+        content: values.content,
+        projectId: values.projectId,
+      },
+      {
+        onSuccess: (updated) => {
+          setInstructions((current) =>
+            current.map((item) => (item.id === updated.id ? updated : item))
+          );
+        },
+        onError: (error: unknown) => {
+          const message =
+            error instanceof Error ? error.message : t("errors.generic");
+          toast.error(t("toast.updateError", { message }));
+          setInstructions(previousInstructions);
+          setModalState({
+            open: true,
+            mode: "edit",
+            instructionId,
+            draft: {
+              title: values.title,
+              content: values.content,
+              projectId: values.projectId,
+            },
+          });
         },
       }
     );
@@ -214,96 +267,49 @@ export const PreferencesInstructionsTab: FC = () => {
     );
   };
 
+  const openCreateModal = (draft: InstructionDraft = EMPTY_DRAFT) => {
+    setModalState({
+      open: true,
+      mode: "create",
+      draft,
+    });
+  };
+
+  const openEditModal = (instructionId: string) => {
+    const instruction = instructions.find((item) => item.id === instructionId);
+    if (!instruction) return;
+    const projectExists = instruction.projectId
+      ? projects.some((project) => project.id === instruction.projectId)
+      : true;
+    setModalState({
+      open: true,
+      mode: "edit",
+      instructionId,
+      draft: {
+        title: instruction.title,
+        content: instruction.content,
+        projectId: projectExists ? instruction.projectId : null,
+      },
+    });
+  };
+
+  const closeModal = () => setModalState({ open: false });
+
   return (
     <TabsContent value="instructions" className="space-y-8">
       <section className="space-y-3">
-        <header className="space-y-1.5">
-          <h2 className="text-lg font-semibold">{t("title")}</h2>
-          <p className="text-muted-foreground text-sm">{t("description")}</p>
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1.5">
+            <h2 className="text-lg font-semibold">{t("title")}</h2>
+            <p className="text-muted-foreground text-sm">{t("description")}</p>
+          </div>
+          <Button type="button" onClick={() => openCreateModal()}>
+            {t("list.addButton")}
+          </Button>
         </header>
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4 rounded-lg border bg-card p-4"
-        >
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium" htmlFor="instruction-title">
-              {t("form.title.label")}
-            </label>
-            <Input
-              id="instruction-title"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              maxLength={200}
-              placeholder={t("form.title.placeholder")}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label
-              className="text-sm font-medium"
-              htmlFor="instruction-project"
-            >
-              {t("form.project.label")}
-            </label>
-            <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger
-                className="w-full justify-between"
-                id="instruction-project"
-              >
-                <SelectValue
-                  placeholder={t("form.project.placeholder")}
-                  aria-hidden
-                  className="sr-only"
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_PROJECTS_VALUE}>
-                  <span className="flex items-center gap-2 truncate">
-                    <span className="truncate">{t("form.project.all")}</span>
-                  </span>
-                </SelectItem>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    <span className="flex items-center gap-2 truncate">
-                      <span
-                        aria-hidden="true"
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: project.color }}
-                      />
-                      <span className="truncate">{project.name}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <label
-              className="text-sm font-medium"
-              htmlFor="instruction-content"
-            >
-              {t("form.content.label")}
-            </label>
-            <textarea
-              id="instruction-content"
-              className="min-h-[160px] w-full rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              placeholder={t("form.content.placeholder")}
-              maxLength={20000}
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button type="submit">{t("form.submit")}</Button>
-          </div>
-        </form>
-      </section>
+        <p className="text-muted-foreground text-sm">{t("list.helper")}</p>
 
-      <section className="space-y-3">
-        <header className="space-y-1">
-          <h3 className="text-base font-semibold">{t("list.title")}</h3>
-          <p className="text-muted-foreground text-sm">{t("list.helper")}</p>
-        </header>
-        {sortedInstructions.length === 0 ? (
+        {!sortedInstructions.length ? (
           <div className="rounded-lg border border-dashed bg-muted/20 p-6 text-center text-sm text-muted-foreground">
             {t("list.empty")}
           </div>
@@ -335,6 +341,7 @@ export const PreferencesInstructionsTab: FC = () => {
                     }
                     onToggle={handleToggle}
                     onDelete={handleDelete}
+                    onEdit={() => openEditModal(instruction.id)}
                   />
                 ))}
               </div>
@@ -342,6 +349,30 @@ export const PreferencesInstructionsTab: FC = () => {
           </DndContext>
         )}
       </section>
+      {modalState.open && modalState.mode === "create" ? (
+        <InstructionModal
+          mode="create"
+          open
+          initialValues={modalState.draft}
+          allProjectsValue={ALL_PROJECTS_VALUE}
+          projects={projects}
+          onSubmit={handleCreateSubmit}
+          onClose={closeModal}
+        />
+      ) : null}
+      {modalState.open && modalState.mode === "edit" ? (
+        <InstructionModal
+          mode="edit"
+          open
+          initialValues={modalState.draft}
+          allProjectsValue={ALL_PROJECTS_VALUE}
+          projects={projects}
+          onSubmit={(values) =>
+            handleEditSubmit(modalState.instructionId, values)
+          }
+          onClose={closeModal}
+        />
+      ) : null}
     </TabsContent>
   );
 };

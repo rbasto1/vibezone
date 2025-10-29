@@ -459,7 +459,8 @@
           "label": "Detalhes da instrução",
           "placeholder": "Descreva as orientações que o assistente deve seguir."
         },
-        "submit": "Adicionar instrução"
+        "submit": "Adicionar instrução",
+        "update": "Salvar alterações"
       },
       "errors": {
         "generic": "Algo deu errado.",
@@ -469,13 +470,22 @@
         "createError": "Não foi possível criar a instrução: {message}",
         "toggleError": "Não foi possível atualizar a instrução: {message}",
         "deleteError": "Não foi possível excluir a instrução: {message}",
-        "reorderError": "Não foi possível reordenar as instruções: {message}"
+        "reorderError": "Não foi possível reordenar as instruções: {message}",
+        "updateError": "Não foi possível atualizar a instrução: {message}"
+      },
+      "modal": {
+        "createTitle": "Adicionar instrução",
+        "createDescription": "Defina o que o assistente deve considerar antes de cada resposta.",
+        "editTitle": "Editar instrução",
+        "editDescription": "Atualize o título, o conteúdo ou o projeto associado desta instrução.",
+        "cancel": "Cancelar"
       },
       "list": {
         "title": "Instruções existentes",
         "helper": "Arraste para reordenar. Apenas instruções ativas são enviadas antes de cada conversa.",
         "empty": "Ainda não há instruções. Adicione uma acima para começar.",
-        "deletedProject": "Projeto indisponível"
+        "deletedProject": "Projeto indisponível",
+        "addButton": "Adicionar instrução"
       }
     },
     "actions": {

@@ -459,7 +459,8 @@
           "label": "Instruction details",
           "placeholder": "Write the guidance you want the assistant to follow."
         },
-        "submit": "Add instruction"
+        "submit": "Add instruction",
+        "update": "Save changes"
       },
       "errors": {
         "generic": "Something went wrong.",
@@ -469,13 +470,22 @@
         "createError": "Unable to create instruction: {message}",
         "toggleError": "Unable to update instruction: {message}",
         "deleteError": "Unable to delete instruction: {message}",
-        "reorderError": "Unable to reorder instructions: {message}"
+        "reorderError": "Unable to reorder instructions: {message}",
+        "updateError": "Unable to update instruction: {message}"
+      },
+      "modal": {
+        "createTitle": "Add instruction",
+        "createDescription": "Set expectations for the assistant before every response.",
+        "editTitle": "Edit instruction",
+        "editDescription": "Update titles, content, or project targeting for this instruction.",
+        "cancel": "Cancel"
       },
       "list": {
         "title": "Existing instructions",
         "helper": "Drag to reorder. Active instructions are sent together before each conversation.",
         "empty": "No instructions yet. Add one above to get started.",
-        "deletedProject": "Project no longer available"
+        "deletedProject": "Project no longer available",
+        "addButton": "Add instruction"
       }
     },
     "actions": {

@@ -1,12 +1,12 @@
 "use client";
 
-import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { Button } from "@/components/ui/button";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { cn } from "@/components/ui/utils";
 import type { InstructionConfig } from "@/store/instructions";
-import { GripVertical, Trash2 } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, PencilIcon, Trash2 } from "lucide-react";
 import type { FC } from "react";
 
 interface InstructionItemProps {
@@ -15,6 +15,7 @@ interface InstructionItemProps {
   projectColor?: string | null;
   onToggle: (id: string, checked: boolean) => void;
   onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
 }
 
 export const InstructionItem: FC<InstructionItemProps> = ({
@@ -23,6 +24,7 @@ export const InstructionItem: FC<InstructionItemProps> = ({
   projectColor,
   onToggle,
   onDelete,
+  onEdit,
 }) => {
   const sortable = useSortable({ id: instruction.id });
   const style = {
@@ -44,7 +46,7 @@ export const InstructionItem: FC<InstructionItemProps> = ({
       <div className="flex items-start gap-3">
         <button
           type="button"
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground cursor-grabbing"
           ref={sortable.setActivatorNodeRef}
           {...sortable.listeners}
           {...sortable.attributes}
@@ -75,6 +77,15 @@ export const InstructionItem: FC<InstructionItemProps> = ({
                 onChange={(checked) => onToggle(instruction.id, checked)}
                 label="Toggle instruction"
               />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => onEdit(instruction.id)}
+                aria-label="Edit instruction"
+              >
+                <PencilIcon className="h-4 w-4" />
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
