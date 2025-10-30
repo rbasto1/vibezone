@@ -77,7 +77,7 @@ export class Usage {
     return { day, dayCount, month, monthCount };
   }
 
-  private async handleValidate(): Promise<Response> {
+  private handleValidate(): Response {
     const now = Date.now();
     this.state.waitUntil(this.state.storage.put("validatedAt", now));
     return Response.json({ validatedAt: now });

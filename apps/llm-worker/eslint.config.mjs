@@ -1,7 +1,8 @@
-import baseConfig from "../../packages/config/eslint.config.mjs";
+import eslintConfig from "@vibezone/config/eslint";
+import { defineConfig } from "eslint/config";
 
-export default [
-  ...baseConfig,
+export default defineConfig([
+  eslintConfig,
   {
     languageOptions: {
       parserOptions: {
@@ -20,4 +21,4 @@ export default [
   {
     ignores: ["worker-configuration.d.ts", ".wrangler"],
   },
-];
+]);

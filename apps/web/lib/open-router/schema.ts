@@ -29,7 +29,7 @@ export const OpenRouterModelSchema = z.object({
     is_moderated: z.boolean(),
     max_completion_tokens: z.number().nullable(),
   }),
-  per_request_limits: z.any().nullable().optional(),
+  per_request_limits: z.null(),
   supported_parameters: z.array(z.string()),
 });
 

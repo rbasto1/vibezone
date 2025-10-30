@@ -406,7 +406,7 @@ export async function getChatName(chatId: string, firstUserMessage?: string) {
     }
   );
 
-  const chatName = await chatNameResponse.json();
+  const chatName: unknown = await chatNameResponse.json();
 
   const chatNameParsed = WorkerCompleteResponseSchema.safeParse(chatName);
   if (!chatNameParsed.success) {

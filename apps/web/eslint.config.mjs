@@ -1,18 +1,18 @@
 import nextPlugin from "@next/eslint-plugin-next";
+import eslintConfig from "@vibezone/config/eslint";
 import reactRefresh from "eslint-plugin-react-refresh";
-import baseConfig from "../../packages/config/eslint.config.mjs";
+import { defineConfig } from "eslint/config";
 
-export default [
-  ...baseConfig,
+export default defineConfig([
+  eslintConfig,
   {
-    files: ["**/*.{js,jsx,ts,tsx}"],
     plugins: {
       "@next/next": nextPlugin,
       "react-refresh": reactRefresh,
     },
     languageOptions: {
       parserOptions: {
-        project: "./tsconfig.json",
+        project: ["./tsconfig.json"],
       },
       globals: {
         // React
@@ -28,7 +28,6 @@ export default [
       "@next/next/no-html-link-for-pages": "off",
       // Additional recommended rules
       ...nextPlugin.configs.recommended.rules,
-      ...baseConfig.rules,
       "react-refresh/only-export-components": [
         "warn",
         {
@@ -38,4 +37,4 @@ export default [
       ],
     },
   },
-];
+]);

@@ -54,7 +54,8 @@ export async function getSession(token: string, origin: string) {
   if (!response.ok) {
     return null;
   }
-  const body = (await response.json()) as ClerkSession;
+  const json = await response.json();
+  const body = json as ClerkSession;
 
   return body.status === "active" ? body.user_id : null;
 }

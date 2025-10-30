@@ -13,6 +13,7 @@ export const DynamicIcon: FC<DynamicIconProps> = ({
   className = "",
 }) => {
   // @ts-expect-error we are forcing this
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const IconComponent = Icon[iconName];
 
   if (!IconComponent) {

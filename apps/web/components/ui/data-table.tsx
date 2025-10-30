@@ -7,8 +7,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import * as React from "react";
 import { useRouter } from "next/navigation";
+import * as React from "react";
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -85,13 +85,13 @@ export function DataTable<TData, TValue>({
                 tabIndex={getRowLink ? 0 : -1}
                 onClick={() => {
                   if (!getRowLink) return;
-                  const href = getRowLink(row.original as TData);
+                  const href = getRowLink(row.original);
                   if (href) router.push(href);
                 }}
                 onKeyDown={(e) => {
                   if (!getRowLink) return;
                   if (e.key === "Enter" || e.key === " ") {
-                    const href = getRowLink(row.original as TData);
+                    const href = getRowLink(row.original);
                     if (href) router.push(href);
                   }
                 }}
@@ -135,12 +135,12 @@ export function DataTable<TData, TValue>({
   );
 }
 
-function SortIndicator({
-  dir,
-}: {
-  dir: false | "asc" | "desc";
-}) {
+function SortIndicator({ dir }: { dir: false | "asc" | "desc" }) {
   if (dir === "asc") return <span aria-hidden>▲</span>;
   if (dir === "desc") return <span aria-hidden>▼</span>;
-  return <span aria-hidden className="opacity-40">⇵</span>;
+  return (
+    <span aria-hidden className="opacity-40">
+      ⇵
+    </span>
+  );
 }

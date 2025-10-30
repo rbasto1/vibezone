@@ -14,7 +14,13 @@ export function useStateSessionStorage(
       // Get from session storage by key
       const item = window.sessionStorage.getItem(key);
       // Parse stored json or return initialValue if none exists
-      return item ? JSON.parse(item) : initialValue;
+      const value: unknown = item ? JSON.parse(item) : initialValue;
+      if (typeof value !== "string") {
+        throw new Error(
+          `Invalid value for sessionStorage key "${key}": expected string, got ${typeof value}`
+        );
+      }
+      return value;
     } catch (error) {
       // If error also return initialValue
       console.error(`Error reading sessionStorage key "${key}":`, error);
@@ -48,7 +54,15 @@ export function useStateSessionStorage(
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === key && e.newValue !== JSON.stringify(storedValue)) {
         try {
-          setStoredValue(e.newValue ? JSON.parse(e.newValue) : initialValue);
+          const value: unknown = e.newValue
+            ? JSON.parse(e.newValue)
+            : initialValue;
+          if (typeof value !== "string") {
+            throw new Error(
+              `Invalid value for sessionStorage key "${key}": expected string, got ${typeof value}`
+            );
+          }
+          setStoredValue(value);
         } catch (error) {
           console.error(
             `Error parsing sessionStorage value for key "${key}":`,

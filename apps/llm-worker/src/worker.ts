@@ -59,7 +59,7 @@ export default {
       return new Response("Unauthorized", { status: 401, headers });
     }
 
-    const rawBody = await request.json().catch((error) => new Error(error));
+    const rawBody = await request.json().catch((error: unknown) => error);
     if (rawBody instanceof Error) {
       return new Response("Invalid json body", {
         status: 400,

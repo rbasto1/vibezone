@@ -48,10 +48,14 @@ export const ReasoningSliderTrigger = () => {
         sliderValue <= 1 ? "low" : sliderValue === 2 ? "medium" : "high";
       if (!isLoggedIn) return;
 
-      void utils.client.users.updatePreferences
+      utils.client.users.updatePreferences
         .mutate({ reasoningEffort })
-        .catch((error) => {
-          toast.error(error.message || "Failed to update preferences");
+        .catch((error: unknown) => {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Failed to update preferences";
+          toast.error(message);
         });
     },
     [utils, isLoggedIn]
@@ -147,11 +151,9 @@ export const ReasoningSliderTrigger = () => {
         </div>
       </TooltipTrigger>
       <TooltipContent>
-        {(disabledTooltipMessage ?? t("label"))
-          .split("\n")
-          .map((line, idx) => (
-            <p key={idx}>{line}</p>
-          ))}
+        {(disabledTooltipMessage ?? t("label")).split("\n").map((line, idx) => (
+          <p key={idx}>{line}</p>
+        ))}
       </TooltipContent>
     </Tooltip>
   );

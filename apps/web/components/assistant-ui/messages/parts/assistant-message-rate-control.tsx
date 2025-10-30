@@ -185,11 +185,7 @@ const getMessagePlainText = (message?: ThreadMessageLike): string => {
 
   const { content } = message;
   if (typeof content === "string") {
-    return content.trim();
-  }
-
-  if (!Array.isArray(content)) {
-    return "";
+    return content;
   }
 
   return content
@@ -197,11 +193,9 @@ const getMessagePlainText = (message?: ThreadMessageLike): string => {
       if (!part || typeof part !== "object" || !("type" in part)) {
         return "";
       }
-
-      if (part.type === "text" || part.type === "reasoning") {
-        return part.text ?? "";
+      if ("text" in part) {
+        return part.text;
       }
-
       return "";
     })
     .filter(Boolean)
@@ -254,7 +248,7 @@ const getMessageAttachments = (
     for (const part of message.content) {
       if (!part || typeof part !== "object" || !("type" in part)) continue;
       const partRecord = part as Record<string, unknown>;
-      const type = String(partRecord.type ?? "");
+      const type = partRecord.type;
       if (type === "file" || type === "image") {
         pushAttachment(
           partRecord.filename ?? partRecord.name,

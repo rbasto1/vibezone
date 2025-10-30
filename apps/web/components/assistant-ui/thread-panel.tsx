@@ -160,7 +160,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
     ]
   );
 
-  const handleModelFinish = async () => {
+  const handleModelFinish = () => {
     setPanelState((currentState) => ({
       ...currentState,
       running: false,

@@ -24,7 +24,7 @@ export const attachmentFileRouter = {
       }
       return { userId: user.id };
     })
-    .onUploadComplete(async ({ file, metadata }) => ({
+    .onUploadComplete(({ file, metadata }) => ({
       uploadedBy: metadata.userId,
       fileUrl: file.ufsUrl,
       fileKey: file.key,

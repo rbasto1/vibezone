@@ -219,7 +219,7 @@ const GetVariablesSchema = z.object({
 
 async function getAllVariables(baseUrl: URL, vercelAuth: VercelAuth) {
   const resp = await callVercelApi(baseUrl, vercelAuth, "GET");
-  const data = await resp.json();
+  const data: unknown = await resp.json();
   const { envs } = GetVariablesSchema.parse(data);
 
   for (const v of envs) {
@@ -227,8 +227,13 @@ async function getAllVariables(baseUrl: URL, vercelAuth: VercelAuth) {
       const url = new URL(baseUrl);
       url.pathname = `${baseUrl.pathname}/${v.id}`;
       const resp = await callVercelApi(url, vercelAuth, "GET");
-      const data = await resp.json();
-      if ("value" in data && typeof data.value === "string") {
+      const data: unknown = await resp.json();
+      if (
+        data &&
+        typeof data === "object" &&
+        "value" in data &&
+        typeof data.value === "string"
+      ) {
         v.value = data.value;
       } else {
         console.warn(`Failed to fetch decrypted value for ${v.key}:`, data);

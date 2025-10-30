@@ -322,8 +322,11 @@ async function buildConversation({
     return { conversation: null, attachmentMap: {} };
   }
 
-  const createTime = messages[0]?.createdAt
-    ? Math.floor(messages[0]!.createdAt.getTime() / 1000)
+  const firstMessage = messages[0];
+  if (!firstMessage) return { conversation: null, attachmentMap: {} };
+
+  const createTime = firstMessage.createdAt
+    ? Math.floor(firstMessage.createdAt.getTime() / 1000)
     : Math.floor(Date.now() / 1000);
   const updateTime = messages[messages.length - 1]?.createdAt
     ? Math.floor(messages[messages.length - 1]!.createdAt.getTime() / 1000)
@@ -389,7 +392,7 @@ async function convertMessageToConversation({
 
   for (const part of partsArray) {
     if (!part || typeof part !== "object") continue;
-    const type = String((part as { type?: unknown }).type ?? "");
+    const type = (part as { type?: unknown }).type ?? "";
 
     if (type === "text" || type === "reasoning") {
       const textValue = (part as { text?: unknown }).text;
@@ -447,7 +450,9 @@ async function convertMessageToConversation({
     (message.metadata as unknown as Record<string, unknown>) ?? {};
   const metadataCopy: Record<string, unknown> = { ...baseMetadata };
   const existingAttachments = Array.isArray(baseMetadata.attachments)
-    ? ([...baseMetadata.attachments] as Array<Record<string, unknown>>)
+    ? ([...(baseMetadata.attachments as unknown[])] as Array<
+        Record<string, unknown>
+      >)
     : [];
   for (const attachment of metadataAttachments) {
     if (!existingAttachments.some((item) => item?.id === attachment.id)) {

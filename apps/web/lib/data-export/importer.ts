@@ -106,7 +106,7 @@ export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
         }
 
         const conversationsJson = await conversationsEntry.async("string");
-        const conversations: Conversation[] = JSON.parse(conversationsJson);
+        const conversations = JSON.parse(conversationsJson) as Conversation[];
 
         const attachmentEntries = zip
           .file(/(^|\/)file-[^/]+$/)
@@ -117,7 +117,7 @@ export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
           const resolved = resolveAttachmentPointer(entry.name);
           if (!resolved) continue;
           if (attachments.has(resolved.pointer)) continue;
-          const buffer = (await entry.async("nodebuffer")) as Buffer;
+          const buffer = await entry.async("nodebuffer");
           const detectedMime = determineMimeFromFilename(resolved.filename);
           const sanitizedName = sanitizeFileName(
             resolved.filename || `${resolved.pointer}.bin`
@@ -316,10 +316,7 @@ async function convertConversationContent({
       }
 
       if (!part || typeof part !== "object") continue;
-      const partType = String(
-        (part as { content_type?: unknown }).content_type ?? ""
-      );
-
+      const partType = (part as { content_type?: string }).content_type ?? "";
       if (partType === "audio_transcription") {
         const transcriptionText = (part as { text?: unknown }).text;
         if (typeof transcriptionText === "string") {
@@ -416,11 +413,11 @@ async function convertConversationContent({
 
     const preferredName =
       typeof entry["name"] === "string" && entry["name"].length
-        ? (entry["name"] as string)
+        ? entry["name"]
         : undefined;
     const preferredMime =
       typeof entry["mime_type"] === "string" && entry["mime_type"].length
-        ? (entry["mime_type"] as string)
+        ? entry["mime_type"]
         : undefined;
 
     await processAttachment(pointer, {
@@ -531,7 +528,7 @@ async function ensureAttachmentUploaded({
   }
 
   const uploaded: UploadedAttachment = {
-    url: uploadResult.data.ufsUrl ?? uploadResult.data.url,
+    url: uploadResult.data.ufsUrl,
     mimeType: attachment.mimeType,
     filename: attachment.filename,
     size: attachment.buffer.length,
@@ -871,7 +868,7 @@ async function prepareConversationRecords({
     const messageId = message.id ?? randomUUID();
     const rawMetadata =
       message.metadata && typeof message.metadata === "object"
-        ? (message.metadata as Record<string, unknown>)
+        ? message.metadata
         : {};
     let role: "assistant" | "user" | "system" = "assistant";
     const authorRole = message.author?.role;

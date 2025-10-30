@@ -189,12 +189,17 @@ async function main() {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cleanup(obj: any) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   Object.keys(obj).forEach((key) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (obj[key] === false || obj[key] === null) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       delete obj[key];
     }
   });
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   delete obj.createdAt;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   delete obj.updatedAt;
 }
 

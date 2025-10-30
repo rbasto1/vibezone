@@ -12,13 +12,6 @@ import {
 } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useCurrentChat } from "@/hooks/use-chat";
-import { useChatActions } from "@/hooks/use-chat-actions";
-import { useProjectsValue } from "@/hooks/use-projects";
-import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { CHAT_LIST_PAGE_SIZE } from "@/lib/constants";
-import { trpc, type RouterOutputs } from "@/lib/trpc/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +19,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { useCurrentChat } from "@/hooks/use-chat";
+import { useChatActions } from "@/hooks/use-chat-actions";
+import { useProjectsValue } from "@/hooks/use-projects";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { CHAT_LIST_PAGE_SIZE } from "@/lib/constants";
+import { trpc, type RouterOutputs } from "@/lib/trpc/client";
 import { SearchResultItem } from "./search-result-item";
 
 type SearchResult = RouterOutputs["chats"]["searchChats"]["results"][number];
@@ -98,7 +98,7 @@ export const SearchPanel = () => {
   const selectedProject = useMemo(
     () =>
       selectedProjectId
-        ? projects.find((project) => project.id === selectedProjectId) ?? null
+        ? (projects.find((project) => project.id === selectedProjectId) ?? null)
         : null,
     [projects, selectedProjectId]
   );
@@ -336,7 +336,9 @@ export const SearchPanel = () => {
               searchResults.map((result) => (
                 <SearchResultItem
                   key={`${result.chatId}-${
-                    result.snippetCreatedAt ?? result.lastMessageAt ?? "base"
+                    (
+                      result.snippetCreatedAt ?? result.lastMessageAt
+                    ).getTime() ?? "base"
                   }`}
                   title={result.title}
                   snippet={result.snippet}

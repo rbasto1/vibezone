@@ -479,6 +479,7 @@ async function getApiData() {
         is_moderated: false,
         max_completion_tokens: null,
       },
+      per_request_limits: null,
     }))
   );
 }
@@ -508,8 +509,10 @@ async function getApiDataMaritacaAI() {
     return [];
   }
 
-  const json = await rest.json().catch((e) => {
-    console.error(`MaritacaAI: Failed to parse models json: ${String(e)}`);
+  const json: unknown = await rest.json().catch((e: unknown) => {
+    console.error(
+      `MaritacaAI: Failed to parse models json: ${JSON.stringify(e)}`
+    );
     return [];
   });
   const parsed = MaritacaAIModelsResponse.safeParse(json);
@@ -537,8 +540,8 @@ async function getApiDataOpenRouter() {
     const body = await res.text().catch(() => "");
     throw new Error(`OpenRouter models error ${res.status}: ${body}`);
   }
-  const json = await res.json().catch((e) => {
-    throw new Error(`Failed to parse models json: ${String(e)}`);
+  const json: unknown = await res.json().catch((e: unknown) => {
+    throw new Error(`Failed to parse models json: ${JSON.stringify(e)}`);
   });
   const parsed = OpenRouterModelsResponse.safeParse(json);
   if (!parsed.success) {
@@ -682,8 +685,8 @@ function unique(
 function cleanup(description: string): string {
   return description
     .replace(/\s?\[Learn more in our docs\]\(https:\/\/\S+\)/g, "")
-    .replace(/([^\]])\(https:\/\/openrouter.ai\/\S+\)/g, (_, p) =>
+    .replace(/([^\]])\(https:\/\/openrouter.ai\/\S+\)/g, (_, p: string) =>
       p === " " ? "" : p
     )
-    .replace(/\[([^\]]+)\]\(\/[^)]+\)/g, (_, p) => p);
+    .replace(/\[([^\]]+)\]\(\/[^)]+\)/g, (_, p: string) => p);
 }

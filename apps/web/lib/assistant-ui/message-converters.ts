@@ -11,7 +11,31 @@ import {
 import type { Message } from "@/db";
 import type { MessageMetadata } from "@vibezone/database";
 
-const toTextPart = (text: string) => ({ type: "text" as const, text });
+const toText = (part: unknown) => {
+  if (typeof part === "string") {
+    return part;
+  }
+
+  if (part && typeof part === "object" && "text" in part) {
+    return part.text;
+  }
+
+  return "";
+};
+
+const toTextPart = (text: unknown) => {
+  if (Array.isArray(text)) {
+    const firstText: unknown = text[0];
+    return {
+      type: "text" as const,
+      text: firstText ? toText(firstText) : "",
+    };
+  }
+  return {
+    type: "text" as const,
+    text: toText(text),
+  };
+};
 
 const convertUIPartToThreadPart = (
   part: UIMessagePart<UIDataTypes, UITools>
@@ -106,7 +130,7 @@ export const toUiMessages = (
     const parts = Array.isArray(message.content)
       ? message.content.map(convertThreadPartToUIPart)
       : [
-          toTextPart(String(message.content ?? "")) as UIMessagePart<
+          toTextPart(message.content ?? "") as UIMessagePart<
             UIDataTypes,
             UITools
           >,
@@ -204,9 +228,7 @@ export const toThreadMessageLike = (
         .filter(
           (part): part is ThreadMessageLike["content"][number] => part !== null
         ) as ThreadMessageLike["content"])
-    : ([
-        { type: "text", text: String(msg.content ?? "") },
-      ] as ThreadMessageLike["content"]);
+    : ([toTextPart(msg.content ?? "")] as ThreadMessageLike["content"]);
 
   const contentArray =
     contentArrayRaw.length > 0
@@ -259,7 +281,7 @@ const convertContentPart = (
             ? candidate.image
             : typeof candidate.url === "string"
               ? candidate.url
-              : String(candidate.data ?? ""),
+              : (candidate.data ?? ""),
         mimeType: "image/png",
         filename:
           typeof candidate.filename === "string" ? candidate.filename : "image",

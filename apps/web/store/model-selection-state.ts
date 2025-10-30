@@ -1,12 +1,9 @@
+import type { CapabilityOptionId } from "@/components/assistant-ui/model-dropdown-constants";
 import type { ProviderTier } from "@/db";
-import type {
-  CapabilityOptionId,
-  TierOptionId,
-} from "@/components/assistant-ui/model-dropdown-constants";
 import { atom } from "jotai";
 
 export interface ModelSelectionState {
-  selectedTier: ProviderTier | TierOptionId | null;
+  selectedTier: ProviderTier | null;
   selectedSuggestionGroup?: string;
   selectedCapabilities: Set<CapabilityOptionId>;
   showFavoritesOnly: boolean;

@@ -167,7 +167,7 @@ export const useAppendAttachments = () => {
           ...prev,
           attachments: prev.attachments.concat(attachment),
         }));
-        void finalizeAttachment(attachment as PendingAttachment);
+        void finalizeAttachment(attachment);
       }
 
       if (droppedCount > 0) {

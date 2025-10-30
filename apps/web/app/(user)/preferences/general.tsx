@@ -26,7 +26,7 @@ export const PreferencesGeneralTab = () => {
     const previous = preferences[key];
     if (value === previous) return;
 
-    void mutatePreferences(
+    mutatePreferences(
       { [key]: value },
       { previousValues: { [key]: previous } }
     );
