@@ -15,8 +15,8 @@ export interface UploadMeta {
 const ATTACHMENT_TAG_REGEX =
   /^<attachment name="([^"]+)">\n([\s\S]*)\n<\/attachment>$/;
 
-const ensureArray = <T>(value: readonly T[] | undefined) =>
-  Array.isArray(value) ? [...value] : ([] as T[]);
+const ensureArray = <T>(value: readonly T[] | undefined): T[] =>
+  Array.isArray(value) ? [...(value as T[])] : ([] as T[]);
 
 const replaceContentWithRemoteUrl = (
   attachment: CompleteAttachment,

@@ -15,6 +15,13 @@
     "typescript",
     "typescriptreact"
   ],
+  "eslint.workingDirectories": [
+    { "directory": "apps/web", "changeProcessCWD": true },
+    { "directory": "apps/llm-worker", "changeProcessCWD": true }
+  ],
+  "eslint.useFlatConfig": true,
+  "eslint.runtime": "node",
+  "eslint.nodePath": "node_modules",
   "files.associations": {
     "*.css": "tailwindcss"
   },

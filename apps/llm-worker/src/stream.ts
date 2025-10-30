@@ -6,10 +6,10 @@ import { persistUsage } from "./lib/usage";
 import { getUsageDO } from "./objects/usage";
 import type { VibezoneContext } from "./worker";
 
-export async function handleProviderStream(
+export function handleProviderStream(
   vzContext: VibezoneContext,
   headers: Headers
-): Promise<Response> {
+): Response {
   const { env, completionRequest } = vzContext;
   const { providerId, adapterModelId, plugins } = completionRequest.config;
   const messages = completionRequest.messages;

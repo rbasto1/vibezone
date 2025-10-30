@@ -8,7 +8,7 @@ export function safeParse<T = unknown>(
     if (schema) {
       return schema.parse(JSON.parse(json));
     } else {
-      return JSON.parse(json);
+      return JSON.parse(json) as T;
     }
   } catch {
     return undefined;

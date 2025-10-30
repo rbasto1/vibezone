@@ -32,7 +32,8 @@ export async function validateCaptchaToken(
       }
     );
 
-    const result = (await response.json()) as {
+    const json = await response.json();
+    const result = json as {
       success: boolean;
       "error-codes"?: string[];
     };

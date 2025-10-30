@@ -39,7 +39,7 @@ export const ReasoningEffortSlider: FC<ReasoningEffortSliderProps> = ({
       timeoutRef.current = null;
       setPreferences((current) => {
         const { reasoningEffort } = current;
-        void onMutatePreferences(
+        onMutatePreferences(
           { reasoningEffort },
           {
             skipLocalUpdate: true,

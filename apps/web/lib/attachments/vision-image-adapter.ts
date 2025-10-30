@@ -9,6 +9,7 @@ const MAX_IMAGE_BYTES = 20 * 1024 * 1024; // 20MB
 export class VisionImageAttachmentAdapter implements AttachmentAdapter {
   public readonly accept = "image/jpeg,image/png,image/webp,image/gif";
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async add({ file }: { file: File }): Promise<PendingAttachment> {
     if (file.size > MAX_IMAGE_BYTES) {
       throw new Error("Image size exceeds the 20MB limit");
@@ -56,7 +57,7 @@ export class VisionImageAttachmentAdapter implements AttachmentAdapter {
         const result = typeof reader.result === "string" ? reader.result : "";
         resolve(result);
       };
-      reader.onerror = (error) => reject(error);
+      reader.onerror = (error) => reject(new Error(error.type));
       reader.readAsDataURL(file);
     });
   }

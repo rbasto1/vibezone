@@ -113,6 +113,7 @@ export const useUserMessageSaver = () => {
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const threads = pendingUserMessages.map((messageInfo) => {
         const existingMessages =
           threadMessagesStable.current[messageInfo.threadId] ?? [];
@@ -134,6 +135,7 @@ export const useUserMessageSaver = () => {
         .mutateAsync({
           chatId,
           projectId,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           threads,
         })
         .then((result) => {

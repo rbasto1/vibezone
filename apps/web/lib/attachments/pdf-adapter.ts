@@ -9,6 +9,7 @@ const MAX_PDF_BYTES = 15 * 1024 * 1024; // 15MB
 export class PdfAttachmentAdapter implements AttachmentAdapter {
   public readonly accept = "application/pdf";
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async add({ file }: { file: File }): Promise<PendingAttachment> {
     if (file.size > MAX_PDF_BYTES) {
       throw new Error("PDF size exceeds the 15MB limit");
@@ -67,7 +68,7 @@ export class PdfAttachmentAdapter implements AttachmentAdapter {
           reject(new Error("Unexpected result type from FileReader"));
         }
       };
-      reader.onerror = (error) => reject(error);
+      reader.onerror = (error) => reject(new Error(error.type));
       reader.readAsDataURL(file);
     });
   }

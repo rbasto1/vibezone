@@ -145,9 +145,11 @@ export const PreferencesDataImportModal = ({
         for (const line of lines) {
           if (!line.trim()) continue;
           try {
-            const payload = JSON.parse(line);
-            applyPayload(payload);
-          } catch (error) {
+            const payload: unknown = JSON.parse(line);
+            applyPayload(
+              payload as { type?: string; progress?: number; message?: string }
+            );
+          } catch (error: unknown) {
             console.error("[data-import] Failed to parse progress chunk:", {
               error,
               line,
@@ -158,8 +160,11 @@ export const PreferencesDataImportModal = ({
 
       if (buffer.trim()) {
         try {
-          applyPayload(JSON.parse(buffer));
-        } catch (error) {
+          const payload: unknown = JSON.parse(buffer);
+          applyPayload(
+            payload as { type?: string; progress?: number; message?: string }
+          );
+        } catch (error: unknown) {
           console.error("[data-import] Failed to parse trailing chunk:", {
             error,
             buffer,

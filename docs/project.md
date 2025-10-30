@@ -22,8 +22,10 @@
 ## Improvements
 
 - [x] Instructions list with toggle
-- [ ] Preferences: enter / shift-enter to send
-- [ ] Data mgmt: delete all my chats
+- [ ] In full-screen mode, allow switching models
+- [ ] Grab pointer for hidden sidebar
+- [x] Preferences: enter / shift-enter to send
+- [x] Data mgmt: delete all my chats
 - [x] Add Terms of Use
 - [x] Translate Privacy Policy and Terms of Use
 - [x] Sending an empty message with attachments should be possible

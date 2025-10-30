@@ -305,7 +305,7 @@ const ProviderManagePageClient: NextPage = () => {
           return (
             <DeleteIconButton
               isDeleted={isDeleted}
-              onDelete={async () => {
+              onDelete={() => {
                 if (isDeleted) {
                   const previousDeletedAt = p.deletedAt;
                   utils.providers.list.setData(listInput, (prev) =>

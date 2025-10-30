@@ -582,7 +582,7 @@ const extractTextFromContent = (content: unknown): string => {
       if (!part || typeof part !== "object" || !("type" in part)) {
         return "";
       }
-      const type = String((part as { type?: unknown }).type ?? "");
+      const type = (part as { type?: unknown }).type ?? "";
       if (type === "text" || type === "reasoning") {
         const textValue = (part as { text?: unknown }).text;
         return typeof textValue === "string" ? textValue : "";
@@ -635,7 +635,7 @@ const extractAttachmentsFromMessage = (
     for (const part of content) {
       if (!part || typeof part !== "object" || !("type" in part)) continue;
       const partRecord = part as Record<string, unknown>;
-      const type = String(partRecord.type ?? "");
+      const type = partRecord.type ?? "";
 
       if (type === "file" || type === "image") {
         pushAttachment(

@@ -32,7 +32,7 @@ const geistMono = Geist_Mono({
 
 const metadataBaseUrl = new URL(baseUrl);
 
-export async function generateMetadata(): Promise<Metadata> {
+export function generateMetadata(): Metadata {
   return {
     metadataBase: metadataBaseUrl,
     title: {

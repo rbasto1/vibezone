@@ -53,7 +53,7 @@ export const persistUsage = async (params: PersistUsageParams) => {
       tokensCompletion: openrouterUsage?.completionTokens,
       responseStatus: isAborted ? "aborted" : "finished",
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error({
         message: "Failed to persist usage log",
         error,
@@ -72,8 +72,8 @@ function extractGeo(cf: VibezoneContext["cf"]): Record<string, unknown> | null {
   }
 
   try {
-    return JSON.parse(JSON.stringify(cf));
-  } catch (error) {
+    return JSON.parse(JSON.stringify(cf)) as Record<string, unknown>;
+  } catch (error: unknown) {
     console.warn({ message: "Failed to serialize geo data", error, cf });
     return null;
   }

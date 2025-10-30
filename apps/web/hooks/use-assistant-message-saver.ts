@@ -194,7 +194,7 @@ export const useAssistantMessageSaver = () => {
           const saveMessages = saveMessagesMutationStable.current;
           await saveMessages.mutateAsync(
             // messages has read-only components, for now let's ignore the warning
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
             payload as any,
             {
               onError: (error) => {

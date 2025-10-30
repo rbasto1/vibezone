@@ -1,32 +1,33 @@
 import js from "@eslint/js";
-import typescript from "@typescript-eslint/eslint-plugin";
-import typescriptParser from "@typescript-eslint/parser";
 import prettier from "eslint-config-prettier";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
+import { defineConfig } from "eslint/config";
 import globals from "globals";
+import tseslint from "typescript-eslint";
 
-export default [
+export default defineConfig([
   js.configs.recommended,
+  tseslint.configs.recommended,
+  tseslint.configs.recommendedTypeChecked,
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
-      parser: typescriptParser,
-      ecmaVersion: 2021,
-      sourceType: "module",
-      globals: {
-        ...globals.node,
-        ...globals.es2021,
-        ...globals.browser,
-      },
       parserOptions: {
+        projectServices: true,
         ecmaFeatures: {
           jsx: true,
         },
       },
+      ecmaVersion: 2024,
+      sourceType: "module",
+      globals: {
+        ...globals.node,
+        ...globals.es2024,
+        ...globals.browser,
+      },
     },
     plugins: {
-      "@typescript-eslint": typescript,
       react,
       "react-hooks": reactHooks,
     },
@@ -79,10 +80,15 @@ export default [
       "prefer-promise-reject-errors": "off",
       "require-await": "off",
       "@typescript-eslint/triple-slash-reference": "warn",
+      "@typescript-eslint/no-deprecated": "warn",
 
       // Promises
       "@typescript-eslint/no-floating-promises": "warn",
       "@typescript-eslint/await-thenable": "off",
+      "@typescript-eslint/no-misused-promises": [
+        "warn",
+        { checksVoidReturn: false },
+      ],
 
       // Console
       "no-console": ["warn", { allow: ["warn", "error", "info", "debug"] }],
@@ -91,9 +97,6 @@ export default [
       "prefer-const": ["warn", { destructuring: "all" }],
       "no-empty": "warn",
       "object-shorthand": "warn",
-
-      // Comma dangle - allow trailing commas to match Prettier
-      "comma-dangle": ["warn", "always-multiline"],
     },
     settings: {
       react: {
@@ -109,9 +112,11 @@ export default [
       "build/",
       ".next/",
       ".expo/",
+      ".turbo/",
       "*.min.js",
       "coverage/",
       "next-env.d.ts",
+      "*.mjs",
     ],
   },
-];
+]);

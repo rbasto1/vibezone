@@ -2,8 +2,6 @@
 
 import type {
   Attachment,
-  FileMessagePart,
-  ImageMessagePart,
   TextMessagePart,
   ThreadMessage,
   ThreadUserMessagePart,
@@ -77,40 +75,37 @@ const deriveAttachmentsFromMessage = (
 
   message.content.forEach((part, index) => {
     if (part.type === "image") {
-      const imagePart = part as ImageMessagePart;
       derived.push({
         id: `${message.id}-image-${index}`,
         type: "image",
-        name: imagePart.filename ?? `image-${index + 1}`,
+        name: part.filename ?? `image-${index + 1}`,
         contentType: "image/png",
         status: { type: "complete" },
-        content: [imagePart as ThreadUserMessagePart],
+        content: [part as ThreadUserMessagePart],
       });
       return;
     }
 
     if (part.type === "file") {
-      const filePart = part as FileMessagePart;
       derived.push({
         id: `${message.id}-file-${index}`,
-        type: filePart.mimeType?.startsWith("image/")
+        type: part.mimeType?.startsWith("image/")
           ? "image"
-          : filePart.mimeType === "application/pdf"
+          : part.mimeType === "application/pdf"
             ? "document"
             : "file",
-        name: filePart.filename ?? `file-${index + 1}`,
-        contentType: filePart.mimeType ?? "application/octet-stream",
+        name: part.filename ?? `file-${index + 1}`,
+        contentType: part.mimeType ?? "application/octet-stream",
         status: { type: "complete" },
-        content: [filePart as ThreadUserMessagePart],
+        content: [part as ThreadUserMessagePart],
       });
       return;
     }
 
     if (part.type === "text") {
-      const textPart = part as TextMessagePart;
-      const url = deriveUrlFromTextPart(textPart);
+      const url = deriveUrlFromTextPart(part);
       if (!url) return;
-      const match = textPart.text.match(ATTACHMENT_TAG_REGEX);
+      const match = part.text.match(ATTACHMENT_TAG_REGEX);
       const name = match?.[1] ?? `attachment-${index + 1}`;
       derived.push({
         id: `${message.id}-text-${index}`,
@@ -179,7 +174,7 @@ const getAttachmentUrl = (attachment: Attachment): string | undefined => {
       return part.data;
     }
     if (part.type === "text") {
-      const url = deriveUrlFromTextPart(part as TextMessagePart);
+      const url = deriveUrlFromTextPart(part);
       if (url) return url;
     }
   }
