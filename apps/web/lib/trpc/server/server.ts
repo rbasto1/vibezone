@@ -1,15 +1,16 @@
 import "server-only";
 
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
+
 import { chatsRouter } from "../chats";
+import { instructionsRouter } from "../instructions";
 import { localesRouter } from "../locales";
 import { messagesRouter } from "../messages";
 import { modelsRouter } from "../models";
-import { providersRouter } from "../providers";
 import { newsRouter } from "../news";
-import { suggestionGroupsRouter } from "../suggestion-groups";
 import { projectsRouter } from "../projects";
-import { instructionsRouter } from "../instructions";
+import { providersRouter } from "../providers";
+import { suggestionGroupsRouter } from "../suggestion-groups";
 import { usersRouter } from "../users";
 import { t } from "./initialize";
 

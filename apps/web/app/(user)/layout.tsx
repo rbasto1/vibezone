@@ -65,7 +65,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const baseSystemPrompt = t("system");
   const preferencesInitialValue: PreferencesAtom = preferences
     ? {
-        pluginWeb: preferences?.preferenceWebSearch,
+        webSearch: preferences?.preferenceWebSearch,
         reasoningEffort: preferences?.preferenceReasoningEffort as
           | "none"
           | "low"
@@ -80,7 +80,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         hideLegal: preferences?.preferenceHideLegal ?? false,
       }
     : {
-        pluginWeb: true,
+        webSearch: true,
         reasoningEffort: "low",
         autoScroll: false,
         hiddenProviders: [],

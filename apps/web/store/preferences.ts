@@ -2,7 +2,7 @@ import type { ReasoningEffort } from "@/db";
 import { atom } from "jotai";
 
 export interface PreferencesAtom {
-  pluginWeb: boolean;
+  webSearch: boolean;
   autoScroll: boolean;
   hiddenProviders: string[];
   reasoningEffort: ReasoningEffort;
@@ -13,7 +13,7 @@ export interface PreferencesAtom {
 }
 
 export const preferencesAtom = atom<PreferencesAtom>({
-  pluginWeb: false,
+  webSearch: false,
   autoScroll: false,
   hiddenProviders: [],
   reasoningEffort: "low",

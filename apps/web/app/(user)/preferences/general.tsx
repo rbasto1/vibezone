@@ -2,10 +2,10 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import type { ReasoningEffort } from "@/db";
-import { useUserPreferences } from "@/hooks/use-user-preferences";
-import { trpc } from "@/lib/trpc/client";
 import { TabsContent } from "@/components/ui/tabs";
+import type { ReasoningEffort } from "@/db";
+import { useMutatePreferences } from "@/hooks/use-mutate-preferences";
+import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { PreferenceRow } from "./preference-row";
 import {
   ReasoningEffortSlider,
@@ -22,7 +22,13 @@ const getErrorMessage = (error: unknown) =>
 export const PreferencesGeneralTab = () => {
   const t = useTranslations("UserPreferences");
   const [preferences, setPreferences] = useUserPreferences();
-  const updatePreferences = trpc.users.updatePreferences.useMutation();
+  const mutatePreferences = useMutatePreferences({
+    onError: (error: unknown) => {
+      console.error("Error saving preferences:", error);
+      const message = getErrorMessage(error);
+      toast.error(t("toast.error", { message }));
+    },
+  });
   const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffortValue>(
     normalizeReasoningEffort(preferences.reasoningEffort)
   );
@@ -30,8 +36,9 @@ export const PreferencesGeneralTab = () => {
     normalizeReasoningEffort(preferences.reasoningEffort)
   );
   const reasoningPendingValueRef = useRef<ReasoningEffortValue | null>(null);
-  const reasoningDebounceTimeoutRef =
-    useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reasoningDebounceTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
   const reasoningMutationIdRef = useRef(0);
 
   useEffect(() => {
@@ -57,35 +64,19 @@ export const PreferencesGeneralTab = () => {
     const previous = preferences.autoScroll;
     if (value === previous) return;
 
-    setPreferences((prev) => ({ ...prev, autoScroll: value }));
-    updatePreferences.mutate(
+    mutatePreferences(
       { autoScroll: value },
-      {
-        onError: (error: unknown) => {
-          console.error("Error saving preferences:", error);
-          const message = getErrorMessage(error);
-          toast.error(t("toast.error", { message }));
-          setPreferences((prev) => ({ ...prev, autoScroll: previous }));
-        },
-      }
+      { previousValues: { autoScroll: previous } }
     );
   };
 
   const handleWebSearchChange = (value: boolean) => {
-    const previous = preferences.pluginWeb;
+    const previous = preferences.webSearch;
     if (value === previous) return;
 
-    setPreferences((prev) => ({ ...prev, pluginWeb: value }));
-    updatePreferences.mutate(
+    mutatePreferences(
       { webSearch: value },
-      {
-        onError: (error: unknown) => {
-          console.error("Error saving preferences:", error);
-          const message = getErrorMessage(error);
-          toast.error(t("toast.error", { message }));
-          setPreferences((prev) => ({ ...prev, pluginWeb: previous }));
-        },
-      }
+      { previousValues: { webSearch: previous } }
     );
   };
 
@@ -93,17 +84,9 @@ export const PreferencesGeneralTab = () => {
     const previous = preferences.enterKeySends;
     if (value === previous) return;
 
-    setPreferences((prev) => ({ ...prev, enterKeySends: value }));
-    updatePreferences.mutate(
+    mutatePreferences(
       { enterKeySends: value },
-      {
-        onError: (error: unknown) => {
-          console.error("Error saving preferences:", error);
-          const message = getErrorMessage(error);
-          toast.error(t("toast.error", { message }));
-          setPreferences((prev) => ({ ...prev, enterKeySends: previous }));
-        },
-      }
+      { previousValues: { enterKeySends: previous } }
     );
   };
 
@@ -111,20 +94,9 @@ export const PreferencesGeneralTab = () => {
     const previous = preferences.shiftEnterKeySends;
     if (value === previous) return;
 
-    setPreferences((prev) => ({ ...prev, shiftEnterKeySends: value }));
-    updatePreferences.mutate(
+    mutatePreferences(
       { shiftEnterKeySends: value },
-      {
-        onError: (error: unknown) => {
-          console.error("Error saving preferences:", error);
-          const message = getErrorMessage(error);
-          toast.error(t("toast.error", { message }));
-          setPreferences((prev) => ({
-            ...prev,
-            shiftEnterKeySends: previous,
-          }));
-        },
-      }
+      { previousValues: { shiftEnterKeySends: previous } }
     );
   };
 
@@ -151,20 +123,20 @@ export const PreferencesGeneralTab = () => {
       const targetValue = reasoningPendingValueRef.current;
       if (!targetValue) return;
 
-      updatePreferences.mutate(
+      const previousValue = reasoningCommittedValueRef.current;
+
+      mutatePreferences(
         { reasoningEffort: targetValue },
         {
+          skipLocalUpdate: true,
+          previousValues: { reasoningEffort: previousValue },
           onSuccess: () => {
-            reasoningCommittedValueRef.current = targetValue;
-            if (reasoningMutationIdRef.current === requestId) {
-              reasoningPendingValueRef.current = null;
-            }
-          },
-          onError: (error: unknown) => {
             if (reasoningMutationIdRef.current !== requestId) return;
-            console.error("Error saving preferences:", error);
-            const message = getErrorMessage(error);
-            toast.error(t("toast.error", { message }));
+            reasoningCommittedValueRef.current = targetValue;
+            reasoningPendingValueRef.current = null;
+          },
+          onError: () => {
+            if (reasoningMutationIdRef.current !== requestId) return;
             reasoningPendingValueRef.current = null;
             const fallback = reasoningCommittedValueRef.current;
             setReasoningEffort(fallback);
@@ -190,7 +162,7 @@ export const PreferencesGeneralTab = () => {
           id="web-search"
           label={t("webSearch.label")}
           description={t("webSearch.description")}
-          checked={preferences.pluginWeb}
+          checked={preferences.webSearch}
           onToggle={handleWebSearchChange}
         />
 

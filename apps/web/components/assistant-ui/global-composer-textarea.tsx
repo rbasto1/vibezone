@@ -16,8 +16,8 @@ import { useAppendAttachments } from "@/hooks/use-attachments";
 import { useComposerPrompt } from "@/hooks/use-composer-prompt";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue } from "@/hooks/use-panels";
-import { useOpenSignIn, useUser } from "@/lib/auth-client";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
+import { useOpenSignIn, useUser } from "@/lib/auth-client";
 
 interface AttachmentCapabilityState {
   allowed: boolean;
@@ -139,11 +139,12 @@ export const GlobalComposerTextarea = forwardRef<
   );
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key !== "Enter") {
-      return;
-    }
-
-    if (event.ctrlKey || event.metaKey || event.altKey) {
+    if (
+      event.key !== "Enter" ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.altKey
+    ) {
       return;
     }
 

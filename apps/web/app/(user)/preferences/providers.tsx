@@ -8,16 +8,22 @@ import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/components/ui/utils";
 import { models as rawModels } from "@/generated/models";
-import { useUserPreferences } from "@/hooks/use-user-preferences";
-import { trpc } from "@/lib/trpc/client";
+import { useMutatePreferences } from "@/hooks/use-mutate-preferences";
+import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : JSON.stringify(error);
 
 export const PreferencesProvidersTab = () => {
   const t = useTranslations("UserPreferences");
-  const [preferences, setPreferences] = useUserPreferences();
-  const updatePreferences = trpc.users.updatePreferences.useMutation();
+  const preferences = useUserPreferencesValue();
+  const mutatePreferences = useMutatePreferences({
+    onError: (error: unknown) => {
+      console.error("Error saving preferences:", error);
+      const message = getErrorMessage(error);
+      toast.error(t("toast.error", { message }));
+    },
+  });
   const [providerInput, setProviderInput] = useState("");
   const [hiddenProvidersSet, setHiddenProvidersSet] = useState<Set<string>>(
     () => new Set(preferences.hiddenProviders ?? [])
@@ -53,27 +59,19 @@ export const PreferencesProvidersTab = () => {
     return query ? base.slice(0, 10) : base;
   }, [providerOptions, trimmedInput]);
 
-  const mutateHiddenProviders = (nextSet: Set<string>, previousSet: Set<string>) => {
+  const mutateHiddenProviders = (
+    nextSet: Set<string>,
+    previousSet: Set<string>
+  ) => {
     const nextList = Array.from(nextSet).sort();
     const previousList = Array.from(previousSet).sort();
 
-    setPreferences((prev) => ({
-      ...prev,
-      hiddenProviders: nextList,
-    }));
-
-    updatePreferences.mutate(
+    mutatePreferences(
       { hiddenProviders: nextList },
       {
-        onError: (error: unknown) => {
-          console.error("Error saving preferences:", error);
-          const message = getErrorMessage(error);
-          toast.error(t("toast.error", { message }));
-          setHiddenProvidersSet(new Set(previousList));
-          setPreferences((prev) => ({
-            ...prev,
-            hiddenProviders: previousList,
-          }));
+        previousValues: { hiddenProviders: previousList },
+        onError: () => {
+          setHiddenProvidersSet(new Set(previousSet));
         },
       }
     );
