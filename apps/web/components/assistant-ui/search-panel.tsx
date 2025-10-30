@@ -335,11 +335,9 @@ export const SearchPanel = () => {
               !isInitialLoading &&
               searchResults.map((result) => (
                 <SearchResultItem
-                  key={`${result.chatId}-${
-                    (
-                      result.snippetCreatedAt ?? result.lastMessageAt
-                    ).getTime() ?? "base"
-                  }`}
+                  key={`${result.chatId}-${(
+                    result.snippetCreatedAt ?? result.lastMessageAt
+                  ).getTime()}`}
                   title={result.title}
                   snippet={result.snippet}
                   timestamp={toDate(
