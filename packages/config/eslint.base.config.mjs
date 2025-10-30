@@ -116,6 +116,7 @@ export default defineConfig([
       "*.min.js",
       "coverage/",
       "next-env.d.ts",
+      "*.mjs",
     ],
   },
 ]);

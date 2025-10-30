@@ -35,6 +35,23 @@ export default defineConfig([
           allowExportNames: ["metadata", "generateMetadata"],
         },
       ],
+      "@typescript-eslint/no-floating-promises": "warn",
+      "@typescript-eslint/await-thenable": "off",
+      "@typescript-eslint/no-misused-promises": [
+        "warn",
+        { checksVoidReturn: false },
+      ],
+    },
+  },
+  {
+    files: ["*.mjs"],
+    languageOptions: {
+      parser: "espree",
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+        project: null,
+      },
     },
   },
 ]);
