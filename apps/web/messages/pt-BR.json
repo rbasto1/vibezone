@@ -68,9 +68,9 @@
     "stopAllError": "Alguns painéis não puderam ser interrompidos: {failures}",
     "guestLimit": "Limite como convidado atingido ({limit}/dia). Faça login.",
     "sendFailed": "Falha ao enviar para um painel: {message}",
-    "placeholder": "Pergunte a todas as IAs...",
-    "stopAllLabel": "Parar todas as respostas de IA",
-    "sendLabel": "Enviar para todas as IAs",
+    "placeholder": "Pergunte o que quiser...",
+    "stopAllLabel": "Parar resposta",
+    "sendLabel": "Enviar",
     "settingsLabel": "Configurações do compositor",
     "projectButtonLabel": "Alterar projeto (atual: {project})"
   },

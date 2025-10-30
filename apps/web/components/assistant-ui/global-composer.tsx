@@ -26,6 +26,7 @@ import { useThreadRuntimeControllersValue } from "@/hooks/use-thread-store";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
 import type { CreateAppendMessage } from "@assistant-ui/react";
+import { cn } from "../ui/utils";
 import { ComposerAddAttachment } from "./add-attachment";
 import { AttachmentChip } from "./attachment-chip";
 import { Captcha } from "./captcha";
@@ -38,11 +39,15 @@ import {
   type IncompatibleAttachment,
 } from "./incompatible-attachments-modal";
 
-type GlobalComposerProps = {
+interface GlobalComposerProps {
   onAddPanel?: (id: string) => void;
-};
+  footerHidden?: boolean;
+}
 
-export const GlobalComposer: FC<GlobalComposerProps> = ({ onAddPanel }) => {
+export const GlobalComposer: FC<GlobalComposerProps> = ({
+  onAddPanel,
+  footerHidden,
+}) => {
   const t = useTranslations("GlobalComposer");
   const removeAttachment = useRemoveAttachment();
   const attachments = useAttachmentsValue();
@@ -308,7 +313,12 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({ onAddPanel }) => {
           onSubmit={handleSubmit}
         />
         {/* Footer with attach and send, styled like thread composer */}
-        <div className="bg-muted border-border dark:border-muted-foreground/15 relative flex items-center gap-1.5 rounded-b-2xl border-x border-b px-2 py-1 cursor-text">
+        <div
+          className={cn(
+            "bg-muted dark:border-muted-foreground/15 relative flex items-center gap-1.5 border-x border-b px-2 py-1 cursor-text",
+            !footerHidden && "rounded-b-2xl"
+          )}
+        >
           <ComposerAddAttachment className="shrink-0" />
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
             {attachments.map((a) => (

@@ -5,8 +5,8 @@
   "main": "index.js",
   "exports": {
     "./eslint": {
-      "default": "./eslint.base.config.mjs",
-      "types": "./types.d.ts"
+      "types": "./types.d.ts",
+      "default": "./eslint.base.config.mjs"
     }
   },
   "scripts": {

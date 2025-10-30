@@ -68,9 +68,9 @@
     "stopAllError": "Some panels failed to stop: {failures}",
     "guestLimit": "Guest limit reached ({limit}/day). Please sign in.",
     "sendFailed": "Send failed for a panel: {message}",
-    "placeholder": "Ask all of the AIs...",
-    "stopAllLabel": "Stop all AI responses",
-    "sendLabel": "Send to all AIs",
+    "placeholder": "Ask anything...",
+    "stopAllLabel": "Stop response",
+    "sendLabel": "Send",
     "settingsLabel": "Composer settings",
     "projectButtonLabel": "Change project (current: {project})"
   },
