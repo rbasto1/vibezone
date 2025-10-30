@@ -124,7 +124,10 @@ const defaultComponents = memoizeMarkdownComponents({
   ),
   p: ({ className, ...props }) => (
     <p
-      className={cn("mb-5 mt-5 leading-7 first:mt-0 last:mb-0", className)}
+      className={cn(
+        "mb-5 mt-5 whitespace-pre-line leading-7 first:mt-0 last:mb-0",
+        className
+      )}
       {...props}
     />
   ),
@@ -179,7 +182,7 @@ const defaultComponents = memoizeMarkdownComponents({
   td: ({ className, ...props }) => (
     <td
       className={cn(
-        "border-b border-l px-4 py-2 text-left last:border-r [&[align=center]]:text-center [&[align=right]]:text-right",
+        "border-b border-l px-4 py-2 text-left last:border-r whitespace-pre-line [&[align=center]]:text-center [&[align=right]]:text-right",
         className
       )}
       {...props}

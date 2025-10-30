@@ -10,7 +10,7 @@
 - [x] Bug: on mobile, closing the model details modal closes also the model selector
 - [x] Text attachments are going inline inside <attachment>
 - [x] Disable sending when attachments are not compatible with one of the models
-- [ ] Markdown render messes up newlines in regular text
+- [x] Markdown render messes up newlines in regular text
 - [ ] Stopping works but state stay as running?
 - [ ] Switching models with attachments is causing issues with the other models
 - [ ] Reloading chats loses the multiple generations (refreshes)
