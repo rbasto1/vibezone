@@ -2,25 +2,25 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useEffect, useState, type FC } from "react";
+import { type FC } from "react";
 
 import { CloseIconButton } from "@/components/ui/close-icon-button";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
+import { LEGAL_HIDE_STORAGE_KEY } from "@/lib/constants";
 import { trpc } from "@/lib/trpc/client";
-
-const LEGAL_HIDE_STORAGE_KEY = "vz-hide-legal-footer";
 
 interface AppFooterProps {
   isLoggedIn: boolean;
+  hide: boolean;
+  onHide: () => void;
 }
 
-export const AppFooter: FC<AppFooterProps> = ({ isLoggedIn }) => {
+export const AppFooter: FC<AppFooterProps> = ({ isLoggedIn, hide, onHide }) => {
   const t = useTranslations("Assistant");
   const [preferences, setPreferences] = useUserPreferences();
   const hideLegalPreference = preferences.hideLegal;
-  const [sessionHideLegal, setSessionHideLegal] = useState(false);
 
-  const hideLegalFooter = hideLegalPreference || sessionHideLegal;
+  const hideLegalFooter = hideLegalPreference || hide;
   const updatePreferences = trpc.users.updatePreferences.useMutation({
     onSuccess: () => {
       setPreferences((prev) =>
@@ -32,20 +32,12 @@ export const AppFooter: FC<AppFooterProps> = ({ isLoggedIn }) => {
     },
   });
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.sessionStorage.getItem(LEGAL_HIDE_STORAGE_KEY);
-    if (stored === "true") {
-      setSessionHideLegal(true);
-    }
-  }, []);
-
   if (hideLegalFooter) return null;
 
   const handleDismissLegalFooter = () => {
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(LEGAL_HIDE_STORAGE_KEY, "true");
-      setSessionHideLegal(true);
+      onHide();
     }
     if (hideLegalPreference || !isLoggedIn) return;
     updatePreferences.mutate({ hideLegal: true });

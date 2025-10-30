@@ -5,3 +5,4 @@ export const INTERNAL_SECRET = "A4U20fxbmCzQm4riyUiImbyb"; // TODO: move to .env
 export const CHAT_LIST_PAGE_SIZE = 20;
 export const NEWS_WINDOW_MS = 1000 * 60 * 60 * 24 * 30;
 export const DEFAULT_PROJECT_COLOR = "#64748B";
+export const LEGAL_HIDE_STORAGE_KEY = "vz-hide-legal-footer";

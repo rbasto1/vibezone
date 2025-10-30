@@ -68,9 +68,9 @@
     "stopAllError": "Einige Panels konnten nicht gestoppt werden: {failures}",
     "guestLimit": "Gastlimit erreicht ({limit}/Tag). Bitte melde dich an.",
     "sendFailed": "Senden an ein Panel fehlgeschlagen: {message}",
-    "placeholder": "Frag alle KI...",
-    "stopAllLabel": "Alle KI-Antworten stoppen",
-    "sendLabel": "An alle KI senden",
+    "placeholder": "Frag was immer du willst...",
+    "stopAllLabel": "Antwort stoppen",
+    "sendLabel": "Senden",
     "settingsLabel": "Composer-Einstellungen",
     "projectButtonLabel": "Projekt ändern (aktuell: {project})"
   },

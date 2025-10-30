@@ -1,8 +1,8 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useSetAtom } from "jotai";
-import { type FC, useState } from "react";
+import { useTranslations } from "next-intl";
+import { type FC, useEffect, useState } from "react";
 
 import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
@@ -23,7 +23,7 @@ import {
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useUIState } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
-import { MAX_PANELS } from "@/lib/constants";
+import { LEGAL_HIDE_STORAGE_KEY, MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { modelMap } from "@/lib/model-map";
 import {
@@ -50,11 +50,20 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
   const saveLastModels = useSaveLastModels();
   const setModelSelectionState = useSetAtom(modelSelectionStateAtom);
   const [isSuggestionPickerOpen, setSuggestionPickerOpen] = useState(false);
+  const [sessionHideLegal, setSessionHideLegal] = useState(false);
 
   const panelCount = Math.min(Math.max(panelsConfig.length, 1), MAX_PANELS);
   const showTabs = isMobile && panelsConfig.length > 1;
   const hideAnonBanner = !!user || (isMobile && uiState.suggestionsUsed);
   const canToggleFocus = !isMobile && panelsConfig.length > 1;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.sessionStorage.getItem(LEGAL_HIDE_STORAGE_KEY);
+    if (stored === "true") {
+      setSessionHideLegal(true);
+    }
+  }, []);
 
   const handleSuggestionClick = (groupId: string) => {
     setModelSelectionState(() => {
@@ -77,11 +86,10 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
         saveLastModels([newPanel]);
         setPanelsState((currentState) => ({
           ...currentState,
-          [newPanelId]:
-            currentState[newPanelId] ?? {
-              running: false,
-              hasMessages: false,
-            },
+          [newPanelId]: currentState[newPanelId] ?? {
+            running: false,
+            hasMessages: false,
+          },
         }));
         onAddPanel?.(newPanelId);
         return [newPanel];
@@ -210,14 +218,17 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
           <ThreadWelcomeSuggestions onSelectGroup={handleSuggestionClick} />
         )}
         {/* Global composer below panels */}
-        <GlobalComposer onAddPanel={onAddPanel} />
+        <GlobalComposer
+          onAddPanel={onAddPanel}
+          footerHidden={sessionHideLegal}
+        />
       </div>
       {isMobile ? (
-        <Sheet open={isSuggestionPickerOpen} onOpenChange={setSuggestionPickerOpen}>
-          <SheetContent
-            side="bottom"
-            className="h-[100dvh] w-screen gap-0 p-0"
-          >
+        <Sheet
+          open={isSuggestionPickerOpen}
+          onOpenChange={setSuggestionPickerOpen}
+        >
+          <SheetContent side="bottom" className="h-[100dvh] w-screen gap-0 p-0">
             <ModelDropdownContents
               onSelect={handleSuggestionModelSelect}
               currentModelId={panelsConfig[0]?.model}
@@ -227,7 +238,10 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
           </SheetContent>
         </Sheet>
       ) : (
-        <Dialog open={isSuggestionPickerOpen} onOpenChange={setSuggestionPickerOpen}>
+        <Dialog
+          open={isSuggestionPickerOpen}
+          onOpenChange={setSuggestionPickerOpen}
+        >
           <DialogContent className="max-w-[min(1200px,95vw)] w-[min(1200px,95vw)] h-[min(85vh,720px)] p-0 overflow-hidden">
             <ModelDropdownContents
               onSelect={handleSuggestionModelSelect}
@@ -238,7 +252,11 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
           </DialogContent>
         </Dialog>
       )}
-      <AppFooter isLoggedIn={!!user} />
+      <AppFooter
+        isLoggedIn={!!user}
+        hide={sessionHideLegal}
+        onHide={() => setSessionHideLegal(true)}
+      />
     </div>
   );
 };
