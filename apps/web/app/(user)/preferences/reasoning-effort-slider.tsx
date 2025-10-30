@@ -1,36 +1,70 @@
-import type { ChangeEvent, FC } from "react";
+import { useRef, useState, type ChangeEvent, type FC } from "react";
 
 import { cn } from "@/components/ui/utils";
 import type { ReasoningEffort } from "@/db";
+import type { useMutatePreferences } from "@/hooks/use-mutate-preferences";
+import { useUserPreferences } from "@/hooks/use-user-preferences";
 
 export type ReasoningEffortValue = Exclude<ReasoningEffort, "none">;
 
 interface ReasoningEffortSliderProps {
-  effort: ReasoningEffortValue;
-  onChange: (value: ReasoningEffortValue) => void;
   label: string;
   description: string;
   lowLabel: string;
   mediumLabel: string;
   highLabel: string;
+  onMutatePreferences: ReturnType<typeof useMutatePreferences>;
 }
 
 export const ReasoningEffortSlider: FC<ReasoningEffortSliderProps> = ({
-  effort,
-  onChange,
   label,
   description,
   lowLabel,
   mediumLabel,
   highLabel,
+  onMutatePreferences,
 }: ReasoningEffortSliderProps) => {
-  const sliderValue = effort === "low" ? 1 : effort === "medium" ? 2 : 3;
+  const [{ reasoningEffort }, setPreferences] = useUserPreferences();
+  const [backendValue, setBackendValue] = useState(reasoningEffort);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleReasoningEffortChange = (value: ReasoningEffortValue) => {
+    setPreferences((prev) => ({ ...prev, reasoningEffort: value }));
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    const commitChange = () => {
+      timeoutRef.current = null;
+      setPreferences((current) => {
+        const { reasoningEffort } = current;
+        void onMutatePreferences(
+          { reasoningEffort },
+          {
+            skipLocalUpdate: true,
+            previousValues: { reasoningEffort: backendValue },
+            onSuccess: ({ preferences: { reasoningEffort } }) => {
+              setBackendValue(reasoningEffort);
+            },
+          }
+        );
+        return current;
+      });
+    };
+
+    timeoutRef.current = setTimeout(commitChange, 1000);
+  };
+
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const value = Number(event.target.value);
     const nextEffort = value <= 1 ? "low" : value === 2 ? "medium" : "high";
-    onChange(nextEffort);
+    handleReasoningEffortChange(nextEffort);
   };
   const labelledBy = "reasoning-effort-label";
+  const normalized = normalizeReasoningEffort(reasoningEffort);
+  const sliderValue =
+    normalized === "low" ? 1 : normalized === "medium" ? 2 : 3;
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
@@ -88,3 +122,7 @@ export const ReasoningEffortSlider: FC<ReasoningEffortSliderProps> = ({
     </div>
   );
 };
+
+const normalizeReasoningEffort = (
+  effort: ReasoningEffort
+): ReasoningEffortValue => (effort === "none" ? "low" : effort);

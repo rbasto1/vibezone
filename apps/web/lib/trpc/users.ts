@@ -14,16 +14,16 @@ import {
 } from "drizzle-orm";
 import { z } from "zod";
 
-import type { Preferences } from "@/db";
+import type { Preferences, ReasoningEffort } from "@/db";
 import {
-  chats,
+  chats as chatsTable,
   db,
-  models,
-  preferences,
-  projects,
-  usage,
-  usersModels,
-  userStats,
+  models as modelsTable,
+  preferences as preferencesTable,
+  projects as projectsTable,
+  usage as usageTable,
+  usersModels as usersModelsTable,
+  userStats as userStatsTable,
 } from "@/db";
 import { MAX_PANELS } from "../constants";
 import {
@@ -40,10 +40,10 @@ export const usersRouter = t.router({
 
     const costCalculationBeforeDtPromise = db
       .select({
-        date: min(usage.createdAt),
+        date: min(usageTable.createdAt),
       })
-      .from(usage)
-      .where(isNull(usage.costPrompt))
+      .from(usageTable)
+      .where(isNull(usageTable.costPrompt))
       .then((rows) => rows[0]?.date ?? null);
 
     const lastSevenDays = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
@@ -51,71 +51,77 @@ export const usersRouter = t.router({
 
     const costQuery = db
       .select({
-        userId: usage.userId,
+        userId: usageTable.userId,
         continents: sql<
           string[] | null
-        >`array_agg(distinct ${usage.geo}->>'continent')`.as("continents"),
+        >`array_agg(distinct ${usageTable.geo}->>'continent')`.as("continents"),
         countries: sql<
           string[] | null
-        >`array_agg(distinct ${usage.geo}->>'country')`.as("countries"),
+        >`array_agg(distinct ${usageTable.geo}->>'country')`.as("countries"),
         totalCost30:
-          sql<number>`coalesce(sum(${usage.costPrompt} + ${usage.costCompletion}), 0)::numeric`.as(
+          sql<number>`coalesce(sum(${usageTable.costPrompt} + ${usageTable.costCompletion}), 0)::numeric`.as(
             "totalCost30"
           ),
         totalCost7:
-          sql<number>`coalesce(sum(case when ${usage.createdAt} >= ${lastSevenDays} then ${usage.costPrompt} + ${usage.costCompletion} else 0 end), 0)::numeric`.as(
+          sql<number>`coalesce(sum(case when ${usageTable.createdAt} >= ${lastSevenDays} then ${usageTable.costPrompt} + ${usageTable.costCompletion} else 0 end), 0)::numeric`.as(
             "totalCost7"
           ),
       })
-      .from(usage)
-      .where(gte(usage.createdAt, lastThirtyDays))
-      .groupBy(usage.userId)
+      .from(usageTable)
+      .where(gte(usageTable.createdAt, lastThirtyDays))
+      .groupBy(usageTable.userId)
       .as("u30");
 
     await syncUsersPromise;
     const usersRows = await db
       .select({
-        id: userStats.id,
-        name: userStats.firstName,
-        email: userStats.email,
-        createdAt: userStats.createdAt,
+        id: userStatsTable.id,
+        name: userStatsTable.firstName,
+        email: userStatsTable.email,
+        createdAt: userStatsTable.createdAt,
         continents: costQuery.continents,
         countries: costQuery.countries,
-        lastLoginAt: userStats.lastSignInAt,
-        lastActiveAt: userStats.lastActiveAt,
-        chatsCount: count(sql`distinct ${chats.id}`),
-        completionsCount: count(sql`distinct ${usage.id}`),
-        activeDaysCount: sql<number>`count(distinct date_trunc('day', ${usage.createdAt}))::int`,
+        lastLoginAt: userStatsTable.lastSignInAt,
+        lastActiveAt: userStatsTable.lastActiveAt,
+        chatsCount: count(sql`distinct ${chatsTable.id}`),
+        completionsCount: count(sql`distinct ${usageTable.id}`),
+        activeDaysCount: sql<number>`count(distinct date_trunc('day', ${usageTable.createdAt}))::int`,
         costLast30: costQuery.totalCost30,
         costLast7: costQuery.totalCost7,
       })
-      .from(userStats)
+      .from(userStatsTable)
       .leftJoin(
-        projects,
-        and(eq(projects.userId, userStats.id), isNull(projects.deletedAt))
-      )
-      .leftJoin(
-        chats,
+        projectsTable,
         and(
-          eq(chats.projectId, projects.id),
-          gte(chats.lastMessageAt, lastSevenDays),
-          isNull(chats.deletedAt)
+          eq(projectsTable.userId, userStatsTable.id),
+          isNull(projectsTable.deletedAt)
         )
       )
       .leftJoin(
-        usage,
-        and(eq(usage.userId, userStats.id), gte(usage.createdAt, lastSevenDays))
+        chatsTable,
+        and(
+          eq(chatsTable.projectId, projectsTable.id),
+          gte(chatsTable.lastMessageAt, lastSevenDays),
+          isNull(chatsTable.deletedAt)
+        )
       )
-      .leftJoinLateral(costQuery, eq(costQuery.userId, userStats.id))
+      .leftJoin(
+        usageTable,
+        and(
+          eq(usageTable.userId, userStatsTable.id),
+          gte(usageTable.createdAt, lastSevenDays)
+        )
+      )
+      .leftJoinLateral(costQuery, eq(costQuery.userId, userStatsTable.id))
       .groupBy(
-        userStats.id,
+        userStatsTable.id,
         costQuery.userId,
         costQuery.totalCost30,
         costQuery.totalCost7,
         costQuery.continents,
         costQuery.countries
       )
-      .orderBy(desc(userStats.createdAt))
+      .orderBy(desc(userStatsTable.createdAt))
       .catch((error) => {
         console.error(error);
         throw error;
@@ -139,29 +145,29 @@ export const usersRouter = t.router({
 
       if (!input.modelIds.length) {
         await db
-          .update(preferences)
+          .update(preferencesTable)
           .set({ lastModels: [] })
-          .where(eq(preferences.userId, authUser.id));
+          .where(eq(preferencesTable.userId, authUser.id));
         return { ok: true as const, lastModels: [] as string[] };
       }
 
       const candidates = await db
-        .select({ id: models.id })
-        .from(models)
+        .select({ id: modelsTable.id })
+        .from(modelsTable)
         .where(
           and(
-            inArray(models.id, input.modelIds),
-            isNull(models.deletedAt),
-            eq(models.isChat, true)
+            inArray(modelsTable.id, input.modelIds),
+            isNull(modelsTable.deletedAt),
+            eq(modelsTable.isChat, true)
           )
         );
       const valid = new Set(candidates.map((m) => m.id));
       const ordered = input.modelIds.filter((id) => valid.has(id)).slice(0, 3);
 
       await db
-        .update(preferences)
+        .update(preferencesTable)
         .set({ lastModels: ordered })
-        .where(eq(preferences.userId, authUser.id));
+        .where(eq(preferencesTable.userId, authUser.id));
 
       return { ok: true as const, lastModels: ordered };
     }),
@@ -174,14 +180,17 @@ export const usersRouter = t.router({
 
     const rows = await db
       .select({
-        modelId: usersModels.modelId,
-        favoritedAt: usersModels.favoritedAt,
+        modelId: usersModelsTable.modelId,
+        favoritedAt: usersModelsTable.favoritedAt,
       })
-      .from(usersModels)
+      .from(usersModelsTable)
       .where(
-        and(eq(usersModels.userId, user.id), isNotNull(usersModels.favoritedAt))
+        and(
+          eq(usersModelsTable.userId, user.id),
+          isNotNull(usersModelsTable.favoritedAt)
+        )
       )
-      .orderBy(desc(usersModels.favoritedAt));
+      .orderBy(desc(usersModelsTable.favoritedAt));
 
     return rows;
   }),
@@ -200,26 +209,26 @@ export const usersRouter = t.router({
 
       const [existing] = await db
         .select({
-          favoritedAt: usersModels.favoritedAt,
+          favoritedAt: usersModelsTable.favoritedAt,
         })
-        .from(usersModels)
+        .from(usersModelsTable)
         .where(
           and(
-            eq(usersModels.userId, userId),
-            eq(usersModels.modelId, input.modelId)
+            eq(usersModelsTable.userId, userId),
+            eq(usersModelsTable.modelId, input.modelId)
           )
         )
         .limit(1);
 
       if (!existing) {
         const [inserted] = await db
-          .insert(usersModels)
+          .insert(usersModelsTable)
           .values({
             userId,
             modelId: input.modelId,
             favoritedAt: new Date(),
           })
-          .returning({ favoritedAt: usersModels.favoritedAt });
+          .returning({ favoritedAt: usersModelsTable.favoritedAt });
 
         return {
           ok: true as const,
@@ -230,12 +239,12 @@ export const usersRouter = t.router({
 
       if (existing.favoritedAt) {
         await db
-          .update(usersModels)
+          .update(usersModelsTable)
           .set({ favoritedAt: null })
           .where(
             and(
-              eq(usersModels.userId, userId),
-              eq(usersModels.modelId, input.modelId)
+              eq(usersModelsTable.userId, userId),
+              eq(usersModelsTable.modelId, input.modelId)
             )
           );
         return {
@@ -246,15 +255,15 @@ export const usersRouter = t.router({
       }
 
       const [updated] = await db
-        .update(usersModels)
+        .update(usersModelsTable)
         .set({ favoritedAt: new Date() })
         .where(
           and(
-            eq(usersModels.userId, userId),
-            eq(usersModels.modelId, input.modelId)
+            eq(usersModelsTable.userId, userId),
+            eq(usersModelsTable.modelId, input.modelId)
           )
         )
-        .returning({ favoritedAt: usersModels.favoritedAt });
+        .returning({ favoritedAt: usersModelsTable.favoritedAt });
 
       return {
         ok: true as const,
@@ -296,9 +305,9 @@ export const usersRouter = t.router({
 
       const [current] = hiddenSet
         ? await db
-            .select({ lastModels: preferences.lastModels })
-            .from(preferences)
-            .where(eq(preferences.userId, authUser.id))
+            .select({ lastModels: preferencesTable.lastModels })
+            .from(preferencesTable)
+            .where(eq(preferencesTable.userId, authUser.id))
             .limit(1)
         : [];
 
@@ -332,26 +341,28 @@ export const usersRouter = t.router({
         Object.assign(updatePayload, { lastModels: filteredLastModels });
       }
 
-      await db
-        .update(preferences)
+      const [preferences] = await db
+        .update(preferencesTable)
         .set(updatePayload)
-        .where(eq(preferences.userId, authUser.id));
+        .where(eq(preferencesTable.userId, authUser.id))
+        .returning();
+      if (!preferences) {
+        throw new Error("Failed to update preferences");
+      }
 
       return {
         ok: true as const,
         preferences: {
-          autoScroll: input.autoScroll,
-          hiddenProviders: sanitizedHiddenProviders,
-          webSearch: input.webSearch,
-          reasoningEffort: input.reasoningEffort,
-          enterKeySends: input.enterKeySends,
-          shiftEnterKeySends: input.shiftEnterKeySends,
-          skipCloseThreadConfirmation: input.skipCloseThreadConfirmation,
-          hideLegal: input.hideLegal,
-          lastModels:
-            "lastModels" in updatePayload
-              ? filteredLastModels
-              : currentLastModels,
+          autoScroll: preferences.preferenceAutoScroll,
+          hiddenProviders: preferences.preferenceHiddenProviders,
+          webSearch: preferences.preferenceWebSearch,
+          reasoningEffort:
+            preferences.preferenceReasoningEffort as ReasoningEffort,
+          enterKeySends: preferences.preferenceEnterKeySends,
+          shiftEnterKeySends: preferences.preferenceShiftEnterKeySends,
+          skipCloseThreadConfirmation:
+            preferences.preferenceSkipCloseThreadConfirmation,
+          hideLegal: preferences.preferenceHideLegal,
         },
       };
     }),
