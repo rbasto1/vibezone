@@ -63,7 +63,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
   const sessionId = useAuthSession();
   const userPreferences = useUserPreferencesValue();
   const plugins = useRef({
-    web: userPreferences.pluginWeb,
+    web: userPreferences.webSearch,
     reason: userPreferences.reasoningEffort,
   });
   const setAnonQuota = useAnonQuotaSetter();
@@ -86,7 +86,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
       : userPreferences.reasoningEffort;
 
   plugins.current = {
-    web: userPreferences.pluginWeb,
+    web: userPreferences.webSearch,
     reason: panelCanReason ? reasoningEffort : "low",
   };
 

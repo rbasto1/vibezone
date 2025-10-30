@@ -418,6 +418,14 @@
       "label": "Web browsing",
       "description": "Allow the AI to browse the web when the selected model supports it."
     },
+    "enterKeySends": {
+      "label": "Press Enter to send message",
+      "description": "When enabled, pressing Enter submits your message. Turn it off to make Enter add a new line instead."
+    },
+    "shiftEnterKeySends": {
+      "label": "Press Shift+Enter to send message",
+      "description": "Enable this if you also want Shift+Enter to send your message. Leave it off to always insert a new line with Shift+Enter."
+    },
     "reasoningEffort": {
       "label": "Reasoning effort",
       "description": "Control how much reasoning effort the AI uses when the selected model supports it.",
@@ -491,6 +499,7 @@
     "actions": {
       "cancel": "Cancel",
       "save": "Save changes",
+      "close": "Close",
       "saving": "Saving..."
     },
     "toast": {

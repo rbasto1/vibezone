@@ -418,6 +418,14 @@
       "label": "Navegação na web",
       "description": "Permita que a IA pesquise na web quando o modelo selecionado oferecer esse recurso."
     },
+    "enterKeySends": {
+      "label": "Enter envia a mensagem",
+      "description": "Quando ativado, pressionar Enter envia sua mensagem. Desative para que Enter insira uma nova linha em vez disso."
+    },
+    "shiftEnterKeySends": {
+      "label": "Shift+Enter envia a mensagem",
+      "description": "Ative se quiser que Shift+Enter envie a mensagem. Deixe desativado para que Shift+Enter sempre crie uma nova linha."
+    },
     "reasoningEffort": {
       "label": "Esforço de raciocínio",
       "description": "Controle quanto esforço de raciocínio a IA usa quando o modelo selecionado oferece suporte.",
@@ -491,6 +499,7 @@
     "actions": {
       "cancel": "Cancelar",
       "save": "Salvar alterações",
+      "close": "Fechar",
       "saving": "Salvando..."
     },
     "toast": {

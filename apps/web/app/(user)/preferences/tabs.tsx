@@ -1,110 +1,26 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import type { FC } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { ReasoningEffort } from "@/db";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { siteName } from "@/lib/branding";
-import { trpc } from "@/lib/trpc/client";
 import {
   Building2Icon,
   DatabaseBackupIcon,
   ScrollTextIcon,
   Settings2Icon,
+  XIcon,
 } from "lucide-react";
 import { PreferencesDataTab } from "./data";
-import type { ReasoningEffortValue } from "./general";
 import { PreferencesGeneralTab } from "./general";
 import { PreferencesInstructionsTab } from "./instructions";
 import { PreferencesProvidersTab } from "./providers";
 
-const normalizeReasoningEffort = (
-  effort: ReasoningEffort
-): ReasoningEffortValue => (effort === "none" ? "low" : effort);
-
-const PreferencesPage = () => {
+const PreferencesPage: FC = () => {
   const t = useTranslations("UserPreferences");
-  const [preferences, setPreferences] = useUserPreferences();
   const setUIState = useUIStateSetter();
-
-  const [hiddenProviders, setHiddenProviders] = useState<Set<string>>(
-    () => new Set(preferences.hiddenProviders ?? [])
-  );
-  const initialHiddenProviders = preferences.hiddenProviders.sort();
-  const initialAutoScroll = preferences.autoScroll;
-  const initialWebSearch = preferences.pluginWeb;
-  const initialReasoningEffort = normalizeReasoningEffort(
-    preferences.reasoningEffort
-  );
-
-  const [autoScroll, setAutoScroll] = useState(initialAutoScroll);
-  const [webSearch, setWebSearch] = useState(initialWebSearch);
-  const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffortValue>(
-    initialReasoningEffort
-  );
-
-  useEffect(() => {
-    setAutoScroll(preferences.autoScroll);
-    setWebSearch(preferences.pluginWeb);
-    setReasoningEffort(normalizeReasoningEffort(preferences.reasoningEffort));
-    const initialHidden = new Set(preferences.hiddenProviders ?? []);
-    setHiddenProviders(initialHidden);
-  }, [preferences, setUIState]);
-
-  const currentHiddenProviders = Array.from(hiddenProviders).sort();
-  const hasHiddenChanged =
-    currentHiddenProviders.length !== initialHiddenProviders.length ||
-    currentHiddenProviders.some(
-      (provider, index) => provider !== initialHiddenProviders[index]
-    );
-
-  const hasChanges =
-    autoScroll !== initialAutoScroll ||
-    webSearch !== initialWebSearch ||
-    reasoningEffort !== initialReasoningEffort ||
-    hasHiddenChanged;
-
-  const updatePreferences = trpc.users.updatePreferences.useMutation({
-    onError: (error: unknown) => {
-      console.error("Error saving preferences:", error);
-      const message =
-        error instanceof Error ? error.message : JSON.stringify(error);
-      toast.error(t("toast.error", { message }));
-      setPreferences((prev) => ({
-        ...prev,
-        pluginWeb: initialWebSearch,
-        reasoningEffort: initialReasoningEffort,
-        autoScroll: initialAutoScroll,
-        hiddenProviders: initialHiddenProviders,
-      }));
-    },
-  });
-
-  const handleSave = () => {
-    const targetHidden = Array.from(hiddenProviders).sort();
-    const hiddenList = targetHidden;
-
-    setUIState({ panelOpen: null });
-
-    updatePreferences.mutate({
-      autoScroll,
-      webSearch,
-      reasoningEffort,
-      hiddenProviders: hiddenList,
-    });
-    setPreferences((prev) => ({
-      ...prev,
-      pluginWeb: webSearch,
-      reasoningEffort,
-      autoScroll,
-      hiddenProviders: hiddenList,
-    }));
-  };
 
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:px-8">
@@ -115,17 +31,14 @@ const PreferencesPage = () => {
             {t("description", { siteName })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setUIState({ panelOpen: null })}
-          >
-            {t("actions.cancel")}
-          </Button>
-          <Button onClick={handleSave} disabled={!hasChanges}>
-            {t("actions.save")}
-          </Button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setUIState({ panelOpen: null })}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={t("actions.close")}
+        >
+          <XIcon className="h-5 w-5" />
+        </button>
       </header>
 
       <Tabs defaultValue="general" className="flex flex-col gap-6">
@@ -162,22 +75,9 @@ const PreferencesPage = () => {
           ))}
         </TabsList>
 
-        <PreferencesGeneralTab
-          autoScroll={autoScroll}
-          setAutoScroll={setAutoScroll}
-          webSearch={webSearch}
-          setWebSearch={setWebSearch}
-          reasoningEffort={reasoningEffort}
-          setReasoningEffort={setReasoningEffort}
-        />
-
-        <PreferencesProvidersTab
-          hiddenProviders={hiddenProviders}
-          setHiddenProviders={setHiddenProviders}
-        />
-
+        <PreferencesGeneralTab />
+        <PreferencesProvidersTab />
         <PreferencesInstructionsTab />
-
         <PreferencesDataTab />
       </Tabs>
     </div>

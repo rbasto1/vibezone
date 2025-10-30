@@ -65,7 +65,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const baseSystemPrompt = t("system");
   const preferencesInitialValue: PreferencesAtom = preferences
     ? {
-        pluginWeb: preferences?.preferenceWebSearch,
+        webSearch: preferences?.preferenceWebSearch,
         reasoningEffort: preferences?.preferenceReasoningEffort as
           | "none"
           | "low"
@@ -73,15 +73,19 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           | "high",
         autoScroll: preferences?.preferenceAutoScroll,
         hiddenProviders: preferences?.preferenceHiddenProviders ?? [],
+        enterKeySends: preferences?.preferenceEnterKeySends ?? true,
+        shiftEnterKeySends: preferences?.preferenceShiftEnterKeySends ?? false,
         skipCloseThreadConfirmation:
           preferences?.preferenceSkipCloseThreadConfirmation ?? false,
         hideLegal: preferences?.preferenceHideLegal ?? false,
       }
     : {
-        pluginWeb: true,
+        webSearch: true,
         reasoningEffort: "low",
         autoScroll: false,
         hiddenProviders: [],
+        enterKeySends: true,
+        shiftEnterKeySends: false,
         skipCloseThreadConfirmation: false,
         hideLegal: false,
       };
