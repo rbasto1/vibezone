@@ -22,7 +22,10 @@
     "addAnotherTooltip": "Add another AI chat",
     "maxModelsTooltip": "Maximum {max} models at a time; remove a model to add another",
     "addAiButton": "Add AI",
-    "addAiAriaLabel": "Add another AI chat"
+    "addAiAriaLabel": "Add another AI chat",
+    "copyModalTitle": "Copy conversation",
+    "copyModalDescription": "Choose which AI conversation you want to duplicate in the new thread.",
+    "copyModalCancel": "Cancel"
   },
   "AssistantMessageFile": {
     "defaultFilename": "download",

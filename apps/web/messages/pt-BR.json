@@ -22,7 +22,10 @@
     "addAnotherTooltip": "Adicionar outro chat de IA",
     "maxModelsTooltip": "Máximo de {max} modelos por vez; remova um modelo para adicionar outro",
     "addAiButton": "Adicionar IA",
-    "addAiAriaLabel": "Adicionar outro chat de IA"
+    "addAiAriaLabel": "Adicionar outro chat de IA",
+    "copyModalTitle": "Copiar conversa",
+    "copyModalDescription": "Escolha qual conversa de IA você quer duplicar no novo painel.",
+    "copyModalCancel": "Cancelar"
   },
   "AssistantMessageFile": {
     "defaultFilename": "download",

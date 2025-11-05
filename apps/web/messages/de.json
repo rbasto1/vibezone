@@ -22,7 +22,10 @@
     "addAnotherTooltip": "Weiteren KI-Chat hinzufügen",
     "maxModelsTooltip": "Maximal {max} Modelle gleichzeitig; entferne ein Modell, um ein weiteres hinzuzufügen",
     "addAiButton": "KI hinzufügen",
-    "addAiAriaLabel": "Weiteren KI-Chat hinzufügen"
+    "addAiAriaLabel": "Weiteren KI-Chat hinzufügen",
+    "copyModalTitle": "Gespräch kopieren",
+    "copyModalDescription": "Wähle, welches KI-Gespräch du im neuen Thread duplizieren möchtest.",
+    "copyModalCancel": "Abbrechen"
   },
   "AssistantMessageFile": {
     "defaultFilename": "download",

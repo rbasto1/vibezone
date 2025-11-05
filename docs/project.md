@@ -2,28 +2,39 @@
 
 ## Features
 
-- [x] Paid plans: Clerk
-- [x] Replace AssistantCloud with ExternalStoreRuntime
-
 ## Bugs
 
+- [ ] Stopping works but state stay as running?
+- [ ] Switching models with attachments is causing issues with the other models
+- [ ] Reloading chats loses the multiple generations (refreshes)
+- [ ] Some threads not saving?
+- [ ] Sync deleted/added threads with backend
+
+## Improvements
+
+- [x] Copy messages from other threads when adding new AI
+- [ ] Add "split to new chat" button
+- [ ] In full-screen mode, allow switching models
+- [ ] Add analytics (Posthog?)
+- [ ] Add Python project to calculate usage of non-OpenRouter models
+- [ ] Add auto-translation button to admin (model descriptions, news)
+- [ ] Add cleanup of attachments never sent or older than 30 days for free users
+- [ ] Importing same OpenAI history for different users will create conflicts with IDs
+
+## MVP (done)
+
+- [x] Paid plans: Clerk
+- [x] Replace AssistantCloud with ExternalStoreRuntime
 - [x] Bug: on mobile, closing the model details modal closes also the model selector
 - [x] Text attachments are going inline inside <attachment>
 - [x] Disable sending when attachments are not compatible with one of the models
 - [x] Markdown render messes up newlines in regular text
-- [ ] Stopping works but state stay as running?
-- [ ] Switching models with attachments is causing issues with the other models
-- [ ] Reloading chats loses the multiple generations (refreshes)
 - [x] Code blocks rendering as download items
 - [x] PDF attachments not rendering
 - [x] Deleting a chat that is currently open should start a new chat
 - [x] Kotlin code not rendering
 - [x] SyntaxHighlight code block has horizontal scrollbar, but "code block" doesn't
-
-## Improvements
-
 - [x] Instructions list with toggle
-- [ ] In full-screen mode, allow switching models
 - [x] Grab pointer for hidden sidebar
 - [x] Preferences: enter / shift-enter to send
 - [x] Data mgmt: delete all my chats
@@ -41,21 +52,13 @@
 - [x] Import chats from OpenAI format
 - [x] Export chats to OpenAI format
 - [x] Composer text area should grow with text
-- [ ] Add analytics (Posthog?)
 - [x] Projects (group threads) - paying only
 - [x] Add a "do not show again" option to the warning about discarding a panel
-- [ ] Add Python project to calculate usage of non-OpenRouter models
 - [x] Allow setting order of groups
 - [x] Syntax highlighting: auto-detect language
 - [x] Add `api_created_at` to models and use our import date for created_at
-- [ ] Add auto-translation button to admin (model descriptions, news)
 - [x] Schedule daily usage calculation
 - [x] Use `useMessage` for saving messages instead of thread message list
-- [ ] Add cleanup of attachments never sent or older than 30 days for free users
-- [ ] Importing same OpenAI history for different users will create conflicts with IDs
-
-## MVP (done)
-
 - [x] Add SEO metadata
 - [x] Mobile version
 - [x] Tag providers that do not have zdr
