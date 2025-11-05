@@ -3,11 +3,13 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
 import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/components/ui/utils";
+import { useCurrentChatValue } from "@/hooks/use-chat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   usePanelsConfigSetter,
@@ -19,7 +21,6 @@ import {
   comparableMessagesEqual,
   toComparableMessages,
 } from "@/lib/assistant-ui/message-compare";
-import { useUser } from "@/lib/auth-client";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
@@ -39,12 +40,10 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
   onAddPanel,
 }) => {
   const t = useTranslations("AssistantHeader");
-  const setLastModels = trpc.users.setLastModels.useMutation();
   const panelsConfig = usePanelsConfigValue();
   const setPanelsConfig = usePanelsConfigSetter();
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
-  const user = useUser();
   const threadMessages = useAtomValue(threadMessagesAtom);
   const setThreadMessages = useSetAtom(threadMessagesAtom);
   const [chooseModelOpen, setChooseModelOpen] = useState(false);
@@ -54,6 +53,14 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
     providerId: string;
     modelId: string;
   } | null>(null);
+  const currentChatId = useCurrentChatValue()?.id;
+  const { mutate: duplicateThread } = trpc.messages.duplicateThread.useMutation(
+    {
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    }
+  );
 
   const canAddMore = panelCount < MAX_PANELS;
   const isMobile = useIsMobile();
@@ -100,11 +107,13 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
       id,
       providerId,
       modelId,
+      sourceThreadId,
       sourceMessages,
     }: {
       id: string;
       providerId: string;
       modelId: string;
+      sourceThreadId?: string;
       sourceMessages?: ThreadMessageLike[];
     }) => {
       const initialMessages = cloneThreadMessages(sourceMessages);
@@ -132,28 +141,32 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
             ...(initialMessages ? { initialMessages } : {}),
           },
         ];
-        if (user) {
-          const modelIds = newPanels.map((p) => p.model).slice(0, MAX_PANELS);
-          setLastModels.mutate({ modelIds });
-        }
 
         saveLastModels(newPanels);
 
         return newPanels;
       });
       onAddPanel?.(id);
+      if (sourceThreadId && initialMessages?.length && currentChatId) {
+        duplicateThread({
+          chatId: currentChatId,
+          sourceThreadId,
+          newThreadId: id,
+          newModelId: modelId,
+        });
+      }
       setPendingPanel(null);
       setCopyModalOpen(false);
     },
     [
       cloneThreadMessages,
+      currentChatId,
+      duplicateThread,
       onAddPanel,
       saveLastModels,
-      setLastModels,
       setPanelsConfig,
       setPanelsState,
       setThreadMessages,
-      user,
     ]
   );
 
@@ -173,16 +186,24 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
     }
 
     const sharedMessages = getSharedMessages();
-    if (sharedMessages) {
-      finalizeAddPanel({ ...newPanel, sourceMessages: sharedMessages });
+    const [sourcePanel, secondPanel] = panelsConfig;
+    if (sharedMessages && sourcePanel) {
+      finalizeAddPanel({
+        ...newPanel,
+        sourceMessages: sharedMessages,
+        sourceThreadId: sourcePanel.id,
+      });
       setChooseModelOpen(false);
       return;
     }
 
-    const [sourcePanel, secondPanel] = panelsConfig;
     if (sourcePanel && !secondPanel) {
       const sourceMessages = getPanelMessages(sourcePanel.id);
-      finalizeAddPanel({ ...newPanel, sourceMessages });
+      finalizeAddPanel({
+        ...newPanel,
+        sourceMessages,
+        sourceThreadId: sourcePanel.id,
+      });
       setChooseModelOpen(false);
       return;
     }
@@ -205,7 +226,11 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
   const handleCopySelect = (sourceId: string) => {
     if (!pendingPanel) return;
     const sourceMessages = getPanelMessages(sourceId);
-    finalizeAddPanel({ ...pendingPanel, sourceMessages });
+    finalizeAddPanel({
+      ...pendingPanel,
+      sourceMessages,
+      sourceThreadId: sourceId,
+    });
   };
 
   const handleCopyCancel = () => {
