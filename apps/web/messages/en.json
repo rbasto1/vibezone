@@ -58,13 +58,14 @@
   },
   "ConfirmCloseModal": {
     "title": "Close this chat?",
-    "descriptionLoss": "If you close the chat, your conversation with this AI will be lost.",
-    "descriptionAlternate": "You can choose another model without closing the chat by clicking the model name in the chat header.",
-    "descriptionConfirm": "Are you sure you want to close this chat?",
+    "descriptionPrimary": "What would you like to do with this conversation?",
+    "descriptionMove": "Move keeps the conversation by creating a new chat just for this thread.",
+    "descriptionDiscard": "Discard removes this thread and its messages. This cannot be undone.",
     "skipLabel": "Do not show this warning again",
     "skipHint": "Sign in to save this preference across devices.",
     "cancel": "Cancel",
-    "confirm": "Close Chat",
+    "move": "Move to new chat",
+    "discard": "Discard conversation",
     "saveError": "We could not save your preference: {message}"
   },
   "GlobalComposer": {
@@ -159,7 +160,12 @@
     "closeAria": "Close panel",
     "closeTooltip": "Close panel",
     "closeDisabledTooltip": "At least one panel must remain",
-    "infoShowDetails": "Show details"
+    "infoShowDetails": "Show details",
+    "toasts": {
+      "discardError": "Could not discard conversation: {message}",
+      "moveError": "Could not move conversation: {message}",
+      "moveSuccess": "Thread moved to a new chat."
+    }
   },
   "SocialImage": {
     "subtitle": "Compare AI Models",

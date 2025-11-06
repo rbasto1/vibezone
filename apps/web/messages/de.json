@@ -58,13 +58,14 @@
   },
   "ConfirmCloseModal": {
     "title": "Diesen Chat schließen?",
-    "descriptionLoss": "Wenn du den Chat schließt, geht deine Unterhaltung mit dieser KI verloren.",
-    "descriptionAlternate": "Du kannst im Chat-Kopf auf den Modellnamen klicken, um ein anderes Modell zu wählen, ohne den Chat zu schließen.",
-    "descriptionConfirm": "Bist du sicher, dass du diesen Chat schließen möchtest?",
+    "descriptionPrimary": "Was möchtest du mit dieser Unterhaltung tun?",
+    "descriptionMove": "Verschieben behält die Unterhaltung, indem ein eigener Chat für diesen Thread erstellt wird.",
+    "descriptionDiscard": "Verwerfen entfernt diesen Thread und seine Nachrichten. Das kann nicht rückgängig gemacht werden.",
     "skipLabel": "Diesen Hinweis nicht mehr anzeigen",
     "skipHint": "Melde dich an, um diese Einstellung überall zu übernehmen.",
     "cancel": "Abbrechen",
-    "confirm": "Chat schließen",
+    "move": "In neuen Chat verschieben",
+    "discard": "Unterhaltung verwerfen",
     "saveError": "Deine Einstellung konnte nicht gespeichert werden: {message}"
   },
   "GlobalComposer": {
@@ -159,7 +160,12 @@
     "closeAria": "Panel schließen",
     "closeTooltip": "Panel schließen",
     "closeDisabledTooltip": "Mindestens ein Panel muss bestehen bleiben",
-    "infoShowDetails": "Modelldetails anzeigen"
+    "infoShowDetails": "Modelldetails anzeigen",
+    "toasts": {
+      "discardError": "Konversation konnte nicht verworfen werden: {message}",
+      "moveError": "Konversation konnte nicht verschoben werden: {message}",
+      "moveSuccess": "Thread wurde in einen neuen Chat verschoben."
+    }
   },
   "SocialImage": {
     "subtitle": "KI-Modelle vergleichen",

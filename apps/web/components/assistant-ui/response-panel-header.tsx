@@ -2,18 +2,22 @@
 
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
 import { StopButton } from "@/components/ui/stop-button";
 import { cn } from "@/components/ui/utils";
+import { useCurrentChatValue } from "@/hooks/use-chat";
 import {
   usePanelsConfig,
   usePanelsStateSetter,
   usePanelStateValue,
 } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
-import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
+import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
+import { threadMessagesAtom } from "@/store/thread-messages";
+import { useSetAtom } from "jotai";
 import { CloseIconButton } from "../ui/close-icon-button";
 import { ConfirmCloseModal } from "./confirm-close-modal";
 import { ModelDropdown } from "./model-dropdown";
@@ -32,20 +36,17 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const modelId = panel.model;
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelState = usePanelStateValue(panelId);
-
-  const preferences = useUserPreferencesValue();
+  const setThreadMessages = useSetAtom(threadMessagesAtom);
+  const currentChat = useCurrentChatValue();
+  const currentChatId = currentChat?.id ?? null;
+  const utils = trpc.useUtils();
+  const deleteThreadMutation = trpc.chats.deleteThread.useMutation();
+  const moveThreadMutation = trpc.chats.moveThreadToNewChat.useMutation();
 
   const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleRemoveClick = () => {
-    if (panelState.hasMessages && !preferences.skipCloseThreadConfirmation) {
-      setShowConfirmClose(true);
-    } else {
-      removePanel();
-    }
-  };
-
-  const removePanel = () => {
+  const finalizePanelRemoval = useCallback(() => {
     setPanelsConfig((prev) => {
       const next = prev.filter((p) => p.id !== panelId);
       saveLastModels(next);
@@ -56,8 +57,114 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
       delete newState[panelId];
       return newState;
     });
+    setThreadMessages((prev) => {
+      if (!(panelId in prev)) {
+        return prev;
+      }
+      const rest = { ...prev };
+      delete rest[panelId];
+      return rest;
+    });
     setShowConfirmClose(false);
-  };
+  }, [
+    panelId,
+    saveLastModels,
+    setPanelsConfig,
+    setPanelsState,
+    setThreadMessages,
+  ]);
+
+  const handleDiscard = useCallback(async () => {
+    if (isProcessing) return;
+
+    if (!panelState.hasMessages || !currentChatId) {
+      finalizePanelRemoval();
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await deleteThreadMutation.mutateAsync({
+        chatId: currentChatId,
+        threadId: panelId,
+      });
+      finalizePanelRemoval();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : JSON.stringify(error);
+      toast.error(t("toasts.discardError", { message }));
+      setShowConfirmClose(true);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [
+    currentChatId,
+    deleteThreadMutation,
+    finalizePanelRemoval,
+    isProcessing,
+    panelId,
+    panelState.hasMessages,
+    t,
+  ]);
+
+  const handleMove = useCallback(async () => {
+    if (isProcessing) return;
+
+    if (!panelState.hasMessages || !currentChatId) {
+      finalizePanelRemoval();
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const result = await moveThreadMutation.mutateAsync({
+        chatId: currentChatId,
+        threadId: panelId,
+      });
+      await Promise.all([
+        utils.chats.listChats.invalidate({ projectId: result.chat.projectId }),
+        utils.chats.listChats.invalidate({ projectId: undefined }),
+      ]);
+      finalizePanelRemoval();
+      toast.success(t("toasts.moveSuccess"));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : JSON.stringify(error);
+      toast.error(t("toasts.moveError", { message }));
+      setShowConfirmClose(true);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [
+    currentChatId,
+    finalizePanelRemoval,
+    isProcessing,
+    moveThreadMutation,
+    panelId,
+    panelState.hasMessages,
+    t,
+    utils,
+  ]);
+
+  const handleRemoveClick = useCallback(() => {
+    if (isProcessing) return;
+    if (panelState.hasMessages) {
+      setShowConfirmClose(true);
+      return;
+    }
+
+    if (!panelState.hasMessages) {
+      finalizePanelRemoval();
+      return;
+    }
+
+    void handleDiscard();
+  }, [
+    finalizePanelRemoval,
+    handleDiscard,
+    isProcessing,
+    panelState.hasMessages,
+  ]);
 
   const isActive = panelState.running;
   const canClose = panelsConfig.length > 1;
@@ -97,6 +204,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
               onClick={handleRemoveClick}
               aria-label={closeAria}
               title={closeTooltip}
+              disabled={isProcessing}
               buttonClassName="opacity-0 group-hover:opacity-100"
             />
           )}
@@ -105,7 +213,9 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
       {showConfirmClose && (
         <ConfirmCloseModal
           onOpenChange={setShowConfirmClose}
-          onConfirm={removePanel}
+          onDiscard={handleDiscard}
+          onMove={handleMove}
+          isProcessing={isProcessing}
         />
       )}
     </div>

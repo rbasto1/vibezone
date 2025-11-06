@@ -235,12 +235,15 @@ export const messagesRouter = t.router({
         }
 
         // Create thread if it doesn't exist
-        await db.insert(threadsTable).values({
-          id: threadId,
-          chatId,
-          lastModelId: modelId,
-          lastMessageAt: new Date(),
-        });
+        await db
+          .insert(threadsTable)
+          .values({
+            id: threadId,
+            chatId,
+            lastModelId: modelId,
+            lastMessageAt: new Date(),
+          })
+          .onConflictDoNothing();
       }
 
       // Insert messages into database (use upsert to handle duplicates)
@@ -304,7 +307,7 @@ export const messagesRouter = t.router({
         });
       }
 
-      const sourceThread = await db.query.threads.findFirst({
+      const sourceThreadPromise = db.query.threads.findFirst({
         where: and(
           eq(threadsTable.id, sourceThreadId),
           eq(threadsTable.chatId, chatId)
@@ -330,26 +333,12 @@ export const messagesRouter = t.router({
         },
       });
 
-      if (!sourceThread?.chat || sourceThread.chat.project?.userId !== user.id) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Thread not found",
-        });
-      }
-
-      const existingTargetThread = await db.query.threads.findFirst({
+      const existingTargetThreadPromise = db.query.threads.findFirst({
         where: eq(threadsTable.id, newThreadId),
         columns: { id: true, chatId: true },
       });
 
-      if (existingTargetThread && existingTargetThread.chatId !== chatId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Target thread belongs to a different chat",
-        });
-      }
-
-      const sourceMessages = await db.query.messages.findMany({
+      const sourceMessagesPromise = db.query.messages.findMany({
         where: eq(messagesTable.threadId, sourceThreadId),
         columns: {
           id: true,
@@ -365,8 +354,30 @@ export const messagesRouter = t.router({
         orderBy: [asc(messagesTable.createdAt)],
       });
 
-      const lastMessageAt =
-        sourceMessages.at(-1)?.createdAt ?? new Date();
+      const [sourceThread, existingTargetThread, sourceMessages] =
+        await Promise.all([
+          sourceThreadPromise,
+          existingTargetThreadPromise,
+          sourceMessagesPromise,
+        ]);
+
+      if (
+        !sourceThread?.chat ||
+        sourceThread.chat.project?.userId !== user.id
+      ) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Thread not found",
+        });
+      }
+      if (existingTargetThread && existingTargetThread.chatId !== chatId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Target thread belongs to a different chat",
+        });
+      }
+
+      const lastMessageAt = sourceMessages.at(-1)?.createdAt ?? new Date();
 
       await db
         .insert(threadsTable)
@@ -384,53 +395,41 @@ export const messagesRouter = t.router({
           },
         });
 
-      const hasExistingMessages = await db.query.messages.findFirst({
-        where: eq(messagesTable.threadId, newThreadId),
-        columns: { id: true },
-      });
-
-      if (hasExistingMessages) {
-        return { success: true as const, count: 0 };
-      }
-
       if (!sourceMessages.length) {
         return { success: true as const, count: 0 };
       }
 
-      const idMap = new Map<string, string>();
-      for (const message of sourceMessages) {
-        idMap.set(message.id, generateId());
-      }
-
-      const duplicatedMessages: NewMessage[] = sourceMessages.map(
-        (message) => {
-          const newMessageId = idMap.get(message.id);
-          if (!newMessageId) {
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to map message identifiers",
-            });
-          }
-          const mappedParentId =
-            message.parentId && idMap.has(message.parentId)
-              ? idMap.get(message.parentId) ?? null
-              : null;
-
-          return {
-            id: newMessageId,
-            threadId: newThreadId,
-            modelId: message.modelId,
-            parentId: mappedParentId,
-            branchNumber: message.branchNumber ?? null,
-            role: message.role,
-            content: cloneJsonValue(message.content),
-            attachments: cloneJsonValue(message.attachments),
-            metadata: null,
-            status: cloneJsonValue(message.status),
-            createdAt: message.createdAt,
-          };
-        }
+      const idMap = new Map(
+        sourceMessages.map((message) => [message.id, generateId()])
       );
+
+      const duplicatedMessages: NewMessage[] = sourceMessages.map((message) => {
+        const newMessageId = idMap.get(message.id);
+        if (!newMessageId) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to map message identifiers",
+          });
+        }
+        const mappedParentId =
+          message.parentId && idMap.has(message.parentId)
+            ? (idMap.get(message.parentId) ?? null)
+            : null;
+
+        return {
+          id: newMessageId,
+          threadId: newThreadId,
+          modelId: message.modelId,
+          parentId: mappedParentId,
+          branchNumber: message.branchNumber,
+          role: message.role,
+          content: cloneJsonValue(message.content),
+          attachments: cloneJsonValue(message.attachments),
+          metadata: null,
+          status: cloneJsonValue(message.status),
+          createdAt: message.createdAt,
+        };
+      });
 
       await db.insert(messagesTable).values(duplicatedMessages);
 

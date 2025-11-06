@@ -57,7 +57,7 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
   const { mutate: duplicateThread } = trpc.messages.duplicateThread.useMutation(
     {
       onError: (error) => {
-        toast.error(error.message);
+        toast.error(`Could not save new thread: ${error.message}`);
       },
     }
   );
@@ -117,12 +117,13 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
       sourceMessages?: ThreadMessageLike[];
     }) => {
       const initialMessages = cloneThreadMessages(sourceMessages);
+      const hasMessages = !!initialMessages?.some((m) => m.role === "user");
 
       setPanelsState((prev) => ({
         ...prev,
         [id]: {
           running: false,
-          hasMessages: Boolean(initialMessages?.length),
+          hasMessages,
         },
       }));
 
@@ -147,7 +148,7 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
         return newPanels;
       });
       onAddPanel?.(id);
-      if (sourceThreadId && initialMessages?.length && currentChatId) {
+      if (sourceThreadId && hasMessages && currentChatId) {
         duplicateThread({
           chatId: currentChatId,
           sourceThreadId,

@@ -75,8 +75,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         hiddenProviders: preferences?.preferenceHiddenProviders ?? [],
         enterKeySends: preferences?.preferenceEnterKeySends ?? true,
         shiftEnterKeySends: preferences?.preferenceShiftEnterKeySends ?? false,
-        skipCloseThreadConfirmation:
-          preferences?.preferenceSkipCloseThreadConfirmation ?? false,
         hideLegal: preferences?.preferenceHideLegal ?? false,
       }
     : {
@@ -86,7 +84,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         hiddenProviders: [],
         enterKeySends: true,
         shiftEnterKeySends: false,
-        skipCloseThreadConfirmation: false,
         hideLegal: false,
       };
 

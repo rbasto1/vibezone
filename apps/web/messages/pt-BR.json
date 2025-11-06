@@ -58,13 +58,14 @@
   },
   "ConfirmCloseModal": {
     "title": "Fechar este chat?",
-    "descriptionLoss": "Se você fechar o chat, sua conversa com esta IA será perdida.",
-    "descriptionAlternate": "Você pode escolher outro modelo sem fechar o chat clicando no nome do modelo no cabeçalho.",
-    "descriptionConfirm": "Tem certeza de que deseja fechar este chat?",
+    "descriptionPrimary": "O que você deseja fazer com esta conversa?",
+    "descriptionMove": "Mover mantém a conversa criando um novo chat apenas para este thread.",
+    "descriptionDiscard": "Descartar remove este thread e suas mensagens. Esta ação não pode ser desfeita.",
     "skipLabel": "Não mostrar este aviso novamente",
     "skipHint": "Entre na sua conta para salvar essa preferência em todos os dispositivos.",
     "cancel": "Cancelar",
-    "confirm": "Fechar chat",
+    "move": "Mover para um novo chat",
+    "discard": "Descartar conversa",
     "saveError": "Não foi possível salvar sua preferência: {message}"
   },
   "GlobalComposer": {
@@ -159,7 +160,12 @@
     "closeAria": "Fechar painel",
     "closeTooltip": "Fechar painel",
     "closeDisabledTooltip": "Ao menos um painel deve permanecer",
-    "infoShowDetails": "Mostrar detalhes"
+    "infoShowDetails": "Mostrar detalhes",
+    "toasts": {
+      "discardError": "Não foi possível descartar a conversa: {message}",
+      "moveError": "Não foi possível mover a conversa: {message}",
+      "moveSuccess": "Thread movido para um novo chat."
+    }
   },
   "SocialImage": {
     "subtitle": "Compare modelos de IA",
