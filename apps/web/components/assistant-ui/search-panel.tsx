@@ -197,7 +197,7 @@ export const SearchPanel = () => {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-10 sm:px-8">
+    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-4 sm:py-10 sm:px-8">
       <header className="flex flex-col gap-2 border-b pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-semibold">{t("title")}</h1>

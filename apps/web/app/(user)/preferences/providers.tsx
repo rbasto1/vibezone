@@ -115,10 +115,10 @@ export const PreferencesProvidersTab = () => {
     <TabsContent value="providers" className="space-y-6">
       <section className="space-y-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-          <div id="hide-providers-label" className="space-y-1">
-            <div className="text-sm font-medium">
+          <div id="hide-providers-label" className="space-y-1.5">
+            <h2 className="text-lg font-semibold">
               {t("hiddenProviders.label")}
-            </div>
+            </h2>
             <p className="text-muted-foreground text-sm">
               {t("hiddenProviders.description")}
             </p>
