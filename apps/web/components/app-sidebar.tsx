@@ -60,21 +60,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarRail />
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            {/* <Link href="#" onClick={(e) => e.preventDefault()}>
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <HelpCircleIcon className="size-4" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">{t("help.title")}</span>
-                  <span className="">{t("help.subtitle")}</span>
-                </div>
-              </Link> */}
-            <div className="flex items-center gap-2 justify-center">
-              <UserMenu />
-              <ThemeToggle />
-              <LanguageToggle />
-            </div>
+          <SidebarMenuItem className="flex items-center gap-2 justify-center">
+            <UserMenu />
+            <ThemeToggle />
+            <LanguageToggle />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

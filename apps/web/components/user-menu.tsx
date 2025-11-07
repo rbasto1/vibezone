@@ -50,7 +50,12 @@ export const UserMenu = () => {
   return (
     <div className="h-8 min-w-7">
       <UserButton
-        appearance={{ theme }}
+        appearance={{
+          theme,
+          elements: {
+            userButtonPopoverCard: { pointerEvents: "initial" },
+          },
+        }}
         userProfileProps={{
           appearance: { theme },
         }}
