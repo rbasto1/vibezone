@@ -37,6 +37,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { BotPlusIcon } from "../ui/icons/bot-plus-icon";
@@ -261,10 +262,6 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-70">
-          <DropdownMenuItem onSelect={openModelInfo}>
-            <InfoIcon className="mr-2 h-4 w-4" />
-            {t("menuModelInfo")}
-          </DropdownMenuItem>
           <DropdownMenuItem onSelect={openModelPicker}>
             <SparklesIcon className="mr-2 h-4 w-4" />
             {t("menuChangeModel")}
@@ -291,6 +288,15 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
             )}
             {favorite ? t("menuUnfavorite") : t("menuFavorite")}
           </DropdownMenuItem>
+          <DropdownMenuItem onSelect={openModelInfo}>
+            <InfoIcon className="mr-2 h-4 w-4" />
+            {t("menuModelInfo")}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={openDuplicatePicker}>
+            <BotPlusIcon className="mr-2 h-4 w-4" />
+            {t("menuDuplicateThread")}
+          </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!canDiscard}
             title={!canDiscard ? t("closeDisabledTooltip") : undefined}
@@ -298,10 +304,6 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           >
             <ArrowUpRightIcon className="mr-2 h-4 w-4" />
             {t("menuMoveThread")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={openDuplicatePicker}>
-            <BotPlusIcon className="mr-2 h-4 w-4" />
-            {t("menuDuplicateThread")}
           </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"

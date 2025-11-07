@@ -97,6 +97,7 @@ export default defineConfig([
       "prefer-const": ["warn", { destructuring: "all" }],
       "no-empty": "warn",
       "object-shorthand": "warn",
+      "@typescript-eslint/no-deprecated": "warn",
     },
     settings: {
       react: {

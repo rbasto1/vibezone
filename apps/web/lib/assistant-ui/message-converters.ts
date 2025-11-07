@@ -72,9 +72,11 @@ const convertThreadPartToUIPart = (
     return toTextPart("") as UIMessagePart<UIDataTypes, UITools>;
   }
 
-  switch ((part as { type: string }).type) {
+  switch (part.type) {
     case "text":
       return { type: "text", text: (part as { text: string }).text };
+    case "reasoning":
+      return { type: "reasoning", text: (part as { text: string }).text };
     case "image":
       return {
         type: "file",
@@ -89,6 +91,15 @@ const convertThreadPartToUIPart = (
         mediaType: (part as { mimeType: string }).mimeType,
         filename: (part as { filename?: string }).filename,
       } as UIMessagePart<UIDataTypes, UITools>;
+    case "source":
+      if (part.sourceType === "url") {
+        return {
+          type: "source-url",
+          url: part.url,
+          sourceId: part.id,
+        };
+      }
+      return toTextPart(part.url) as UIMessagePart<UIDataTypes, UITools>;
     default:
       return toTextPart(
         (part as { text?: string }).text ?? ""
@@ -262,6 +273,11 @@ const convertContentPart = (
     case "text":
       return {
         type: "text",
+        text: typeof candidate.text === "string" ? candidate.text : "",
+      };
+    case "reasoning":
+      return {
+        type: "reasoning",
         text: typeof candidate.text === "string" ? candidate.text : "",
       };
     case "image":

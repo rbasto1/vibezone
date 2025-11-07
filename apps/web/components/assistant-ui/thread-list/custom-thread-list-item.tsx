@@ -27,7 +27,7 @@ import {
   Loader2Icon,
   MoreVerticalIcon,
   PencilIcon,
-  TrashIcon,
+  Trash2Icon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, type FC } from "react";
@@ -220,11 +220,15 @@ export const CustomThreadListItem: FC<CustomThreadListItemProps> = ({
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem onClick={handleDelete} disabled={isDeleting}>
+          <DropdownMenuItem
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="text-destructive"
+          >
             {isDeleting ? (
               <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <TrashIcon className="mr-2 h-4 w-4" />
+              <Trash2Icon className="mr-2 h-4 w-4" />
             )}
             {t("delete")}
           </DropdownMenuItem>

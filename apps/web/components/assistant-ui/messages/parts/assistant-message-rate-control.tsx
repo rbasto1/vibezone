@@ -8,11 +8,7 @@ import { TooltipIconButton } from "@/components/assistant-ui/messages/tooltip-ic
 import { cn } from "@/components/ui/utils";
 import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
-import {
-  useMessage,
-  useThread,
-  type ThreadMessageLike,
-} from "@assistant-ui/react";
+import { useAssistantState, type ThreadMessageLike } from "@assistant-ui/react";
 import type {
   MessageMetadataCustom,
   MessageRate,
@@ -51,8 +47,8 @@ export const AssistantMessageRateControl: FC<
   AssistantMessageRateControlProps
 > = ({ delayDuration }) => {
   const t = useTranslations("AssistantMessageRate");
-  const message = useMessage();
-  const thread = useThread();
+  const message = useAssistantState(({ message }) => message);
+  const thread = useAssistantState(({ thread }) => thread);
   const rateMutation = trpc.messages.rateMessage.useMutation();
   const rateAnonymousMutation =
     trpc.messages.rateMessageAnonymous.useMutation();

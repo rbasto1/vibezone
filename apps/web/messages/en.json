@@ -168,7 +168,7 @@
     "menuFavorite": "Add model to favorites",
     "menuUnfavorite": "Remove model from favorites",
     "menuMoveThread": "Move thread to new chat",
-    "menuDuplicateThread": "Duplicate thread with other AI",
+    "menuDuplicateThread": "Duplicate thread with new AI",
     "menuDiscardThread": "Discard and close thread",
     "toasts": {
       "discardError": "Could not discard conversation: {message}",

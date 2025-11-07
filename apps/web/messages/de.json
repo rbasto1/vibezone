@@ -168,7 +168,7 @@
     "menuFavorite": "Modell zu Favoriten hinzufügen",
     "menuUnfavorite": "Modell aus Favoriten entfernen",
     "menuMoveThread": "Thread in neuen Chat verschieben",
-    "menuDuplicateThread": "Thread mit anderer KI duplizieren",
+    "menuDuplicateThread": "Thread mit neuen KI duplizieren",
     "menuDiscardThread": "Thread verwerfen und schließen",
     "toasts": {
       "discardError": "Konversation konnte nicht verworfen werden: {message}",

@@ -1,18 +1,11 @@
 "use client";
 
 import type { FC, KeyboardEvent } from "react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { z } from "zod";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { cn } from "@/components/ui/utils";
-import { safeParse } from "@/lib/json";
 import { useMessagePartReasoning } from "@assistant-ui/react";
 import { useTranslations } from "next-intl";
-
-const ReasoningSchema = z.object({
-  text: z.string(),
-  type: z.string().optional(),
-});
 
 export const Reasoning: FC = () => {
   const reasoning = useMessagePartReasoning();
@@ -21,13 +14,7 @@ export const Reasoning: FC = () => {
   const streamRef = useRef<HTMLDivElement | null>(null);
   const contentId = useId();
 
-  const parsedReasoning = useMemo(
-    () => safeParse(reasoning.text, ReasoningSchema),
-    [reasoning.text]
-  );
-
-  const text = parsedReasoning?.text ?? reasoning.text;
-  const reasoningType = parsedReasoning?.type;
+  const text = reasoning.text;
   const isRunning = reasoning.status.type === "running";
   const hasText = text.trim().length > 0;
 
@@ -52,7 +39,7 @@ export const Reasoning: FC = () => {
 
   useEffect(() => {
     if (hasText) return;
-    setIsExpanded((previous) => (previous ? false : previous));
+    setIsExpanded(false);
   }, [hasText]);
 
   if (!hasText && !isRunning) return null;
@@ -61,17 +48,12 @@ export const Reasoning: FC = () => {
     <div>
       <div className="flex items-center text-[10px] uppercase tracking-[0.28em] text-muted-foreground/70">
         <span>{t("title")}</span>
-        {reasoningType ? (
-          <span className="text-[9px] uppercase tracking-[0.32em] text-muted-foreground/50">
-            {reasoningType}
-          </span>
-        ) : null}
-        {isRunning ? (
+        {isRunning && (
           <span className="relative inline-flex size-2 shrink-0 items-center justify-center">
             <span className="absolute inline-flex size-full rounded-full bg-muted-foreground/30 opacity-70 animate-ping" />
             <span className="relative inline-flex size-1.5 rounded-full bg-muted-foreground/70" />
           </span>
-        ) : null}
+        )}
       </div>
 
       <div
@@ -100,7 +82,7 @@ export const Reasoning: FC = () => {
               : "max-h-12 pr-1 [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.95)_65%,rgba(0,0,0,0))] [-webkit-mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.95)_65%,rgba(0,0,0,0))]"
           )}
         >
-          {hasText ? text : "..."}
+          {text || "..."}
         </div>
 
         {isExpanded && (

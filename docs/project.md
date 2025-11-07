@@ -6,9 +6,9 @@
 
 - [ ] Stopping works but state stay as running?
 - [ ] Switching models with attachments is causing issues with the other models
-- [ ] Reloading chats make reasoning not render (but is loaded)
-- [ ] Reasoning rendering is too slow
-- [ ] Reloading chats loses the multiple generations (refreshes)
+- [x] Reloading chats make reasoning not render (but is loaded)
+- [x] Reasoning rendering is too slow
+- [ ] Reloading chats loses the multiple generations (refreshes/branching)
 - [ ] Some threads not saving?
 - [x] Sync deleted/added threads with backend
 - [ ] Mobile: no side menu open handle
@@ -16,6 +16,7 @@
 ## Improvements
 
 - [ ] Store and display which model generated each response
+- [ ] Store and display how long it took to generate each response
 - [x] Copy messages from other threads when adding new AI
 - [x] Add "split to new chat" button
 - [ ] In full-screen mode, allow switching threads

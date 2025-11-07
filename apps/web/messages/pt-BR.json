@@ -59,8 +59,8 @@
   "ConfirmCloseModal": {
     "title": "Fechar este chat?",
     "descriptionPrimary": "O que você deseja fazer com esta conversa?",
-    "descriptionMove": "Mover mantém a conversa criando um novo chat apenas para este thread.",
-    "descriptionDiscard": "Descartar remove este thread e suas mensagens. Esta ação não pode ser desfeita.",
+    "descriptionMove": "Mover remove a conversa daqui e cria um novo chat apenas para ela.",
+    "descriptionDiscard": "Descartar remove esta conversa e suas mensagens. Esta ação não pode ser desfeita.",
     "skipLabel": "Não mostrar este aviso novamente",
     "skipHint": "Entre na sua conta para salvar essa preferência em todos os dispositivos.",
     "cancel": "Cancelar",
@@ -161,22 +161,22 @@
     "closeTooltip": "Fechar painel",
     "closeDisabledTooltip": "Ao menos um painel deve permanecer",
     "infoShowDetails": "Mostrar detalhes",
-    "menuLabel": "Opções do thread",
-    "menuAriaLabel": "Abrir opções do thread",
+    "menuLabel": "Opções da conversa",
+    "menuAriaLabel": "Abrir opções da conversa",
     "menuChangeModel": "Trocar IA a partir de agora",
     "menuModelInfo": "Sobre esse modelo",
     "menuFavorite": "Adicionar modelo aos favoritos",
     "menuUnfavorite": "Remover modelo dos favoritos",
-    "menuMoveThread": "Mover thread para um novo chat",
-    "menuDuplicateThread": "Duplicar thread com outra IA",
-    "menuDiscardThread": "Descartar e fechar thread",
+    "menuMoveThread": "Mover conversa para um novo chat",
+    "menuDuplicateThread": "Duplicar conversa com nova IA",
+    "menuDiscardThread": "Descartar e fechar conversa",
     "toasts": {
       "discardError": "Não foi possível descartar a conversa: {message}",
       "moveError": "Não foi possível mover a conversa: {message}",
-      "moveSuccess": "Thread movido para um novo chat.",
+      "moveSuccess": "Conversa movida para um novo chat.",
       "duplicateError": "Não foi possível duplicar a conversa: {message}",
-      "duplicateLimit": "Você precisa remover outro thread antes de duplicar (máx. {max}).",
-      "duplicateMissing": "Não encontramos mais esse thread."
+      "duplicateLimit": "Você precisa remover outro conversa antes de duplicar (máx. {max}).",
+      "duplicateMissing": "Não encontramos mais essa conversa."
     }
   },
   "SocialImage": {

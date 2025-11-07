@@ -1,6 +1,6 @@
-import { MessagePrimitive, useMessage } from "@assistant-ui/react";
+import { MessagePrimitive, useAssistantState } from "@assistant-ui/react";
 import { motion } from "framer-motion";
-import { useEffect, type FC } from "react";
+import { useEffect, useMemo, type FC } from "react";
 
 import { usePendingUserMessagesAppender } from "@/store/pending-user-messages";
 import { BranchPicker } from "./branch-picker";
@@ -16,7 +16,7 @@ interface UserMessageProps {
 export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
   const branchingEnabled = false;
 
-  const message = useMessage();
+  const message = useAssistantState(({ message }) => message);
   const appendPendingUserMessage = usePendingUserMessagesAppender();
 
   useEffect(() => {
@@ -24,6 +24,15 @@ export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
     appendPendingUserMessage(message, threadId, modelId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message.id]);
+
+  const components = useMemo(
+    () => ({
+      Text: TextWithAttachments,
+      Image: EmptyPart,
+      File: EmptyPart,
+    }),
+    []
+  );
 
   return (
     <MessagePrimitive.Root asChild>
@@ -40,13 +49,7 @@ export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
 
         {/* aui-user-message-content */}
         <div className="bg-muted text-foreground col-start-2 rounded-3xl px-5 py-2.5 break-words">
-          <MessagePrimitive.Content
-            components={{
-              Text: TextWithAttachments,
-              Image: EmptyPart,
-              File: EmptyPart,
-            }}
-          />
+          <MessagePrimitive.Content components={components} />
         </div>
 
         {/* aui-user-branch-picker */}
