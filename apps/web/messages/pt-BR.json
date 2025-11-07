@@ -164,6 +164,7 @@
     "menuLabel": "Opções do thread",
     "menuAriaLabel": "Abrir opções do thread",
     "menuChangeModel": "Trocar IA a partir de agora",
+    "menuModelInfo": "Sobre esse modelo",
     "menuFavorite": "Adicionar modelo aos favoritos",
     "menuUnfavorite": "Remover modelo dos favoritos",
     "menuMoveThread": "Mover thread para um novo chat",
