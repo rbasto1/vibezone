@@ -161,10 +161,22 @@
     "closeTooltip": "Panel schließen",
     "closeDisabledTooltip": "Mindestens ein Panel muss bestehen bleiben",
     "infoShowDetails": "Modelldetails anzeigen",
+    "menuLabel": "Thread-Optionen",
+    "menuAriaLabel": "Thread-Optionen öffnen",
+    "menuChangeModel": "KI für zukünftige Antworten ändern",
+    "menuFavorite": "Modell zu Favoriten hinzufügen",
+    "menuUnfavorite": "Modell aus Favoriten entfernen",
+    "menuMoveThread": "Thread in neuen Chat verschieben",
+    "menuDuplicateThread": "Thread mit anderer KI duplizieren",
+    "menuDiscardThread": "Thread verwerfen und schließen",
     "toasts": {
       "discardError": "Konversation konnte nicht verworfen werden: {message}",
       "moveError": "Konversation konnte nicht verschoben werden: {message}",
-      "moveSuccess": "Thread wurde in einen neuen Chat verschoben."
+      "moveSuccess": "Thread wurde in einen neuen Chat verschoben.",
+      "duplicateError": "Konversation konnte nicht dupliziert werden: {message}",
+      "duplicateSuccess": "Thread mit dem ausgewählten Modell dupliziert.",
+      "duplicateLimit": "Du musst erst einen anderen Thread entfernen (max. {max}).",
+      "duplicateMissing": "Dieser Thread konnte nicht mehr gefunden werden."
     }
   },
   "SocialImage": {

@@ -242,14 +242,12 @@ export const toThreadMessageLike = (
     role,
     content: contentArray,
     attachments: undefined,
-    metadata: msg.metadata?.custom
-      ? {
-          custom: {
-            ...msg.metadata.custom,
-            saved: true,
-          },
-        }
-      : undefined,
+    metadata: {
+      custom: {
+        ...msg.metadata?.custom,
+        saved: true,
+      },
+    },
     ...(status ? { status } : {}),
   };
 

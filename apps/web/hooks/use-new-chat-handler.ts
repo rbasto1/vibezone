@@ -81,7 +81,7 @@ export function useNewChatHandler() {
       );
       setThreadMessages(nextThreadMessages);
 
-      setUIState({ panelOpen: null, suggestionsUsed: false });
+      setUIState({ panelOpen: null, suggestionsUsed: false, modelPicker: null });
 
       return chat;
     },

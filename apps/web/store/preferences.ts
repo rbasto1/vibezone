@@ -8,6 +8,7 @@ export interface PreferencesAtom {
   reasoningEffort: ReasoningEffort;
   enterKeySends: boolean;
   shiftEnterKeySends: boolean;
+  skipCloseThreadConfirmation: boolean;
   hideLegal: boolean;
 }
 
@@ -18,5 +19,6 @@ export const preferencesAtom = atom<PreferencesAtom>({
   reasoningEffort: "low",
   enterKeySends: true,
   shiftEnterKeySends: false,
+  skipCloseThreadConfirmation: false,
   hideLegal: false,
 });

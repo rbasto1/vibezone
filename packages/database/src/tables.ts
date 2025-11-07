@@ -56,6 +56,11 @@ export const preferences = pgTable("preferences", {
   preferenceShiftEnterKeySends: boolean("preference_shift_enter_key_sends")
     .default(false)
     .notNull(),
+  preferenceSkipCloseThreadConfirmation: boolean(
+    "preference_skip_close_thread_confirmation"
+  )
+    .default(false)
+    .notNull(),
   preferenceHideLegal: boolean("preference_hide_legal")
     .default(false)
     .notNull(),

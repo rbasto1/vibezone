@@ -8,12 +8,13 @@
 - [ ] Switching models with attachments is causing issues with the other models
 - [ ] Reloading chats loses the multiple generations (refreshes)
 - [ ] Some threads not saving?
-- [ ] Sync deleted/added threads with backend
+- [x] Sync deleted/added threads with backend
+- [ ] Mobile: no side menu open handle
 
 ## Improvements
 
 - [x] Copy messages from other threads when adding new AI
-- [ ] Add "split to new chat" button
+- [x] Add "split to new chat" button
 - [ ] In full-screen mode, allow switching models
 - [ ] Add analytics (Posthog?)
 - [ ] Add Python project to calculate usage of non-OpenRouter models

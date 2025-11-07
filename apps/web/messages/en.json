@@ -161,10 +161,22 @@
     "closeTooltip": "Close panel",
     "closeDisabledTooltip": "At least one panel must remain",
     "infoShowDetails": "Show details",
+    "menuLabel": "Thread options",
+    "menuAriaLabel": "Open thread options",
+    "menuChangeModel": "Change AI going forward",
+    "menuFavorite": "Add model to favorites",
+    "menuUnfavorite": "Remove model from favorites",
+    "menuMoveThread": "Move thread to new chat",
+    "menuDuplicateThread": "Duplicate thread with other AI",
+    "menuDiscardThread": "Discard and close thread",
     "toasts": {
       "discardError": "Could not discard conversation: {message}",
       "moveError": "Could not move conversation: {message}",
-      "moveSuccess": "Thread moved to a new chat."
+      "moveSuccess": "Thread moved to a new chat.",
+      "duplicateError": "Could not duplicate conversation: {message}",
+      "duplicateSuccess": "Thread duplicated with the selected model.",
+      "duplicateLimit": "You need to delete another thread before duplicating (max {max}).",
+      "duplicateMissing": "We could not find that thread anymore."
     }
   },
   "SocialImage": {

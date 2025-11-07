@@ -281,6 +281,7 @@ export const usersRouter = t.router({
         reasoningEffort: z.enum(["none", "low", "medium", "high"]).optional(),
         enterKeySends: z.boolean().optional(),
         shiftEnterKeySends: z.boolean().optional(),
+        skipCloseThreadConfirmation: z.boolean().optional(),
         hideLegal: z.boolean().optional(),
       })
     )
@@ -327,6 +328,8 @@ export const usersRouter = t.router({
         preferenceReasoningEffort: input.reasoningEffort,
         preferenceEnterKeySends: input.enterKeySends,
         preferenceShiftEnterKeySends: input.shiftEnterKeySends,
+        preferenceSkipCloseThreadConfirmation:
+          input.skipCloseThreadConfirmation,
         preferenceHideLegal: input.hideLegal,
       };
 

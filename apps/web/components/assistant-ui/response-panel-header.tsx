@@ -5,7 +5,6 @@ import type { FC } from "react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import { StopButton } from "@/components/ui/stop-button";
 import { cn } from "@/components/ui/utils";
 import { useCurrentChatValue } from "@/hooks/use-chat";
 import {
@@ -14,14 +13,14 @@ import {
   usePanelStateValue,
 } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import { useSetAtom } from "jotai";
-import { CloseIconButton } from "../ui/close-icon-button";
 import { ConfirmCloseModal } from "./confirm-close-modal";
 import { ModelDropdown } from "./model-dropdown";
-import { ModelFavoriteButton } from "./model-favorite-button";
 
 export interface PanelHeaderProps {
   panel: PanelConfig;
@@ -36,12 +35,15 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const modelId = panel.model;
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelState = usePanelStateValue(panelId);
+  const preferences = useUserPreferencesValue();
   const setThreadMessages = useSetAtom(threadMessagesAtom);
   const currentChat = useCurrentChatValue();
   const currentChatId = currentChat?.id ?? null;
+  const setUIState = useUIStateSetter();
   const utils = trpc.useUtils();
   const deleteThreadMutation = trpc.chats.deleteThread.useMutation();
   const moveThreadMutation = trpc.chats.moveThreadToNewChat.useMutation();
+  const canClose = panelsConfig.length > 1;
 
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -74,10 +76,19 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
     setThreadMessages,
   ]);
 
-  const handleDiscard = useCallback(async () => {
+  const executeDiscard = useCallback(async () => {
     if (isProcessing) return;
 
-    if (!panelState.hasMessages || !currentChatId) {
+    if (!canClose) {
+      toast.error(t("closeDisabledTooltip"));
+      return;
+    }
+
+    if (
+      !panelState.hasMessages ||
+      !currentChatId ||
+      preferences.skipCloseThreadConfirmation
+    ) {
       finalizePanelRemoval();
       return;
     }
@@ -98,17 +109,24 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
       setIsProcessing(false);
     }
   }, [
+    canClose,
     currentChatId,
     deleteThreadMutation,
     finalizePanelRemoval,
     isProcessing,
     panelId,
     panelState.hasMessages,
+    preferences.skipCloseThreadConfirmation,
     t,
   ]);
 
   const handleMove = useCallback(async () => {
     if (isProcessing) return;
+
+    if (!canClose) {
+      toast.error(t("closeDisabledTooltip"));
+      return;
+    }
 
     if (!panelState.hasMessages || !currentChatId) {
       finalizePanelRemoval();
@@ -136,6 +154,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
       setIsProcessing(false);
     }
   }, [
+    canClose,
     currentChatId,
     finalizePanelRemoval,
     isProcessing,
@@ -146,8 +165,12 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
     utils,
   ]);
 
-  const handleRemoveClick = useCallback(() => {
+  const handleDiscardRequest = useCallback(() => {
     if (isProcessing) return;
+    if (!canClose) {
+      toast.error(t("closeDisabledTooltip"));
+      return;
+    }
     if (panelState.hasMessages) {
       setShowConfirmClose(true);
       return;
@@ -155,69 +178,59 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
 
     if (!panelState.hasMessages) {
       finalizePanelRemoval();
-      return;
     }
+  }, [canClose, finalizePanelRemoval, isProcessing, panelState.hasMessages, t]);
 
-    void handleDiscard();
-  }, [
-    finalizePanelRemoval,
-    handleDiscard,
-    isProcessing,
-    panelState.hasMessages,
-  ]);
+  const openModelPicker = useCallback(() => {
+    setUIState((prev) => ({
+      ...prev,
+      modelPicker: { type: "thread-change", panelId },
+    }));
+  }, [panelId, setUIState]);
+
+  const openDuplicatePicker = useCallback(() => {
+    if (isProcessing) return;
+    setUIState((prev) => ({
+      ...prev,
+      modelPicker: { type: "thread-duplicate", panelId },
+    }));
+  }, [isProcessing, panelId, setUIState]);
 
   const isActive = panelState.running;
-  const canClose = panelsConfig.length > 1;
   const stopLabel = t("stopLabel");
-  const closeAria = t("closeAria");
-  const closeTooltip = canClose ? t("closeTooltip") : t("closeDisabledTooltip");
 
   return (
-    <div
-      className={cn(
-        "flex items-center justify-between px-3 py-2 gap-2 fixed z-50",
-        isActive && "panel-button-glow"
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <ModelDropdown
-          panelId={panelId}
-          modelId={modelId}
-          className="flex items-center gap-2 min-w-0 flex-1 h-8 text-sm"
-        />
-        <div className="flex items-center gap-1">
-          {onStop && (
-            <StopButton
-              onClick={onStop}
-              aria-label={stopLabel}
-              title={stopLabel}
-              className="opacity-0 group-hover:opacity-100"
-            />
-          )}
-          <ModelFavoriteButton
-            modelId={modelId}
-            size="md"
-            className="opacity-0 group-hover:opacity-100"
-          />
-          {canClose && (
-            <CloseIconButton
-              onClick={handleRemoveClick}
-              aria-label={closeAria}
-              title={closeTooltip}
-              disabled={isProcessing}
-              buttonClassName="opacity-0 group-hover:opacity-100"
-            />
-          )}
-        </div>
-      </div>
+    <>
+      <ModelDropdown
+        modelId={modelId}
+        isRunning={panelState.running}
+        isProcessing={isProcessing}
+        canDiscard={canClose}
+        onStop={onStop}
+        onOpenModelPicker={openModelPicker}
+        onMoveThread={() => {
+          void handleMove();
+        }}
+        onDuplicateThread={openDuplicatePicker}
+        onDiscardThread={handleDiscardRequest}
+        stopLabel={stopLabel}
+        className={cn(
+          "flex items-center justify-between mt-2 px-3 py-2 gap-2 fixed z-50 min-w-0",
+          isActive && "panel-button-glow"
+        )}
+      />
       {showConfirmClose && (
         <ConfirmCloseModal
           onOpenChange={setShowConfirmClose}
-          onDiscard={handleDiscard}
-          onMove={handleMove}
+          onDiscard={() => {
+            void executeDiscard();
+          }}
+          onMove={() => {
+            void handleMove();
+          }}
           isProcessing={isProcessing}
         />
       )}
-    </div>
+    </>
   );
 };
