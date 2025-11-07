@@ -6,6 +6,7 @@
 
 - [ ] Stopping works but state stay as running?
 - [ ] Switching models with attachments is causing issues with the other models
+- [ ] Reloading chats make reasoning not render (but is loaded)
 - [ ] Reloading chats loses the multiple generations (refreshes)
 - [ ] Some threads not saving?
 - [x] Sync deleted/added threads with backend

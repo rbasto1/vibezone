@@ -22,7 +22,7 @@ import {
   toComparableMessages,
 } from "@/lib/assistant-ui/message-compare";
 import { MAX_PANELS } from "@/lib/constants";
-import { generateThreadId } from "@/lib/id";
+import { generateThreadId, getNextThreadOrderFromExisting } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import { BotPlusIcon } from "../ui/icons/bot-plus-icon";
@@ -173,7 +173,7 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
 
   const handleAddPanel = (providerId: string, modelId: string) => {
     if (!canAddMore) return;
-    const id = generateThreadId(panelCount);
+    const id = generateThreadId(getNextThreadOrderFromExisting(panelsConfig));
     const newPanel = {
       id,
       providerId,

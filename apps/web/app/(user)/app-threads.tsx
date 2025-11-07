@@ -26,7 +26,7 @@ import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useUIState } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
 import { LEGAL_HIDE_STORAGE_KEY, MAX_PANELS } from "@/lib/constants";
-import { generateThreadId } from "@/lib/id";
+import { generateThreadId, getNextThreadOrderFromExisting } from "@/lib/id";
 import { modelMap } from "@/lib/model-map";
 import { trpc } from "@/lib/trpc/client";
 import {
@@ -96,7 +96,17 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
 
   const cloneThreadMessages = useCallback((messages?: ThreadMessageLike[]) => {
     if (!messages?.length) return undefined;
-    return messages.map((message) => ({ ...message }));
+    return messages.map((message): typeof message => ({
+      ...message,
+      metadata: {
+        ...message.metadata,
+        custom: {
+          ...message.metadata?.custom,
+          saved: true,
+          rate: undefined,
+        },
+      },
+    }));
   }, []);
 
   const getPanelMessages = useCallback(
@@ -195,7 +205,9 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
           return;
         }
 
-        const newPanelId = generateThreadId(panelsConfig.length);
+        const newPanelId = generateThreadId(
+          getNextThreadOrderFromExisting(panelsConfig)
+        );
         const initialMessages = cloneThreadMessages(
           getPanelMessages(sourcePanelId)
         );

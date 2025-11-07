@@ -12,7 +12,6 @@ import {
   useCaptchaStateValue,
 } from "@/hooks/use-captcha";
 import { useCurrentChatSetter } from "@/hooks/use-chat";
-import { useComposerPromptSetter } from "@/hooks/use-composer-prompt";
 import { usePanelState } from "@/hooks/use-panels";
 import { useStableValue } from "@/hooks/use-stable-value";
 import { useThreadRuntime } from "@/hooks/use-thread-runtime";
@@ -70,12 +69,10 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
   const setCaptchaFailed = useCaptchaFailed();
   const setCaptchaRequested = useCaptchaRequested();
   const captchaState = useCaptchaStateValue();
-  const setGlobalPrompt = useComposerPromptSetter();
   const setRuntimeController = useThreadRuntimeControllerSetter();
   const runtimeRef = useRef<AssistantRuntime | null>(null);
 
   const sessionToken = useStableValue(sessionId ?? undefined);
-  const modelId = useStableValue(panel.model);
 
   const panelCanReason = canReason(panel.model);
   const panelNotRegisteredMessage = t("panelNotRegistered");
@@ -116,46 +113,12 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
         }));
       }
 
-      // reset the state to before sending
-      const runtimeInstance = runtimeRef.current;
-      if (runtimeInstance) {
-        const parcel = runtimeInstance.thread.export();
-        const messages = parcel.messages;
-        if (messages.at(-1)?.message?.status?.type === "running") {
-          messages.pop();
-        }
-        const lastMessage = messages.pop();
-        if (lastMessage?.message.role === "user") {
-          if (messages.length) {
-            // TODO: import messages, but this .import is not working
-            // runtimeInstance.thread.import({ ...parcel, messages });
-          }
-          const text = lastMessage.message.content.find(
-            (c) => c.type === "text"
-          )?.text;
-          if (text) {
-            setGlobalPrompt(text);
-          }
-          const hadAttachments = lastMessage.message.content.some(
-            (c) => c.type !== "text"
-          );
-          const model = modelId.current;
-          toast.warning(
-            hadAttachments
-              ? `Model ${model} failed, please attach the files and submit your message to try again`
-              : `Model ${model} failed, please submit your message to try again`
-          );
-        }
-      }
-
       throw error;
     },
     [
       captchaState.execution,
-      modelId,
       setCaptchaFailed,
       setCaptchaRequested,
-      setGlobalPrompt,
       setPanelState,
     ]
   );
