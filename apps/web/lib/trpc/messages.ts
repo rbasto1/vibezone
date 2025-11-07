@@ -14,7 +14,8 @@ import type {
   MessageMetadata,
   MessageRatingAttachment,
 } from "@vibezone/database";
-import { and, desc, eq, isNull, lte } from "drizzle-orm";
+import { generateId } from "ai";
+import { and, asc, desc, eq, isNull, lte } from "drizzle-orm";
 import { z } from "zod";
 import { getChatName } from "./chats";
 import {
@@ -234,12 +235,15 @@ export const messagesRouter = t.router({
         }
 
         // Create thread if it doesn't exist
-        await db.insert(threadsTable).values({
-          id: threadId,
-          chatId,
-          lastModelId: modelId,
-          lastMessageAt: new Date(),
-        });
+        await db
+          .insert(threadsTable)
+          .values({
+            id: threadId,
+            chatId,
+            lastModelId: modelId,
+            lastMessageAt: new Date(),
+          })
+          .onConflictDoNothing();
       }
 
       // Insert messages into database (use upsert to handle duplicates)
@@ -280,6 +284,156 @@ export const messagesRouter = t.router({
       }
 
       return { success: true, count: messagesToInsert.length, chat } as const;
+    }),
+
+  duplicateThread: authenticatedProcedure
+    .input(
+      z.object({
+        chatId: z.string(),
+        sourceThreadId: z.string(),
+        newThreadId: z.string(),
+        newModelId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
+
+      const { chatId, sourceThreadId, newThreadId, newModelId } = input;
+      if (sourceThreadId === newThreadId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Source and target threads must differ",
+        });
+      }
+
+      const sourceThreadPromise = db.query.threads.findFirst({
+        where: and(
+          eq(threadsTable.id, sourceThreadId),
+          eq(threadsTable.chatId, chatId)
+        ),
+        columns: {
+          id: true,
+          chatId: true,
+        },
+        with: {
+          chat: {
+            columns: {
+              id: true,
+              projectId: true,
+            },
+            with: {
+              project: {
+                columns: {
+                  userId: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const existingTargetThreadPromise = db.query.threads.findFirst({
+        where: eq(threadsTable.id, newThreadId),
+        columns: { id: true, chatId: true },
+      });
+
+      const sourceMessagesPromise = db.query.messages.findMany({
+        where: eq(messagesTable.threadId, sourceThreadId),
+        columns: {
+          id: true,
+          parentId: true,
+          branchNumber: true,
+          role: true,
+          content: true,
+          attachments: true,
+          status: true,
+          createdAt: true,
+          modelId: true,
+        },
+        orderBy: [asc(messagesTable.createdAt)],
+      });
+
+      const [sourceThread, existingTargetThread, sourceMessages] =
+        await Promise.all([
+          sourceThreadPromise,
+          existingTargetThreadPromise,
+          sourceMessagesPromise,
+        ]);
+
+      if (
+        !sourceThread?.chat ||
+        sourceThread.chat.project?.userId !== user.id
+      ) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Thread not found",
+        });
+      }
+      if (existingTargetThread && existingTargetThread.chatId !== chatId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Target thread belongs to a different chat",
+        });
+      }
+
+      const lastMessageAt = sourceMessages.at(-1)?.createdAt ?? new Date();
+
+      await db
+        .insert(threadsTable)
+        .values({
+          id: newThreadId,
+          chatId,
+          lastModelId: newModelId,
+          lastMessageAt,
+        })
+        .onConflictDoUpdate({
+          target: threadsTable.id,
+          set: {
+            lastModelId: newModelId,
+            lastMessageAt,
+          },
+        });
+
+      if (!sourceMessages.length) {
+        return { success: true as const, count: 0 };
+      }
+
+      const idMap = new Map(
+        sourceMessages.map((message) => [message.id, generateId()])
+      );
+
+      const duplicatedMessages: NewMessage[] = sourceMessages.map((message) => {
+        const newMessageId = idMap.get(message.id);
+        if (!newMessageId) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to map message identifiers",
+          });
+        }
+        const mappedParentId =
+          message.parentId && idMap.has(message.parentId)
+            ? (idMap.get(message.parentId) ?? null)
+            : null;
+
+        return {
+          id: newMessageId,
+          threadId: newThreadId,
+          modelId: message.modelId,
+          parentId: mappedParentId,
+          branchNumber: message.branchNumber,
+          role: message.role,
+          content: cloneJsonValue(message.content),
+          attachments: cloneJsonValue(message.attachments),
+          metadata: null,
+          status: cloneJsonValue(message.status),
+          createdAt: message.createdAt,
+        };
+      });
+
+      await db.insert(messagesTable).values(duplicatedMessages);
+
+      return { success: true as const, count: duplicatedMessages.length };
     }),
 
   rateMessage: authenticatedProcedure
@@ -566,6 +720,13 @@ async function getOrInsertChat(
 
 const ensureNonEmpty = (value: string): string => {
   return value.trim() || "[empty]";
+};
+
+const cloneJsonValue = <T>(value: T): T => {
+  if (value === null || value === undefined) {
+    return value;
+  }
+  return JSON.parse(JSON.stringify(value)) as T;
 };
 
 const extractTextFromContent = (content: unknown): string => {

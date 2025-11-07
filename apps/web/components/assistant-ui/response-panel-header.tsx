@@ -2,22 +2,45 @@
 
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
-import { StopButton } from "@/components/ui/stop-button";
 import { cn } from "@/components/ui/utils";
+import { useCurrentChatValue } from "@/hooks/use-chat";
+import { useModelFavorites } from "@/hooks/use-model-favorites";
+import { useModelsValue } from "@/hooks/use-models";
 import {
   usePanelsConfig,
   usePanelsStateSetter,
   usePanelStateValue,
 } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
+import { useOpenSignIn } from "@/lib/auth-client";
+import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
-import { CloseIconButton } from "../ui/close-icon-button";
+import { threadMessagesAtom } from "@/store/thread-messages";
+import { useSetAtom } from "jotai";
+import {
+  ArrowUpRightIcon,
+  CircleStopIcon,
+  MoreVerticalIcon,
+  SparklesIcon,
+  StarIcon,
+  StarOffIcon,
+  Trash2Icon,
+} from "lucide-react";
+import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { BotPlusIcon } from "../ui/icons/bot-plus-icon";
+import { ProviderIcon } from "../ui/providers/provider";
 import { ConfirmCloseModal } from "./confirm-close-modal";
-import { ModelDropdown } from "./model-dropdown";
-import { ModelFavoriteButton } from "./model-favorite-button";
 
 export interface PanelHeaderProps {
   panel: PanelConfig;
@@ -32,20 +55,32 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const modelId = panel.model;
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelState = usePanelStateValue(panelId);
-
   const preferences = useUserPreferencesValue();
+  const setThreadMessages = useSetAtom(threadMessagesAtom);
+  const currentChat = useCurrentChatValue();
+  const currentChatId = currentChat?.id ?? null;
+  const setUIState = useUIStateSetter();
+  const utils = trpc.useUtils();
+  const deleteThreadMutation = trpc.chats.deleteThread.useMutation();
+  const moveThreadMutation = trpc.chats.moveThreadToNewChat.useMutation();
+  const canClose = panelsConfig.length > 1;
+  const includeModels = [modelId];
+  const { models, providers } = useModelsValue({ includeModels });
+  const { isFavorite, toggleFavorite, user, isToggling } = useModelFavorites();
+  const openSignIn = useOpenSignIn();
+  const model = models.find((item) => item.id === modelId) ?? {
+    id: modelId,
+    name: modelId,
+    providerId: modelId.split("/")[0] ?? "",
+  };
+  const provider = providers.find((item) => item.id === model.providerId);
+
+  const favorite = Boolean(user) && isFavorite(modelId);
 
   const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleRemoveClick = () => {
-    if (panelState.hasMessages && !preferences.skipCloseThreadConfirmation) {
-      setShowConfirmClose(true);
-    } else {
-      removePanel();
-    }
-  };
-
-  const removePanel = () => {
+  const finalizePanelRemoval = useCallback(() => {
     setPanelsConfig((prev) => {
       const next = prev.filter((p) => p.id !== panelId);
       saveLastModels(next);
@@ -56,58 +91,250 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
       delete newState[panelId];
       return newState;
     });
+    setThreadMessages((prev) => {
+      if (!(panelId in prev)) {
+        return prev;
+      }
+      const rest = { ...prev };
+      delete rest[panelId];
+      return rest;
+    });
     setShowConfirmClose(false);
-  };
+  }, [
+    panelId,
+    saveLastModels,
+    setPanelsConfig,
+    setPanelsState,
+    setThreadMessages,
+  ]);
+
+  const executeDiscard = useCallback(async () => {
+    if (isProcessing) return;
+
+    if (!canClose) {
+      toast.error(t("closeDisabledTooltip"));
+      return;
+    }
+
+    if (
+      !panelState.hasMessages ||
+      !currentChatId ||
+      preferences.skipCloseThreadConfirmation
+    ) {
+      finalizePanelRemoval();
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await deleteThreadMutation.mutateAsync({
+        chatId: currentChatId,
+        threadId: panelId,
+      });
+      finalizePanelRemoval();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : JSON.stringify(error);
+      toast.error(t("toasts.discardError", { message }));
+      setShowConfirmClose(true);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [
+    canClose,
+    currentChatId,
+    deleteThreadMutation,
+    finalizePanelRemoval,
+    isProcessing,
+    panelId,
+    panelState.hasMessages,
+    preferences.skipCloseThreadConfirmation,
+    t,
+  ]);
+
+  const handleMove = useCallback(async () => {
+    if (isProcessing) return;
+
+    if (!canClose) {
+      toast.error(t("closeDisabledTooltip"));
+      return;
+    }
+
+    if (!panelState.hasMessages || !currentChatId) {
+      finalizePanelRemoval();
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const result = await moveThreadMutation.mutateAsync({
+        chatId: currentChatId,
+        threadId: panelId,
+      });
+      await Promise.all([
+        utils.chats.listChats.invalidate({ projectId: result.chat.projectId }),
+        utils.chats.listChats.invalidate({ projectId: undefined }),
+      ]);
+      finalizePanelRemoval();
+      toast.success(t("toasts.moveSuccess"));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : JSON.stringify(error);
+      toast.error(t("toasts.moveError", { message }));
+      setShowConfirmClose(true);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [
+    canClose,
+    currentChatId,
+    finalizePanelRemoval,
+    isProcessing,
+    moveThreadMutation,
+    panelId,
+    panelState.hasMessages,
+    t,
+    utils,
+  ]);
+
+  const handleDiscardRequest = useCallback(() => {
+    if (isProcessing) return;
+    if (!canClose) {
+      toast.error(t("closeDisabledTooltip"));
+      return;
+    }
+    if (panelState.hasMessages) {
+      setShowConfirmClose(true);
+      return;
+    }
+
+    if (!panelState.hasMessages) {
+      finalizePanelRemoval();
+    }
+  }, [canClose, finalizePanelRemoval, isProcessing, panelState.hasMessages, t]);
+
+  const openModelPicker = useCallback(() => {
+    setUIState((prev) => ({
+      ...prev,
+      modelPicker: { type: "thread-change", panelId },
+    }));
+  }, [panelId, setUIState]);
+
+  const openDuplicatePicker = useCallback(() => {
+    if (isProcessing) return;
+    setUIState((prev) => ({
+      ...prev,
+      modelPicker: { type: "thread-duplicate", panelId },
+    }));
+  }, [isProcessing, panelId, setUIState]);
 
   const isActive = panelState.running;
-  const canClose = panelsConfig.length > 1;
   const stopLabel = t("stopLabel");
-  const closeAria = t("closeAria");
-  const closeTooltip = canClose ? t("closeTooltip") : t("closeDisabledTooltip");
+  const canDiscard = panelsConfig.length > 1;
 
   return (
-    <div
-      className={cn(
-        "flex items-center justify-between px-3 py-2 gap-2 fixed z-50",
-        isActive && "panel-button-glow"
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <ModelDropdown
-          panelId={panelId}
-          modelId={modelId}
-          className="flex items-center gap-2 min-w-0 flex-1 h-8 text-sm"
-        />
-        <div className="flex items-center gap-1">
-          {onStop && (
-            <StopButton
-              onClick={onStop}
-              aria-label={stopLabel}
-              title={stopLabel}
-              className="opacity-0 group-hover:opacity-100"
-            />
-          )}
-          <ModelFavoriteButton
-            modelId={modelId}
-            size="md"
-            className="opacity-0 group-hover:opacity-100"
-          />
-          {canClose && (
-            <CloseIconButton
-              onClick={handleRemoveClick}
-              aria-label={closeAria}
-              title={closeTooltip}
-              buttonClassName="opacity-0 group-hover:opacity-100"
-            />
-          )}
-        </div>
-      </div>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            disabled={isProcessing}
+            title={t("menuLabel")}
+            className={cn(
+              "flex justify-between mt-2 px-3 py-2 gap-2 fixed z-50 min-w-0 h-8 items-center truncate border-border bg-muted text-sm font-medium text-foreground transition-colors hover:bg-muted-foreground/10",
+              isActive && "panel-button-glow"
+            )}
+          >
+            <span className="flex items-center gap-2 truncate min-w-0">
+              {provider && <ProviderIcon providerId={provider.id} />}
+              <span className="truncate">{model.name ?? modelId}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              {favorite && (
+                <StarIcon
+                  className="h-4 w-4 text-yellow-500"
+                  fill="currentColor"
+                />
+              )}
+              {isActive && onStop ? (
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-destructive/10"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onStop();
+                  }}
+                  aria-label={stopLabel}
+                  title={stopLabel}
+                >
+                  <CircleStopIcon className="h-4 w-4 text-destructive" />
+                </span>
+              ) : (
+                <MoreVerticalIcon className="h-4 w-4" />
+              )}
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-70">
+          <DropdownMenuItem onSelect={openModelPicker}>
+            <SparklesIcon className="mr-2 h-4 w-4" />
+            {t("menuChangeModel")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(event) => {
+              if (isToggling) {
+                event.preventDefault();
+                return;
+              }
+              if (!user) {
+                event.preventDefault();
+                openSignIn();
+                return;
+              }
+              toggleFavorite(modelId);
+            }}
+            disabled={isToggling}
+          >
+            {favorite ? (
+              <StarOffIcon className="mr-2 h-4 w-4" />
+            ) : (
+              <StarIcon className="mr-2 h-4 w-4" />
+            )}
+            {favorite ? t("menuUnfavorite") : t("menuFavorite")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!canDiscard}
+            title={!canDiscard ? t("closeDisabledTooltip") : undefined}
+            onSelect={handleMove}
+          >
+            <ArrowUpRightIcon className="mr-2 h-4 w-4" />
+            {t("menuMoveThread")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={openDuplicatePicker}>
+            <BotPlusIcon className="mr-2 h-4 w-4" />
+            {t("menuDuplicateThread")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            disabled={!canDiscard}
+            title={!canDiscard ? t("closeDisabledTooltip") : undefined}
+            onSelect={handleDiscardRequest}
+          >
+            <Trash2Icon className="mr-2 h-4 w-4" />
+            {t("menuDiscardThread")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       {showConfirmClose && (
         <ConfirmCloseModal
           onOpenChange={setShowConfirmClose}
-          onConfirm={removePanel}
+          onDiscard={executeDiscard}
+          onMove={handleMove}
+          isProcessing={isProcessing}
         />
       )}
-    </div>
+    </>
   );
 };

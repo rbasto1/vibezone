@@ -360,8 +360,6 @@ export const usersRouter = t.router({
             preferences.preferenceReasoningEffort as ReasoningEffort,
           enterKeySends: preferences.preferenceEnterKeySends,
           shiftEnterKeySends: preferences.preferenceShiftEnterKeySends,
-          skipCloseThreadConfirmation:
-            preferences.preferenceSkipCloseThreadConfirmation,
           hideLegal: preferences.preferenceHideLegal,
         },
       };

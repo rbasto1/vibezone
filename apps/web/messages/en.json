@@ -22,7 +22,10 @@
     "addAnotherTooltip": "Add another AI chat",
     "maxModelsTooltip": "Maximum {max} models at a time; remove a model to add another",
     "addAiButton": "Add AI",
-    "addAiAriaLabel": "Add another AI chat"
+    "addAiAriaLabel": "Add another AI chat",
+    "copyModalTitle": "Copy conversation",
+    "copyModalDescription": "Choose which AI conversation you want to duplicate in the new thread.",
+    "copyModalCancel": "Cancel"
   },
   "AssistantMessageFile": {
     "defaultFilename": "download",
@@ -55,13 +58,14 @@
   },
   "ConfirmCloseModal": {
     "title": "Close this chat?",
-    "descriptionLoss": "If you close the chat, your conversation with this AI will be lost.",
-    "descriptionAlternate": "You can choose another model without closing the chat by clicking the model name in the chat header.",
-    "descriptionConfirm": "Are you sure you want to close this chat?",
+    "descriptionPrimary": "What would you like to do with this conversation?",
+    "descriptionMove": "Move keeps the conversation by creating a new chat just for this thread.",
+    "descriptionDiscard": "Discard removes this thread and its messages. This cannot be undone.",
     "skipLabel": "Do not show this warning again",
     "skipHint": "Sign in to save this preference across devices.",
     "cancel": "Cancel",
-    "confirm": "Close Chat",
+    "move": "Move to new chat",
+    "discard": "Discard conversation",
     "saveError": "We could not save your preference: {message}"
   },
   "GlobalComposer": {
@@ -156,7 +160,23 @@
     "closeAria": "Close panel",
     "closeTooltip": "Close panel",
     "closeDisabledTooltip": "At least one panel must remain",
-    "infoShowDetails": "Show details"
+    "infoShowDetails": "Show details",
+    "menuLabel": "Thread options",
+    "menuAriaLabel": "Open thread options",
+    "menuChangeModel": "Change AI going forward",
+    "menuFavorite": "Add model to favorites",
+    "menuUnfavorite": "Remove model from favorites",
+    "menuMoveThread": "Move thread to new chat",
+    "menuDuplicateThread": "Duplicate thread with other AI",
+    "menuDiscardThread": "Discard and close thread",
+    "toasts": {
+      "discardError": "Could not discard conversation: {message}",
+      "moveError": "Could not move conversation: {message}",
+      "moveSuccess": "Thread moved to a new chat.",
+      "duplicateError": "Could not duplicate conversation: {message}",
+      "duplicateLimit": "You need to delete another thread before duplicating (max {max}).",
+      "duplicateMissing": "We could not find that thread anymore."
+    }
   },
   "SocialImage": {
     "subtitle": "Compare AI Models",

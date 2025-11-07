@@ -1,5 +1,10 @@
 "use client";
 
+import { useAtom } from "jotai";
+import { StarIcon, XIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
 import { ProviderIcon } from "@/components/ui/providers/provider";
@@ -10,10 +15,6 @@ import { useOpenSignIn, useUser } from "@/lib/auth-client";
 import { modelMap } from "@/lib/model-map";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { modelSelectionStateAtom } from "@/store/model-selection-state";
-import { Star, X } from "lucide-react";
-import { useAtom } from "jotai";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   capabilityOptions,
   tierOptions,
@@ -475,7 +476,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
           toggleFavoritesOnly();
         }}
       >
-        <Star
+        <StarIcon
           className={cn(
             "h-4 w-4",
             showFavoritesOnly ? "fill-current" : "fill-transparent"
@@ -487,7 +488,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
 
   const sheetFilters = (
     <div className="mb-3 flex w-full flex-col gap-1 px-1">
-      <div className="flex w-full flex-wrap items-center gap-2">
+      <div className="flex w-full flex-wrap items-center gap-2 pr-6">
         <div className="inline-flex flex-wrap items-center gap-1 rounded-md border bg-muted p-0.5">
           {renderFavoritesFilterButton()}
           {tierOptions.map(({ id, labelKey, Icon, color }) => {
@@ -563,7 +564,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   );
 
   const desktopFilters = (
-    <div className="flex items-center gap-6 pb-3 border-b mb-3 shrink-0">
+    <div className="flex items-center gap-6 pb-3 border-b mb-3 shrink-0 pr-6">
       <div className="flex items-center gap-3">
         <div className="inline-flex rounded-md border bg-muted p-0.5">
           {renderFavoritesFilterButton()}
@@ -694,7 +695,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                       aria-label={t("favoriteRemove")}
                       className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
                     >
-                      <X className="h-4 w-4" />
+                      <XIcon className="h-4 w-4" />
                     </button>
                   </div>
                 ))}

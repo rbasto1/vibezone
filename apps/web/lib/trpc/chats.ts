@@ -1,4 +1,6 @@
+import type { Chat, Project, Thread } from "@/db";
 import { chats, db, messages, projects, threads } from "@/db";
+import { generateChatId } from "@/lib/id";
 import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, gt, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -9,6 +11,17 @@ import {
   publicProcedure,
   t,
 } from "./server/initialize";
+
+type ThreadWithChatProject = Pick<
+  Thread,
+  "id" | "lastMessageAt" | "lastModelId"
+> & {
+  chat:
+    | (Pick<Chat, "id" | "projectId" | "title"> & {
+        project?: Pick<Project, "id" | "userId"> | null;
+      })
+    | null;
+};
 
 export const chatsRouter = t.router({
   listChats: publicProcedure
@@ -215,6 +228,150 @@ export const chatsRouter = t.router({
 
       return { success: true };
     }),
+  deleteThread: authenticatedProcedure
+    .input(
+      z.object({
+        chatId: z.string(),
+        threadId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
+
+      const { chatId, threadId } = input;
+
+      const threadRecord = await db.query.threads.findFirst({
+        where: and(eq(threads.id, threadId), eq(threads.chatId, chatId)),
+        columns: {
+          id: true,
+        },
+        with: {
+          chat: {
+            columns: {
+              id: true,
+              projectId: true,
+            },
+            with: {
+              project: {
+                columns: {
+                  userId: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !threadRecord?.chat ||
+        threadRecord.chat.project?.userId !== user.id
+      ) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Thread not found",
+        });
+      }
+
+      await db.delete(threads).where(eq(threads.id, threadId));
+
+      return { success: true } as const;
+    }),
+  moveThreadToNewChat: authenticatedProcedure
+    .input(
+      z.object({
+        chatId: z.string(),
+        threadId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
+
+      const { chatId, threadId } = input;
+
+      const threadRecord: ThreadWithChatProject | undefined =
+        await db.query.threads.findFirst({
+          where: and(eq(threads.id, threadId), eq(threads.chatId, chatId)),
+          columns: {
+            id: true,
+            lastMessageAt: true,
+            lastModelId: true,
+          },
+          with: {
+            chat: {
+              columns: {
+                id: true,
+                projectId: true,
+                title: true,
+              },
+              with: {
+                project: {
+                  columns: {
+                    id: true,
+                    userId: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+      const chatRecord = threadRecord?.chat;
+      const projectRecord = chatRecord?.project ?? null;
+
+      if (!chatRecord || !projectRecord || projectRecord.userId !== user.id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Thread not found",
+        });
+      }
+
+      const projectId = chatRecord.projectId;
+      const lastMessageAt = threadRecord.lastMessageAt ?? new Date();
+      const newChatId = generateChatId();
+
+      const title = incrementTitle(chatRecord.title);
+      await db
+        .insert(chats)
+        .values({
+          id: newChatId,
+          projectId,
+          title,
+          lastMessageAt,
+        })
+        .onConflictDoNothing();
+
+      await db
+        .update(threads)
+        .set({
+          chatId: newChatId,
+        })
+        .where(eq(threads.id, threadId));
+
+      const newChatRecord = await db.query.chats.findFirst({
+        where: eq(chats.id, newChatId),
+        columns: {
+          id: true,
+          title: true,
+          lastMessageAt: true,
+          createdAt: true,
+          projectId: true,
+        },
+      });
+
+      if (!newChatRecord) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create chat",
+        });
+      }
+
+      return {
+        success: true as const,
+        chat: newChatRecord,
+      };
+    }),
   deleteAllChats: authenticatedProcedure.mutation(async ({ ctx }) => {
     const user = ctx.user;
     if (!user) throw new Error("Assert: auth procedure must have user");
@@ -387,11 +544,18 @@ export async function getChatName(chatId: string, firstUserMessage?: string) {
               {
                 type: "text",
                 text: [
-                  "Looking at the following text, which is the first thing spoken in a conversation, generate a short title for the conversation (max 5 words, no more than 30 characters). It should be something that helps the user remember what their intention was when they started chatting. Do not include words like 'Inquiry' or 'Query', and just respond with the title, no need to preface it. Output plain text, no markdown. Write it in the same language the user used.",
+                  "Given the following user message — the first message in a new chat — write a very short and natural title (maximum 5 words / 30 characters).",
+                  "The title should summarize what the message is about, not describe that it’s a question or a request.",
+                  "Avoid phrases like “Question about”, “Request to”, “Ask for”, or “Create”.",
+                  "Use only plain text (no markdown, no punctuation at the end).",
+                  "Write the title in the same language as the message.",
+                  "Output only the title, nothing else.",
                   "",
-                  "<userQuery>",
+                  "Message:",
+                  "",
+                  "<message>",
                   userQuery,
-                  "</userQuery>",
+                  "</message>",
                 ].join("\n"),
               },
             ],
@@ -464,4 +628,13 @@ async function getChatFirstUserMessage(chatId: string) {
     return { error: "Error 1003" };
   }
   return userQuery;
+}
+
+function incrementTitle(title: string) {
+  const match = title.match(/ \((\d+)\)$/);
+  if (match?.[1]) {
+    const count = parseInt(match[1], 10);
+    return title.replace(/\(\d+\)$/, `(${count + 1})`);
+  }
+  return `${title} (1)`;
 }

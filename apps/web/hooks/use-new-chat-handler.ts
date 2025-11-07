@@ -3,20 +3,21 @@ import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 
 import { useNewChat } from "@/hooks/use-chat";
+import { useInstructionsValue } from "@/hooks/use-instructions";
 import {
   usePanelsConfigSetter,
   usePanelsStateSetter,
 } from "@/hooks/use-panels";
 import { useProjectsValue } from "@/hooks/use-projects";
-import { useInstructionsValue } from "@/hooks/use-instructions";
 import { useThreadRuntimeControllersValue } from "@/hooks/use-thread-store";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { generateThreadId } from "@/lib/id";
+import { composeInstructionPrompt } from "@/lib/instructions";
 import type { PanelConfig } from "@/store/panels";
+import { usePendingUserMessagesClear } from "@/store/pending-user-messages";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import { useSetAtom } from "jotai";
-import { composeInstructionPrompt } from "@/lib/instructions";
 
 interface NewChatOptions {
   projectId?: string | null;
@@ -32,6 +33,7 @@ export function useNewChatHandler() {
   const instructions = useInstructionsValue();
   const runtimeControllers = useThreadRuntimeControllersValue();
   const setThreadMessages = useSetAtom(threadMessagesAtom);
+  const clearPendingUserMessages = usePendingUserMessagesClear();
 
   const baseSystemPrompt = t("Prompts.system");
 
@@ -60,6 +62,7 @@ export function useNewChatHandler() {
         controller.runtime.thread.reset();
       }
 
+      clearPendingUserMessages();
       setPanelsState({});
       const nextThreadMessages: Record<string, ThreadMessageLike[]> = {};
 
@@ -78,7 +81,7 @@ export function useNewChatHandler() {
       );
       setThreadMessages(nextThreadMessages);
 
-      setUIState({ panelOpen: null, suggestionsUsed: false });
+      setUIState({ panelOpen: null, suggestionsUsed: false, modelPicker: null });
 
       return chat;
     },
@@ -87,6 +90,7 @@ export function useNewChatHandler() {
       defaultProject,
       instructions,
       projects,
+      clearPendingUserMessages,
       runtimeControllers,
       setPanelsConfig,
       setPanelsState,
