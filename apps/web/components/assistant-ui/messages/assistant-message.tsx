@@ -1,7 +1,7 @@
-import { MessagePrimitive, useMessage } from "@assistant-ui/react";
+import { MessagePrimitive, useAssistantState } from "@assistant-ui/react";
 import { motion } from "framer-motion";
 import { StarIcon } from "lucide-react";
-import { useEffect, type FC } from "react";
+import { useEffect, useMemo, type FC } from "react";
 
 import { useAssistantMessageSaver } from "@/hooks/use-assistant-message-saver";
 
@@ -25,7 +25,7 @@ export const AssistantMessage: FC<AssistantMessageProps> = ({
   threadId,
   modelId,
 }) => {
-  const message = useMessage();
+  const message = useAssistantState(({ message }) => message);
   const saveAssistantMessage = useAssistantMessageSaver();
 
   useEffect(() => {
@@ -39,6 +39,19 @@ export const AssistantMessage: FC<AssistantMessageProps> = ({
     saveAssistantMessage(message, threadId, modelId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message.id, message.status?.type, threadId, modelId]);
+
+  const components = useMemo(
+    () => ({
+      Text: MarkdownText,
+      Reasoning,
+      Image,
+      File,
+      Source,
+      Unstable_Audio: Audio,
+      tools: { Fallback: ToolFallback },
+    }),
+    []
+  );
 
   return (
     <MessagePrimitive.Root asChild>
@@ -56,17 +69,7 @@ export const AssistantMessage: FC<AssistantMessageProps> = ({
 
         {/* aui-assistant-message-content */}
         <div className="text-foreground col-span-2 col-start-2 row-start-1 ml-4 leading-7 break-words">
-          <MessagePrimitive.Content
-            components={{
-              Text: MarkdownText,
-              Reasoning,
-              Image,
-              File,
-              Source,
-              Unstable_Audio: Audio,
-              tools: { Fallback: ToolFallback },
-            }}
-          />
+          <MessagePrimitive.Content components={components} />
           <MessageError />
         </div>
 
