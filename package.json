@@ -19,11 +19,12 @@
   "packageManager": "pnpm@10.14.0",
   "pnpm": {
     "overrides": {
-      "react": "19.1.1",
-      "react-dom": "19.1.1",
+      "@ai-sdk/provider-utils": "3.0.16",
+      "@ai-sdk/react": "~2.0.89",
       "@types/react": "19.1.12",
-      "ai": "5.0.24",
-      "@ai-sdk/provider-utils": "3.0.6"
+      "ai": "5.0.89",
+      "react": "19.1.1",
+      "react-dom": "19.1.1"
     }
   },
   "devDependencies": {
