@@ -14,6 +14,7 @@ import { ClientOnly } from "@/components/ui/client-only";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/components/ui/utils";
+import { useCurrentChatValue } from "@/hooks/use-chat";
 import { useFocusPanelIdValue } from "@/hooks/use-focus-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -21,8 +22,6 @@ import {
   usePanelsStateSetter,
   usePanelsStateValue,
 } from "@/hooks/use-panels";
-import { useCurrentChatValue } from "@/hooks/use-chat";
-import type { ThreadMessageLike } from "@assistant-ui/react";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useUIState } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
@@ -36,6 +35,7 @@ import {
 } from "@/store/model-selection-state";
 import type { PanelConfig } from "@/store/panels";
 import { threadMessagesAtom } from "@/store/thread-messages";
+import type { ThreadMessageLike } from "@assistant-ui/react";
 import { AppFooter } from "./app-footer";
 
 interface AppThreadsProps {
@@ -59,7 +59,9 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
   const setThreadMessages = useSetAtom(threadMessagesAtom);
   const duplicateThreadMutation = trpc.messages.duplicateThread.useMutation();
   const currentChat = useCurrentChatValue();
-  const currentChatId = currentChat?.id ?? null;
+  const currentChatId = currentChat.addedToList
+    ? (currentChat?.id ?? null)
+    : null;
   const modelPicker = uiState.modelPicker;
   const panelActionsT = useTranslations("ResponsePanelHeader");
 
@@ -92,13 +94,10 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
     setUIState((prev) => ({ ...prev, modelPicker: null }));
   }, [setUIState]);
 
-  const cloneThreadMessages = useCallback(
-    (messages?: ThreadMessageLike[]) => {
-      if (!messages?.length) return undefined;
-      return messages.map((message) => ({ ...message }));
-    },
-    []
-  );
+  const cloneThreadMessages = useCallback((messages?: ThreadMessageLike[]) => {
+    if (!messages?.length) return undefined;
+    return messages.map((message) => ({ ...message }));
+  }, []);
 
   const getPanelMessages = useCallback(
     (panelId: string): ThreadMessageLike[] => {
@@ -187,7 +186,9 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
         }
 
         const sourcePanelId = picker.panelId;
-        const sourcePanel = panelsConfig.find((panel) => panel.id === sourcePanelId);
+        const sourcePanel = panelsConfig.find(
+          (panel) => panel.id === sourcePanelId
+        );
         if (!sourcePanel) {
           toast.error(panelActionsT("toasts.duplicateMissing"));
           setUIState((prev) => ({ ...prev, modelPicker: null }));
@@ -210,7 +211,7 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
           ...prev,
           [newPanelId]: {
             running: false,
-            hasMessages: Boolean(initialMessages?.length),
+            hasMessages: !!initialMessages?.some((m) => m.role === "user"),
           },
         }));
 
@@ -228,12 +229,6 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
         onAddPanel?.(newPanelId);
         setUIState((prev) => ({ ...prev, modelPicker: null }));
 
-        const handleDuplicateError = (error: unknown) => {
-          const message =
-            error instanceof Error ? error.message : JSON.stringify(error);
-          toast.error(panelActionsT("toasts.duplicateError", { message }));
-        };
-
         if (initialMessages?.length && currentChatId) {
           void duplicateThreadMutation
             .mutateAsync({
@@ -242,12 +237,11 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
               newThreadId: newPanelId,
               newModelId: modelId,
             })
-            .then(() => {
-              toast.success(panelActionsT("toasts.duplicateSuccess"));
-            })
-            .catch(handleDuplicateError);
-        } else {
-          toast.success(panelActionsT("toasts.duplicateSuccess"));
+            .catch((error: unknown) => {
+              const message =
+                error instanceof Error ? error.message : JSON.stringify(error);
+              toast.error(panelActionsT("toasts.duplicateError", { message }));
+            });
         }
 
         return;
@@ -272,7 +266,8 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
 
   const isModelPickerOpen = Boolean(modelPicker);
   const currentModelIdForPicker =
-    modelPicker?.type === "thread-change" || modelPicker?.type === "thread-duplicate"
+    modelPicker?.type === "thread-change" ||
+    modelPicker?.type === "thread-duplicate"
       ? panelsConfig.find((panel) => panel.id === modelPicker.panelId)?.model
       : panelsConfig[0]?.model;
 

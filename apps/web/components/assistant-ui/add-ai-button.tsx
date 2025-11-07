@@ -25,7 +25,7 @@ import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
 import { threadMessagesAtom } from "@/store/thread-messages";
-import { BotIcon } from "lucide-react";
+import { BotPlusIcon } from "../ui/icons/bot-plus-icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { CopyConversationModal } from "./copy-conversation-modal";
 import { ModelDropdownContents } from "./model-dropdown-contents";
@@ -257,7 +257,7 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
             type="button"
             onClick={handleTriggerClick}
           >
-            <BotIcon className="h-4 w-4" />
+            <BotPlusIcon />
             <span className="sr-only">{addButtonLabel}</span>
           </Button>
         </TooltipTrigger>

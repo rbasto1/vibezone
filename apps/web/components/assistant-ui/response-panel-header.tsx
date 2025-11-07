@@ -25,7 +25,6 @@ import { useSetAtom } from "jotai";
 import {
   ArrowUpRightIcon,
   CircleStopIcon,
-  CopyIcon,
   MoreVerticalIcon,
   SparklesIcon,
   StarIcon,
@@ -39,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { BotPlusIcon } from "../ui/icons/bot-plus-icon";
 import { ProviderIcon } from "../ui/providers/provider";
 import { ConfirmCloseModal } from "./confirm-close-modal";
 
@@ -313,7 +313,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
             {t("menuMoveThread")}
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={openDuplicatePicker}>
-            <CopyIcon className="mr-2 h-4 w-4" />
+            <BotPlusIcon className="mr-2 h-4 w-4" />
             {t("menuDuplicateThread")}
           </DropdownMenuItem>
           <DropdownMenuItem

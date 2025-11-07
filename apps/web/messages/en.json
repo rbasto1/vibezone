@@ -174,7 +174,6 @@
       "moveError": "Could not move conversation: {message}",
       "moveSuccess": "Thread moved to a new chat.",
       "duplicateError": "Could not duplicate conversation: {message}",
-      "duplicateSuccess": "Thread duplicated with the selected model.",
       "duplicateLimit": "You need to delete another thread before duplicating (max {max}).",
       "duplicateMissing": "We could not find that thread anymore."
     }

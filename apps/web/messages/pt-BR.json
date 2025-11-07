@@ -174,7 +174,6 @@
       "moveError": "Não foi possível mover a conversa: {message}",
       "moveSuccess": "Thread movido para um novo chat.",
       "duplicateError": "Não foi possível duplicar a conversa: {message}",
-      "duplicateSuccess": "Thread duplicado com o novo modelo.",
       "duplicateLimit": "Você precisa remover outro thread antes de duplicar (máx. {max}).",
       "duplicateMissing": "Não encontramos mais esse thread."
     }

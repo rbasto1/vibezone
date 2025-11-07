@@ -174,7 +174,6 @@
       "moveError": "Konversation konnte nicht verschoben werden: {message}",
       "moveSuccess": "Thread wurde in einen neuen Chat verschoben.",
       "duplicateError": "Konversation konnte nicht dupliziert werden: {message}",
-      "duplicateSuccess": "Thread mit dem ausgewählten Modell dupliziert.",
       "duplicateLimit": "Du musst erst einen anderen Thread entfernen (max. {max}).",
       "duplicateMissing": "Dieser Thread konnte nicht mehr gefunden werden."
     }
