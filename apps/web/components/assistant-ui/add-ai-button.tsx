@@ -1,4 +1,5 @@
 import type { ThreadMessageLike } from "@assistant-ui/react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
@@ -6,7 +7,12 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/components/ui/utils";
 import { useCurrentChatValue } from "@/hooks/use-chat";
@@ -277,6 +283,13 @@ export const AddAiButton: FC<AddAiButtonProps> = ({
       ) : (
         <Dialog open={chooseModelOpen} onOpenChange={setChooseModelOpen}>
           <DialogContent className="max-w-[min(1200px,95vw)] w-[min(1200px,95vw)] h-[min(85vh,720px)] p-0 overflow-hidden">
+            <DialogHeader>
+              <VisuallyHidden>
+                <DialogTitle aria-label="Choose Model">
+                  Choose Model
+                </DialogTitle>
+              </VisuallyHidden>
+            </DialogHeader>
             <ModelDropdownContents
               onSelect={handleAddPanel}
               onClose={() => setChooseModelOpen(false)}

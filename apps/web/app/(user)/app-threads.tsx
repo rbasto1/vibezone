@@ -1,5 +1,6 @@
 "use client";
 
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useTranslations } from "next-intl";
 import { type FC, useCallback, useEffect, useState } from "react";
@@ -11,7 +12,12 @@ import { ModelDropdownContents } from "@/components/assistant-ui/model-dropdown-
 import { ThreadPanel } from "@/components/assistant-ui/thread-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
 import { ClientOnly } from "@/components/ui/client-only";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/components/ui/utils";
 import { useCurrentChatValue } from "@/hooks/use-chat";
@@ -418,6 +424,13 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
           }}
         >
           <DialogContent className="max-w-[min(1200px,95vw)] w-[min(1200px,95vw)] h-[min(85vh,720px)] p-0 overflow-hidden">
+            <DialogHeader>
+              <VisuallyHidden>
+                <DialogTitle aria-label="Choose Model">
+                  Choose Model
+                </DialogTitle>
+              </VisuallyHidden>
+            </DialogHeader>
             <ModelDropdownContents
               onSelect={handleModelPickerSelect}
               currentModelId={currentModelIdForPicker}

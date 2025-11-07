@@ -11,7 +11,7 @@
 - [ ] Reloading chats loses the multiple generations (refreshes/branching)
 - [ ] Some threads not saving?
 - [x] Sync deleted/added threads with backend
-- [ ] Mobile: no side menu open handle
+- [x] Mobile: no side menu open handle
 
 ## Improvements
 

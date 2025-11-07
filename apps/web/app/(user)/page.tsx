@@ -1,28 +1,34 @@
 "use client";
 
+import { AssistantRuntimeProvider } from "@assistant-ui/react";
+import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import type { FC } from "react";
 
+import { AppSidebar } from "@/components/app-sidebar";
 import { ModelInfoModal } from "@/components/assistant-ui/model-info-modal";
 import { ProjectDeleteModal } from "@/components/assistant-ui/project-delete-modal";
 import { ProjectModal } from "@/components/assistant-ui/project-modal";
 import { SearchPanel } from "@/components/assistant-ui/search-panel";
+import { MobileSidebarTrigger } from "@/components/mobile-sidebar-trigger";
 import { SidebarInset } from "@/components/ui/sidebar/sidebar-inset";
 import { SidebarProvider } from "@/components/ui/sidebar/sidebar-provider";
 import { useFocusPanelIdValue } from "@/hooks/use-focus-panel";
 import { useUIState } from "@/hooks/use-ui-state";
-import { AppSidebarLoader } from "./app-sidebar-loader";
 import { AppThreads } from "./app-threads";
 import PreferencesPage from "./preferences/tabs";
 
 const Assistant: FC = () => {
   const [uiState, setUIState] = useUIState();
-
+  const sidebarRuntime = useChatRuntime();
   const focusPanelId = useFocusPanelIdValue();
 
   return (
     <SidebarProvider>
       <div className="flex h-dvh w-full">
-        <AppSidebarLoader />
+        <AssistantRuntimeProvider runtime={sidebarRuntime}>
+          <AppSidebar />
+          <MobileSidebarTrigger />
+        </AssistantRuntimeProvider>
         <SidebarInset>
           {uiState.panelOpen === "preferences" && <PreferencesPage />}
           {uiState.panelOpen === "search" && <SearchPanel />}
