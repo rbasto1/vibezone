@@ -13,7 +13,7 @@ import {
   type AssistantRuntime,
 } from "@assistant-ui/react";
 import type { DefaultChatTransport } from "ai";
-import { useEffect } from "react";
+import { startTransition, useEffect } from "react";
 import { useAttachmentAdapter } from "./use-attachments";
 import { useThreadMessages } from "./use-thread-store";
 
@@ -62,7 +62,7 @@ export const useThreadRuntime = ({
   }, []);
 
   useEffect(() => {
-    setMessages(toThreadMessages(chat.messages));
+    startTransition(() => setMessages(toThreadMessages(chat.messages)));
   }, [chat.messages, setMessages]);
 
   const runtime = useExternalStoreRuntime<ThreadMessageLike>({

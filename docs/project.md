@@ -16,6 +16,7 @@
 ## Improvements
 
 - [ ] Store and display which model generated each response
+- [ ] Store and display how long it took to generate each response
 - [x] Copy messages from other threads when adding new AI
 - [x] Add "split to new chat" button
 - [ ] In full-screen mode, allow switching threads
