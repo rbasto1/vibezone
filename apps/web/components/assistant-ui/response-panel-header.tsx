@@ -25,6 +25,7 @@ import { useSetAtom } from "jotai";
 import {
   ArrowUpRightIcon,
   CircleStopIcon,
+  InfoIcon,
   MoreVerticalIcon,
   SparklesIcon,
   StarIcon,
@@ -51,14 +52,14 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const t = useTranslations("ResponsePanelHeader");
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
-  const panelId = panel.id;
+  const threadId = panel.id;
   const modelId = panel.model;
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
-  const panelState = usePanelStateValue(panelId);
+  const panelState = usePanelStateValue(threadId);
   const preferences = useUserPreferencesValue();
   const setThreadMessages = useSetAtom(threadMessagesAtom);
   const currentChat = useCurrentChatValue();
-  const currentChatId = currentChat?.id ?? null;
+  const chatId = currentChat?.id ?? null;
   const setUIState = useUIStateSetter();
   const utils = trpc.useUtils();
   const deleteThreadMutation = trpc.chats.deleteThread.useMutation();
@@ -82,33 +83,33 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
 
   const finalizePanelRemoval = useCallback(() => {
     setPanelsConfig((prev) => {
-      const next = prev.filter((p) => p.id !== panelId);
+      const next = prev.filter((p) => p.id !== threadId);
       saveLastModels(next);
       return next;
     });
     setPanelsState((currentState) => {
       const newState = { ...currentState };
-      delete newState[panelId];
+      delete newState[threadId];
       return newState;
     });
     setThreadMessages((prev) => {
-      if (!(panelId in prev)) {
+      if (!(threadId in prev)) {
         return prev;
       }
       const rest = { ...prev };
-      delete rest[panelId];
+      delete rest[threadId];
       return rest;
     });
     setShowConfirmClose(false);
   }, [
-    panelId,
+    threadId,
     saveLastModels,
     setPanelsConfig,
     setPanelsState,
     setThreadMessages,
   ]);
 
-  const executeDiscard = useCallback(async () => {
+  const executeDiscard = async () => {
     if (isProcessing) return;
 
     if (!canClose) {
@@ -116,41 +117,21 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
       return;
     }
 
-    if (
-      !panelState.hasMessages ||
-      !currentChatId ||
-      preferences.skipCloseThreadConfirmation
-    ) {
-      finalizePanelRemoval();
-      return;
-    }
+    finalizePanelRemoval();
 
-    setIsProcessing(true);
-    try {
-      await deleteThreadMutation.mutateAsync({
-        chatId: currentChatId,
-        threadId: panelId,
-      });
-      finalizePanelRemoval();
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : JSON.stringify(error);
-      toast.error(t("toasts.discardError", { message }));
-      setShowConfirmClose(true);
-    } finally {
+    if (panelState.hasMessages && chatId) {
+      setIsProcessing(true);
+      await deleteThreadMutation
+        .mutateAsync({ chatId, threadId })
+        .catch((error) => {
+          const message =
+            error instanceof Error ? error.message : JSON.stringify(error);
+          toast.error(t("toasts.discardError", { message }));
+          setShowConfirmClose(true);
+        });
       setIsProcessing(false);
     }
-  }, [
-    canClose,
-    currentChatId,
-    deleteThreadMutation,
-    finalizePanelRemoval,
-    isProcessing,
-    panelId,
-    panelState.hasMessages,
-    preferences.skipCloseThreadConfirmation,
-    t,
-  ]);
+  };
 
   const handleMove = useCallback(async () => {
     if (isProcessing) return;
@@ -160,7 +141,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
       return;
     }
 
-    if (!panelState.hasMessages || !currentChatId) {
+    if (!panelState.hasMessages || !chatId) {
       finalizePanelRemoval();
       return;
     }
@@ -168,8 +149,8 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
     setIsProcessing(true);
     try {
       const result = await moveThreadMutation.mutateAsync({
-        chatId: currentChatId,
-        threadId: panelId,
+        chatId,
+        threadId,
       });
       await Promise.all([
         utils.chats.listChats.invalidate({ projectId: result.chat.projectId }),
@@ -187,46 +168,48 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
     }
   }, [
     canClose,
-    currentChatId,
+    chatId,
     finalizePanelRemoval,
     isProcessing,
     moveThreadMutation,
-    panelId,
+    threadId,
     panelState.hasMessages,
     t,
     utils,
   ]);
 
-  const handleDiscardRequest = useCallback(() => {
+  const handleDiscardRequest = () => {
     if (isProcessing) return;
     if (!canClose) {
       toast.error(t("closeDisabledTooltip"));
       return;
     }
-    if (panelState.hasMessages) {
+    if (panelState.hasMessages && !preferences.skipCloseThreadConfirmation) {
       setShowConfirmClose(true);
       return;
     }
 
-    if (!panelState.hasMessages) {
-      finalizePanelRemoval();
-    }
-  }, [canClose, finalizePanelRemoval, isProcessing, panelState.hasMessages, t]);
+    void executeDiscard();
+  };
 
-  const openModelPicker = useCallback(() => {
+  const openModelPicker = () => {
     setUIState((prev) => ({
       ...prev,
-      modelPicker: { type: "thread-change", panelId },
+      modelPicker: { type: "thread-change", panelId: threadId },
     }));
-  }, [panelId, setUIState]);
+  };
 
-  const openDuplicatePicker = useCallback(() => {
+  const openDuplicatePicker = () => {
     if (isProcessing) return;
     setUIState((prev) => ({
       ...prev,
-      modelPicker: { type: "thread-duplicate", panelId },
+      modelPicker: { type: "thread-duplicate", panelId: threadId },
     }));
-  }, [isProcessing, panelId, setUIState]);
+  };
+
+  const openModelInfo = useCallback(() => {
+    setUIState({ detailsModelId: modelId });
+  }, [modelId, setUIState]);
 
   const isActive = panelState.running;
   const stopLabel = t("stopLabel");
@@ -278,6 +261,10 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-70">
+          <DropdownMenuItem onSelect={openModelInfo}>
+            <InfoIcon className="mr-2 h-4 w-4" />
+            {t("menuModelInfo")}
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={openModelPicker}>
             <SparklesIcon className="mr-2 h-4 w-4" />
             {t("menuChangeModel")}

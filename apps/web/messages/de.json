@@ -164,6 +164,7 @@
     "menuLabel": "Thread-Optionen",
     "menuAriaLabel": "Thread-Optionen öffnen",
     "menuChangeModel": "KI für zukünftige Antworten ändern",
+    "menuModelInfo": "Modellinformationen",
     "menuFavorite": "Modell zu Favoriten hinzufügen",
     "menuUnfavorite": "Modell aus Favoriten entfernen",
     "menuMoveThread": "Thread in neuen Chat verschieben",

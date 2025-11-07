@@ -13,9 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useUserPreferencesSetter } from "@/hooks/use-user-preferences";
+import { useMutatePreferences } from "@/hooks/use-mutate-preferences";
 import { useUser } from "@/lib/auth-client";
-import { trpc } from "@/lib/trpc/client";
 
 export interface ConfirmCloseModalProps {
   onOpenChange: (open: boolean) => void;
@@ -33,8 +32,7 @@ export const ConfirmCloseModal = ({
   const t = useTranslations("ConfirmCloseModal");
   const [skipConfirmation, setSkipConfirmation] = useState(false);
   const user = useUser();
-  const setPreferences = useUserPreferencesSetter();
-  const updatePreferences = trpc.users.updatePreferences.useMutation({
+  const updatePreferences = useMutatePreferences({
     onError: (error: unknown) => {
       const message =
         error instanceof Error ? error.message : JSON.stringify(error);
@@ -44,13 +42,13 @@ export const ConfirmCloseModal = ({
 
   const persistSkipPreference = () => {
     if (!skipConfirmation) return;
-    setPreferences((prev) =>
-      prev.skipCloseThreadConfirmation
-        ? prev
-        : { ...prev, skipCloseThreadConfirmation: true }
-    );
     if (user) {
-      updatePreferences.mutate({ skipCloseThreadConfirmation: true });
+      updatePreferences(
+        { skipCloseThreadConfirmation: true },
+        {
+          previousValues: { skipCloseThreadConfirmation: false },
+        }
+      );
     }
   };
 
