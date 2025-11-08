@@ -16,7 +16,6 @@ export function useNewChat() {
       createdAt: new Date(),
       addedToList: false,
       projectId,
-      fetchedTitlePanelId: null,
     };
     setCurrentChat(newChat);
     return newChat;

@@ -229,7 +229,10 @@ export const sliceUiMessagesUntil = <UI_MESSAGE extends UIMessage = UIMessage>(
 
 // Helper function to convert database messages to ThreadMessageLike format
 export const toThreadMessageLike = (
-  msg: Pick<Message, "id" | "role" | "content" | "status" | "metadata">
+  msg: Pick<
+    Message,
+    "id" | "role" | "content" | "status" | "metadata" | "modelId"
+  >
 ): ThreadMessageLike => {
   const role = (msg.role ?? "system") as "user" | "assistant" | "system";
 
@@ -248,6 +251,9 @@ export const toThreadMessageLike = (
 
   const status = role === "assistant" ? convertStatus(msg.status) : undefined;
 
+  const metadataCustom =
+    (msg.metadata?.custom as Record<string, unknown> | undefined) ?? {};
+
   const threadMessage: ThreadMessageLike = {
     id: msg.id,
     role,
@@ -255,7 +261,8 @@ export const toThreadMessageLike = (
     attachments: undefined,
     metadata: {
       custom: {
-        ...msg.metadata?.custom,
+        ...metadataCustom,
+        modelId: msg.modelId,
         saved: true,
       },
     },

@@ -9,7 +9,11 @@ import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { currentChatAtom } from "@/store/chat";
 import { instructionsAtom, type InstructionConfig } from "@/store/instructions";
 import type { PanelState } from "@/store/panels";
-import { panelConfigAtom, panelStateAtom, type PanelConfig } from "@/store/panels";
+import {
+  panelConfigAtom,
+  panelStateAtom,
+  type PanelConfig,
+} from "@/store/panels";
 import { preferencesAtom, type PreferencesAtom } from "@/store/preferences";
 import { projectsAtom, type ProjectConfig } from "@/store/projects";
 
@@ -53,7 +57,6 @@ export function StoreProvider({
       createdAt: new Date(),
       addedToList: false,
       projectId: defaultProjectId,
-      fetchedTitlePanelId: null,
     });
 
     return s;

@@ -74,11 +74,10 @@ export const chatsRouter = t.router({
         chatId: z.string(),
         projectId: z.string(),
         title: z.string().nullable(),
-        firstUserMessage: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { chatId, projectId, title: inputTitle, firstUserMessage } = input;
+      const { chatId, projectId, title: inputTitle } = input;
       const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
       const userId = user.id;
@@ -95,7 +94,7 @@ export const chatsRouter = t.router({
         return { success: false, message: "Access denied" } as const;
       }
 
-      const title = inputTitle ?? (await getChatName(chatId, firstUserMessage));
+      const title = inputTitle ?? (await getChatName(chatId));
 
       if (chat) {
         await db

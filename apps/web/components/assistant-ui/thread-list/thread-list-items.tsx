@@ -75,7 +75,6 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({ projects }) => {
         createdAt: new Date(),
         addedToList: true,
         projectId: chat.project.id,
-        fetchedTitlePanelId: "loaded-from-db",
       });
 
       try {
