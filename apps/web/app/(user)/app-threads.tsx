@@ -11,6 +11,7 @@ import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ModelDropdownContents } from "@/components/assistant-ui/model-dropdown-contents";
 import { ThreadPanel } from "@/components/assistant-ui/thread-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
+import { Button } from "@/components/ui/button";
 import { ClientOnly } from "@/components/ui/client-only";
 import {
   Dialog,
@@ -357,11 +358,37 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
           {panelsConfig.map((panel) => {
             const isFocused = focusPanelId === panel.id;
             const isDimmed = Boolean(focusPanelId) && focusPanelId !== panel.id;
+            const focusSwitchButtons =
+              canToggleFocus && focusPanelId === panel.id
+                ? panelsConfig
+                    .filter((candidate) => candidate.id !== panel.id)
+                    .map((candidate) => {
+                      const label =
+                        modelMap.get(candidate.model)?.name ?? candidate.model;
+                      const isRunning = panelsState[candidate.id]?.running;
+                      return (
+                        <Button
+                          key={candidate.id}
+                          onClick={() =>
+                            setUIState({ focusPanelId: candidate.id })
+                          }
+                          variant="outline"
+                          className={cn(
+                            "bg-background/80 h-7 px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                            isRunning && "panel-button-glow"
+                          )}
+                        >
+                          {label}
+                        </Button>
+                      );
+                    })
+                : null;
             return (
               <ThreadPanel
                 key={panel.id}
                 panel={panel}
                 isFocused={isFocused}
+                focusSwitchButtons={focusSwitchButtons}
                 onToggleFocus={
                   canToggleFocus
                     ? () =>
