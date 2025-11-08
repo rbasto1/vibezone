@@ -373,3 +373,44 @@ const convertStatus = (
       return undefined;
   }
 };
+
+export const sanitizeMessagesForRequest = (
+  messages: readonly UIMessage[]
+): UIMessage[] => {
+  return messages
+    .map((message) => {
+      if (!Array.isArray(message.parts)) {
+        return message;
+      }
+
+      const parts = message.parts
+        .filter(isKeptPart)
+        .filter((p): p is NonNullable<typeof p> => !!p);
+      if (!parts?.length) {
+        return null;
+      }
+
+      return {
+        ...message,
+        metadata: undefined,
+        parts,
+      };
+    })
+    .filter((m): m is NonNullable<typeof m> => !!m);
+};
+
+export const isUiMessageArray = (value: unknown): value is UIMessage[] => {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        item &&
+        typeof item === "object" &&
+        Array.isArray((item as { parts?: unknown }).parts)
+    )
+  );
+};
+
+function isKeptPart(part: UIMessagePart<UIDataTypes, UITools>) {
+  return part.type !== "reasoning" && part.type !== "step-start";
+}

@@ -17,6 +17,10 @@ import { useStableValue } from "@/hooks/use-stable-value";
 import { useThreadRuntime } from "@/hooks/use-thread-runtime";
 import { useThreadRuntimeControllerSetter } from "@/hooks/use-thread-store";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
+import {
+  isUiMessageArray,
+  sanitizeMessagesForRequest,
+} from "@/lib/assistant-ui/message-converters";
 import { safeParse } from "@/lib/json";
 import { generateFingerprint } from "@/lib/limiting";
 import type { PanelConfig } from "@/store/panels";
@@ -210,6 +214,34 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
                 })
                 .catch(handleModelError)
           );
+        },
+        prepareSendMessagesRequest: ({
+          body,
+          messages,
+          id: chatId,
+          trigger,
+          messageId,
+        }) => {
+          const sanitizedMessages = sanitizeMessagesForRequest(messages);
+          const baseBody: Record<string, unknown> = body ? { ...body } : {};
+          const existingMessages = (
+            baseBody as {
+              messages?: unknown;
+            }
+          ).messages;
+          const bodyMessages = isUiMessageArray(existingMessages)
+            ? sanitizeMessagesForRequest(existingMessages)
+            : sanitizedMessages;
+
+          return {
+            body: {
+              ...baseBody,
+              id: chatId,
+              trigger,
+              messageId,
+              messages: bodyMessages,
+            },
+          };
         },
       }),
     [
