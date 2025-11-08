@@ -11,6 +11,7 @@ import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ModelDropdownContents } from "@/components/assistant-ui/model-dropdown-contents";
 import { ThreadPanel } from "@/components/assistant-ui/thread-panel";
 import { ThreadWelcomeSuggestions } from "@/components/assistant-ui/thread-welcome-suggestions";
+import { Button } from "@/components/ui/button";
 import { ClientOnly } from "@/components/ui/client-only";
 import {
   Dialog,
@@ -366,19 +367,19 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
                         modelMap.get(candidate.model)?.name ?? candidate.model;
                       const isRunning = panelsState[candidate.id]?.running;
                       return (
-                        <button
+                        <Button
                           key={candidate.id}
-                          type="button"
                           onClick={() =>
                             setUIState({ focusPanelId: candidate.id })
                           }
+                          variant="outline"
                           className={cn(
-                            "inline-flex items-center rounded-md border border-border/60 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                            "bg-background/80 h-7 px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                             isRunning && "panel-button-glow"
                           )}
                         >
                           {label}
-                        </button>
+                        </Button>
                       );
                     })
                 : null;
