@@ -1,4 +1,5 @@
 import { convertToModelMessages, streamText } from "ai";
+import type { TextStreamPart, ToolSet } from "ai";
 import { waitUntil } from "cloudflare:workers";
 import { getAdapterForProvider } from "./lib/gateway";
 import { printLogInfo } from "./lib/log";
@@ -44,6 +45,40 @@ export function handleProviderStream(
 
   printLogInfo(vzContext);
 
+  let responseStartedAt: number | null = null;
+
+  const baseCustomMetadata = {
+    model: completionRequest.config.modelId,
+  };
+
+  const getMessageMetadata = ({
+    part,
+  }: {
+    part: TextStreamPart<ToolSet>;
+  }) => {
+    if (part.type === "start") {
+      responseStartedAt = Date.now();
+      return {
+        custom: { ...baseCustomMetadata },
+      };
+    }
+
+    if (part.type === "finish" || part.type === "abort") {
+      const finishedAt = Date.now();
+      const duration =
+        responseStartedAt !== null ? finishedAt - responseStartedAt : null;
+
+      return {
+        custom: {
+          ...baseCustomMetadata,
+          ...(duration !== null ? { duration } : {}),
+        },
+      };
+    }
+
+    return undefined;
+  };
+
   const result = streamText({
     model: adapter(modelSpecifier),
     messages: convertToModelMessages(messages),
@@ -70,6 +105,7 @@ export function handleProviderStream(
 
   return result.toUIMessageStreamResponse({
     headers,
+    messageMetadata: getMessageMetadata,
     onError: (error) => {
       console.error({
         message: "toUIMessageStreamResponse onError:",
