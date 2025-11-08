@@ -8,8 +8,6 @@ export interface ChatConfig {
   addedToList: boolean;
   projectId: string | null;
   title?: string;
-  fetchedTitlePanelId: string | null;
-  firstUserMessage?: string;
 }
 
 // Current chat atom - always has a chat ID
@@ -18,5 +16,4 @@ export const currentChatAtom = atom<ChatConfig>({
   createdAt: new Date(),
   addedToList: false,
   projectId: null,
-  fetchedTitlePanelId: null,
 });

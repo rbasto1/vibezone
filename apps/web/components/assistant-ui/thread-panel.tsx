@@ -11,7 +11,6 @@ import {
   useCaptchaRequested,
   useCaptchaStateValue,
 } from "@/hooks/use-captcha";
-import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { usePanelState } from "@/hooks/use-panels";
 import { useStableValue } from "@/hooks/use-stable-value";
 import { useThreadRuntime } from "@/hooks/use-thread-runtime";
@@ -28,6 +27,7 @@ import {
   AssistantRuntimeProvider,
   type AssistantRuntime,
 } from "@assistant-ui/react";
+import type { ChatOnFinishCallback, UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -71,7 +71,6 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
     };
   }, [id]);
   const [panelState, setPanelState] = usePanelState(id);
-  const setCurrentChat = useCurrentChatSetter();
   const sessionId = useAuthSession();
   const userPreferences = useUserPreferencesValue();
   const plugins = useRef({
@@ -136,37 +135,12 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
     ]
   );
 
-  const handleModelFinish = () => {
+  const handleModelFinish: ChatOnFinishCallback<UIMessage> = () => {
     setPanelState((currentState) => ({
       ...currentState,
       running: false,
       hasMessages: true,
     }));
-
-    // use the setter to have access to the current chat
-    setCurrentChat((currentChat) => {
-      if (currentChat.fetchedTitlePanelId || !currentChat.projectId) {
-        // chat was fetched or is being fetched by another panel
-        return currentChat;
-      }
-
-      // marks the chat as fetched by us, to prevent multiple calls to the backend
-      setCurrentChat({
-        ...currentChat,
-        fetchedTitlePanelId: id,
-      });
-
-      if (sessionToken.current) {
-        const firstUserMessage = currentChat.firstUserMessage;
-        if (!firstUserMessage) {
-          console.warn("No first user message found");
-          return currentChat;
-        }
-      }
-
-      // make sure not to overwrite the fetched title panel id with empty value
-      return { ...currentChat, fetchedTitlePanelId: id };
-    });
   };
 
   const transport = useMemo(

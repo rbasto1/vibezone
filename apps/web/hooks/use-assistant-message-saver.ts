@@ -1,4 +1,6 @@
 import { useCallback, useRef } from "react";
+import { toast } from "sonner";
+import type { ClientUploadedFileData } from "uploadthing/types";
 
 import type { UploadMeta } from "@/lib/attachments/storage";
 import { sanitizeAttachmentText } from "@/lib/attachments/storage";
@@ -13,8 +15,6 @@ import type {
   TextMessagePart,
 } from "@assistant-ui/react";
 import type { MessageMetadata } from "@vibezone/database";
-import type { ClientUploadedFileData } from "uploadthing/types";
-
 import { useCurrentChatValue } from "./use-chat";
 import { useStableValue } from "./use-stable-value";
 
@@ -146,22 +146,30 @@ export const useAssistantMessageSaver = () => {
   const user = useUser();
   const chat = useCurrentChatValue();
   const [savedMessages, appendSavedMessages] = useSavedMessages();
-  const saveMessagesMutation = trpc.messages.saveMessages.useMutation();
+  const saveMessagesMutation = trpc.messages.saveMessages.useMutation({
+    retry: 3,
+    retryDelay: 5000,
+  });
   const saveMessagesMutationStable = useStableValue(saveMessagesMutation);
   const inFlightIds = useRef(new Set<string>());
 
   const isLoggedIn = !!user;
   const chatId = chat.id;
   const projectId = chat.projectId;
+  const notReadyToSave = !isLoggedIn || !projectId;
 
   return useCallback(
     (message: MessageState, threadId: string, modelId: string) => {
-      if (!isLoggedIn || !projectId) return;
-      if (message.id.startsWith("__optimistic__")) return;
-      if (message.role !== "assistant") return;
-      if (message.status?.type === "running") return;
-      if (savedMessages.has(message.id)) return;
-      if (inFlightIds.current.has(message.id)) return;
+      if (
+        notReadyToSave ||
+        message.id.startsWith("__optimistic__") ||
+        message.role !== "assistant" ||
+        message.status.type === "running" ||
+        savedMessages.has(message.id) ||
+        inFlightIds.current.has(message.id)
+      ) {
+        return;
+      }
 
       inFlightIds.current.add(message.id);
 
@@ -205,7 +213,10 @@ export const useAssistantMessageSaver = () => {
 
           appendSavedMessages(message.id);
         } catch (error) {
+          const message =
+            error instanceof Error ? error.message : JSON.stringify(error);
           console.error("Failed to save assistant message:", error);
+          toast.error(`Failed to save assistant message: ${message}`);
         } finally {
           inFlightIds.current.delete(message.id);
         }
@@ -216,7 +227,7 @@ export const useAssistantMessageSaver = () => {
     [
       appendSavedMessages,
       chatId,
-      isLoggedIn,
+      notReadyToSave,
       projectId,
       saveMessagesMutationStable,
       savedMessages,

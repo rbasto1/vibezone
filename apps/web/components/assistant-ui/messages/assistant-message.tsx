@@ -28,17 +28,19 @@ export const AssistantMessage: FC<AssistantMessageProps> = ({
   const message = useAssistantState(({ message }) => message);
   const saveAssistantMessage = useAssistantMessageSaver();
 
+  const customMetadata =
+    (message.metadata as { custom?: Record<string, unknown> } | undefined)
+      ?.custom ?? {};
+
+  const isCompleted =
+    !customMetadata.saved &&
+    !message.id.startsWith("__optimistic__") &&
+    message.status?.type !== "running";
   useEffect(() => {
-    if (
-      message.metadata.custom?.saved ||
-      message.id.startsWith("__optimistic__") ||
-      message.status?.type === "running"
-    ) {
-      return;
-    }
+    if (!isCompleted) return;
     saveAssistantMessage(message, threadId, modelId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [message.id, message.status?.type, threadId, modelId]);
+  }, [message.id, threadId, modelId, isCompleted]);
 
   const components = useMemo(
     () => ({

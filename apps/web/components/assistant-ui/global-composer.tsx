@@ -19,7 +19,6 @@ import {
   useCaptchaRequested,
   useCaptchaStateValue,
 } from "@/hooks/use-captcha";
-import { useCurrentChatSetter } from "@/hooks/use-chat";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue, usePanelsState } from "@/hooks/use-panels";
 import { useThreadRuntimeControllersValue } from "@/hooks/use-thread-store";
@@ -71,7 +70,6 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({
     return Math.round(total / uploading.length);
   }, [attachments]);
   const completeAttachments = useCompleteAttachmentsValue();
-  const setCurrentChat = useCurrentChatSetter();
   const setUIState = useUIStateSetter();
   const remaining = useAnonRemaining();
   const clearAttachments = useClearAttachments();
@@ -263,14 +261,6 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({
     if (!success) return false;
 
     setUIState({ suggestionsUsed: true });
-    setCurrentChat((currentChat) =>
-      currentChat.firstUserMessage
-        ? currentChat
-        : {
-            ...currentChat,
-            firstUserMessage: prompt,
-          }
-    );
 
     return true;
   };

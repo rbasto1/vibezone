@@ -176,7 +176,6 @@ export const SearchPanel = () => {
           addedToList: true,
           projectId: result.projectId,
           title: result.title,
-          fetchedTitlePanelId: "loaded-from-db",
         });
 
         const loadResult = await loadChatById(result.chatId);
