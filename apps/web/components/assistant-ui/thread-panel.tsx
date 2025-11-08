@@ -27,7 +27,14 @@ import {
 import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, type FC } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type FC,
+  type ReactNode,
+} from "react";
 import { toast } from "sonner";
 import z from "zod";
 import { PanelHeader } from "./response-panel-header";
@@ -37,6 +44,7 @@ interface ResponsePanelProps {
   className?: string;
   isFocused?: boolean;
   onToggleFocus?: () => void;
+  focusSwitchButtons?: ReactNode;
 }
 
 // Since we can't use ModelContextProviders (see comment below), we will
@@ -48,6 +56,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
   className,
   isFocused = false,
   onToggleFocus,
+  focusSwitchButtons,
 }) => {
   const t = useTranslations("ResponsePanel");
   const { id } = panel;
@@ -281,6 +290,13 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
         className
       )}
     >
+      {focusSwitchButtons && (
+        <div className="pointer-events-none absolute right-3 top-3 z-30 flex flex-wrap justify-end gap-2">
+          <div className="pointer-events-auto flex flex-wrap justify-end gap-2">
+            {focusSwitchButtons}
+          </div>
+        </div>
+      )}
       <PanelHeader panel={panel} onStop={running ? handleStop : undefined} />
       <div className="flex-1 min-h-0">
         <AssistantRuntimeProvider runtime={runtime}>

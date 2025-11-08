@@ -357,11 +357,37 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
           {panelsConfig.map((panel) => {
             const isFocused = focusPanelId === panel.id;
             const isDimmed = Boolean(focusPanelId) && focusPanelId !== panel.id;
+            const focusSwitchButtons =
+              canToggleFocus && focusPanelId === panel.id
+                ? panelsConfig
+                    .filter((candidate) => candidate.id !== panel.id)
+                    .map((candidate) => {
+                      const label =
+                        modelMap.get(candidate.model)?.name ?? candidate.model;
+                      const isRunning = panelsState[candidate.id]?.running;
+                      return (
+                        <button
+                          key={candidate.id}
+                          type="button"
+                          onClick={() =>
+                            setUIState({ focusPanelId: candidate.id })
+                          }
+                          className={cn(
+                            "inline-flex items-center rounded-md border border-border/60 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                            isRunning && "panel-button-glow"
+                          )}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })
+                : null;
             return (
               <ThreadPanel
                 key={panel.id}
                 panel={panel}
                 isFocused={isFocused}
+                focusSwitchButtons={focusSwitchButtons}
                 onToggleFocus={
                   canToggleFocus
                     ? () =>
