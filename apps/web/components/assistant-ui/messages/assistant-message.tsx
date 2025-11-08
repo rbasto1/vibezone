@@ -28,17 +28,36 @@ export const AssistantMessage: FC<AssistantMessageProps> = ({
   const message = useAssistantState(({ message }) => message);
   const saveAssistantMessage = useAssistantMessageSaver();
 
+  const customMetadata =
+    (message.metadata as { custom?: Record<string, unknown> } | undefined)
+      ?.custom ?? {};
+  const metadataSaved = Boolean(customMetadata.saved);
+  const metadataDuration =
+    typeof customMetadata.duration === "number" ? customMetadata.duration : null;
+  const metadataModelId =
+    typeof customMetadata.modelId === "string" ? customMetadata.modelId : null;
+
   useEffect(() => {
     if (
-      message.metadata.custom?.saved ||
+      metadataSaved ||
       message.id.startsWith("__optimistic__") ||
-      message.status?.type === "running"
+      message.status?.type === "running" ||
+      metadataDuration == null ||
+      metadataModelId == null
     ) {
       return;
     }
     saveAssistantMessage(message, threadId, modelId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [message.id, message.status?.type, threadId, modelId]);
+  }, [
+    message.id,
+    message.status?.type,
+    threadId,
+    modelId,
+    metadataSaved,
+    metadataDuration,
+    metadataModelId,
+  ]);
 
   const components = useMemo(
     () => ({

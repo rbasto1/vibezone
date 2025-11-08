@@ -13,7 +13,7 @@ import {
   type AssistantRuntime,
 } from "@assistant-ui/react";
 import type { DefaultChatTransport } from "ai";
-import { startTransition, useEffect } from "react";
+import { startTransition, useCallback, useEffect } from "react";
 import { useAttachmentAdapter } from "./use-attachments";
 import { useThreadMessages } from "./use-thread-store";
 
@@ -23,6 +23,11 @@ interface UseThreadRuntimeParams {
   transport: DefaultChatTransport<UIMessage>;
   onFinish?: () => void;
   onError?: (error: Error) => void;
+  modelId: string;
+}
+
+interface MetadataWithOptionalCustom extends Record<string, unknown> {
+  custom?: Record<string, unknown>;
 }
 
 export const useThreadRuntime = ({
@@ -31,6 +36,7 @@ export const useThreadRuntime = ({
   transport,
   onFinish,
   onError,
+  modelId,
 }: UseThreadRuntimeParams): AssistantRuntime => {
   const [messages, setMessages] = useThreadMessages(threadId);
   const attachmentAdapter = useAttachmentAdapter();
@@ -65,6 +71,63 @@ export const useThreadRuntime = ({
     startTransition(() => setMessages(toThreadMessages(chat.messages)));
   }, [chat.messages, setMessages]);
 
+  const applyLatestAssistantMetadata = useCallback(
+    (
+      updater: (
+        current: Record<string, unknown>
+      ) => Record<string, unknown>,
+    ) => {
+      const currentMessages = chat.messages;
+      if (!currentMessages.length) {
+        return;
+      }
+
+      const nextMessages = [...currentMessages];
+      for (let index = nextMessages.length - 1; index >= 0; index -= 1) {
+        const candidate = nextMessages[index];
+        if (candidate.role !== "assistant") {
+          continue;
+        }
+
+        const metadata = (candidate.metadata as MetadataWithOptionalCustom) ?? {};
+        const currentCustom = metadata.custom ?? {};
+        const nextCustom = updater(currentCustom);
+        nextMessages[index] = {
+          ...candidate,
+          metadata: {
+            ...metadata,
+            custom: nextCustom,
+          },
+        } as UIMessage;
+        chat.setMessages(nextMessages);
+        break;
+      }
+    },
+    [chat]
+  );
+
+  const runWithTiming = useCallback(
+    async (operation: () => Promise<void>) => {
+      const startTime = Date.now();
+      try {
+        await operation();
+        const duration = Date.now() - startTime;
+        applyLatestAssistantMetadata((currentCustom) => ({
+          ...currentCustom,
+          modelId,
+          duration,
+        }));
+      } catch (error) {
+        applyLatestAssistantMetadata((currentCustom) => ({
+          ...currentCustom,
+          modelId,
+        }));
+        throw error;
+      }
+    },
+    [applyLatestAssistantMetadata, modelId]
+  );
+
   const runtime = useExternalStoreRuntime<ThreadMessageLike>({
     messages,
     isRunning: chat.status === "streaming" || chat.status === "submitted",
@@ -76,9 +139,11 @@ export const useThreadRuntime = ({
     },
     onNew: async (message) => {
       const uiMessage = createMessageFromAppend(message);
-      await chat.sendMessage(uiMessage, {
-        metadata: message.runConfig,
-      });
+      await runWithTiming(() =>
+        chat.sendMessage(uiMessage, {
+          metadata: message.runConfig,
+        })
+      );
     },
     onEdit: async (message) => {
       const trimmedMessages = sliceUiMessagesUntil(
@@ -87,14 +152,18 @@ export const useThreadRuntime = ({
       );
       chat.setMessages(trimmedMessages);
       const uiMessage = createMessageFromAppend(message);
-      await chat.sendMessage(uiMessage, {
-        metadata: message.runConfig,
-      });
+      await runWithTiming(() =>
+        chat.sendMessage(uiMessage, {
+          metadata: message.runConfig,
+        })
+      );
     },
     onReload: async (parentId, config) => {
       const trimmedMessages = sliceUiMessagesUntil(chat.messages, parentId);
       chat.setMessages(trimmedMessages);
-      await chat.regenerate({ metadata: config.runConfig });
+      await runWithTiming(() =>
+        chat.regenerate({ metadata: config.runConfig })
+      );
     },
     onCancel: () => chat.stop(),
     adapters: {

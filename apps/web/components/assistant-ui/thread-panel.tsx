@@ -269,6 +269,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
     transport,
     onFinish: handleModelFinish,
     onError: handleModelError,
+    modelId: panel.model,
   });
   runtimeRef.current = runtime;
 
