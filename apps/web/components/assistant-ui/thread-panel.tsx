@@ -17,6 +17,10 @@ import { useStableValue } from "@/hooks/use-stable-value";
 import { useThreadRuntime } from "@/hooks/use-thread-runtime";
 import { useThreadRuntimeControllerSetter } from "@/hooks/use-thread-store";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
+import {
+  isUiMessageArray,
+  sanitizeMessagesForRequest,
+} from "@/lib/assistant-ui/message-converters";
 import { safeParse } from "@/lib/json";
 import { generateFingerprint } from "@/lib/limiting";
 import type { PanelConfig } from "@/store/panels";
@@ -24,7 +28,7 @@ import {
   AssistantRuntimeProvider,
   type AssistantRuntime,
 } from "@assistant-ui/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, type FC } from "react";
@@ -42,50 +46,6 @@ interface ResponsePanelProps {
 // Since we can't use ModelContextProviders (see comment below), we will
 // have to hack our way out
 const panelGlobalContext: Record<string, PanelConfig> = {};
-
-const sanitizeMessageParts = (
-  parts: UIMessage["parts"]
-): UIMessage["parts"] => {
-  const filtered = parts.filter((part) => part.type !== "reasoning");
-  if (filtered.length > 0) {
-    return filtered;
-  }
-  return [{ type: "text", text: "" }];
-};
-
-const sanitizeMessagesForRequest = (
-  messages: readonly UIMessage[]
-): UIMessage[] => {
-  return messages.map((message) => {
-    if (!Array.isArray(message.parts)) {
-      return message;
-    }
-
-    const hasReasoning = message.parts.some(
-      (part) => part.type === "reasoning"
-    );
-    if (!hasReasoning) {
-      return message;
-    }
-
-    return {
-      ...message,
-      parts: sanitizeMessageParts(message.parts),
-    };
-  });
-};
-
-const isUiMessageArray = (value: unknown): value is UIMessage[] => {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (item) =>
-        item &&
-        typeof item === "object" &&
-        Array.isArray((item as { parts?: unknown }).parts)
-    )
-  );
-};
 
 export const ThreadPanel: FC<ResponsePanelProps> = ({
   panel,
@@ -263,12 +223,12 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
           messageId,
         }) => {
           const sanitizedMessages = sanitizeMessagesForRequest(messages);
-          const baseBody: Record<string, unknown> = body
-            ? { ...body }
-            : {};
-          const existingMessages = (baseBody as {
-            messages?: unknown;
-          }).messages;
+          const baseBody: Record<string, unknown> = body ? { ...body } : {};
+          const existingMessages = (
+            baseBody as {
+              messages?: unknown;
+            }
+          ).messages;
           const bodyMessages = isUiMessageArray(existingMessages)
             ? sanitizeMessagesForRequest(existingMessages)
             : sanitizedMessages;
