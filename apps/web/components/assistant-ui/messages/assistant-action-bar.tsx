@@ -13,8 +13,9 @@ import { CheckIcon, CopyIcon, RefreshCwIcon } from "lucide-react";
 import { AssistantMessageRateControl } from "./parts/assistant-message-rate-control";
 
 interface MetadataCustom {
-  modelId?: unknown;
-  duration?: unknown;
+  modelId?: string;
+  startTime?: number;
+  endTime?: number;
 }
 
 const formatDuration = (durationMs: number) => {
@@ -24,7 +25,14 @@ const formatDuration = (durationMs: number) => {
   if (durationMs < 1000) {
     return `${Math.round(durationMs)} ms`;
   }
-  return `${(durationMs / 1000).toFixed(1)} s`;
+  if (durationMs < 1000 * 60) {
+    return `${(durationMs / 1000).toFixed(1)} s`;
+  }
+  const minutes = Math.floor(durationMs / (1000 * 60));
+  const restSeconds = Math.floor((durationMs % (1000 * 60)) / 1000)
+    .toString()
+    .padStart(2, "0");
+  return `${minutes}:${restSeconds}`;
 };
 
 export const AssistantActionBar: FC = () => {
@@ -36,13 +44,21 @@ export const AssistantActionBar: FC = () => {
     typeof customMetadata.modelId === "string"
       ? customMetadata.modelId
       : undefined;
-  const duration =
-    typeof customMetadata.duration === "number"
-      ? customMetadata.duration
+  const startTime =
+    typeof customMetadata.startTime === "number"
+      ? customMetadata.startTime
+      : undefined;
+  const endTime =
+    typeof customMetadata.endTime === "number"
+      ? customMetadata.endTime
       : undefined;
   const modelName = modelId
     ? (modelMap.get(modelId)?.name ?? modelId)
     : undefined;
+  const duration =
+    startTime && endTime && startTime < endTime
+      ? endTime - startTime
+      : undefined;
   const formattedDuration =
     typeof duration === "number"
       ? (formatDuration(duration) ?? undefined)
@@ -72,17 +88,17 @@ export const AssistantActionBar: FC = () => {
           <RefreshCwIcon />
         </TooltipIconButton>
       </ActionBarPrimitive.Reload>
+      {formattedDuration && (
+        <span className="text-sm text-muted-foreground hidden group-hover:block mt-0.5">
+          {formattedDuration}
+        </span>
+      )}
       {modelName && (
         <span
           className="text-sm font-medium hidden group-hover:block mt-0.5"
           title={modelName}
         >
           {modelName}
-        </span>
-      )}
-      {formattedDuration && (
-        <span className="text-sm text-muted-foreground hidden group-hover:block mt-0.5">
-          {formattedDuration}
         </span>
       )}
     </ActionBarPrimitive.Root>

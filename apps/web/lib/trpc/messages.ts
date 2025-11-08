@@ -256,24 +256,23 @@ export const messagesRouter = t.router({
         role: msg.role,
         content: msg.content,
         attachments: msg.attachments,
-        metadata: msg.metadata,
+        metadata: {
+          ...msg.metadata,
+          custom: {
+            ...msg.metadata?.custom,
+            endTime: msg.createdAt
+              ? new Date(msg.createdAt).getTime()
+              : Date.now(),
+          },
+        },
         status: msg.status,
         createdAt: msg.createdAt,
       }));
 
-      // Use upsert to handle potential duplicates
-      for (const message of messagesToInsert) {
-        await db.insert(messagesTable).values(message).onConflictDoNothing();
-        // .onConflictDoUpdate({
-        //   target: messagesTable.id,
-        //   set: {
-        //     content: message.content,
-        //     attachments: message.attachments,
-        //     metadata: message.metadata,
-        //     status: message.status,
-        //   },
-        // });
-      }
+      await db
+        .insert(messagesTable)
+        .values(messagesToInsert)
+        .onConflictDoNothing();
 
       const chat = await chatPromise;
       if (!chat) {

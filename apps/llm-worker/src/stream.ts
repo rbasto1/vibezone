@@ -68,8 +68,29 @@ export function handleProviderStream(
     headers.set("X-Remaining-Quota", remainingQuota.toString());
   }
 
+  const startTime = Date.now();
   return result.toUIMessageStreamResponse({
     headers,
+    messageMetadata: ({ part }) => {
+      if (part.type === "start") {
+        return {
+          custom: {
+            modelId: adapterModelId,
+            startTime,
+          },
+        };
+      }
+      if (part.type === "finish") {
+        return {
+          custom: {
+            modelId: adapterModelId,
+            startTime,
+            endTime: Date.now(),
+          },
+        };
+      }
+      return undefined;
+    },
     onError: (error) => {
       console.error({
         message: "toUIMessageStreamResponse onError:",

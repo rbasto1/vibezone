@@ -12,7 +12,11 @@ import {
   useExternalStoreRuntime,
   type AssistantRuntime,
 } from "@assistant-ui/react";
-import type { DefaultChatTransport } from "ai";
+import type {
+  ChatOnErrorCallback,
+  ChatOnFinishCallback,
+  DefaultChatTransport,
+} from "ai";
 import { startTransition, useEffect } from "react";
 import { useAttachmentAdapter } from "./use-attachments";
 import { useThreadMessages } from "./use-thread-store";
@@ -21,8 +25,8 @@ interface UseThreadRuntimeParams {
   threadId: string;
   initialMessages?: ThreadMessageLike[];
   transport: DefaultChatTransport<UIMessage>;
-  onFinish?: () => void;
-  onError?: (error: Error) => void;
+  onFinish?: ChatOnFinishCallback<UIMessage>;
+  onError?: ChatOnErrorCallback;
 }
 
 export const useThreadRuntime = ({
@@ -41,16 +45,8 @@ export const useThreadRuntime = ({
       messages.length ? messages : (initialMessages ?? [])
     ),
     transport,
-    onFinish: () => {
-      onFinish?.();
-    },
-    onError(error: unknown) {
-      if (error instanceof Error) {
-        onError?.(error);
-      } else {
-        onError?.(new Error(JSON.stringify(error)));
-      }
-    },
+    onFinish,
+    onError,
   });
 
   useEffect(() => {

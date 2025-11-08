@@ -24,7 +24,10 @@ export const useUserMessageSaver = () => {
   const projects = useProjectsValue();
   const clearPendingUserMessages = usePendingUserMessagesClear();
   const utils = trpc.useUtils();
-  const saveUserMessageMutation = trpc.messages.saveUserMessage.useMutation();
+  const saveUserMessageMutation = trpc.messages.saveUserMessage.useMutation({
+    retry: 3,
+    retryDelay: 5000,
+  });
   const saveUserMessageMutationStable = useStableValue(saveUserMessageMutation);
   const threadMessagesStable = useStableValue(useAtomValue(threadMessagesAtom));
 

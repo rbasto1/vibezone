@@ -27,6 +27,7 @@ import {
   AssistantRuntimeProvider,
   type AssistantRuntime,
 } from "@assistant-ui/react";
+import type { ChatOnFinishCallback, UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -134,7 +135,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
     ]
   );
 
-  const handleModelFinish = () => {
+  const handleModelFinish: ChatOnFinishCallback<UIMessage> = () => {
     setPanelState((currentState) => ({
       ...currentState,
       running: false,

@@ -165,7 +165,12 @@ export const AssistantMessageRateControl: FC<
             aria-pressed={isSelected}
             data-selected={isSelected}
             onClick={(event) => handleSelect(event, value)}
-            className={cn("data-[selected=true]:text-amber-600")}
+            className={cn(
+              "data-[selected=true]:text-amber-600 transition-all duration-200 overflow-hidden",
+              isSelected || !optimisticRate
+                ? "w-6 opacity-100"
+                : "w-0 size-0 opacity-0 p-0"
+            )}
             disabled={rateMutation.isPending || rateAnonymousMutation.isPending}
           >
             <Icon className="size-4" />
