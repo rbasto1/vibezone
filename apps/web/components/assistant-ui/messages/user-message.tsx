@@ -48,7 +48,7 @@ export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
         <UserMessageAttachments />
 
         {/* aui-user-message-content */}
-        <div className="bg-muted text-foreground col-start-2 rounded-3xl px-5 py-2.5 break-words">
+        <div className="bg-muted text-foreground col-start-2 rounded-3xl px-5 py-2.5 wrap-break-words">
           <MessagePrimitive.Content components={components} />
         </div>
 

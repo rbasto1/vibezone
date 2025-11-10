@@ -66,7 +66,7 @@ export const Image: FC<ImageProps> = (props) => {
         <img
           src={src}
           className={cn(
-            "block max-h-[24rem] w-full object-contain transition-opacity duration-300",
+            "block max-h-96 w-full object-contain transition-opacity duration-300",
             isLoaded ? "opacity-100" : "opacity-0",
             status.type === "running" && !isLoaded ? "animate-pulse" : null
           )}

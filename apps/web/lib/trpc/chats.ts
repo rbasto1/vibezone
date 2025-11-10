@@ -173,7 +173,6 @@ export const chatsRouter = t.router({
             with: {
               messages: {
                 columns: {
-                  createdAt: false,
                   updatedAt: false,
                   deletedAt: false,
                 },
@@ -192,6 +191,14 @@ export const chatsRouter = t.router({
         });
       }
 
+      chatRecord.threads.forEach((t) =>
+        t.messages.forEach((m) => {
+          m.metadata ??= {};
+          m.metadata.custom ??= {};
+          m.metadata.custom.endTime ??= m.createdAt.getTime();
+          m.metadata.custom.modelId ??= m.modelId;
+        })
+      );
       return chatRecord;
     }),
 

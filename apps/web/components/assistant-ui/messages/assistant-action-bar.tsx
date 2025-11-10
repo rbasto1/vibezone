@@ -9,14 +9,9 @@ import type { FC } from "react";
 
 import { TooltipIconButton } from "@/components/assistant-ui/messages/tooltip-icon-button";
 import { modelMap } from "@/lib/model-map";
+import type { MessageMetadata } from "@vibezone/database";
 import { CheckIcon, CopyIcon, RefreshCwIcon } from "lucide-react";
 import { AssistantMessageRateControl } from "./parts/assistant-message-rate-control";
-
-interface MetadataCustom {
-  modelId?: string;
-  startTime?: number;
-  endTime?: number;
-}
 
 const formatDuration = (durationMs: number) => {
   if (Number.isNaN(durationMs) || durationMs < 0) {
@@ -37,8 +32,7 @@ const formatDuration = (durationMs: number) => {
 
 export const AssistantActionBar: FC = () => {
   const message = useAssistantState(({ message }) => message);
-  const customMetadata: MetadataCustom =
-    (message.metadata as { custom?: MetadataCustom } | undefined)?.custom ?? {};
+  const customMetadata = (message.metadata as MessageMetadata)?.custom ?? {};
 
   const modelId =
     typeof customMetadata.modelId === "string"
@@ -63,6 +57,7 @@ export const AssistantActionBar: FC = () => {
     typeof duration === "number"
       ? (formatDuration(duration) ?? undefined)
       : undefined;
+  const messageTs = endTime || startTime || message.createdAt;
 
   return (
     <ActionBarPrimitive.Root
@@ -99,6 +94,11 @@ export const AssistantActionBar: FC = () => {
           title={modelName}
         >
           {modelName}
+        </span>
+      )}
+      {!!messageTs && (
+        <span className="text-sm text-muted-foreground hidden group-hover:block mt-0.5">
+          {new Date(messageTs).toLocaleString()}
         </span>
       )}
     </ActionBarPrimitive.Root>

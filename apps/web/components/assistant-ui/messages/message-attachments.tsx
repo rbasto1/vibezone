@@ -252,7 +252,7 @@ const AttachmentTile: FC<{ attachment: Attachment }> = ({ attachment }) => {
         {trigger}
         <TooltipContent side="top">{attachment.name}</TooltipContent>
       </Tooltip>
-      <span className="max-w-[3.5rem] truncate text-xs font-medium text-muted-foreground">
+      <span className="max-w-14 truncate text-xs font-medium text-muted-foreground">
         {attachment.name}
       </span>
     </div>

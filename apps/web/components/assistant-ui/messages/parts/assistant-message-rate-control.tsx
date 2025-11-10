@@ -10,7 +10,7 @@ import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import { useAssistantState, type ThreadMessageLike } from "@assistant-ui/react";
 import type {
-  MessageMetadataCustom,
+  MessageMetadata,
   MessageRate,
   MessageRatingAttachment,
 } from "@vibezone/database";
@@ -22,11 +22,6 @@ interface RateOption {
   value: MessageRate;
   Icon: LucideIcon;
   translationKey: "dislike" | "like" | "reallyLike";
-}
-
-interface MetadataWithCustom {
-  custom?: MessageMetadataCustom;
-  [key: string]: unknown;
 }
 
 const RATE_OPTIONS: RateOption[] = [
@@ -58,8 +53,7 @@ export const AssistantMessageRateControl: FC<
   const messageId = message.id;
 
   const metadataRate = useMemo(() => {
-    const rateValue = (message.metadata as MetadataWithCustom | undefined)
-      ?.custom?.rate;
+    const rateValue = (message.metadata as MessageMetadata)?.custom?.rate;
     return rateValue ?? null;
   }, [message.metadata]);
 

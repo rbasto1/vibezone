@@ -1,6 +1,7 @@
 export * from "./enums";
 export * from "./helpers";
 export * from "./json-columns-types";
+export * from "./metadata";
 export * from "./relations";
 export * from "./schema";
 export * as schema from "./schema";

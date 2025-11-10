@@ -863,7 +863,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
       align="start"
       sideOffset={8}
       className={cn(
-        "z-50 bg-popover text-popover-foreground shadow-md max-w-[100vw] max-h-[100vh] p-3",
+        "z-50 bg-popover text-popover-foreground shadow-md max-w-[100vw] max-h-screen p-3",
         "sm:w-[min(1200px,calc(100vw-2rem))] sm:h-[min(80vh,700px)] sm:rounded-md sm:border"
       )}
     >

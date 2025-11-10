@@ -25,9 +25,7 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
       UserMessage: () => (
         <UserMessage threadId={panel.id} modelId={panel.model} />
       ),
-      AssistantMessage: () => (
-        <AssistantMessage threadId={panel.id} modelId={panel.model} />
-      ),
+      AssistantMessage,
     }),
     [panel.id, panel.model]
   );

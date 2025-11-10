@@ -3,6 +3,7 @@
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAnonQuotaSetter } from "@/hooks/use-anon-quota";
+import { useAssistantMessageSaver } from "@/hooks/use-assistant-message-saver";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { canReason } from "@/hooks/use-capabilities";
 import {
@@ -13,10 +14,12 @@ import {
 } from "@/hooks/use-captcha";
 import { usePanelState } from "@/hooks/use-panels";
 import { useStableValue } from "@/hooks/use-stable-value";
+import type { FinishCallbackOptions } from "@/hooks/use-thread-runtime";
 import { useThreadRuntime } from "@/hooks/use-thread-runtime";
 import { useThreadRuntimeControllerSetter } from "@/hooks/use-thread-store";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import {
+  convertAISDKAssistantMessageToMessageState,
   isUiMessageArray,
   sanitizeMessagesForRequest,
 } from "@/lib/assistant-ui/message-converters";
@@ -27,7 +30,7 @@ import {
   AssistantRuntimeProvider,
   type AssistantRuntime,
 } from "@assistant-ui/react";
-import type { ChatOnFinishCallback, UIMessage } from "ai";
+import type { MessageMetadata } from "@vibezone/database";
 import { DefaultChatTransport } from "ai";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -73,10 +76,6 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
   const [panelState, setPanelState] = usePanelState(id);
   const sessionId = useAuthSession();
   const userPreferences = useUserPreferencesValue();
-  const plugins = useRef({
-    web: userPreferences.webSearch,
-    reason: userPreferences.reasoningEffort,
-  });
   const setAnonQuota = useAnonQuotaSetter();
   const setCaptchaFailed = useCaptchaFailed();
   const setCaptchaRequested = useCaptchaRequested();
@@ -93,11 +92,10 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
     userPreferences.reasoningEffort === "none"
       ? "low"
       : userPreferences.reasoningEffort;
-
-  plugins.current = {
+  const plugins = useStableValue({
     web: userPreferences.webSearch,
     reason: panelCanReason ? reasoningEffort : "low",
-  };
+  });
 
   // This callback function is never reload by the runtime provider, so any initial value of variables
   // in its scope will be valid for the duration of the app. That's why we need stable values (refs).
@@ -135,7 +133,36 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
     ]
   );
 
-  const handleModelFinish: ChatOnFinishCallback<UIMessage> = () => {
+  const saveAssistantMessage = useAssistantMessageSaver();
+  const saveAssistantMessageRef = useStableValue(saveAssistantMessage);
+
+  const handleModelFinish = ({
+    message,
+    messages,
+    isError,
+    isDisconnect,
+    isAbort,
+  }: FinishCallbackOptions) => {
+    const saveAssistantMessage = saveAssistantMessageRef.current;
+    const metadata = message.metadata as MessageMetadata;
+    const modelId = metadata?.custom?.modelId ?? panelGlobalContext[id]?.model;
+    if (!modelId) {
+      toast.error("Could not save response, model not detected");
+      return;
+    }
+
+    const messageState = convertAISDKAssistantMessageToMessageState(
+      message,
+      messages,
+      {
+        isError,
+        isDisconnect,
+        isAbort,
+      }
+    );
+
+    saveAssistantMessage(messageState, id, modelId);
+
     setPanelState((currentState) => ({
       ...currentState,
       running: false,
@@ -234,6 +261,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
       setAnonQuota,
       sessionToken,
       handleModelError,
+      plugins,
     ]
   );
 
