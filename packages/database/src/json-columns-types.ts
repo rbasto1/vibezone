@@ -17,22 +17,9 @@ export interface ModelTopProvider {
 
 export type MessageRate = "dislike" | "like" | "really-like";
 
-export interface MessageMetadataCustom {
-  rate?: MessageRate;
-  [key: string]: unknown;
-}
-
 export interface MessageRatingAttachment {
   filename: string;
   mimeType?: string;
-}
-
-export interface MessageMetadata {
-  custom: MessageMetadataCustom;
-  steps?: unknown[];
-  unstable_data?: unknown[];
-  unstable_state?: null;
-  unstable_annotations?: unknown[];
 }
 
 export interface MessageStatus {

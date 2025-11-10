@@ -434,7 +434,7 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
             if (!open) handleModelPickerClose();
           }}
         >
-          <SheetContent side="bottom" className="h-[100dvh] w-screen gap-0 p-0">
+          <SheetContent side="bottom" className="h-dvh w-screen gap-0 p-0">
             <ModelDropdownContents
               onSelect={handleModelPickerSelect}
               currentModelId={currentModelIdForPicker}

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
 import type { ClientUploadedFileData } from "uploadthing/types";
 
@@ -7,7 +7,7 @@ import { sanitizeAttachmentText } from "@/lib/attachments/storage";
 import { useUser } from "@/lib/auth-client";
 import { trpc } from "@/lib/trpc/client";
 import { uploadFiles } from "@/lib/uploadthing/client";
-import { useSavedMessages } from "@/store/saved-messages";
+import { useSavedMessagesAppend } from "@/store/saved-messages";
 import type {
   FileMessagePart,
   ImageMessagePart,
@@ -145,35 +145,25 @@ const sanitizeContent = async (parts: MessageState["content"]) => {
 export const useAssistantMessageSaver = () => {
   const user = useUser();
   const chat = useCurrentChatValue();
-  const [savedMessages, appendSavedMessages] = useSavedMessages();
+  const appendSavedMessages = useSavedMessagesAppend();
   const saveMessagesMutation = trpc.messages.saveMessages.useMutation({
     retry: 3,
     retryDelay: 5000,
   });
   const saveMessagesMutationStable = useStableValue(saveMessagesMutation);
-  const inFlightIds = useRef(new Set<string>());
 
   const isLoggedIn = !!user;
   const chatId = chat.id;
   const projectId = chat.projectId;
-  const notReadyToSave = !isLoggedIn || !projectId;
 
   return useCallback(
-    (message: MessageState, threadId: string, modelId: string) => {
-      if (
-        notReadyToSave ||
-        message.id.startsWith("__optimistic__") ||
-        message.role !== "assistant" ||
-        message.status.type === "running" ||
-        savedMessages.has(message.id) ||
-        inFlightIds.current.has(message.id)
-      ) {
-        return;
-      }
-
-      inFlightIds.current.add(message.id);
-
+    (
+      message: Omit<MessageState, "speech" | "submittedFeedback">,
+      threadId: string,
+      modelId: string
+    ) => {
       const run = async () => {
+        if (!isLoggedIn) return;
         try {
           const content = Array.isArray(message.content)
             ? await sanitizeContent(message.content)
@@ -217,8 +207,6 @@ export const useAssistantMessageSaver = () => {
             error instanceof Error ? error.message : JSON.stringify(error);
           console.error("Failed to save assistant message:", error);
           toast.error(`Failed to save assistant message: ${message}`);
-        } finally {
-          inFlightIds.current.delete(message.id);
         }
       };
 
@@ -227,10 +215,9 @@ export const useAssistantMessageSaver = () => {
     [
       appendSavedMessages,
       chatId,
-      notReadyToSave,
       projectId,
       saveMessagesMutationStable,
-      savedMessages,
+      isLoggedIn,
     ]
   );
 };

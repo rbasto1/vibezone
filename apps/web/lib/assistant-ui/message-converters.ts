@@ -1,4 +1,13 @@
-import type { AppendMessage, ThreadMessageLike } from "@assistant-ui/react";
+import type {
+  AppendMessage,
+  FileMessagePart,
+  ImageMessagePart,
+  MessageState,
+  ReasoningMessagePart,
+  SourceMessagePart,
+  TextMessagePart,
+  ThreadMessageLike,
+} from "@assistant-ui/react";
 import {
   generateId,
   type CreateUIMessage,
@@ -240,7 +249,7 @@ export const toThreadMessageLike = (
     ? (msg.content
         .map(convertContentPart)
         .filter(
-          (part): part is ThreadMessageLike["content"][number] => part !== null
+          (part): part is NonNullable<typeof part> => part !== null
         ) as ThreadMessageLike["content"])
     : ([toTextPart(msg.content ?? "")] as ThreadMessageLike["content"]);
 
@@ -251,8 +260,7 @@ export const toThreadMessageLike = (
 
   const status = role === "assistant" ? convertStatus(msg.status) : undefined;
 
-  const metadataCustom =
-    (msg.metadata?.custom as Record<string, unknown> | undefined) ?? {};
+  const metadataCustom = (msg.metadata as MessageMetadata)?.custom ?? {};
 
   const threadMessage: ThreadMessageLike = {
     id: msg.id,
@@ -272,9 +280,14 @@ export const toThreadMessageLike = (
   return threadMessage;
 };
 
-const convertContentPart = (
-  part: unknown
-): ThreadMessageLike["content"][number] | null => {
+type EnabledContentPart =
+  | TextMessagePart
+  | ReasoningMessagePart
+  | SourceMessagePart
+  | ImageMessagePart
+  | FileMessagePart;
+
+const convertContentPart = (part: unknown): EnabledContentPart | null => {
   const candidate = part as Record<string, unknown>;
   switch (candidate?.type) {
     case "text":
@@ -306,7 +319,7 @@ const convertContentPart = (
         mimeType: "image/png",
         filename:
           typeof candidate.filename === "string" ? candidate.filename : "image",
-      } as ThreadMessageLike["content"][number];
+      } as FileMessagePart;
     case "file":
       if (
         typeof candidate.url !== "string" &&
@@ -336,7 +349,7 @@ const convertContentPart = (
           data,
           mimeType,
           filename,
-        } as ThreadMessageLike["content"][number];
+        } as FileMessagePart;
       }
     default:
       return null;
@@ -420,4 +433,63 @@ export const isUiMessageArray = (value: unknown): value is UIMessage[] => {
 
 function isKeptPart(part: UIMessagePart<UIDataTypes, UITools>) {
   return part.type !== "reasoning" && part.type !== "step-start";
+}
+
+export function convertAISDKAssistantMessageToMessageState(
+  message: UIMessage,
+  messages: readonly UIMessage[],
+  terminationFlags: {
+    isError: boolean;
+    isDisconnect: boolean;
+    isAbort: boolean;
+  }
+): Omit<MessageState, "speech" | "submittedFeedback"> {
+  const messageIndex = messages.findIndex((m) => m.id === message.id);
+  const parent = messageIndex > 0 ? messages[messageIndex - 1] : null;
+  const parentId = parent?.id ?? null;
+  const isLast = messageIndex === messages.length - 1;
+  const { isError, isDisconnect, isAbort } = terminationFlags;
+  const content = message.parts
+    .map(convertContentPart)
+    .filter((p): p is NonNullable<typeof p> => !!p);
+
+  if (message.role !== "assistant") {
+    throw new Error(
+      `Cannot use function convertAISDKAssistantMessageToMessageState to convert role=${message.role} messages`
+    );
+  }
+
+  return {
+    id: message.id,
+    parentId,
+    isLast,
+    branchCount: 1,
+    branchNumber: 1,
+    role: "assistant",
+    content,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+    metadata: message.metadata as any,
+    status: isError
+      ? {
+          type: "incomplete",
+          reason: "error",
+          error: { message: "Unknown error" },
+        }
+      : isDisconnect
+        ? {
+            type: "incomplete",
+            reason: "error",
+            error: { message: "Disconnected" },
+          }
+        : isAbort
+          ? {
+              type: "incomplete",
+              reason: "cancelled",
+            }
+          : {
+              type: "complete",
+              reason: "stop",
+            },
+    createdAt: new Date(),
+  } satisfies Omit<MessageState, "speech" | "submittedFeedback">;
 }

@@ -5,21 +5,23 @@
 ## Bugs
 
 - [ ] Stopping works but state stay as running?
+- [ ] Not saving last few tokens of response
 - [ ] Switching models with attachments is causing issues with the other models
 - [x] Reloading chats make reasoning not render (but is loaded)
 - [x] Reasoning rendering is too slow
 - [ ] Reloading chats loses the multiple generations (refreshes/branching)
-- [ ] Some threads not saving?
+- [x] Some threads not saving?
 - [x] Sync deleted/added threads with backend
 - [x] Mobile: no side menu open handle
 
 ## Improvements
 
-- [ ] Store and display which model generated each response
-- [ ] Store and display how long it took to generate each response
+- [ ] Import data creates a new project "Imported"
+- [x] Store and display which model generated each response
+- [x] Store and display how long it took to generate each response
 - [x] Copy messages from other threads when adding new AI
 - [x] Add "split to new chat" button
-- [ ] In full-screen mode, allow switching threads
+- [x] In full-screen mode, allow switching threads
 - [ ] Add analytics (Posthog?)
 - [ ] Add Python project to calculate usage of non-OpenRouter models
 - [ ] Add auto-translation button to admin (model descriptions, news)

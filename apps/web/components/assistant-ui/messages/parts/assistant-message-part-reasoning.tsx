@@ -78,7 +78,7 @@ export const Reasoning: FC = () => {
             // hidden scrollbars
             "[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
             isExpanded
-              ? "max-h-[32rem] [mask-image:none] [-webkit-mask-image:none]"
+              ? "max-h-128 mask-none [-webkit-mask-image:none]"
               : "max-h-12 pr-1 [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.95)_65%,rgba(0,0,0,0))] [-webkit-mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.95)_65%,rgba(0,0,0,0))]"
           )}
         >

@@ -15,13 +15,13 @@ import {
 import { providerTiers } from "./enums";
 import { timestampTz, timestampTzNow, timestampTzNowUpdated } from "./helpers";
 import type {
-  MessageMetadata,
   MessageRate,
   MessageRatingAttachment,
   MessageStatus,
   ModelPricing,
   ModelTopProvider,
 } from "./json-columns-types";
+import type { MessageMetadata } from "./metadata";
 
 export const userStats = pgTable("user_stats", {
   id: text("id").primaryKey(),

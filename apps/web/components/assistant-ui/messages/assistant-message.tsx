@@ -1,9 +1,7 @@
-import { MessagePrimitive, useAssistantState } from "@assistant-ui/react";
+import { MessagePrimitive } from "@assistant-ui/react";
 import { motion } from "framer-motion";
 import { StarIcon } from "lucide-react";
-import { useEffect, useMemo, type FC } from "react";
-
-import { useAssistantMessageSaver } from "@/hooks/use-assistant-message-saver";
+import { useMemo, type FC } from "react";
 
 import { AssistantActionBar } from "./assistant-action-bar";
 import { BranchPicker } from "./branch-picker";
@@ -16,32 +14,7 @@ import { Reasoning } from "./parts/assistant-message-part-reasoning";
 import { Source } from "./parts/assistant-message-part-source";
 import { ToolFallback } from "./tool-fallback";
 
-interface AssistantMessageProps {
-  threadId: string;
-  modelId: string;
-}
-
-export const AssistantMessage: FC<AssistantMessageProps> = ({
-  threadId,
-  modelId,
-}) => {
-  const message = useAssistantState(({ message }) => message);
-  const saveAssistantMessage = useAssistantMessageSaver();
-
-  const customMetadata =
-    (message.metadata as { custom?: Record<string, unknown> } | undefined)
-      ?.custom ?? {};
-
-  const isCompleted =
-    !customMetadata.saved &&
-    !message.id.startsWith("__optimistic__") &&
-    message.status?.type !== "running";
-  useEffect(() => {
-    if (!isCompleted) return;
-    saveAssistantMessage(message, threadId, modelId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [message.id, threadId, modelId, isCompleted]);
-
+export const AssistantMessage: FC = () => {
   const components = useMemo(
     () => ({
       Text: MarkdownText,
@@ -70,7 +43,7 @@ export const AssistantMessage: FC<AssistantMessageProps> = ({
         </div>
 
         {/* aui-assistant-message-content */}
-        <div className="text-foreground col-span-2 col-start-2 row-start-1 ml-4 leading-7 break-words">
+        <div className="text-foreground col-span-2 col-start-2 row-start-1 ml-4 leading-7 wrap-break-words">
           <MessagePrimitive.Content components={components} />
           <MessageError />
         </div>

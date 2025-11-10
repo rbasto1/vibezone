@@ -10,10 +10,7 @@ import {
   threads as threadsTable,
 } from "@/db";
 import { TRPCError } from "@trpc/server";
-import type {
-  MessageMetadata,
-  MessageRatingAttachment,
-} from "@vibezone/database";
+import type { MessageRatingAttachment } from "@vibezone/database";
 import { generateId } from "ai";
 import { and, asc, desc, eq, isNull, lte } from "drizzle-orm";
 import { z } from "zod";
@@ -260,9 +257,10 @@ export const messagesRouter = t.router({
           ...msg.metadata,
           custom: {
             ...msg.metadata?.custom,
-            endTime: msg.createdAt
-              ? new Date(msg.createdAt).getTime()
-              : Date.now(),
+            endTime:
+              (msg.metadata?.custom?.endTime as number) ??
+              msg.createdAt?.getTime() ??
+              Date.now(),
           },
         },
         status: msg.status,
@@ -496,14 +494,12 @@ export const messagesRouter = t.router({
         });
       }
 
-      const existingMetadata: MessageMetadata = messageRecord.metadata ?? {
-        custom: {},
-      };
+      const existingMetadata = messageRecord.metadata;
 
-      const nextMetadata: MessageMetadata = {
+      const nextMetadata = {
         ...existingMetadata,
         custom: {
-          ...existingMetadata.custom,
+          ...existingMetadata?.custom,
         },
       };
 
