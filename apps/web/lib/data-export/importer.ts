@@ -1,5 +1,7 @@
+import type { MessageMetadata } from "@vibezone/database";
 import { eq, inArray, sql } from "drizzle-orm";
 import JSZip from "jszip";
+import { getTranslations } from "next-intl/server";
 import { randomUUID } from "node:crypto";
 import { UTApi } from "uploadthing/server";
 
@@ -14,15 +16,16 @@ import {
   type NewThread,
 } from "@/db";
 import { DEFAULT_PROJECT_COLOR } from "@/lib/constants";
+import type { AppLocale } from "@/lib/i18n/locales";
 import type {
   Conversation,
   ConversationNodeMessageContent,
 } from "@/lib/openai/export-types";
-import type { MessageMetadata } from "@vibezone/database";
 
 interface ImportStreamOptions {
   userId: string;
   file: File;
+  locale: AppLocale;
 }
 
 type ProgressType = "progress" | "complete" | "error";
@@ -80,7 +83,11 @@ const fallbackModelId = "openai/gpt-5";
 
 const encoder = new TextEncoder();
 
-export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
+export const createImportStream = ({
+  userId,
+  file,
+  locale,
+}: ImportStreamOptions) => {
   return new ReadableStream<Uint8Array>({
     async start(controller) {
       const push = (payload: ImportProgressPayload) => {
@@ -144,6 +151,7 @@ export const createImportStream = ({ userId, file }: ImportStreamOptions) => {
 
         await importConversations({
           userId,
+          locale,
           conversations,
           attachments,
           push,
@@ -562,38 +570,73 @@ function getAssetPointer(part: unknown): string | null {
   return null;
 }
 
-async function ensureGeneralProject(userId: string) {
-  const existing = await db.query.projects.findFirst({
-    where: eq(projects.id, userId),
-  });
-
-  if (existing && !existing.deletedAt) {
-    return existing.id;
-  }
-
+async function createImportProject({
+  userId,
+  locale,
+}: {
+  userId: string;
+  locale: AppLocale;
+}) {
   const now = new Date();
-  await db
+  const existingProjectNames = await db
+    .select({ name: projects.name })
+    .from(projects)
+    .where(eq(projects.userId, userId));
+  const existingNames = new Set(
+    existingProjectNames
+      .map((project) => project.name)
+      .filter((name): name is string => typeof name === "string")
+  );
+  const name = await generateProjectName({ locale, date: now, existingNames });
+
+  const [project] = await db
     .insert(projects)
     .values({
-      id: userId,
       userId,
-      name: "General",
+      name,
       color: DEFAULT_PROJECT_COLOR,
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
     })
-    .onConflictDoUpdate({
-      target: projects.id,
-      set: {
-        name: "General",
-        color: DEFAULT_PROJECT_COLOR,
-        deletedAt: null,
-        updatedAt: now,
-      },
-    });
+    .returning({ id: projects.id });
 
-  return userId;
+  if (!project) {
+    throw new Error("Failed to create project for import");
+  }
+
+  return project.id;
+}
+
+interface GenerateProjectNameInput {
+  locale: AppLocale;
+  date: Date;
+  existingNames: Set<string>;
+}
+
+async function generateProjectName({
+  locale,
+  date,
+  existingNames,
+}: GenerateProjectNameInput): Promise<string> {
+  const formatter = new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const formattedDate = formatter.format(date);
+
+  const t = await getTranslations({ locale, namespace: "DataImport" });
+  const baseName = t("projectName", { date: formattedDate });
+
+  let attempt = 0;
+  let candidate = baseName;
+
+  while (existingNames.has(candidate)) {
+    attempt += 1;
+    candidate = `${baseName} (${attempt})`;
+  }
+
+  return candidate;
 }
 
 function selectModelId(slug: string | null): string {
@@ -675,11 +718,13 @@ function determineMimeFromFilename(filename: string) {
 }
 async function importConversations({
   userId,
+  locale,
   conversations,
   attachments,
   push,
 }: {
   userId: string;
+  locale: AppLocale;
   conversations: Conversation[];
   attachments: Map<string, AttachmentEntry>;
   push: (payload: ImportProgressPayload) => void;
@@ -689,7 +734,7 @@ async function importConversations({
   }
 
   const utapi = new UTApi();
-  const projectId = await ensureGeneralProject(userId);
+  const projectId = await createImportProject({ userId, locale });
 
   const contexts: Array<{
     conversation: Conversation;
@@ -974,7 +1019,7 @@ async function insertChatsInBatches(
             title: sql`excluded.title`,
             lastMessageAt: sql`excluded.last_message_at`,
             deletedAt: null,
-            projectId: records[0]?.projectId, // all chats are imported into the default project
+            projectId: records[0]?.projectId, // chats in the batch share the import project
           },
         }),
   });
