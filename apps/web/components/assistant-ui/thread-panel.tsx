@@ -1,5 +1,25 @@
 "use client";
 
+import {
+  AssistantRuntimeProvider,
+  type AssistantRuntime,
+} from "@assistant-ui/react";
+import type { MessageMetadata } from "@vibezone/database";
+import type { ChatOnFinishCallback, UIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
+import { Maximize2, Minimize2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type FC,
+  type ReactNode,
+} from "react";
+import { toast } from "sonner";
+import z from "zod";
+
 import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAnonQuotaSetter } from "@/hooks/use-anon-quota";
@@ -14,7 +34,6 @@ import {
 } from "@/hooks/use-captcha";
 import { usePanelState } from "@/hooks/use-panels";
 import { useStableValue } from "@/hooks/use-stable-value";
-import type { FinishCallbackOptions } from "@/hooks/use-thread-runtime";
 import { useThreadRuntime } from "@/hooks/use-thread-runtime";
 import { useThreadRuntimeControllerSetter } from "@/hooks/use-thread-store";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
@@ -26,24 +45,6 @@ import {
 import { safeParse } from "@/lib/json";
 import { generateFingerprint } from "@/lib/limiting";
 import type { PanelConfig } from "@/store/panels";
-import {
-  AssistantRuntimeProvider,
-  type AssistantRuntime,
-} from "@assistant-ui/react";
-import type { MessageMetadata } from "@vibezone/database";
-import { DefaultChatTransport } from "ai";
-import { Maximize2, Minimize2 } from "lucide-react";
-import { useTranslations } from "next-intl";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  type FC,
-  type ReactNode,
-} from "react";
-import { toast } from "sonner";
-import z from "zod";
 import { PanelHeader } from "./response-panel-header";
 
 interface ResponsePanelProps {
@@ -136,13 +137,13 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
   const saveAssistantMessage = useAssistantMessageSaver();
   const saveAssistantMessageRef = useStableValue(saveAssistantMessage);
 
-  const handleModelFinish = ({
+  const handleModelFinish: ChatOnFinishCallback<UIMessage> = ({
     message,
     messages,
     isError,
     isDisconnect,
     isAbort,
-  }: FinishCallbackOptions) => {
+  }) => {
     const saveAssistantMessage = saveAssistantMessageRef.current;
     const metadata = message.metadata as MessageMetadata;
     const modelId = metadata?.custom?.modelId ?? panelGlobalContext[id]?.model;

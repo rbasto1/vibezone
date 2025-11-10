@@ -21,19 +21,11 @@ import { startTransition, useEffect } from "react";
 import { useAttachmentAdapter } from "./use-attachments";
 import { useThreadMessages } from "./use-thread-store";
 
-export interface FinishCallbackOptions {
-  message: UIMessage;
-  messages: UIMessage[];
-  isError: boolean;
-  isDisconnect: boolean;
-  isAbort: boolean;
-}
-
 interface UseThreadRuntimeParams {
   threadId: string;
   initialMessages?: ThreadMessageLike[];
   transport: DefaultChatTransport<UIMessage>;
-  onFinish?: (options: FinishCallbackOptions) => void;
+  onFinish?: ChatOnFinishCallback<UIMessage>;
   onError?: ChatOnErrorCallback;
 }
 
@@ -53,7 +45,7 @@ export const useThreadRuntime = ({
       messages.length ? messages : (initialMessages ?? [])
     ),
     transport,
-    onFinish: onFinish as ChatOnFinishCallback<UIMessage>,
+    onFinish,
     onError,
   });
 
