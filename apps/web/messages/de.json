@@ -3,6 +3,9 @@
     "system": "Sie sind ein hilfreicher Assistent. Der Benutzer spricht Deutsch.",
     "generalProjectName": "Allgemein"
   },
+  "DataImport": {
+    "projectName": "Importiert am {date}"
+  },
   "AnonQuota": {
     "mobileChip": "{remaining} von {limit}",
     "mobileBanner": "{remaining} von {limit} kostenlose Nachrichten übrig",

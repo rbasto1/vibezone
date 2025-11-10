@@ -5,7 +5,7 @@
 ## Bugs
 
 - [ ] Stopping works but state stay as running?
-- [ ] Not saving last few tokens of response
+- [x] Not saving last few tokens of response
 - [ ] Switching models with attachments is causing issues with the other models
 - [x] Reloading chats make reasoning not render (but is loaded)
 - [x] Reasoning rendering is too slow
@@ -16,7 +16,7 @@
 
 ## Improvements
 
-- [ ] Import data creates a new project "Imported"
+- [x] Import data creates a new project "Imported"
 - [x] Store and display which model generated each response
 - [x] Store and display how long it took to generate each response
 - [x] Copy messages from other threads when adding new AI
