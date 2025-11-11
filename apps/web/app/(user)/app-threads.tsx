@@ -7,6 +7,7 @@ import { type FC, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
+import { CopyConversationModal } from "@/components/assistant-ui/copy-conversation-modal";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ModelDropdownContents } from "@/components/assistant-ui/model-dropdown-contents";
 import { ThreadPanel } from "@/components/assistant-ui/thread-panel";
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/components/ui/utils";
+import { useAddAi } from "@/hooks/use-add-ai";
 import { useCurrentChatValue } from "@/hooks/use-chat";
 import { useFocusPanelIdValue } from "@/hooks/use-focus-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -47,10 +49,9 @@ import { AppFooter } from "./app-footer";
 
 interface AppThreadsProps {
   hide: boolean;
-  onAddPanel?: (id: string) => void;
 }
 
-export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
+export const AppThreads: FC<AppThreadsProps> = ({ hide }) => {
   const t = useTranslations("Assistant");
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelsState = usePanelsStateValue();
@@ -71,6 +72,16 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
     : null;
   const modelPicker = uiState.modelPicker;
   const panelActionsT = useTranslations("ResponsePanelHeader");
+  const removeFocus = focusPanelId
+    ? () => setUIState({ focusPanelId: undefined })
+    : undefined;
+  const {
+    handleAddModelSelection,
+    pendingPanel,
+    copyOptions,
+    handleCopySelect,
+    handleCopyCancel,
+  } = useAddAi({ onAddPanel: removeFocus });
 
   const panelCount = Math.min(Math.max(panelsConfig.length, 1), MAX_PANELS);
   const showTabs = isMobile && panelsConfig.length > 1;
@@ -150,7 +161,7 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
                 hasMessages: false,
               },
             }));
-            onAddPanel?.(newPanelId);
+            removeFocus?.();
             return [newPanel];
           }
 
@@ -245,7 +256,7 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
           return next;
         });
 
-        onAddPanel?.(newPanelId);
+        removeFocus?.();
         setUIState((prev) => ({ ...prev, modelPicker: null }));
 
         if (initialMessages?.length && currentChatId) {
@@ -265,6 +276,11 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
 
         return;
       }
+
+      if (picker.type === "add-panel") {
+        handleAddModelSelection(providerId, modelId);
+        return;
+      }
     },
     [
       cloneThreadMessages,
@@ -272,7 +288,7 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
       duplicateThreadMutation,
       getPanelMessages,
       modelPicker,
-      onAddPanel,
+      removeFocus,
       panelActionsT,
       panelsConfig,
       saveLastModels,
@@ -280,6 +296,7 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
       setPanelsState,
       setThreadMessages,
       setUIState,
+      handleAddModelSelection,
     ]
   );
 
@@ -423,7 +440,7 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
         )}
         {/* Global composer below panels */}
         <GlobalComposer
-          onAddPanel={onAddPanel}
+          onAddPanel={removeFocus}
           footerHidden={sessionHideLegal}
         />
       </div>
@@ -466,6 +483,13 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
             />
           </DialogContent>
         </Dialog>
+      )}
+      {pendingPanel && (
+        <CopyConversationModal
+          options={copyOptions}
+          onSelect={handleCopySelect}
+          onCancel={handleCopyCancel}
+        />
       )}
       <AppFooter
         isLoggedIn={!!user}

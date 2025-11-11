@@ -14,14 +14,13 @@ import { useTranslations } from "next-intl";
 import { useCallback, useState, type FC } from "react";
 
 interface GlobalComposerSettingsMenuProps {
-  panelCount: number;
   onAddPanel?: (id: string) => void;
   className?: string;
 }
 
 export const GlobalComposerSettingsMenu: FC<
   GlobalComposerSettingsMenuProps
-> = ({ panelCount, onAddPanel, className }) => {
+> = ({ onAddPanel, className }) => {
   const t = useTranslations("GlobalComposer");
   const [open, setOpen] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
@@ -65,7 +64,7 @@ export const GlobalComposerSettingsMenu: FC<
         className="flex min-w-0 flex-col items-center gap-1.5 overflow-visible p-2"
       >
         <ReasoningSliderTrigger />
-        <AddAiButton panelCount={panelCount} onAddPanel={handleAddPanel} />
+        <AddAiButton onAddPanel={handleAddPanel} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

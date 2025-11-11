@@ -13,6 +13,9 @@ export type ModelPickerState =
   | {
       type: "thread-duplicate";
       panelId: string;
+    }
+  | {
+      type: "add-panel";
     };
 
 export interface UIState {
@@ -24,6 +27,13 @@ export interface UIState {
   createProject: boolean;
   focusPanelId?: string;
   modelPicker?: ModelPickerState | null;
+  addPanelPending?: PendingAddPanel | null;
+}
+
+export interface PendingAddPanel {
+  id: string;
+  providerId: string;
+  modelId: string;
 }
 
 // Global UI state atom
@@ -32,6 +42,7 @@ const uiStateAtom = atom<UIState>({
   panelOpen: null,
   createProject: false,
   modelPicker: null,
+  addPanelPending: null,
 });
 
 export const useUIStateValue = () => {

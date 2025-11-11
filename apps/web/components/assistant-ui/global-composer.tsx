@@ -323,10 +323,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({
             <GlobalComposerProjectButton />
           </div>
           <div className="shrink-0">
-            <GlobalComposerSettingsMenu
-              panelCount={panels.length}
-              onAddPanel={onAddPanel}
-            />
+            <GlobalComposerSettingsMenu onAddPanel={onAddPanel} />
           </div>
           {onStopAll ? (
             <StopButton

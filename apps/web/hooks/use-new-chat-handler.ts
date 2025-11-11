@@ -2,7 +2,6 @@ import { generateId } from "ai";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 
-import { useNewChat } from "@/hooks/use-chat";
 import { useInstructionsValue } from "@/hooks/use-instructions";
 import {
   usePanelsConfigSetter,
@@ -18,6 +17,7 @@ import { usePendingUserMessagesClear } from "@/store/pending-user-messages";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import { useSetAtom } from "jotai";
+import { useNewChat } from "./use-chat";
 
 interface NewChatOptions {
   projectId?: string | null;
@@ -81,7 +81,11 @@ export function useNewChatHandler() {
       );
       setThreadMessages(nextThreadMessages);
 
-      setUIState({ panelOpen: null, suggestionsUsed: false, modelPicker: null });
+      setUIState({
+        panelOpen: null,
+        suggestionsUsed: false,
+        modelPicker: null,
+      });
 
       return chat;
     },

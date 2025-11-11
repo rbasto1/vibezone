@@ -1,15 +1,16 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { useSidebar } from "@/components/ui/sidebar/sidebar-context";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useNewChatHandler } from "@/hooks/use-new-chat-handler";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
-import { requestAddAiPanel } from "@/lib/add-ai-trigger";
 import { useOpenSignIn, useUser } from "@/lib/auth-client";
-import { useTranslations } from "next-intl";
+import { useAddAi } from "./use-add-ai";
+import { useNewChatHandler } from "./use-new-chat-handler";
+import { useStableValue } from "./use-stable-value";
 
 const SHORTCUT_KEYS = {
   newChat: "o",
@@ -25,7 +26,7 @@ const shouldHandleEvent = (event: KeyboardEvent) => {
   return event.metaKey || event.ctrlKey;
 };
 
-export const GlobalShortcuts = () => {
+export const useGlobalShortcuts = () => {
   const isMobile = useIsMobile();
   const createChat = useNewChatHandler();
   const setUIState = useUIStateSetter();
@@ -34,9 +35,26 @@ export const GlobalShortcuts = () => {
   const isLoggedIn = Boolean(user);
   const openSignIn = useOpenSignIn();
   const t = useTranslations("ThreadList");
+  const { openAddAiSelector } = useAddAi();
+
+  const controls = useStableValue({
+    createChat,
+    isLoggedIn,
+    openAddAiSelector,
+    openSignIn,
+    toggleSidebar,
+  });
 
   useEffect(() => {
     if (isMobile) return;
+
+    const {
+      createChat,
+      isLoggedIn,
+      openAddAiSelector,
+      openSignIn,
+      toggleSidebar,
+    } = controls.current;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!shouldHandleEvent(event)) return;
@@ -70,13 +88,11 @@ export const GlobalShortcuts = () => {
 
       if (key === SHORTCUT_KEYS.addAi) {
         event.preventDefault();
-        requestAddAiPanel();
+        openAddAiSelector({ showLimitToast: true });
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [createChat, isLoggedIn, isMobile, openSignIn, setUIState, t, toggleSidebar]);
-
-  return null;
+  }, [controls, setUIState, isMobile, t]);
 };
