@@ -5,6 +5,7 @@ import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import type { FC } from "react";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { GlobalShortcuts } from "@/components/assistant-ui/global-shortcuts";
 import { ModelInfoModal } from "@/components/assistant-ui/model-info-modal";
 import { ProjectDeleteModal } from "@/components/assistant-ui/project-delete-modal";
 import { ProjectModal } from "@/components/assistant-ui/project-modal";
@@ -24,6 +25,7 @@ const Assistant: FC = () => {
 
   return (
     <SidebarProvider>
+      <GlobalShortcuts />
       <div className="flex h-dvh w-full">
         <AssistantRuntimeProvider runtime={sidebarRuntime}>
           <AppSidebar />

@@ -168,6 +168,7 @@
     "menuAriaLabel": "Open thread options",
     "menuChangeModel": "Change AI going forward",
     "menuModelInfo": "Model information",
+    "menuStartNewChat": "Start new chat",
     "menuFavorite": "Add model to favorites",
     "menuUnfavorite": "Remove model from favorites",
     "menuMoveThread": "Move thread to new chat",

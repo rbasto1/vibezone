@@ -168,6 +168,7 @@
     "menuAriaLabel": "Abrir opções da conversa",
     "menuChangeModel": "Trocar IA a partir de agora",
     "menuModelInfo": "Sobre esse modelo",
+    "menuStartNewChat": "Iniciar novo chat",
     "menuFavorite": "Adicionar modelo aos favoritos",
     "menuUnfavorite": "Remover modelo dos favoritos",
     "menuMoveThread": "Mover conversa para um novo chat",
