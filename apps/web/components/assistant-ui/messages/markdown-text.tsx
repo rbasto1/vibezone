@@ -14,7 +14,7 @@ import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
-import { TooltipIconButton } from "@/components/assistant-ui/messages/tooltip-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { cn } from "@/components/ui/utils";
 import { SyntaxHighlighter } from "../shiki-highlighter";
 

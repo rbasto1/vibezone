@@ -1,4 +1,4 @@
-import type { CapabilityOptionId } from "@/components/assistant-ui/model-dropdown-constants";
+import type { CapabilityOptionId } from "@/components/assistant-ui/model-selector/model-dropdown-constants";
 import type { ProviderTier } from "@/db";
 import { atom } from "jotai";
 

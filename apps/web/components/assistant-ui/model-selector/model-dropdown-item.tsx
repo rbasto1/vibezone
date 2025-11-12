@@ -11,14 +11,14 @@ import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { InfoIcon, ShieldAlertIcon, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { capabilityOptions } from "./model-dropdown-constants";
 import {
   ExperimentalTag,
   FreeTag,
   IncludedTag,
   NewTag,
   PremiumTag,
-} from "./tags";
+} from "../tags";
+import { capabilityOptions } from "./model-dropdown-constants";
 
 interface ModelDropdownItemProps {
   model: GetModelsListReturn["models"][number];

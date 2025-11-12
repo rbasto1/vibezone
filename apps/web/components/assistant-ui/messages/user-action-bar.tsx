@@ -2,7 +2,7 @@ import { ActionBarPrimitive } from "@assistant-ui/react";
 import { PencilIcon } from "lucide-react";
 import type { FC } from "react";
 
-import { TooltipIconButton } from "./tooltip-icon-button";
+import { TooltipIconButton } from "../../ui/tooltip-icon-button";
 
 export const UserActionBar: FC = () => {
   return (

@@ -1,11 +1,9 @@
 import {
-  Brain,
-  Crown,
-  Eye,
-  Image as ImageIcon,
-  Mountain,
-  Wand2,
-  Wrench,
+  BrainIcon,
+  EyeIcon,
+  MountainIcon,
+  TrophyIcon,
+  Wand2Icon,
 } from "lucide-react";
 import { FaRegFilePdf } from "react-icons/fa";
 
@@ -14,27 +12,25 @@ export const tierOptions = [
   {
     id: "leaders" as const,
     labelKey: "tiers.leaders" as const,
-    Icon: Crown,
+    Icon: TrophyIcon,
     color: "text-yellow-400 dark:text-yellow-300",
   },
   {
     id: "challengers" as const,
     labelKey: "tiers.challengers" as const,
-    Icon: Mountain,
-    color: "text-foreground/80",
+    Icon: MountainIcon,
   },
   {
     id: "specialists" as const,
     labelKey: "tiers.specialists" as const,
-    Icon: Wand2,
-    color: "text-foreground/80",
+    Icon: Wand2Icon,
   },
 ];
 export const capabilityOptions = [
   {
     id: "capVision" as const,
     labelKey: "capabilities.vision" as const,
-    Icon: Eye,
+    Icon: EyeIcon,
     color: "text-sky-600 dark:text-sky-400",
   },
   {
@@ -46,21 +42,21 @@ export const capabilityOptions = [
   {
     id: "capReason" as const,
     labelKey: "capabilities.reasoning" as const,
-    Icon: Brain,
+    Icon: BrainIcon,
     color: "text-violet-600 dark:text-violet-400",
   },
-  {
-    id: "capImageGen" as const,
-    labelKey: "capabilities.imageGeneration" as const,
-    Icon: ImageIcon,
-    color: "text-pink-600 dark:text-pink-400",
-  },
-  {
-    id: "capTools" as const,
-    labelKey: "capabilities.tools" as const,
-    Icon: Wrench,
-    color: "text-zinc-600 dark:text-zinc-400",
-  },
+  // {
+  //   id: "capImageGen" as const,
+  //   labelKey: "capabilities.imageGeneration" as const,
+  //   Icon: ImageIcon,
+  //   color: "text-pink-600 dark:text-pink-400",
+  // },
+  // {
+  //   id: "capTools" as const,
+  //   labelKey: "capabilities.tools" as const,
+  //   Icon: Wrench,
+  //   color: "text-zinc-600 dark:text-zinc-400",
+  // },
 ];
 
 export type TierOptionId = (typeof tierOptions)[number]["id"];
