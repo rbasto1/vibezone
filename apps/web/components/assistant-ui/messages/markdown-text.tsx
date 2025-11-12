@@ -41,7 +41,7 @@ const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
 
   const languageLabel = language !== "unknown" ? language : "code block";
   return (
-    <div className="flex items-center justify-between rounded-t-lg bg-zinc-900 px-2 py-1 text-sm font-semibold text-white">
+    <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-lg bg-zinc-900 px-2 py-1 text-sm font-semibold text-white">
       <span className="lowercase [&>span]:text-xs">{languageLabel}</span>
       <TooltipIconButton tooltip="Copy" onClick={onCopy}>
         {!isCopied ? <CopyIcon /> : <CheckIcon />}

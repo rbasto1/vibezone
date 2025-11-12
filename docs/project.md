@@ -5,25 +5,13 @@
 ## Bugs
 
 - [ ] Stopping works but state stay as running?
-- [x] Not saving last few tokens of response
 - [ ] Switching models with attachments is causing issues with the other models
-- [x] Reloading chats make reasoning not render (but is loaded)
-- [x] Reasoning rendering is too slow
 - [ ] Reloading chats loses the multiple generations (refreshes/branching)
-- [x] Some threads not saving?
-- [x] Sync deleted/added threads with backend
-- [x] Mobile: no side menu open handle
 - [ ] Regenerate: stop button not appearing
 
 ## Improvements
 
-- [ ] Add "copy code" as floating button when scrolled down
-- [x] Import data creates a new project "Imported"
-- [x] Store and display which model generated each response
-- [x] Store and display how long it took to generate each response
-- [x] Copy messages from other threads when adding new AI
-- [x] Add "split to new chat" button
-- [x] In full-screen mode, allow switching threads
+- [x] Add "copy code" as floating button when scrolled down
 - [ ] Add analytics (Posthog?)
 - [ ] Add Python project to calculate usage of non-OpenRouter models
 - [ ] Add auto-translation button to admin (model descriptions, news)
@@ -32,6 +20,18 @@
 
 ## MVP (done)
 
+- [x] Import data creates a new project "Imported"
+- [x] Store and display which model generated each response
+- [x] Store and display how long it took to generate each response
+- [x] Copy messages from other threads when adding new AI
+- [x] Add "split to new chat" button
+- [x] In full-screen mode, allow switching threads
+- [x] Not saving last few tokens of response
+- [x] Reloading chats make reasoning not render (but is loaded)
+- [x] Reasoning rendering is too slow
+- [x] Some threads not saving?
+- [x] Sync deleted/added threads with backend
+- [x] Mobile: no side menu open handle
 - [x] Paid plans: Clerk
 - [x] Replace AssistantCloud with ExternalStoreRuntime
 - [x] Bug: on mobile, closing the model details modal closes also the model selector
