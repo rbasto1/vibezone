@@ -67,11 +67,11 @@ export const AppChat: FC<AppChatProps> = ({ hide, focusPanelId }) => {
   return (
     <div
       className={cn(
-        "flex-1 overflow-hidden flex flex-col gap-2",
+        "flex flex-1 min-h-0 overflow-hidden flex-col gap-2",
         hide && "hidden"
       )}
     >
-      <div className="px-3 flex-1 flex flex-col gap-0">
+      <div className="px-3 flex-1 min-h-0 overflow-hidden flex flex-col gap-0">
         <div className="flex flex-col gap-1 flex-1 min-h-0">
           {showTabs && <MobileThreadTabButtons focusPanelId={focusPanelId} />}
           <div
@@ -154,7 +154,7 @@ export const AppChat: FC<AppChatProps> = ({ hide, focusPanelId }) => {
         </div>
       </div>
 
-      <div className="overflow-hidden sm:px-3 flex flex-col">
+      <div className="sm:px-3 flex flex-col shrink-0">
         <div className="mx-auto w-full max-w-3xl md:max-w-4xl lg:max-w-5xl flex flex-col gap-3 sm:px-3">
           <GlobalComposer
             onAddPanel={removeFocus}
