@@ -4,6 +4,7 @@ import {
   ChevronDownIcon,
   FolderIcon,
   FolderPlusIcon,
+  MessageCirclePlusIcon,
   MoreVerticalIcon,
   Trash2Icon,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/components/ui/utils";
+import { useNewChatHandler } from "@/hooks/use-new-chat-handler";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import type { ProjectConfig } from "@/store/projects";
 
@@ -37,6 +39,7 @@ export const ThreadListProjectHeader: FC<ThreadListProjectHeaderProps> = ({
 }) => {
   const t = useTranslations("ThreadList");
   const setUIState = useUIStateSetter();
+  const handleNewChat = useNewChatHandler();
 
   const handleEditProject = () => {
     setUIState({ editProject: project });
@@ -85,6 +88,12 @@ export const ThreadListProjectHeader: FC<ThreadListProjectHeaderProps> = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
+          <DropdownMenuItem
+            onClick={() => handleNewChat({ projectId: project.id })}
+          >
+            <MessageCirclePlusIcon className="mr-2 h-4 w-4" />
+            {t("projectMenu.newChat")}
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleEditProject}>
             <FolderIcon className="mr-2 h-4 w-4" />
             {t("projectMenu.edit")}

@@ -41,6 +41,7 @@ export const preferences = pgTable("preferences", {
 
   // User preferences
   lastModels: text("last_models").array(),
+  lastProjectId: text("last_project_id"),
   favoriteModels: text("favorite_models").array(),
   preferenceAutoScroll: boolean("preference_auto_scroll")
     .default(false)

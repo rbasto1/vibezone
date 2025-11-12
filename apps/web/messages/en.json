@@ -243,6 +243,7 @@
     },
     "projectMenu": {
       "edit": "Edit project",
+      "newChat": "New chat",
       "create": "New project",
       "delete": "Delete project",
       "deleteDisabled": "You cannot delete the General project"

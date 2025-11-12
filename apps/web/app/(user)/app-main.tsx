@@ -21,6 +21,7 @@ import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePanelsConfig, usePanelsStateSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
+import { useSaveLastProject } from "@/hooks/use-save-last-project";
 import { useUIState, useUIStateValue } from "@/hooks/use-ui-state";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId, getNextThreadOrderFromExisting } from "@/lib/id";
@@ -28,7 +29,7 @@ import { trpc } from "@/lib/trpc/client";
 import type { PanelConfig } from "@/store/panels";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import type { ThreadMessageLike } from "@assistant-ui/react";
-import { startTransition, type FC } from "react";
+import { startTransition, useEffect, useRef, type FC } from "react";
 import { AppChat } from "./app-chat";
 import PreferencesPage from "./preferences/tabs";
 
@@ -42,6 +43,8 @@ export const AppMain: FC = () => {
   useGlobalShortcuts();
 
   const saveLastModels = useSaveLastModels();
+  const saveLastProject = useSaveLastProject();
+  const lastSavedProjectIdRef = useRef<string | null | undefined>(undefined);
   const [threadMessages, setThreadMessages] = useAtom(threadMessagesAtom);
   const duplicateThreadMutation = trpc.messages.duplicateThread.useMutation();
   const currentChat = useCurrentChatValue();
@@ -60,6 +63,15 @@ export const AppMain: FC = () => {
     handleCopySelect,
     handleCopyCancel,
   } = useAddAi({ onAddPanel: removeFocus });
+
+  useEffect(() => {
+    const projectId = currentChat.projectId ?? null;
+    if (lastSavedProjectIdRef.current === projectId) {
+      return;
+    }
+    lastSavedProjectIdRef.current = projectId;
+    saveLastProject(projectId);
+  }, [currentChat.projectId, saveLastProject]);
 
   const handleModelPickerClose = () =>
     setUIState((prev) => ({ ...prev, modelPicker: null }));
