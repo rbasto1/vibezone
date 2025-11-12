@@ -102,10 +102,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     projectsInitialValue.find((project) => project.isDefault)?.id ??
     projectsInitialValue[0]?.id ??
     null;
-  const initialPrompt = composeInstructionPrompt(
+  const initialPromptResult = composeInstructionPrompt(
     baseSystemPrompt,
     instructionsInitialValue,
-    defaultProjectId
+    defaultProjectId,
+    projectsInitialValue
   );
 
   const initialPanels = modelListForPanels.map(
@@ -113,7 +114,10 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       id: generateThreadId(order),
       provider: r.providerId,
       model: r.id,
-      initialMessages: buildInitialMessages(initialPrompt),
+      initialMessages: buildInitialMessages(
+        initialPromptResult.prompt,
+        initialPromptResult.instructions
+      ),
     })
   );
 

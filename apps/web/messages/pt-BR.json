@@ -199,6 +199,12 @@
     "signInButton": "Fazer login",
     "genericTitle": "Algo deu errado"
   },
+  "ThreadInstructions": {
+    "systemMessage": "Mensagem do sistema",
+    "viewInstruction": "Ver instrução \"{title}\"",
+    "viewSystemMessage": "Ver mensagem do sistema",
+    "fallbackTitle": "Instrução"
+  },
   "SearchPanel": {
     "title": "Pesquisar chats",
     "description": "Encontre conversas rapidamente pesquisando títulos e mensagens.",

@@ -8,6 +8,7 @@ import { AssistantMessage } from "../messages/assistant-message";
 import { UserMessage } from "../messages/user-message";
 import { ThreadError } from "./thread-error";
 import { ThreadIfEmpty } from "./thread-if-empty";
+import { ThreadInstructions } from "./thread-instructions";
 import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";
 import { ThreadWelcome } from "./thread-welcome";
 
@@ -41,6 +42,7 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
         className="relative flex min-w-0 flex-1 flex-col gap-6 overflow-y-scroll pt-12"
         autoScroll={autoScroll}
       >
+        <ThreadInstructions threadId={id} />
         <ThreadIfEmpty empty>
           <ThreadWelcome />
         </ThreadIfEmpty>

@@ -199,6 +199,12 @@
     "signInButton": "Sign in",
     "genericTitle": "Something went wrong"
   },
+  "ThreadInstructions": {
+    "systemMessage": "System Message",
+    "viewInstruction": "View instruction \"{title}\"",
+    "viewSystemMessage": "View system message",
+    "fallbackTitle": "Instruction"
+  },
   "SearchPanel": {
     "title": "Search chats",
     "description": "Find conversations quickly by searching titles and messages.",

@@ -1,12 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Instruction } from "@/components/ui/instruction";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { cn } from "@/components/ui/utils";
 import type { InstructionConfig } from "@/store/instructions";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, PencilIcon, Trash2 } from "lucide-react";
+import { AsteriskIcon, GripVertical, PencilIcon, Trash2 } from "lucide-react";
 import type { FC } from "react";
 
 interface InstructionItemProps {
@@ -67,7 +68,9 @@ export const InstructionItem: FC<InstructionItemProps> = ({
                     className="h-2 w-2 flex-none rounded-full"
                     style={{ backgroundColor: projectColor }}
                   />
-                ) : null}
+                ) : (
+                  <AsteriskIcon className="size-3.5 -mr-1" />
+                )}
                 <span className="truncate">{projectLabel}</span>
               </div>
             </div>
@@ -78,7 +81,6 @@ export const InstructionItem: FC<InstructionItemProps> = ({
                 label="Toggle instruction"
               />
               <Button
-                type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => onEdit(instruction.id)}
@@ -87,7 +89,6 @@ export const InstructionItem: FC<InstructionItemProps> = ({
                 <PencilIcon className="h-4 w-4" />
               </Button>
               <Button
-                type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => onDelete(instruction.id)}
@@ -97,9 +98,7 @@ export const InstructionItem: FC<InstructionItemProps> = ({
               </Button>
             </div>
           </div>
-          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-            {instruction.content}
-          </p>
+          <Instruction content={instruction.content} />
         </div>
       </div>
     </div>
