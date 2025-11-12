@@ -217,7 +217,11 @@ export const AppMain: FC = () => {
               if (!open) handleModelPickerClose();
             }}
           >
-            <SheetContent side="bottom" className="h-dvh w-screen gap-0 p-0">
+            <SheetContent
+              side="bottom"
+              className="h-dvh w-screen gap-0 p-0"
+              onOpenAutoFocus={(event) => event.preventDefault()}
+            >
               <ModelDropdownContents
                 onSelect={handleModelPickerSelect}
                 currentModelId={currentModelIdForPicker}
@@ -233,7 +237,10 @@ export const AppMain: FC = () => {
               if (!open) handleModelPickerClose();
             }}
           >
-            <DialogContent className="max-w-[min(1200px,95vw)] w-[min(1200px,95vw)] h-[min(85vh,720px)] p-0 overflow-hidden">
+            <DialogContent
+              className="max-w-[min(1200px,95vw)] w-[min(1200px,95vw)] h-[min(85vh,720px)] p-0 overflow-hidden"
+              onOpenAutoFocus={(event) => event.preventDefault()}
+            >
               <VisuallyHidden>
                 <DialogHeader>
                   <DialogTitle aria-label="Choose Model">
