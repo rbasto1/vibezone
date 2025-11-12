@@ -11,6 +11,7 @@
 
 ## Improvements
 
+- [ ] Add "new chat" from the Project item dropdown menu
 - [x] Add "copy code" as floating button when scrolled down
 - [ ] Add analytics (Posthog?)
 - [ ] Add Python project to calculate usage of non-OpenRouter models

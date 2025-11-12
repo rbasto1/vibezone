@@ -50,7 +50,6 @@ export const GlobalComposerSettingsMenu: FC<
             className
           )}
           aria-label={t("settingsLabel")}
-          type="button"
         >
           <Settings2Icon className="h-4 w-4" />
         </Button>

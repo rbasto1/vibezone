@@ -165,7 +165,6 @@ ${formatModelNames(attachmentsCapabilities.pdf.blockingModels, t)}`;
     <Button
       variant="ghost"
       size="icon"
-      type="button"
       className={cn(
         "h-8 w-8 rounded-full text-xs font-semibold hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30",
         className

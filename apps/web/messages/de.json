@@ -199,6 +199,12 @@
     "signInButton": "Anmelden",
     "genericTitle": "Etwas ist schiefgelaufen"
   },
+  "ThreadInstructions": {
+    "systemMessage": "Systemnachricht",
+    "viewInstruction": "Anweisung \"{title}\" anzeigen",
+    "viewSystemMessage": "Systemnachricht anzeigen",
+    "fallbackTitle": "Anweisung"
+  },
   "SearchPanel": {
     "title": "Chats durchsuchen",
     "description": "Finde Unterhaltungen schnell, indem du Titel und Nachrichten durchsucht.",

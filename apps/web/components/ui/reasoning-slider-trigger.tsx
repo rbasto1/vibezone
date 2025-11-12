@@ -131,7 +131,6 @@ export const ReasoningSliderTrigger = () => {
       <TooltipTrigger asChild>
         <div ref={containerRef} className="relative">
           <Button
-            type="button"
             variant="ghost"
             size="icon"
             onClick={() => setShowReasoningSlider((prev) => !prev)}

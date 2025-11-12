@@ -137,7 +137,6 @@ const LocalesManagePageClient: NextPage = () => {
             <div className="flex justify-end">
               <Button
                 variant="destructive"
-                type="button"
                 onClick={async () => {
                   if (
                     !confirm(

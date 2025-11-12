@@ -91,7 +91,6 @@ const SyncResultModal = ({
             </p>
           </div>
           <Button
-            type="button"
             variant="ghost"
             size="icon"
             className="shrink-0"

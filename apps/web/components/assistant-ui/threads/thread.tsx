@@ -5,6 +5,7 @@ import { type FC, type PropsWithChildren, useMemo } from "react";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import type { PanelConfig } from "@/store/panels";
 import { AssistantMessage } from "../messages/assistant-message";
+import { SystemMessage } from "../messages/system-message";
 import { UserMessage } from "../messages/user-message";
 import { ThreadError } from "./thread-error";
 import { ThreadIfEmpty } from "./thread-if-empty";
@@ -23,6 +24,7 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
 
   const threadMessageComponents = useMemo(
     () => ({
+      SystemMessage,
       UserMessage: () => <UserMessage threadId={id} modelId={model} />,
       AssistantMessage,
     }),

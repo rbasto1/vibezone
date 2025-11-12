@@ -23,6 +23,7 @@ import {
 import type { InstructionConfig } from "@/store/instructions";
 import type { ProjectConfig } from "@/store/projects";
 import type { ThreadMessageLike } from "@assistant-ui/react";
+import type { SystemMessageInstruction } from "@vibezone/database";
 import type { User } from "@clerk/nextjs/server";
 
 export async function GetUserModels(userId: string | undefined) {
@@ -90,7 +91,8 @@ export function getDefaultModels() {
 }
 
 export const buildInitialMessages = (
-  prompt: string | null | undefined
+  prompt: string | null | undefined,
+  instructions?: SystemMessageInstruction[]
 ): ThreadMessageLike[] => {
   if (!prompt) return [];
   return [
@@ -104,7 +106,9 @@ export const buildInitialMessages = (
           text: prompt,
         },
       ],
-      metadata: { custom: {} },
+      metadata: {
+        custom: instructions?.length ? { instructions } : {},
+      },
     } satisfies ThreadMessageLike,
   ];
 };

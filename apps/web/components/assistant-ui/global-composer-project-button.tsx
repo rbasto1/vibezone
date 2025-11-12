@@ -9,8 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useChatActions } from "@/hooks/use-chat-actions";
 import { useCurrentChatSetter, useCurrentChatValue } from "@/hooks/use-chat";
+import { useChatActions } from "@/hooks/use-chat-actions";
 import { useProjectsValue } from "@/hooks/use-projects";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import type { ProjectConfig } from "@/store/projects";
@@ -64,7 +64,13 @@ export const GlobalComposerProjectButton: FC = () => {
         setPendingProjectId(null);
       }
     },
-    [currentChat.addedToList, currentChat.id, currentProject?.id, moveChat, setCurrentChat]
+    [
+      currentChat.addedToList,
+      currentChat.id,
+      currentProject?.id,
+      moveChat,
+      setCurrentChat,
+    ]
   );
 
   if (!currentProject) {
@@ -82,7 +88,6 @@ export const GlobalComposerProjectButton: FC = () => {
           className="h-8 gap-2 rounded-full border border-border/60 bg-background/60 px-2.5 text-sm font-medium text-foreground hover:bg-accent/40"
           aria-label={t("projectButtonLabel", { project: currentProject.name })}
           title={t("projectButtonLabel", { project: currentProject.name })}
-          type="button"
           aria-busy={isBusy}
         >
           <span
@@ -109,7 +114,9 @@ export const GlobalComposerProjectButton: FC = () => {
               setMenuOpen(false);
               void handleSelectProject(project);
             }}
-            disabled={pendingProjectId !== null && pendingProjectId !== project.id}
+            disabled={
+              pendingProjectId !== null && pendingProjectId !== project.id
+            }
           >
             <span
               aria-hidden="true"

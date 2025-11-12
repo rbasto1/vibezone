@@ -11,11 +11,15 @@ import {
 import { useProjectsValue } from "@/hooks/use-projects";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { generateThreadId } from "@/lib/id";
-import { composeInstructionPrompt } from "@/lib/instructions";
+import {
+  composeInstructionPrompt,
+  type InstructionPromptResult,
+} from "@/lib/instructions";
 import type { PanelConfig } from "@/store/panels";
 import { usePendingUserMessagesClear } from "@/store/pending-user-messages";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import type { ThreadMessageLike } from "@assistant-ui/react";
+import type { SystemMessageInstruction } from "@vibezone/database";
 import { useNewChat } from "./use-chat";
 import { useStableValue } from "./use-stable-value";
 import { useThreadRuntimeControllersValue } from "./use-thread-controllers";
@@ -67,10 +71,11 @@ export function useNewChatHandler() {
 
       const targetProjectId = targetProject?.id ?? options?.projectId ?? null;
 
-      const mergedPrompt = composeInstructionPrompt(
+      const promptResult = composeInstructionPrompt(
         baseSystemPrompt,
         instructions,
-        targetProjectId
+        targetProjectId,
+        projects
       );
 
       const chat = createNewChat(targetProjectId);
@@ -86,7 +91,10 @@ export function useNewChatHandler() {
       setPanelsConfig((config) =>
         config.map((panel, order) => {
           const id = generateThreadId(order);
-          const initialMessages = buildSystemMessages(mergedPrompt);
+          const initialMessages = buildSystemMessages(
+            promptResult.prompt,
+            promptResult.instructions
+          );
           nextThreadMessages[id] = initialMessages;
           return {
             id,
@@ -119,7 +127,8 @@ export function useNewChatHandler() {
 }
 
 const buildSystemMessages = (
-  systemPrompt: string | null
+  systemPrompt: InstructionPromptResult["prompt"],
+  instructions?: SystemMessageInstruction[]
 ): ThreadMessageLike[] => {
   if (!systemPrompt) return [];
   return [
@@ -133,7 +142,9 @@ const buildSystemMessages = (
           text: systemPrompt,
         },
       ],
-      metadata: { custom: {} },
+      metadata: {
+        custom: instructions?.length ? { instructions } : {},
+      },
     } satisfies ThreadMessageLike,
   ];
 };

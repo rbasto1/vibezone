@@ -266,7 +266,6 @@ const ProviderManagePageClient: NextPage = () => {
 
           return (
             <Button
-              type="button"
               variant="outline"
               className={cn(
                 "transition-colors",

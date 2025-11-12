@@ -13,10 +13,25 @@ export interface MessageMetadataAssistantUI {
   custom?: MetadataCustom;
 }
 
+export interface SystemMessageInstructionProjectSnapshot {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface SystemMessageInstruction {
+  id: string;
+  title: string;
+  contentStartAt: number;
+  contentLength: number;
+  project: SystemMessageInstructionProjectSnapshot | null;
+}
+
 export interface MetadataCustom {
   saved?: boolean;
   rate?: MessageRate;
   modelId?: string;
   startTime?: number;
   endTime?: number;
+  instructions?: SystemMessageInstruction[];
 }
