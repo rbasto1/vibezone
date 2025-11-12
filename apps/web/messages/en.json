@@ -95,6 +95,11 @@
       "file": "File"
     }
   },
+  "Message": {
+    "copy": "Copy",
+    "refresh": "Refresh",
+    "codeBlock": "code block"
+  },
   "ModelDropdown": {
     "tiers": {
       "leaders": "Leaders",

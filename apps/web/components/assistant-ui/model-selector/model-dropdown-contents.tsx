@@ -1,12 +1,11 @@
 "use client";
 
 import { useAtom } from "jotai";
-import { StarIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { ProviderIcon } from "@/components/ui/providers/provider";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { cn } from "@/components/ui/utils";
 import { useModelFavorites } from "@/hooks/use-model-favorites";
 import { useModelsValue } from "@/hooks/use-models";
@@ -23,6 +22,9 @@ import {
 import { ModelDropdownItem } from "./model-dropdown-item";
 import { ModelDropdownSearch } from "./model-dropdown-search";
 import { ModelDropdownSuggestionGroup } from "./model-dropdown-suggestion-group";
+import { ModelFavoriteButton } from "./model-favorite-button";
+import { RemovedFavorites } from "./removed-favorites";
+import { TierOptionButton } from "./tier-option-button";
 
 interface ModelDropdownContentsProps {
   onSelect: (providerId: string, modelId: string) => void;
@@ -450,194 +452,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   const effectiveSelectedSuggestionGroup =
     showFavoritesOnly || searchQuery.trim() ? null : selectedSuggestionGroup;
 
-  const renderFavoritesFilterButton = () => {
-    if (!showFavoritesToggle) {
-      return null;
-    }
-    return (
-      <Button
-        type="button"
-        variant={showFavoritesOnly ? "default" : "ghost"}
-        size="sm"
-        className={cn(
-          "h-8 w-8 p-0",
-          showFavoritesOnly
-            ? "bg-background text-yellow-500 shadow-sm"
-            : "text-muted-foreground hover:text-foreground"
-        )}
-        aria-pressed={showFavoritesOnly}
-        title={t("favoritesFilter")}
-        aria-label={t("favoritesFilter")}
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          toggleFavoritesOnly();
-        }}
-      >
-        <StarIcon
-          className={cn(
-            "h-4 w-4",
-            showFavoritesOnly ? "fill-current" : "fill-transparent"
-          )}
-        />
-      </Button>
-    );
-  };
-
-  const sheetFilters = (
-    <div className="mb-3 flex w-full flex-col gap-1 px-1">
-      <div className="flex w-full flex-wrap items-center gap-2 pr-6">
-        <div className="inline-flex flex-wrap items-center gap-1 rounded-md border bg-muted p-0.5">
-          {renderFavoritesFilterButton()}
-          {tierOptions.map(({ id, labelKey, Icon, color }) => {
-            const active = effectiveSelectedTier === id;
-            const label = t(labelKey);
-            return (
-              <button
-                key={id}
-                className={cn(
-                  "px-3 h-8 text-xs inline-flex items-center gap-1.5 rounded-[6px] cursor-pointer transition-colors",
-                  active ? "bg-background shadow-sm" : "text-foreground/80"
-                )}
-                data-active={active}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleTierSelect(id);
-                }}
-              >
-                <Icon className={cn("size-4", color)} />
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {suggestionGroups.length > 0 && (
-        <div className="flex w-full flex-wrap items-center gap-2">
-          {suggestionGroups.map((group) => (
-            <ModelDropdownSuggestionGroup
-              key={group.id}
-              group={group}
-              isActive={effectiveSelectedSuggestionGroup === group.id}
-              onSelect={handleSuggestionGroupSelect}
-            />
-          ))}
-        </div>
-      )}
-
-      <div className="flex w-full flex-wrap items-center gap-2">
-        {capabilityOptions.map(({ id, labelKey, Icon, color }) => {
-          const active = selectedCapabilities.has(id);
-          const label = t(labelKey);
-          return (
-            <Button
-              key={id}
-              variant={active ? "default" : "outline"}
-              size="sm"
-              className="h-8 w-8 p-0"
-              title={label}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleCapability(id);
-              }}
-            >
-              <Icon className={cn("size-4", color)} />
-            </Button>
-          );
-        })}
-      </div>
-
-      <ModelDropdownSearch
-        onSearchChange={setSearchQuery}
-        onSearchFocusChange={setIsSearchFocused}
-        searchQuery={searchQuery}
-        isSearchFocused={isSearchFocused}
-        className="w-full"
-        inputClassName="w-full"
-      />
-    </div>
-  );
-
-  const desktopFilters = (
-    <div className="flex items-center gap-6 pb-3 border-b mb-3 shrink-0 pr-6">
-      <div className="flex items-center gap-3">
-        <div className="inline-flex rounded-md border bg-muted p-0.5">
-          {renderFavoritesFilterButton()}
-          {tierOptions.map(({ id, labelKey, Icon, color }) => {
-            const active = effectiveSelectedTier === id;
-            const label = t(labelKey);
-            return (
-              <button
-                key={id}
-                className={cn(
-                  "px-3 h-8 text-xs inline-flex items-center gap-1.5 rounded-[6px] cursor-pointer",
-                  "transition-colors",
-                  active ? "bg-background shadow-sm" : "text-foreground/80"
-                )}
-                data-active={active}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleTierSelect(id);
-                }}
-              >
-                <Icon className={cn("size-4", color)} />
-                {label}
-              </button>
-            );
-          })}
-
-          {suggestionGroups.length > 0 && (
-            <>
-              <div className="w-px h-8 bg-border mx-1" />
-              {suggestionGroups.map((group) => (
-                <ModelDropdownSuggestionGroup
-                  key={group.id}
-                  group={group}
-                  isActive={effectiveSelectedSuggestionGroup === group.id}
-                  onSelect={handleSuggestionGroupSelect}
-                />
-              ))}
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 flex-wrap">
-        {capabilityOptions.map(({ id, labelKey, Icon, color }) => {
-          const active = selectedCapabilities.has(id);
-          const label = t(labelKey);
-          return (
-            <Button
-              key={id}
-              variant={active ? "default" : "outline"}
-              size="sm"
-              className="h-8 w-8 p-0"
-              title={label}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleCapability(id);
-              }}
-            >
-              <Icon className={cn("size-4", color)} />
-            </Button>
-          );
-        })}
-      </div>
-
-      <ModelDropdownSearch
-        onSearchChange={setSearchQuery}
-        onSearchFocusChange={setIsSearchFocused}
-        searchQuery={searchQuery}
-        isSearchFocused={isSearchFocused}
-      />
-    </div>
-  );
-
   const handleFavoriteToggle = (modelId: string) => {
     if (!user) {
       openSignIn();
@@ -653,7 +467,106 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
         isSheet ? "p-3" : "p-4"
       )}
     >
-      {isSheet ? sheetFilters : desktopFilters}
+      <div
+        className={cn(
+          "flex items-center pb-3 border-b mb-3 shrink-0 pr-6",
+          isSheet ? "w-full flex-col gap-1 px-1" : "gap-6"
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center",
+            isSheet ? "w-full flex-wrap gap-2 pr-6" : "gap-3"
+          )}
+        >
+          <div
+            className={cn(
+              "inline-flex rounded-md border bg-muted p-0.5",
+              isSheet && "flex-wrap items-center gap-1"
+            )}
+          >
+            {showFavoritesToggle && (
+              <ModelFavoriteButton
+                selected={showFavoritesOnly}
+                onClick={toggleFavoritesOnly}
+                title={t("favoritesFilter")}
+              />
+            )}
+            {tierOptions.map(({ id, labelKey, Icon, color }) => (
+              <TierOptionButton
+                key={id}
+                id={id}
+                label={
+                  !isSheet || effectiveSelectedTier === id ? t(labelKey) : null
+                }
+                icon={Icon}
+                color={color}
+                selected={effectiveSelectedTier === id}
+                onClick={handleTierSelect}
+              />
+            ))}
+
+            {suggestionGroups.length > 0 && (
+              <>
+                {!isSheet && <div className="w-px h-8 bg-border mx-1" />}
+                <div
+                  className={cn(
+                    isSheet && "flex w-full flex-wrap items-center gap-2"
+                  )}
+                >
+                  {suggestionGroups.map((group) => (
+                    <ModelDropdownSuggestionGroup
+                      key={group.id}
+                      group={group}
+                      isActive={effectiveSelectedSuggestionGroup === group.id}
+                      onSelect={handleSuggestionGroupSelect}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div
+          className={cn(
+            "flex items-center gap-2 flex-wrap",
+            isSheet && "w-full"
+          )}
+        >
+          {capabilityOptions
+            .filter((c) => !c.hideSelector)
+            .map(({ id, labelKey, Icon, color }) => {
+              const active = selectedCapabilities.has(id);
+              const label = t(labelKey);
+              return (
+                <TooltipIconButton
+                  key={id}
+                  variant={active ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  tooltip={label}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleCapability(id);
+                  }}
+                >
+                  <Icon className={cn("size-4", color)} />
+                </TooltipIconButton>
+              );
+            })}
+        </div>
+
+        <ModelDropdownSearch
+          onSearchChange={setSearchQuery}
+          onSearchFocusChange={setIsSearchFocused}
+          searchQuery={searchQuery}
+          isSearchFocused={isSearchFocused}
+          className={cn(isSheet && "w-full")}
+          inputClassName={cn(isSheet && "w-full")}
+        />
+      </div>
 
       <div className="flex-1 overflow-hidden">
         {providersByTier.length === 0 ? (
@@ -679,26 +592,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
                     </span>
                   </div>
                 </div>
-                {missingFavoriteModelIds.map((missingId) => (
-                  <div
-                    key={missingId}
-                    className="flex items-center justify-between rounded-md border border-dashed border-border px-2 py-1.5 text-sm text-muted-foreground"
-                  >
-                    <span className="truncate">{missingId}</span>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        handleFavoriteToggle(missingId);
-                      }}
-                      aria-label={t("favoriteRemove")}
-                      className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
-                    >
-                      <XIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
+                {!!missingFavoriteModelIds.length && (
+                  <RemovedFavorites
+                    models={missingFavoriteModelIds}
+                    label={t("favoriteRemove")}
+                    onRemove={handleFavoriteToggle}
+                  />
+                )}
               </div>
             )}
             {providersByTier.map((p) => {

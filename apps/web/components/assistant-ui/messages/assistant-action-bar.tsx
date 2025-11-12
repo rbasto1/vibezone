@@ -7,10 +7,11 @@ import {
 } from "@assistant-ui/react";
 import type { FC } from "react";
 
-import { TooltipIconButton } from "@/components/assistant-ui/messages/tooltip-icon-button";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { modelMap } from "@/lib/model-map";
 import type { MessageMetadata } from "@vibezone/database";
 import { CheckIcon, CopyIcon, RefreshCwIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { AssistantMessageRateControl } from "./parts/assistant-message-rate-control";
 
 const formatDuration = (durationMs: number) => {
@@ -31,6 +32,7 @@ const formatDuration = (durationMs: number) => {
 };
 
 export const AssistantActionBar: FC = () => {
+  const t = useTranslations("Message");
   const message = useAssistantState(({ message }) => message);
   const customMetadata = (message.metadata as MessageMetadata)?.custom ?? {};
 
@@ -69,7 +71,7 @@ export const AssistantActionBar: FC = () => {
     >
       <AssistantMessageRateControl delayDuration={200} />
       <ActionBarPrimitive.Copy asChild>
-        <TooltipIconButton tooltip="Copy" delayDuration={200}>
+        <TooltipIconButton tooltip={t("copy")} delayDuration={200}>
           <MessagePrimitive.If copied>
             <CheckIcon />
           </MessagePrimitive.If>
@@ -79,7 +81,7 @@ export const AssistantActionBar: FC = () => {
         </TooltipIconButton>
       </ActionBarPrimitive.Copy>
       <ActionBarPrimitive.Reload asChild>
-        <TooltipIconButton tooltip="Refresh" delayDuration={200}>
+        <TooltipIconButton tooltip={t("refresh")} delayDuration={200}>
           <RefreshCwIcon />
         </TooltipIconButton>
       </ActionBarPrimitive.Reload>

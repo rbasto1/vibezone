@@ -95,6 +95,11 @@
       "file": "Datei"
     }
   },
+  "Message": {
+    "copy": "Kopieren",
+    "refresh": "Erneut generieren",
+    "codeBlock": "Codeblock"
+  },
   "ModelDropdown": {
     "tiers": {
       "leaders": "Spitzenreiter",

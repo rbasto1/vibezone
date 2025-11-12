@@ -18,7 +18,7 @@ import { modelMap, providerMap } from "@/lib/model-map";
 import { trpc } from "@/lib/trpc/client";
 import { ShieldAlertIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { capabilityOptions } from "./model-dropdown-constants";
+import { capabilityOptions } from "./model-selector/model-dropdown-constants";
 import {
   ExperimentalTag,
   FreeTag,

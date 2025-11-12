@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { CopyConversationModal } from "@/components/assistant-ui/copy-conversation-modal";
-import { ModelDropdownContents } from "@/components/assistant-ui/model-dropdown-contents";
+import { ModelDropdownContents } from "@/components/assistant-ui/model-selector/model-dropdown-contents";
 import { SearchPanel } from "@/components/assistant-ui/search-panel";
 import {
   Dialog,
