@@ -243,6 +243,7 @@
     },
     "projectMenu": {
       "edit": "Editar projeto",
+      "newChat": "Novo chat",
       "create": "Novo projeto",
       "delete": "Excluir projeto",
       "deleteDisabled": "Você não pode excluir o projeto Geral"

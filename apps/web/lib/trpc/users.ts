@@ -171,6 +171,43 @@ export const usersRouter = t.router({
 
       return { ok: true as const, lastModels: ordered };
     }),
+  setLastProject: authenticatedProcedure
+    .input(
+      z.object({
+        projectId: z.string().min(1).nullable(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const authUser = ctx.user;
+      if (!authUser) throw new Error("Assert: auth procedure must have user");
+
+      if (input.projectId) {
+        const [project] = await db
+          .select({ id: projectsTable.id })
+          .from(projectsTable)
+          .where(
+            and(
+              eq(projectsTable.id, input.projectId),
+              eq(projectsTable.userId, authUser.id),
+              isNull(projectsTable.deletedAt)
+            )
+          )
+          .limit(1);
+        if (!project) {
+          throw new Error("Project not found");
+        }
+      }
+
+      await db
+        .update(preferencesTable)
+        .set({ lastProjectId: input.projectId })
+        .where(eq(preferencesTable.userId, authUser.id));
+
+      return {
+        ok: true as const,
+        lastProjectId: input.projectId,
+      };
+    }),
 
   favorites: publicProcedure.query(async ({ ctx }) => {
     const user = ctx.user;

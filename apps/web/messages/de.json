@@ -243,6 +243,7 @@
     },
     "projectMenu": {
       "edit": "Projekt bearbeiten",
+      "newChat": "Neuer Chat",
       "create": "Neues Projekt",
       "delete": "Projekt löschen",
       "deleteDisabled": "Das Projekt \"General\" kann nicht gelöscht werden"

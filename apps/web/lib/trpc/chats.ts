@@ -605,7 +605,9 @@ export async function getChatName(chatId: string, firstUserMessage?: string) {
     }
   }
 
-  return chatNameParsed.data.text;
+  const title = chatNameParsed.data.text.replace(/<\w+>/g, "").trim();
+
+  return title;
 }
 
 async function getChatFirstUserMessage(chatId: string) {

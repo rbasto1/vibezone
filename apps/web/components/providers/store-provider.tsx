@@ -23,6 +23,7 @@ type ModelsProviderProps = PropsWithChildren<{
   preferencesInitialValue: PreferencesAtom;
   projectsInitialValue: ProjectConfig[];
   instructionsInitialValue: InstructionConfig[];
+  initialProjectId: string | null;
 }>;
 
 export function StoreProvider({
@@ -30,6 +31,7 @@ export function StoreProvider({
   preferencesInitialValue,
   projectsInitialValue,
   instructionsInitialValue,
+  initialProjectId,
   children,
 }: ModelsProviderProps) {
   const store = useMemo(() => {
@@ -52,11 +54,16 @@ export function StoreProvider({
     // Initialize chat atom with a new chat ID
     const defaultProjectId =
       projectsInitialValue.find((project) => project.isDefault)?.id ?? null;
+    const initialChatProjectId =
+      (initialProjectId &&
+      projectsInitialValue.some((project) => project.id === initialProjectId)
+        ? initialProjectId
+        : null) ?? defaultProjectId;
     s.set(currentChatAtom, {
       id: generateChatId(),
       createdAt: new Date(),
       addedToList: false,
-      projectId: defaultProjectId,
+      projectId: initialChatProjectId,
     });
 
     return s;
@@ -65,6 +72,7 @@ export function StoreProvider({
     preferencesInitialValue,
     projectsInitialValue,
     instructionsInitialValue,
+    initialProjectId,
   ]);
 
   return <JotaiProvider store={store}>{children}</JotaiProvider>;

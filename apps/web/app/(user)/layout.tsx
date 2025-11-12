@@ -102,10 +102,18 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     projectsInitialValue.find((project) => project.isDefault)?.id ??
     projectsInitialValue[0]?.id ??
     null;
+  const persistedProjectId =
+    preferences?.lastProjectId &&
+    projectsInitialValue.some(
+      (project) => project.id === preferences.lastProjectId
+    )
+      ? preferences.lastProjectId
+      : null;
+  const initialProjectId = persistedProjectId ?? defaultProjectId;
   const initialPromptResult = composeInstructionPrompt(
     baseSystemPrompt,
     instructionsInitialValue,
-    defaultProjectId,
+    initialProjectId,
     projectsInitialValue
   );
 
@@ -135,6 +143,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           preferencesInitialValue={preferencesInitialValue}
           projectsInitialValue={projectsInitialValue}
           instructionsInitialValue={instructionsInitialValue}
+          initialProjectId={initialProjectId}
         >
           <TooltipProvider>
             {children}
