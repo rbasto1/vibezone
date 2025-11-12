@@ -20,7 +20,6 @@ import {
 import { toast } from "sonner";
 import z from "zod";
 
-import { Thread } from "@/components/assistant-ui/thread";
 import { cn } from "@/components/ui/utils";
 import { useAnonQuotaSetter } from "@/hooks/use-anon-quota";
 import { useAssistantMessageSaver } from "@/hooks/use-assistant-message-saver";
@@ -45,7 +44,8 @@ import {
 import { safeParse } from "@/lib/json";
 import { generateFingerprint } from "@/lib/limiting";
 import type { PanelConfig } from "@/store/panels";
-import { PanelHeader } from "./response-panel-header";
+import { PanelHeader } from "../response-panel-header";
+import { Thread } from "./thread";
 
 interface ResponsePanelProps {
   panel: PanelConfig;

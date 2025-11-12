@@ -5,14 +5,10 @@ import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 
 import { useCurrentChatValue } from "@/hooks/use-chat";
-import {
-  usePanelsConfigSetter,
-  usePanelsConfigValue,
-  usePanelsStateSetter,
-} from "@/hooks/use-panels";
+import { usePanelsConfig, usePanelsStateSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useUIState, type PendingAddPanel } from "@/hooks/use-ui-state";
 import {
@@ -44,12 +40,10 @@ export const useAddAi = (options?: UseAddAiOptions) => {
   const { onAddPanel } = options ?? {};
   const t = useTranslations("AssistantHeader");
   const [{ addPanelPending }, setUIState] = useUIState();
-  const panelsConfig = usePanelsConfigValue();
-  const setPanelsConfig = usePanelsConfigSetter();
+  const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
-  const threadMessages = useAtomValue(threadMessagesAtom);
-  const setThreadMessages = useSetAtom(threadMessagesAtom);
+  const [threadMessages, setThreadMessages] = useAtom(threadMessagesAtom);
   const currentChatId = useCurrentChatValue()?.id ?? null;
   const { mutate: duplicateThread } = trpc.messages.duplicateThread.useMutation(
     {
@@ -202,6 +196,7 @@ export const useAddAi = (options?: UseAddAiOptions) => {
       const [sourcePanel, secondPanel] = panelsConfig;
 
       if (sharedMessages && sourcePanel) {
+        // The messages are the same for all existing panels, just copy
         finalizeAddPanel({
           ...newPanel,
           sourceMessages: sharedMessages,
@@ -212,6 +207,7 @@ export const useAddAi = (options?: UseAddAiOptions) => {
       }
 
       if (sourcePanel && !secondPanel) {
+        // There is no second panel, just copy from the first
         const sourceMessages = getPanelMessages(sourcePanel.id);
         finalizeAddPanel({
           ...newPanel,
@@ -222,6 +218,8 @@ export const useAddAi = (options?: UseAddAiOptions) => {
         return;
       }
 
+      // User has to choose from which panel to copy, since there is more than one
+      // and they have different contents
       setUIState((prev) => ({
         ...prev,
         modelPicker: null,

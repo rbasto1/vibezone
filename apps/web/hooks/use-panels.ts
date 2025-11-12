@@ -13,20 +13,14 @@ export const usePanelConfigValue = (id: string) => {
   return panelConfigs.find((panel) => panel.id === id);
 };
 
-export const usePanelsConfigValue = () => {
-  return useAtomValue(panelConfigAtom);
-};
+export const usePanelsConfigValue = () => useAtomValue(panelConfigAtom);
 
 export const usePanelStateValue = (id: string) => {
   const panelStates = useAtomValue(panelStateAtom);
-  return (
-    panelStates[id] || { running: false, hasMessages: false }
-  );
+  return panelStates[id] || { running: false, hasMessages: false };
 };
 
-export const usePanelsStateValue = () => {
-  return useAtomValue(panelStateAtom);
-};
+export const usePanelsStateValue = () => useAtomValue(panelStateAtom);
 
 // Setter hooks - write-only access
 export const usePanelConfigSetter = (id: string) => {
@@ -99,13 +93,9 @@ export const usePanelsStateSetter = () => {
 };
 
 // Combined hooks - read and write access
-export const usePanelsConfig = () => {
-  return useAtom(panelConfigAtom);
-};
+export const usePanelsConfig = () => useAtom(panelConfigAtom);
 
-export const usePanelsState = () => {
-  return useAtom(panelStateAtom);
-};
+export const usePanelsState = () => useAtom(panelStateAtom);
 
 export const usePanelState = (id: string) => {
   const value = usePanelStateValue(id);

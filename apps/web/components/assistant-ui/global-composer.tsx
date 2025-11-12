@@ -270,29 +270,8 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({
 
   return (
     <>
-      {incompatibleModalOpen && (
-        <IncompatibleAttachmentsModal
-          onOpenChange={setIncompatibleModalOpen}
-          incompatibleAttachments={incompatibleAttachments}
-          onRemoveAttachment={(attachmentId) => {
-            const attachment = attachments.find((a) => a.id === attachmentId);
-            if (attachment) {
-              removeAttachment(attachment);
-            }
-            // Re-validate after removal
-            const remaining = incompatibleAttachments.filter(
-              (a) => a.id !== attachmentId
-            );
-            setIncompatibleAttachments(remaining);
-            if (!remaining.length) {
-              setIncompatibleModalOpen(false);
-            }
-          }}
-          onClose={() => setIncompatibleModalOpen(false)}
-        />
-      )}
       <div
-        className="relative flex w-full flex-col gap-0 cursor-text"
+        className="relative flex w-full flex-col cursor-text"
         onClick={handleContainerClick}
       >
         <Captcha />
@@ -360,6 +339,27 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({
           )}
         </div>
       </div>
+
+      {incompatibleModalOpen && (
+        <IncompatibleAttachmentsModal
+          onOpenChange={setIncompatibleModalOpen}
+          incompatibleAttachments={incompatibleAttachments}
+          onRemoveAttachment={(attachmentId) => {
+            const attachment = attachments.find((a) => a.id === attachmentId);
+            if (!attachment) return;
+
+            removeAttachment(attachment);
+            const remaining = incompatibleAttachments.filter(
+              (a) => a.id !== attachmentId
+            );
+            setIncompatibleAttachments(remaining);
+            if (!remaining.length) {
+              setIncompatibleModalOpen(false);
+            }
+          }}
+          onClose={() => setIncompatibleModalOpen(false)}
+        />
+      )}
     </>
   );
 };

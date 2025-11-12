@@ -4,8 +4,8 @@ import { type FC, type PropsWithChildren, useMemo } from "react";
 
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import type { PanelConfig } from "@/store/panels";
-import { AssistantMessage } from "./messages/assistant-message";
-import { UserMessage } from "./messages/user-message";
+import { AssistantMessage } from "../messages/assistant-message";
+import { UserMessage } from "../messages/user-message";
 import { ThreadError } from "./thread-error";
 import { ThreadIfEmpty } from "./thread-if-empty";
 import { ThreadScrollToBottom } from "./thread-scroll-to-bottom";

@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
 import { ProviderIcon } from "@/components/ui/providers/provider";
 import { cn } from "@/components/ui/utils";
 import { useModelFavorites } from "@/hooks/use-model-favorites";
@@ -29,14 +28,14 @@ interface ModelDropdownContentsProps {
   onSelect: (providerId: string, modelId: string) => void;
   currentModelId?: string;
   onClose?: () => void;
-  variant?: "dropdown" | "sheet" | "modal";
+  variant: "sheet" | "modal";
 }
 
 export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   onSelect,
   currentModelId,
   onClose,
-  variant = "dropdown",
+  variant,
 }) => {
   const t = useTranslations("ModelDropdown");
   const openSignIn = useOpenSignIn();
@@ -84,7 +83,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
   }, [showFavoritesOnly, showFavoritesToggle, setModelSelectionState]);
 
   const isSheet = variant === "sheet";
-  const isModal = variant === "modal";
 
   // Ensure we always show something even if no providers in the default tier
   useEffect(() => {
@@ -648,8 +646,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     toggleFavorite(modelId);
   };
 
-  const body = (
-    <div className="flex h-full flex-col">
+  return (
+    <div
+      className={cn(
+        "flex h-full flex-col overflow-hidden",
+        isSheet ? "p-3" : "p-4"
+      )}
+    >
       {isSheet ? sheetFilters : desktopFilters}
 
       <div className="flex-1 overflow-hidden">
@@ -840,32 +843,6 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
         )}
       </div>
     </div>
-  );
-
-  if (isSheet || isModal) {
-    return (
-      <div
-        className={cn(
-          "flex h-full flex-col overflow-hidden",
-          isSheet ? "p-3" : "p-4"
-        )}
-      >
-        {body}
-      </div>
-    );
-  }
-
-  return (
-    <DropdownMenuContent
-      align="start"
-      sideOffset={8}
-      className={cn(
-        "z-50 bg-popover text-popover-foreground shadow-md max-w-[100vw] max-h-screen p-3",
-        "sm:w-[min(1200px,calc(100vw-2rem))] sm:h-[min(80vh,700px)] sm:rounded-md sm:border"
-      )}
-    >
-      {body}
-    </DropdownMenuContent>
   );
 };
 

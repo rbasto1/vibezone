@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { type FC } from "react";
+import { useEffect, type FC } from "react";
 
 import { CloseIconButton } from "@/components/ui/close-icon-button";
 import { useUserPreferences } from "@/hooks/use-user-preferences";
@@ -11,16 +11,14 @@ import { trpc } from "@/lib/trpc/client";
 
 interface AppFooterProps {
   isLoggedIn: boolean;
-  hide: boolean;
   onHide: () => void;
 }
 
-export const AppFooter: FC<AppFooterProps> = ({ isLoggedIn, hide, onHide }) => {
+export const AppFooter: FC<AppFooterProps> = ({ isLoggedIn, onHide }) => {
   const t = useTranslations("Assistant");
   const [preferences, setPreferences] = useUserPreferences();
   const hideLegalPreference = preferences.hideLegal;
 
-  const hideLegalFooter = hideLegalPreference || hide;
   const updatePreferences = trpc.users.updatePreferences.useMutation({
     onSuccess: () => {
       setPreferences((prev) =>
@@ -32,7 +30,11 @@ export const AppFooter: FC<AppFooterProps> = ({ isLoggedIn, hide, onHide }) => {
     },
   });
 
-  if (hideLegalFooter) return null;
+  useEffect(() => {
+    if (hideLegalPreference) onHide();
+  }, [hideLegalPreference]);
+
+  if (hideLegalPreference) return null;
 
   const handleDismissLegalFooter = () => {
     if (typeof window !== "undefined") {
@@ -44,8 +46,8 @@ export const AppFooter: FC<AppFooterProps> = ({ isLoggedIn, hide, onHide }) => {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-3 px-3 pb-0 text-xs text-muted-foreground [&>a]:underline">
-      <span className="text-center">{t("aiDisclaimer")}</span>
+    <div className="sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-3 px-3 pb-0 text-xs text-muted-foreground [&>a]:underline text-center space-x-2 sm:space-x-0 [&>*]:inline-block leading-tight">
+      <span>{t("aiDisclaimer")}</span>
       <Link href="/privacy" prefetch={false}>
         {t("privacyPolicy")}
       </Link>

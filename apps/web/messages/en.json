@@ -14,7 +14,6 @@
   },
   "Assistant": {
     "signinWarning": "Please sign in to use these models.",
-    "panelTabLabel": "{index}: {modelName}",
     "panelAriaLabel": "Switch to panel {index}",
     "aiDisclaimer": "AI can make mistakes. Always check important responses independently.",
     "privacyPolicy": "Privacy Policy",
