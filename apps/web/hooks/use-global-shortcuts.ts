@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
-import { toast } from "sonner";
 
 import { useSidebar } from "@/components/ui/sidebar/sidebar-context";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -59,36 +58,29 @@ export const useGlobalShortcuts = () => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!shouldHandleEvent(event)) return;
 
-      const key = event.key.toLowerCase();
-
-      if (key === SHORTCUT_KEYS.newChat && event.shiftKey) {
-        event.preventDefault();
-        const chat = createChat();
-        if (!chat) {
-          toast.error(t("errors.createChat"));
-        }
-        return;
-      }
-
-      if (key === SHORTCUT_KEYS.search) {
-        event.preventDefault();
-        if (isLoggedIn) {
-          setUIState({ panelOpen: "search" });
-        } else {
-          openSignIn();
-        }
-        return;
-      }
-
-      if (key === SHORTCUT_KEYS.sidebar) {
-        event.preventDefault();
-        toggleSidebar();
-        return;
-      }
-
-      if (key === SHORTCUT_KEYS.addAi) {
-        event.preventDefault();
-        openAddAiSelector({ showLimitToast: true });
+      switch (event.key.toLowerCase()) {
+        case SHORTCUT_KEYS.newChat:
+          if (event.shiftKey) {
+            event.preventDefault();
+            createChat();
+          }
+          break;
+        case SHORTCUT_KEYS.search:
+          event.preventDefault();
+          if (isLoggedIn) {
+            setUIState({ panelOpen: "search" });
+          } else {
+            openSignIn();
+          }
+          break;
+        case SHORTCUT_KEYS.sidebar:
+          event.preventDefault();
+          toggleSidebar();
+          break;
+        case SHORTCUT_KEYS.addAi:
+          event.preventDefault();
+          openAddAiSelector({ showLimitToast: true });
+          break;
       }
     };
 

@@ -11,10 +11,10 @@ import { ReasoningSliderTrigger } from "@/components/ui/reasoning-slider-trigger
 import { cn } from "@/components/ui/utils";
 import { Settings2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState, type FC } from "react";
+import { useState, type FC } from "react";
 
 interface GlobalComposerSettingsMenuProps {
-  onAddPanel?: (id: string) => void;
+  onAddPanel?: () => void;
   className?: string;
 }
 
@@ -25,14 +25,11 @@ export const GlobalComposerSettingsMenu: FC<
   const [open, setOpen] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
 
-  const handleAddPanel = useCallback(
-    (id: string) => {
-      onAddPanel?.(id);
-      setSelectorOpen(false);
-      setOpen(false);
-    },
-    [onAddPanel]
-  );
+  const handleAddPanel = () => {
+    onAddPanel?.();
+    setSelectorOpen(false);
+    setOpen(false);
+  };
 
   return (
     <DropdownMenu

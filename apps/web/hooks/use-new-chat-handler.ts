@@ -1,4 +1,5 @@
 import { generateId } from "ai";
+import { useSetAtom } from "jotai";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 
@@ -8,7 +9,6 @@ import {
   usePanelsStateSetter,
 } from "@/hooks/use-panels";
 import { useProjectsValue } from "@/hooks/use-projects";
-import { useThreadRuntimeControllersValue } from "@/hooks/use-thread-store";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { generateThreadId } from "@/lib/id";
 import { composeInstructionPrompt } from "@/lib/instructions";
@@ -16,8 +16,9 @@ import type { PanelConfig } from "@/store/panels";
 import { usePendingUserMessagesClear } from "@/store/pending-user-messages";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import type { ThreadMessageLike } from "@assistant-ui/react";
-import { useSetAtom } from "jotai";
 import { useNewChat } from "./use-chat";
+import { useStableValue } from "./use-stable-value";
+import { useThreadRuntimeControllersValue } from "./use-thread-controllers";
 
 interface NewChatOptions {
   projectId?: string | null;
@@ -42,8 +43,24 @@ export function useNewChatHandler() {
     [projects]
   );
 
+  const state = useStableValue({
+    defaultProject,
+    instructions,
+    projects,
+    runtimeControllers,
+    baseSystemPrompt,
+  });
+
   return useCallback(
     (options?: NewChatOptions) => {
+      const {
+        defaultProject,
+        instructions,
+        projects,
+        runtimeControllers,
+        baseSystemPrompt,
+      } = state.current;
+
       const targetProject = options?.projectId
         ? (projects.find((project) => project.id === options.projectId) ?? null)
         : defaultProject;
@@ -90,17 +107,13 @@ export function useNewChatHandler() {
       return chat;
     },
     [
+      state,
       createNewChat,
-      defaultProject,
-      instructions,
-      projects,
       clearPendingUserMessages,
-      runtimeControllers,
       setPanelsConfig,
       setPanelsState,
       setThreadMessages,
       setUIState,
-      baseSystemPrompt,
     ]
   );
 }

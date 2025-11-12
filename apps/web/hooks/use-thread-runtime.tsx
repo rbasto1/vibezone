@@ -19,7 +19,7 @@ import type {
 } from "ai";
 import { startTransition, useEffect } from "react";
 import { useAttachmentAdapter } from "./use-attachments";
-import { useThreadMessages } from "./use-thread-store";
+import { useThreadMessages } from "./use-thread-messages";
 
 interface UseThreadRuntimeParams {
   threadId: string;

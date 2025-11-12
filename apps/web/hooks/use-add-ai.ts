@@ -8,16 +8,20 @@ import { toast } from "sonner";
 import { useAtomValue, useSetAtom } from "jotai";
 
 import { useCurrentChatValue } from "@/hooks/use-chat";
-import { usePanelsConfigSetter, usePanelsConfigValue, usePanelsStateSetter } from "@/hooks/use-panels";
+import {
+  usePanelsConfigSetter,
+  usePanelsConfigValue,
+  usePanelsStateSetter,
+} from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useUIState, type PendingAddPanel } from "@/hooks/use-ui-state";
-import { MAX_PANELS } from "@/lib/constants";
-import { generateThreadId, getNextThreadOrderFromExisting } from "@/lib/id";
-import { trpc } from "@/lib/trpc/client";
 import {
   comparableMessagesEqual,
   toComparableMessages,
 } from "@/lib/assistant-ui/message-compare";
+import { MAX_PANELS } from "@/lib/constants";
+import { generateThreadId, getNextThreadOrderFromExisting } from "@/lib/id";
+import { trpc } from "@/lib/trpc/client";
 import { threadMessagesAtom } from "@/store/thread-messages";
 
 interface FinalizeOptions {
@@ -29,7 +33,7 @@ interface FinalizeOptions {
 }
 
 interface UseAddAiOptions {
-  onAddPanel?: (id: string) => void;
+  onAddPanel?: () => void;
 }
 
 interface OpenSelectorOptions {
@@ -90,7 +94,13 @@ export const useAddAi = (options?: UseAddAiOptions) => {
   }, [getPanelMessages, panelsConfig]);
 
   const finalizeAddPanel = useCallback(
-    ({ id, providerId, modelId, sourceMessages, sourceThreadId }: FinalizeOptions) => {
+    ({
+      id,
+      providerId,
+      modelId,
+      sourceMessages,
+      sourceThreadId,
+    }: FinalizeOptions) => {
       const initialMessages = cloneThreadMessages(sourceMessages);
       const hasMessages = !!initialMessages?.some((m) => m.role === "user");
 
@@ -122,7 +132,7 @@ export const useAddAi = (options?: UseAddAiOptions) => {
         return newPanels;
       });
 
-      onAddPanel?.(id);
+      onAddPanel?.();
 
       if (sourceThreadId && hasMessages && currentChatId) {
         duplicateThread({

@@ -19,15 +19,14 @@ interface ThreadProps extends PropsWithChildren {
 export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
   const preferences = useUserPreferencesValue();
   const autoScroll = preferences.autoScroll;
+  const { id, model } = panel;
 
   const threadMessageComponents = useMemo(
     () => ({
-      UserMessage: () => (
-        <UserMessage threadId={panel.id} modelId={panel.model} />
-      ),
+      UserMessage: () => <UserMessage threadId={id} modelId={model} />,
       AssistantMessage,
     }),
-    [panel.id, panel.model]
+    [id, model]
   );
 
   return (

@@ -3,7 +3,7 @@
 import { useAtom } from "jotai";
 import { StarIcon, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenuContent } from "@/components/ui/dropdown-menu";
@@ -132,7 +132,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     });
   };
 
-  const toggleFavoritesOnly = useCallback(() => {
+  const toggleFavoritesOnly = () => {
     setModelSelectionState((prev) => {
       const nextShowFavoritesOnly = !prev.showFavoritesOnly;
       return {
@@ -143,7 +143,7 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
           : prev.selectedSuggestionGroup,
       };
     });
-  }, [setModelSelectionState]);
+  };
 
   const handleTierSelect = (tier: TierOptionId) => {
     setModelSelectionState((prev) => ({
@@ -640,16 +640,13 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
     </div>
   );
 
-  const handleFavoriteToggle = useCallback(
-    (modelId: string) => {
-      if (!user) {
-        openSignIn();
-        return;
-      }
-      toggleFavorite(modelId);
-    },
-    [toggleFavorite, user, openSignIn]
-  );
+  const handleFavoriteToggle = (modelId: string) => {
+    if (!user) {
+      openSignIn();
+      return;
+    }
+    toggleFavorite(modelId);
+  };
 
   const body = (
     <div className="flex h-full flex-col">

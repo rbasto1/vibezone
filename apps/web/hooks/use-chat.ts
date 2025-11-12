@@ -10,17 +10,20 @@ import { useCallback } from "react";
  */
 export function useNewChat() {
   const setCurrentChat = useCurrentChatSetter();
-  return useCallback((projectId: string | null = null) => {
-    // Helper hook to create new chat
-    const newChat: ChatConfig = {
-      id: generateChatId(),
-      createdAt: new Date(),
-      addedToList: false,
-      projectId,
-    };
-    setCurrentChat(newChat);
-    return newChat;
-  }, []);
+  return useCallback(
+    (projectId: string | null = null) => {
+      // Helper hook to create new chat
+      const newChat: ChatConfig = {
+        id: generateChatId(),
+        createdAt: new Date(),
+        addedToList: false,
+        projectId,
+      };
+      setCurrentChat(newChat);
+      return newChat;
+    },
+    [setCurrentChat]
+  );
 }
 
 export function useCurrentChat() {
