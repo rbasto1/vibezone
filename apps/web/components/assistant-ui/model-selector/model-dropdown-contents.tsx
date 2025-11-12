@@ -534,26 +534,28 @@ export const ModelDropdownContents: React.FC<ModelDropdownContentsProps> = ({
             isSheet && "w-full"
           )}
         >
-          {capabilityOptions.map(({ id, labelKey, Icon, color }) => {
-            const active = selectedCapabilities.has(id);
-            const label = t(labelKey);
-            return (
-              <TooltipIconButton
-                key={id}
-                variant={active ? "default" : "outline"}
-                size="sm"
-                className="h-8 w-8 p-0"
-                tooltip={label}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  toggleCapability(id);
-                }}
-              >
-                <Icon className={cn("size-4", color)} />
-              </TooltipIconButton>
-            );
-          })}
+          {capabilityOptions
+            .filter((c) => !c.hideSelector)
+            .map(({ id, labelKey, Icon, color }) => {
+              const active = selectedCapabilities.has(id);
+              const label = t(labelKey);
+              return (
+                <TooltipIconButton
+                  key={id}
+                  variant={active ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  tooltip={label}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleCapability(id);
+                  }}
+                >
+                  <Icon className={cn("size-4", color)} />
+                </TooltipIconButton>
+              );
+            })}
         </div>
 
         <ModelDropdownSearch

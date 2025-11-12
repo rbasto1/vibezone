@@ -1,9 +1,11 @@
 import {
   BrainIcon,
   EyeIcon,
+  ImageIcon,
   MountainIcon,
   TrophyIcon,
   Wand2Icon,
+  WrenchIcon,
 } from "lucide-react";
 import { FaRegFilePdf } from "react-icons/fa";
 
@@ -45,18 +47,20 @@ export const capabilityOptions = [
     Icon: BrainIcon,
     color: "text-violet-600 dark:text-violet-400",
   },
-  // {
-  //   id: "capImageGen" as const,
-  //   labelKey: "capabilities.imageGeneration" as const,
-  //   Icon: ImageIcon,
-  //   color: "text-pink-600 dark:text-pink-400",
-  // },
-  // {
-  //   id: "capTools" as const,
-  //   labelKey: "capabilities.tools" as const,
-  //   Icon: Wrench,
-  //   color: "text-zinc-600 dark:text-zinc-400",
-  // },
+  {
+    id: "capImageGen" as const,
+    labelKey: "capabilities.imageGeneration" as const,
+    Icon: ImageIcon,
+    color: "text-pink-600 dark:text-pink-400",
+    hideSelector: true,
+  },
+  {
+    id: "capTools" as const,
+    labelKey: "capabilities.tools" as const,
+    Icon: WrenchIcon,
+    color: "text-zinc-600 dark:text-zinc-400",
+    hideSelector: true,
+  },
 ];
 
 export type TierOptionId = (typeof tierOptions)[number]["id"];
