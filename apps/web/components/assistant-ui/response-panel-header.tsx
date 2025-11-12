@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { cn } from "@/components/ui/utils";
 import { useCurrentChatValue } from "@/hooks/use-chat";
+import { useNewChatHandler } from "@/hooks/use-new-chat-handler";
 import { useModelFavorites } from "@/hooks/use-model-favorites";
 import { useModelsValue } from "@/hooks/use-models";
 import {
@@ -26,6 +27,7 @@ import {
   ArrowUpRightIcon,
   CircleStopIcon,
   InfoIcon,
+  MessageCirclePlusIcon,
   MoreVerticalIcon,
   SparklesIcon,
   StarIcon,
@@ -38,10 +40,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { BotPlusIcon } from "../ui/icons/bot-plus-icon";
 import { ProviderIcon } from "../ui/providers/provider";
+import { ShortcutHint } from "../ui/shortcut-hint";
 import { ConfirmCloseModal } from "./confirm-close-modal";
 
 export interface PanelHeaderProps {
@@ -51,6 +55,7 @@ export interface PanelHeaderProps {
 
 export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const t = useTranslations("ResponsePanelHeader");
+  const threadListT = useTranslations("ThreadList");
   const setPanelsState = usePanelsStateSetter();
   const saveLastModels = useSaveLastModels();
   const threadId = panel.id;
@@ -65,6 +70,7 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const utils = trpc.useUtils();
   const deleteThreadMutation = trpc.chats.deleteThread.useMutation();
   const moveThreadMutation = trpc.chats.moveThreadToNewChat.useMutation();
+  const createChat = useNewChatHandler();
   const canClose = panelsConfig.length > 1;
   const includeModels = [modelId];
   const { models, providers } = useModelsValue({ includeModels });
@@ -200,6 +206,13 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
     }));
   };
 
+  const handleStartNewChat = useCallback(() => {
+    const chat = createChat();
+    if (!chat) {
+      toast.error(threadListT("errors.createChat"));
+    }
+  }, [createChat, threadListT]);
+
   const openDuplicatePicker = () => {
     if (isProcessing) return;
     setUIState((prev) => ({
@@ -293,6 +306,13 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
             {t("menuModelInfo")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={handleStartNewChat}>
+            <MessageCirclePlusIcon className="mr-2 h-4 w-4" />
+            {t("menuStartNewChat")}
+            <DropdownMenuShortcut>
+              <ShortcutHint combo={["cmdOrCtrl", "shift", "O"]} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={openDuplicatePicker}>
             <BotPlusIcon className="mr-2 h-4 w-4" />
             {t("menuDuplicateThread")}

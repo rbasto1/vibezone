@@ -3,10 +3,11 @@
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useTranslations } from "next-intl";
-import { type FC, useCallback, useEffect, useState } from "react";
+import { type FC, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
+import { CopyConversationModal } from "@/components/assistant-ui/copy-conversation-modal";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
 import { ModelDropdownContents } from "@/components/assistant-ui/model-dropdown-contents";
 import { ThreadPanel } from "@/components/assistant-ui/thread-panel";
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/components/ui/utils";
+import { useAddAi } from "@/hooks/use-add-ai";
 import { useCurrentChatValue } from "@/hooks/use-chat";
 import { useFocusPanelIdValue } from "@/hooks/use-focus-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -47,10 +49,9 @@ import { AppFooter } from "./app-footer";
 
 interface AppThreadsProps {
   hide: boolean;
-  onAddPanel?: (id: string) => void;
 }
 
-export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
+export const AppThreads: FC<AppThreadsProps> = ({ hide }) => {
   const t = useTranslations("Assistant");
   const [panelsConfig, setPanelsConfig] = usePanelsConfig();
   const panelsState = usePanelsStateValue();
@@ -71,6 +72,16 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
     : null;
   const modelPicker = uiState.modelPicker;
   const panelActionsT = useTranslations("ResponsePanelHeader");
+  const removeFocus = focusPanelId
+    ? () => setUIState({ focusPanelId: undefined })
+    : undefined;
+  const {
+    handleAddModelSelection,
+    pendingPanel,
+    copyOptions,
+    handleCopySelect,
+    handleCopyCancel,
+  } = useAddAi({ onAddPanel: removeFocus });
 
   const panelCount = Math.min(Math.max(panelsConfig.length, 1), MAX_PANELS);
   const showTabs = isMobile && panelsConfig.length > 1;
@@ -97,11 +108,10 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
     }));
   };
 
-  const handleModelPickerClose = useCallback(() => {
+  const handleModelPickerClose = () =>
     setUIState((prev) => ({ ...prev, modelPicker: null }));
-  }, [setUIState]);
 
-  const cloneThreadMessages = useCallback((messages?: ThreadMessageLike[]) => {
+  const cloneThreadMessages = (messages?: ThreadMessageLike[]) => {
     if (!messages?.length) return undefined;
     return messages.map((message): typeof message => ({
       ...message,
@@ -114,174 +124,159 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
         },
       },
     }));
-  }, []);
+  };
 
-  const getPanelMessages = useCallback(
-    (panelId: string): ThreadMessageLike[] => {
-      const stored = threadMessages[panelId];
-      if (stored?.length) {
-        return stored;
-      }
-      const panel = panelsConfig.find((p) => p.id === panelId);
-      return panel?.initialMessages ?? [];
-    },
-    [panelsConfig, threadMessages]
-  );
+  const getPanelMessages = (panelId: string): ThreadMessageLike[] => {
+    const stored = threadMessages[panelId];
+    if (stored?.length) {
+      return stored;
+    }
+    const panel = panelsConfig.find((p) => p.id === panelId);
+    return panel?.initialMessages ?? [];
+  };
 
-  const handleModelPickerSelect = useCallback(
-    (providerId: string, modelId: string) => {
-      const picker = modelPicker;
-      if (!picker) return;
+  const handleModelPickerSelect = (providerId: string, modelId: string) => {
+    const picker = modelPicker;
+    if (!picker) return;
 
-      if (picker.type === "suggestion") {
-        setPanelsConfig((prevPanels) => {
-          if (!prevPanels.length) {
-            const newPanelId = generateThreadId(0);
-            const newPanel: PanelConfig = {
-              id: newPanelId,
-              provider: providerId,
-              model: modelId,
-            };
-            saveLastModels([newPanel]);
-            setPanelsState((currentState) => ({
-              ...currentState,
-              [newPanelId]: currentState[newPanelId] ?? {
-                running: false,
-                hasMessages: false,
-              },
-            }));
-            onAddPanel?.(newPanelId);
-            return [newPanel];
-          }
+    if (picker.type === "suggestion") {
+      setPanelsConfig((prevPanels) => {
+        if (!prevPanels.length) {
+          const newPanelId = generateThreadId(0);
+          const newPanel: PanelConfig = {
+            id: newPanelId,
+            provider: providerId,
+            model: modelId,
+          };
+          saveLastModels([newPanel]);
+          setPanelsState((currentState) => ({
+            ...currentState,
+            [newPanelId]: currentState[newPanelId] ?? {
+              running: false,
+              hasMessages: false,
+            },
+          }));
+          removeFocus?.();
+          return [newPanel];
+        }
 
-          const nextPanels = prevPanels.map((panel, index) =>
-            index === 0
-              ? {
-                  ...panel,
-                  provider: providerId,
-                  model: modelId,
-                }
-              : panel
-          );
-          saveLastModels(nextPanels);
-          return nextPanels;
-        });
+        const nextPanels = prevPanels.map((panel, index) =>
+          index === 0
+            ? {
+                ...panel,
+                provider: providerId,
+                model: modelId,
+              }
+            : panel
+        );
+        saveLastModels(nextPanels);
+        return nextPanels;
+      });
 
-        setUIState((prev) => ({
-          ...prev,
-          suggestionsUsed: true,
-          modelPicker: null,
-        }));
-        return;
-      }
+      setUIState((prev) => ({
+        ...prev,
+        suggestionsUsed: true,
+        modelPicker: null,
+      }));
+      return;
+    }
 
-      if (picker.type === "thread-change") {
-        setPanelsConfig((prevPanels) => {
-          const nextPanels = prevPanels.map((panel) =>
-            panel.id === picker.panelId
-              ? {
-                  ...panel,
-                  provider: providerId,
-                  model: modelId,
-                }
-              : panel
-          );
-          saveLastModels(nextPanels);
-          return nextPanels;
-        });
+    if (picker.type === "thread-change") {
+      setPanelsConfig((prevPanels) => {
+        const nextPanels = prevPanels.map((panel) =>
+          panel.id === picker.panelId
+            ? {
+                ...panel,
+                provider: providerId,
+                model: modelId,
+              }
+            : panel
+        );
+        saveLastModels(nextPanels);
+        return nextPanels;
+      });
+      setUIState((prev) => ({ ...prev, modelPicker: null }));
+      return;
+    }
+
+    if (picker.type === "thread-duplicate") {
+      if (panelsConfig.length >= MAX_PANELS) {
+        toast.error(
+          panelActionsT("toasts.duplicateLimit", { max: MAX_PANELS })
+        );
         setUIState((prev) => ({ ...prev, modelPicker: null }));
         return;
       }
 
-      if (picker.type === "thread-duplicate") {
-        if (panelsConfig.length >= MAX_PANELS) {
-          toast.error(
-            panelActionsT("toasts.duplicateLimit", { max: MAX_PANELS })
-          );
-          setUIState((prev) => ({ ...prev, modelPicker: null }));
-          return;
-        }
-
-        const sourcePanelId = picker.panelId;
-        const sourcePanel = panelsConfig.find(
-          (panel) => panel.id === sourcePanelId
-        );
-        if (!sourcePanel) {
-          toast.error(panelActionsT("toasts.duplicateMissing"));
-          setUIState((prev) => ({ ...prev, modelPicker: null }));
-          return;
-        }
-
-        const newPanelId = generateThreadId(
-          getNextThreadOrderFromExisting(panelsConfig)
-        );
-        const initialMessages = cloneThreadMessages(
-          getPanelMessages(sourcePanelId)
-        );
-
-        const newPanel: PanelConfig = {
-          id: newPanelId,
-          provider: providerId,
-          model: modelId,
-          ...(initialMessages ? { initialMessages } : {}),
-        };
-
-        setPanelsState((prev) => ({
-          ...prev,
-          [newPanelId]: {
-            running: false,
-            hasMessages: !!initialMessages?.some((m) => m.role === "user"),
-          },
-        }));
-
-        setThreadMessages((prev) => ({
-          ...prev,
-          [newPanelId]: initialMessages ?? [],
-        }));
-
-        setPanelsConfig((prev) => {
-          const next = [...prev, newPanel];
-          saveLastModels(next);
-          return next;
-        });
-
-        onAddPanel?.(newPanelId);
+      const sourcePanelId = picker.panelId;
+      const sourcePanel = panelsConfig.find(
+        (panel) => panel.id === sourcePanelId
+      );
+      if (!sourcePanel) {
+        toast.error(panelActionsT("toasts.duplicateMissing"));
         setUIState((prev) => ({ ...prev, modelPicker: null }));
-
-        if (initialMessages?.length && currentChatId) {
-          void duplicateThreadMutation
-            .mutateAsync({
-              chatId: currentChatId,
-              sourceThreadId: sourcePanelId,
-              newThreadId: newPanelId,
-              newModelId: modelId,
-            })
-            .catch((error: unknown) => {
-              const message =
-                error instanceof Error ? error.message : JSON.stringify(error);
-              toast.error(panelActionsT("toasts.duplicateError", { message }));
-            });
-        }
-
         return;
       }
-    },
-    [
-      cloneThreadMessages,
-      currentChatId,
-      duplicateThreadMutation,
-      getPanelMessages,
-      modelPicker,
-      onAddPanel,
-      panelActionsT,
-      panelsConfig,
-      saveLastModels,
-      setPanelsConfig,
-      setPanelsState,
-      setThreadMessages,
-      setUIState,
-    ]
-  );
+
+      const newPanelId = generateThreadId(
+        getNextThreadOrderFromExisting(panelsConfig)
+      );
+      const initialMessages = cloneThreadMessages(
+        getPanelMessages(sourcePanelId)
+      );
+
+      const newPanel: PanelConfig = {
+        id: newPanelId,
+        provider: providerId,
+        model: modelId,
+        ...(initialMessages ? { initialMessages } : {}),
+      };
+
+      setPanelsState((prev) => ({
+        ...prev,
+        [newPanelId]: {
+          running: false,
+          hasMessages: !!initialMessages?.some((m) => m.role === "user"),
+        },
+      }));
+
+      setThreadMessages((prev) => ({
+        ...prev,
+        [newPanelId]: initialMessages ?? [],
+      }));
+
+      setPanelsConfig((prev) => {
+        const next = [...prev, newPanel];
+        saveLastModels(next);
+        return next;
+      });
+
+      removeFocus?.();
+      setUIState((prev) => ({ ...prev, modelPicker: null }));
+
+      if (initialMessages?.length && currentChatId) {
+        void duplicateThreadMutation
+          .mutateAsync({
+            chatId: currentChatId,
+            sourceThreadId: sourcePanelId,
+            newThreadId: newPanelId,
+            newModelId: modelId,
+          })
+          .catch((error: unknown) => {
+            const message =
+              error instanceof Error ? error.message : JSON.stringify(error);
+            toast.error(panelActionsT("toasts.duplicateError", { message }));
+          });
+      }
+
+      return;
+    }
+
+    if (picker.type === "add-panel") {
+      handleAddModelSelection(providerId, modelId);
+      return;
+    }
+  };
 
   const isModelPickerOpen = Boolean(modelPicker);
   const currentModelIdForPicker =
@@ -317,10 +312,10 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
                   <div
                     key={panel.id}
                     className={cn(
-                      "relative flex-1 basis-1/3 min-w-0",
+                      "relative flex-1 basis-1/3 min-w-0 border-b-2",
                       isActive
-                        ? "border-b-2 border-primary"
-                        : "border-b-2 border-transparent hover:border-border"
+                        ? "border-primary"
+                        : "border-transparent hover:border-border"
                     )}
                   >
                     <button
@@ -423,7 +418,7 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
         )}
         {/* Global composer below panels */}
         <GlobalComposer
-          onAddPanel={onAddPanel}
+          onAddPanel={removeFocus}
           footerHidden={sessionHideLegal}
         />
       </div>
@@ -466,6 +461,13 @@ export const AppThreads: FC<AppThreadsProps> = ({ hide, onAddPanel }) => {
             />
           </DialogContent>
         </Dialog>
+      )}
+      {pendingPanel && (
+        <CopyConversationModal
+          options={copyOptions}
+          onSelect={handleCopySelect}
+          onCancel={handleCopyCancel}
+        />
       )}
       <AppFooter
         isLoggedIn={!!user}

@@ -13,9 +13,11 @@
 - [x] Some threads not saving?
 - [x] Sync deleted/added threads with backend
 - [x] Mobile: no side menu open handle
+- [ ] Regenerate: stop button not appearing
 
 ## Improvements
 
+- [ ] Add "copy code" as floating button when scrolled down
 - [x] Import data creates a new project "Imported"
 - [x] Store and display which model generated each response
 - [x] Store and display how long it took to generate each response

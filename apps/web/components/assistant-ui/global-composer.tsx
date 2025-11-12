@@ -21,7 +21,7 @@ import {
 } from "@/hooks/use-captcha";
 import { useModelsValue } from "@/hooks/use-models";
 import { usePanelsConfigValue, usePanelsState } from "@/hooks/use-panels";
-import { useThreadRuntimeControllersValue } from "@/hooks/use-thread-store";
+import { useThreadRuntimeControllersValue } from "@/hooks/use-thread-controllers";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useUser } from "@/lib/auth-client";
 import type { CreateAppendMessage } from "@assistant-ui/react";
@@ -39,7 +39,7 @@ import {
 } from "./incompatible-attachments-modal";
 
 interface GlobalComposerProps {
-  onAddPanel?: (id: string) => void;
+  onAddPanel?: () => void;
   footerHidden?: boolean;
 }
 
@@ -323,10 +323,7 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({
             <GlobalComposerProjectButton />
           </div>
           <div className="shrink-0">
-            <GlobalComposerSettingsMenu
-              panelCount={panels.length}
-              onAddPanel={onAddPanel}
-            />
+            <GlobalComposerSettingsMenu onAddPanel={onAddPanel} />
           </div>
           {onStopAll ? (
             <StopButton

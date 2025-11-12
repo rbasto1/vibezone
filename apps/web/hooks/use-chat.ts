@@ -2,6 +2,7 @@ import { generateChatId } from "@/lib/id";
 import type { ChatConfig } from "@/store/chat";
 import { currentChatAtom } from "@/store/chat";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useCallback } from "react";
 
 /**
  * Hook that returns the newChat atom setter function (write-only)
@@ -9,17 +10,20 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
  */
 export function useNewChat() {
   const setCurrentChat = useCurrentChatSetter();
-  return (projectId: string | null = null) => {
-    // Helper hook to create new chat
-    const newChat: ChatConfig = {
-      id: generateChatId(),
-      createdAt: new Date(),
-      addedToList: false,
-      projectId,
-    };
-    setCurrentChat(newChat);
-    return newChat;
-  };
+  return useCallback(
+    (projectId: string | null = null) => {
+      // Helper hook to create new chat
+      const newChat: ChatConfig = {
+        id: generateChatId(),
+        createdAt: new Date(),
+        addedToList: false,
+        projectId,
+      };
+      setCurrentChat(newChat);
+      return newChat;
+    },
+    [setCurrentChat]
+  );
 }
 
 export function useCurrentChat() {

@@ -25,8 +25,8 @@ export const useFocusPanelIdValue = () => {
     }
 
     setUIState(({ focusPanelId }) => {
-      if (!focusPanelId) return { focusPanelId: undefined };
-      const exists = panelsConfig.some((panel) => panel.id === focusPanelId);
+      const exists =
+        focusPanelId && panelsConfig.some((panel) => panel.id === focusPanelId);
       if (!exists || panelsConfig.length <= 1) {
         return { focusPanelId: undefined };
       }

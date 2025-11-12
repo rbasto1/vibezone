@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
@@ -36,29 +35,27 @@ export const TooltipIconButton = forwardRef<
     ...rest
   } = props;
   return (
-    <TooltipProvider>
-      <Tooltip
-        delayDuration={delayDuration}
-        open={open}
-        defaultOpen={defaultOpen}
-        onOpenChange={onOpenChange}
-        disableHoverableContent={disableHoverableContent}
-      >
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            {...rest}
-            className={cn("size-6 p-1", className)}
-            ref={ref}
-          >
-            {children}
-            <span className="sr-only">{tooltip}</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side={side}>{tooltip}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip
+      delayDuration={delayDuration}
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpenChange={onOpenChange}
+      disableHoverableContent={disableHoverableContent}
+    >
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          {...rest}
+          className={cn("size-6 p-1", className)}
+          ref={ref}
+        >
+          {children}
+          <span className="sr-only">{tooltip}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side={side}>{tooltip}</TooltipContent>
+    </Tooltip>
   );
 });
 

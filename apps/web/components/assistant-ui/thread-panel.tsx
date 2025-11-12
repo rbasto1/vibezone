@@ -34,8 +34,8 @@ import {
 } from "@/hooks/use-captcha";
 import { usePanelState } from "@/hooks/use-panels";
 import { useStableValue } from "@/hooks/use-stable-value";
+import { useThreadRuntimeControllerSetter } from "@/hooks/use-thread-controllers";
 import { useThreadRuntime } from "@/hooks/use-thread-runtime";
-import { useThreadRuntimeControllerSetter } from "@/hooks/use-thread-store";
 import { useUserPreferencesValue } from "@/hooks/use-user-preferences";
 import {
   convertAISDKAssistantMessageToMessageState,
