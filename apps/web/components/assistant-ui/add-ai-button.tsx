@@ -34,7 +34,6 @@ export const AddAiButton: FC<AddAiButtonProps> = ({ onAddPanel }) => {
           className={triggerClassName}
           disabled={!canAddMore}
           aria-label={addButtonAriaLabel}
-          type="button"
           onClick={() => openAddAiSelector()}
         >
           <BotPlusIcon />

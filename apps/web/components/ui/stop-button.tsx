@@ -15,6 +15,7 @@ export const StopButton: React.FC<StopButtonProps> = ({
 }) => {
   return (
     <button
+      type="button"
       className={cn(
         "size-8 rounded-full transition-all duration-200",
         "hover:scale-105 active:scale-95",

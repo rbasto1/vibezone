@@ -7,9 +7,9 @@ import { toast } from "sonner";
 
 import { cn } from "@/components/ui/utils";
 import { useCurrentChatValue } from "@/hooks/use-chat";
-import { useNewChatHandler } from "@/hooks/use-new-chat-handler";
 import { useModelFavorites } from "@/hooks/use-model-favorites";
 import { useModelsValue } from "@/hooks/use-models";
+import { useNewChatHandler } from "@/hooks/use-new-chat-handler";
 import {
   usePanelsConfig,
   usePanelsStateSetter,
@@ -234,7 +234,6 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            type="button"
             disabled={isProcessing}
             title={t("menuLabel")}
             className={cn(

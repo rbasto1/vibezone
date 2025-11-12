@@ -17,7 +17,6 @@ export const ModelFavoriteButton: React.FC<ModelFavoriteButtonProps> = ({
 }) => {
   return (
     <TooltipIconButton
-      type="button"
       variant={selected ? "default" : "ghost"}
       size="sm"
       className={cn(

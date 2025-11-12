@@ -254,7 +254,6 @@ const ModelsPageClient: NextPage = () => {
               />
 
               <Button
-                type="button"
                 variant={m.isSuggested ? "default" : "outline"}
                 className="transition-colors"
                 aria-pressed={!!m.isSuggested}
@@ -266,7 +265,6 @@ const ModelsPageClient: NextPage = () => {
               </Button>
 
               <Button
-                type="button"
                 variant="outline"
                 className={cn(
                   "transition-colors",
@@ -283,7 +281,6 @@ const ModelsPageClient: NextPage = () => {
               </Button>
 
               <Button
-                type="button"
                 variant="outline"
                 className={cn(
                   "transition-colors",
@@ -465,7 +462,6 @@ const ModelsPageClient: NextPage = () => {
             </Select>
             <div className="ml-2 flex items-center gap-2">
               <Button
-                type="button"
                 variant="ghost"
                 className={cn(
                   priorityOnly
@@ -484,7 +480,6 @@ const ModelsPageClient: NextPage = () => {
                 <span className="hidden sm:inline">Priority</span>
               </Button>
               <Button
-                type="button"
                 variant="ghost"
                 className={cn(
                   hiddenOnly

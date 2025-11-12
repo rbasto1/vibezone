@@ -90,12 +90,7 @@ export const RenameChatModal: FC<RenameChatModalProps> = ({
             />
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isRenaming}
-            >
+            <Button variant="outline" onClick={onClose} disabled={isRenaming}>
               {t("cancel")}
             </Button>
             <Button

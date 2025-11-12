@@ -53,6 +53,7 @@ function Button({
   ...props
 }: ButtonProps) {
   const Comp = asChild ? Slot : "button";
+  props.type ??= "button";
   const { children, ...restProps } = props;
 
   const spinner = loading ? <InlineSpinner /> : null;

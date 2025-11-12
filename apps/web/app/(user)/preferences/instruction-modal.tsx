@@ -178,7 +178,7 @@ export const InstructionModal: FC<InstructionModalProps> = ({
           </div>
 
           <DialogFooter className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose}>
               {t("modal.cancel")}
             </Button>
             <Button type="submit">

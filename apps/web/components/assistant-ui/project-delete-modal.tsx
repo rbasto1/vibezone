@@ -182,7 +182,6 @@ export const ProjectDeleteModal: FC<ProjectDeleteModalProps> = ({
 
           <DialogFooter>
             <Button
-              type="button"
               variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}

@@ -309,7 +309,6 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({
               onClick={onStopAll}
               aria-label={stopAllLabel}
               title={stopAllLabel}
-              type="button"
               className="size-8 shrink-0"
             />
           ) : (
@@ -328,7 +327,6 @@ export const GlobalComposer: FC<GlobalComposerProps> = ({
               }
               className="h-8 w-8 shrink-0 rounded-full"
               disabled={pendingAttachments}
-              type="button"
             >
               {uploadProgress !== null ? (
                 <span className="text-xs font-semibold">{uploadProgress}%</span>

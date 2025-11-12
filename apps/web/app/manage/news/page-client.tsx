@@ -332,7 +332,6 @@ const NewsManagePageClient: NextPage = () => {
                 </Button>
                 {selectedIsArchived ? (
                   <Button
-                    type="button"
                     variant="outline"
                     onClick={() => handleRestore(selectedItem.id)}
                     loading={restoreMutation.isPending}
@@ -341,7 +340,6 @@ const NewsManagePageClient: NextPage = () => {
                   </Button>
                 ) : (
                   <Button
-                    type="button"
                     variant="destructive"
                     onClick={() => handleDelete(selectedItem.id)}
                     loading={deleteMutation.isPending}
@@ -350,7 +348,6 @@ const NewsManagePageClient: NextPage = () => {
                   </Button>
                 )}
                 <Button
-                  type="button"
                   variant="outline"
                   onClick={() => setSelectedArticleId(undefined)}
                 >

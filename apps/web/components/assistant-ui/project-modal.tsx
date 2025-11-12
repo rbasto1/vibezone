@@ -14,19 +14,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/components/ui/utils";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { cn } from "@/components/ui/utils";
 import { PROJECT_COLOR_PRESETS } from "@/constants/projects";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useProjectActions } from "@/hooks/use-project-actions";
-import { useUIStateSetter } from "@/hooks/use-ui-state";
 import {
   useInstructionsSetter,
   useInstructionsValue,
 } from "@/hooks/use-instructions";
-import type { ProjectConfig } from "@/store/projects";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useProjectActions } from "@/hooks/use-project-actions";
+import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { trpc } from "@/lib/trpc/client";
-import { useTranslations as useGlobalTranslations } from "next-intl";
+import type { ProjectConfig } from "@/store/projects";
 
 interface ProjectModalProps {
   mode: "create" | "edit";
@@ -36,7 +35,7 @@ interface ProjectModalProps {
 export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
   const t = useTranslations("ProjectModal");
   const tColors = useTranslations("ProjectModal.colors");
-  const tInstructions = useGlobalTranslations("ProjectModal.instructions");
+  const tInstructions = useTranslations("ProjectModal.instructions");
   const isMobile = useIsMobile();
   const [name, setName] = useState(project?.name ?? "");
   const [color, setColor] = useState(
@@ -238,7 +237,6 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
 
           <DialogFooter>
             <Button
-              type="button"
               variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}

@@ -303,7 +303,7 @@ export const PreferencesInstructionsTab: FC = () => {
             <h2 className="text-lg font-semibold">{t("title")}</h2>
             <p className="text-muted-foreground text-sm">{t("description")}</p>
           </div>
-          <Button type="button" onClick={() => openCreateModal()}>
+          <Button onClick={() => openCreateModal()}>
             {t("list.addButton")}
           </Button>
         </header>
