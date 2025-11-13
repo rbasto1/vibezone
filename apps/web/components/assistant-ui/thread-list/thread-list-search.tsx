@@ -6,6 +6,7 @@ import type { FC } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ShortcutHint } from "@/components/ui/shortcut-hint";
+import { useSidebar } from "@/components/ui/sidebar/sidebar-context";
 import { useUIStateSetter } from "@/hooks/use-ui-state";
 import { useOpenSignIn } from "@/lib/auth-client";
 
@@ -17,8 +18,12 @@ export const ThreadListSearch: FC<ThreadListSearchProps> = ({ loggedIn }) => {
   const t = useTranslations("ThreadList");
   const setUIState = useUIStateSetter();
   const openSignIn = useOpenSignIn();
+  const { isMobile, setOpenMobile } = useSidebar();
   const handleOpenSearch = () => {
     setUIState({ panelOpen: "search" });
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   return (

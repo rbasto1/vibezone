@@ -3,6 +3,7 @@ import { useSetAtom } from "jotai";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 
+import { useSidebar } from "@/components/ui/sidebar/sidebar-context";
 import { useInstructionsValue } from "@/hooks/use-instructions";
 import { useMemoriesValue } from "@/hooks/use-memories";
 import {
@@ -38,6 +39,7 @@ export function useNewChatHandler() {
   const setPanelsState = usePanelsStateSetter();
   const setPanelsConfig = usePanelsConfigSetter();
   const setUIState = useUIStateSetter();
+  const { isMobile, setOpenMobile } = useSidebar();
   const projects = useProjectsValue();
   const instructions = useInstructionsValue();
   const memories = useMemoriesValue();
@@ -120,6 +122,9 @@ export function useNewChatHandler() {
         suggestionsUsed: false,
         modelPicker: null,
       });
+      if (isMobile) {
+        setOpenMobile(false);
+      }
 
       return chat;
     },
@@ -131,6 +136,8 @@ export function useNewChatHandler() {
       setPanelsState,
       setThreadMessages,
       setUIState,
+      isMobile,
+      setOpenMobile,
     ]
   );
 }
