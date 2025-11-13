@@ -73,6 +73,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         skipCloseThreadConfirmation:
           preferences?.preferenceSkipCloseThreadConfirmation ?? false,
         hideLegal: preferences?.preferenceHideLegal ?? false,
+        automaticMemoriesDisabled:
+          preferences?.preferenceAutomaticMemoriesDisabled ?? false,
       }
     : {
         webSearch: true,
@@ -83,6 +85,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         shiftEnterKeySends: false,
         skipCloseThreadConfirmation: false,
         hideLegal: false,
+        automaticMemoriesDisabled: false,
       };
 
   // Load all the state we will pass to the client side store

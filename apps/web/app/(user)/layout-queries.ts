@@ -130,6 +130,7 @@ export async function loadUserWorkspaceState(
             id: true,
             name: true,
             color: true,
+            automaticMemoriesDisabled: true,
           },
           where: and(
             eq(projectsTable.userId, userId),
@@ -207,6 +208,7 @@ export async function loadUserWorkspaceState(
       name: project.name,
       color: project.color,
       isDefault: project.id === userId,
+      automaticMemoriesDisabled: project.automaticMemoriesDisabled ?? false,
     })
   );
 
@@ -218,6 +220,8 @@ export async function loadUserWorkspaceState(
         name: defaultProject.name,
         color: defaultProject.color,
         isDefault: true,
+        automaticMemoriesDisabled:
+          defaultProject.automaticMemoriesDisabled ?? false,
       });
     }
   }
@@ -239,7 +243,7 @@ export async function loadUserWorkspaceState(
       content: memory.content,
       projectId: memory.projectId,
       isActive: memory.isActive,
-      createdAt: memory.createdAt?.toISOString() ?? new Date().toISOString(),
+      createdAt: memory.createdAt,
     })
   );
 

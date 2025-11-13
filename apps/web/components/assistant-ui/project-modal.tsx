@@ -41,6 +41,9 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
   const [color, setColor] = useState(
     project?.color ?? PROJECT_COLOR_PRESETS[0]
   );
+  const [automaticMemoriesDisabled, setAutomaticMemoriesDisabled] = useState(
+    project?.automaticMemoriesDisabled ?? false
+  );
   const [error, setError] = useState<string | null>(null);
   const setUIState = useUIStateSetter();
   const { createProject, updateProject } = useProjectActions();
@@ -70,6 +73,7 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
       void updateProject(project.id, {
         name: trimmedName,
         color,
+        automaticMemoriesDisabled,
       })
         .then(handleClose)
         .catch((submitError) => {
@@ -85,6 +89,7 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
       void createProject({
         name: trimmedName,
         color,
+        automaticMemoriesDisabled,
       })
         .then(handleClose)
         .catch((submitError) => {
@@ -227,6 +232,24 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
                   ))}
                 </div>
               )}
+            </div>
+            <div className="flex flex-col gap-2 rounded-md border bg-muted/20 px-3 py-2">
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium">
+                    {t("fields.memories.label")}
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {t("fields.memories.description")}
+                  </p>
+                </div>
+                <ToggleSwitch
+                  checked={automaticMemoriesDisabled}
+                  onChange={setAutomaticMemoriesDisabled}
+                  disabled={isSubmitting}
+                  label={t("fields.memories.toggle")}
+                />
+              </div>
             </div>
             {error && (
               <div className="rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-sm text-destructive">

@@ -4,8 +4,10 @@ import type { NewMessage } from "@/db";
 import {
   chats as chatsTable,
   db,
+  memories as memoriesTable,
   messageRatings as messageRatingsTable,
   messages as messagesTable,
+  preferences as preferencesTable,
   projects as projectsTable,
   threads as threadsTable,
 } from "@/db";
@@ -15,6 +17,10 @@ import { generateId } from "ai";
 import { and, asc, desc, eq, isNull, lte } from "drizzle-orm";
 import { z } from "zod";
 import { getChatName } from "./chats";
+import {
+  classifyMemoryCandidate,
+  generateMemoryPreview,
+} from "./memory-worker";
 import {
   authenticatedProcedure,
   publicProcedure,
@@ -111,6 +117,11 @@ export const messagesRouter = t.router({
 
       // Ensure project belongs to user
       const projectRecord = await db.query.projects.findFirst({
+        columns: {
+          id: true,
+          name: true,
+          automaticMemoriesDisabled: true,
+        },
         where: and(
           eq(projectsTable.id, projectId),
           eq(projectsTable.userId, user.id),
@@ -123,6 +134,13 @@ export const messagesRouter = t.router({
           message: "Project not found",
         });
       }
+
+      const preferencesRecord = await db.query.preferences.findFirst({
+        where: eq(preferencesTable.userId, user.id),
+        columns: {
+          preferenceAutomaticMemoriesDisabled: true,
+        },
+      });
 
       // Ensure chat exists
       const chat = await getOrInsertChat(
@@ -175,7 +193,18 @@ export const messagesRouter = t.router({
         )
         .onConflictDoNothing();
 
-      return { success: true, chat } as const;
+      const autoMemory = await maybeCreateAutomaticMemory({
+        userId: user.id,
+        projectId,
+        projectName: projectRecord.name,
+        projectAutomaticMemoriesDisabled:
+          projectRecord.automaticMemoriesDisabled ?? false,
+        preferenceAutomaticMemoriesDisabled:
+          preferencesRecord?.preferenceAutomaticMemoriesDisabled ?? false,
+        userMessageContent: firstUserMessage?.content,
+      });
+
+      return { success: true, chat, memory: autoMemory } as const;
     }),
 
   saveMessages: authenticatedProcedure
@@ -715,6 +744,84 @@ async function getOrInsertChat(
 
 const ensureNonEmpty = (value: string): string => {
   return value.trim() || "[empty]";
+};
+
+interface AutomaticMemoryOptions {
+  userId: string;
+  projectId: string;
+  projectName?: string | null;
+  projectAutomaticMemoriesDisabled: boolean;
+  preferenceAutomaticMemoriesDisabled: boolean;
+  userMessageContent: unknown;
+}
+
+type AutomaticMemoryResult = {
+  id: string;
+  title: string;
+  content: string;
+  projectId: string;
+  isActive: boolean;
+  createdAt: Date;
+};
+
+const maybeCreateAutomaticMemory = async (
+  options: AutomaticMemoryOptions
+): Promise<AutomaticMemoryResult | null> => {
+  const {
+    userId,
+    projectId,
+    projectName,
+    projectAutomaticMemoriesDisabled,
+    preferenceAutomaticMemoriesDisabled,
+    userMessageContent,
+  } = options;
+
+  if (
+    preferenceAutomaticMemoriesDisabled ||
+    projectAutomaticMemoriesDisabled ||
+    !userMessageContent
+  ) {
+    return null;
+  }
+
+  const text = extractTextFromContent(userMessageContent);
+  if (!text.length) {
+    return null;
+  }
+
+  try {
+    const classification = await classifyMemoryCandidate(text);
+    if (!classification.shouldCreate) {
+      return null;
+    }
+
+    const preview = await generateMemoryPreview({
+      text,
+      projectName,
+    });
+
+    const [created] = await db
+      .insert(memoriesTable)
+      .values({
+        userId,
+        projectId,
+        title: preview.title,
+        content: preview.content,
+      })
+      .returning({
+        id: memoriesTable.id,
+        title: memoriesTable.title,
+        content: memoriesTable.content,
+        projectId: memoriesTable.projectId,
+        isActive: memoriesTable.isActive,
+        createdAt: memoriesTable.createdAt,
+      });
+
+    return created ?? null;
+  } catch (error) {
+    console.error("Failed to create automatic memory:", error);
+    return null;
+  }
 };
 
 const cloneJsonValue = <T>(value: T): T => {

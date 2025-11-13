@@ -98,7 +98,19 @@
   "Message": {
     "copy": "Kopieren",
     "refresh": "Erneut generieren",
-    "codeBlock": "Codeblock"
+    "codeBlock": "Codeblock",
+    "memory": {
+      "tooltip": "Erinnerung erstellen",
+      "errors": {
+        "unavailable": "Aus dieser Nachricht kann noch keine Erinnerung erstellt werden."
+      }
+    },
+    "info": {
+      "tooltipLabel": "Nachrichteninfo",
+      "model": "Modell: {model}",
+      "duration": "Dauer: {value}",
+      "timestamp": "Gesendet: {value}"
+    }
   },
   "ModelDropdown": {
     "tiers": {
@@ -209,6 +221,59 @@
     "viewMemory": "Gespeichertes Memo \"{title}\" anzeigen",
     "fallbackTitle": "Memo"
   },
+  "MemoryModal": {
+    "title": "Erinnerung erstellen",
+    "description": "Wähle, welcher Teil des Gesprächs zusammengefasst werden soll, und prüfe die Vorschau vor dem Speichern.",
+    "projectLabel": "Speicherung in {project}",
+    "scope": {
+      "label": "Quelle",
+      "prompt": {
+        "title": "Deine Eingabe",
+        "description": "Fasse die Nutzernachricht zusammen, die diese Antwort ausgelöst hat."
+      },
+      "response": {
+        "title": "KI-Antwort",
+        "description": "Halte hilfreiche Details aus der Assistenten-Antwort fest."
+      },
+      "chat": {
+        "title": "Gesamter Chat",
+        "description": "Durchsuche den gesamten Verlauf nach relevanten Kontexten."
+      }
+    },
+    "fields": {
+      "title": "Titel",
+      "titlePlaceholder": "z. B. Frontend-Stil",
+      "content": "Details der Erinnerung",
+      "contentPlaceholder": "Passe die erzeugte Zusammenfassung vor dem Speichern an."
+    },
+    "actions": {
+      "preview": "Vorschau anzeigen",
+      "previewing": "Wird erstellt…",
+      "save": "Erinnerung speichern",
+      "saving": "Speichere…"
+    },
+    "errors": {
+      "missingContext": "Der benötigte Chat-Kontext konnte nicht gefunden werden.",
+      "missingProject": "Wähle vor dem Speichern ein Projekt aus.",
+      "preview": "Erinnerungsvorschau konnte nicht erstellt werden.",
+      "create": "Erinnerung konnte nicht gespeichert werden."
+    },
+    "toast": {
+      "success": "Erinnerung gespeichert"
+    }
+  },
+  "MemoryToast": {
+    "title": "Neue Erinnerung erstellt",
+    "description": "„{title}“ wurde diesem Projekt hinzugefügt.",
+    "untitled": "Unbenannte Erinnerung",
+    "actions": {
+      "delete": "Erinnerung löschen",
+      "manage": "Erinnerungen verwalten"
+    },
+    "errors": {
+      "delete": "Erinnerung konnte nicht gelöscht werden."
+    }
+  },
   "SearchPanel": {
     "title": "Chats durchsuchen",
     "description": "Finde Unterhaltungen schnell, indem du Titel und Nachrichten durchsucht.",
@@ -284,7 +349,12 @@
         "label": "Name",
         "placeholder": "Projektname"
       },
-      "color": "Farbe"
+      "color": "Farbe",
+      "memories": {
+        "label": "Automatische Erinnerungen",
+        "description": "Automatische Erinnerungsvorschläge für dieses Projekt deaktivieren.",
+        "toggle": "Automatische Erinnerungen deaktivieren"
+      }
     },
     "instructions": {
       "title": "Projektanweisungen",
@@ -406,6 +476,7 @@
     "tabs": {
       "general": "Allgemein",
       "instructions": "Anweisungen",
+      "memories": "Erinnerungen",
       "providers": "Anbieter",
       "myData": "Meine Daten"
     },
@@ -534,6 +605,38 @@
         "empty": "Noch keine Anweisungen vorhanden. Lege oben eine neue an.",
         "deletedProject": "Projekt nicht mehr verfügbar",
         "addButton": "Anweisung hinzufügen"
+      }
+    },
+    "memories": {
+      "title": "Projekt-Erinnerungen",
+      "helper": "Überprüfe und steuere die langfristigen Erinnerungen für jedes Projekt.",
+      "empty": "Noch keine Erinnerungen. Erstelle eine im Chat oder aktiviere die automatische Erfassung.",
+      "automatic": {
+        "label": "Automatische Erinnerungen deaktivieren",
+        "description": "Benutzeranfragen nicht mehr automatisch analysieren, um neue Erinnerungen anzulegen."
+      },
+      "table": {
+        "memory": "Erinnerung",
+        "project": "Projekt",
+        "createdAt": "Erstellt",
+        "status": "Status",
+        "actions": "Aktionen",
+        "toggle": "Erinnerung umschalten",
+        "untitled": "Unbenannte Erinnerung",
+        "missingProject": "Projekt entfernt"
+      },
+      "actions": {
+        "copy": "Kopieren",
+        "delete": "Löschen"
+      },
+      "toast": {
+        "copy": "Erinnerung wurde in das ausgewählte Projekt kopiert"
+      },
+      "errors": {
+        "generic": "Etwas ist schiefgelaufen.",
+        "toggle": "Erinnerung konnte nicht aktualisiert werden.",
+        "delete": "Erinnerung konnte nicht gelöscht werden.",
+        "copy": "Erinnerung konnte nicht kopiert werden."
       }
     },
     "actions": {

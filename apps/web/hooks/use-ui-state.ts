@@ -28,6 +28,7 @@ export interface UIState {
   focusPanelId?: string;
   modelPicker?: ModelPickerState | null;
   addPanelPending?: PendingAddPanel | null;
+  preferencesTab?: "general" | "instructions" | "memories" | "providers" | "my-data";
 }
 
 export interface PendingAddPanel {

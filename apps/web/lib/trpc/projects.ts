@@ -12,6 +12,7 @@ const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
 const projectInputSchema = z.object({
   name: z.string().min(1).max(60),
   color: z.string().regex(HEX_COLOR_REGEX, "Invalid color"),
+  automaticMemoriesDisabled: z.boolean().optional(),
 });
 
 export const projectsRouter = t.router({
@@ -38,6 +39,8 @@ export const projectsRouter = t.router({
             userId: user.id,
             name: input.name.trim(),
             color: input.color,
+            automaticMemoriesDisabled:
+              input.automaticMemoriesDisabled ?? false,
           })
           .returning({ id: projects.id });
 
@@ -112,6 +115,9 @@ export const projectsRouter = t.router({
         .set({
           name: name.trim(),
           color,
+          automaticMemoriesDisabled:
+            input.data.automaticMemoriesDisabled ??
+            target.automaticMemoriesDisabled,
         })
         .where(eq(projects.id, input.id))
         .returning()
@@ -294,6 +300,7 @@ async function selectProjects(userId: string, projectId?: string) {
       userId: projects.userId,
       name: projects.name,
       color: projects.color,
+      automaticMemoriesDisabled: projects.automaticMemoriesDisabled,
       createdAt: projects.createdAt,
       updatedAt: projects.updatedAt,
       isDefault: sql<boolean>`${projects.id} = ${userId}`,
@@ -315,6 +322,7 @@ async function selectProjects(userId: string, projectId?: string) {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     isDefault: row.isDefault,
+    automaticMemoriesDisabled: row.automaticMemoriesDisabled ?? false,
   }));
 }
 

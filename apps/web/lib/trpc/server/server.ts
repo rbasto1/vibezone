@@ -5,6 +5,7 @@ import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { chatsRouter } from "../chats";
 import { instructionsRouter } from "../instructions";
 import { localesRouter } from "../locales";
+import { memoriesRouter } from "../memories";
 import { messagesRouter } from "../messages";
 import { modelsRouter } from "../models";
 import { newsRouter } from "../news";
@@ -25,6 +26,7 @@ export const appRouter = t.router({
   news: newsRouter,
   projects: projectsRouter,
   instructions: instructionsRouter,
+  memories: memoriesRouter,
 });
 
 export type AppRouter = typeof appRouter;

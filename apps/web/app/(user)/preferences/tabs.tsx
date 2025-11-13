@@ -1,12 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { FC } from "react";
+import { useEffect, useState, type FC } from "react";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useUIStateSetter } from "@/hooks/use-ui-state";
+import { useUIState, type UIState } from "@/hooks/use-ui-state";
 import { siteName } from "@/lib/branding";
 import {
+  BrainIcon,
   Building2Icon,
   DatabaseBackupIcon,
   ScrollTextIcon,
@@ -16,11 +17,28 @@ import {
 import { PreferencesDataTab } from "./data";
 import { PreferencesGeneralTab } from "./general";
 import { PreferencesInstructionsTab } from "./instructions";
+import { PreferencesMemoriesTab } from "./memories";
 import { PreferencesProvidersTab } from "./providers";
 
 const PreferencesPage: FC = () => {
   const t = useTranslations("UserPreferences");
-  const setUIState = useUIStateSetter();
+  const [uiState, setUIState] = useUIState();
+  const [activeTab, setActiveTab] = useState(
+    uiState.preferencesTab ?? "general"
+  );
+
+  useEffect(() => {
+    if (uiState.preferencesTab && uiState.preferencesTab !== activeTab) {
+      setActiveTab(uiState.preferencesTab);
+    }
+  }, [uiState.preferencesTab, activeTab]);
+
+  const handleTabChange = (value: NonNullable<UIState["preferencesTab"]>) => {
+    setActiveTab(value);
+    setUIState({
+      preferencesTab: value,
+    });
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col px-4 py-4 sm:py-10 sm:px-8">
@@ -33,7 +51,9 @@ const PreferencesPage: FC = () => {
         </div>
         <button
           type="button"
-          onClick={() => setUIState({ panelOpen: null })}
+          onClick={() =>
+            setUIState({ panelOpen: null, preferencesTab: undefined })
+          }
           className="inline-flex h-9 w-9 cursor-pointer items-center justify-center self-start rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={t("actions.close")}
         >
@@ -41,7 +61,11 @@ const PreferencesPage: FC = () => {
         </button>
       </header>
 
-      <Tabs defaultValue="general" className="flex flex-col gap-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange as (value: string) => void}
+        className="flex flex-col gap-6"
+      >
         <TabsList className="border-b border-border flex w-full gap-4 rounded-none bg-transparent p-0">
           {[
             {
@@ -53,6 +77,11 @@ const PreferencesPage: FC = () => {
               value: "instructions",
               label: t("tabs.instructions"),
               Icon: ScrollTextIcon,
+            },
+            {
+              value: "memories",
+              label: t("tabs.memories"),
+              Icon: BrainIcon,
             },
             {
               value: "providers",
@@ -79,6 +108,7 @@ const PreferencesPage: FC = () => {
         <PreferencesGeneralTab />
         <PreferencesProvidersTab />
         <PreferencesInstructionsTab />
+        <PreferencesMemoriesTab />
         <PreferencesDataTab />
       </Tabs>
     </div>

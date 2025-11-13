@@ -6,7 +6,7 @@ export interface MemoryConfig {
   content: string;
   projectId: string;
   isActive: boolean;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export const memoriesAtom = atom<MemoryConfig[]>([]);
