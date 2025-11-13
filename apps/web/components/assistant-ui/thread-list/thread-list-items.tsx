@@ -14,6 +14,7 @@ import type { FC } from "react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
+import { useSidebar } from "@/components/ui/sidebar/sidebar-context";
 import { useCurrentChat } from "@/hooks/use-chat";
 import type { UseChatActionsResult } from "@/hooks/use-chat-actions";
 import { useChatActions } from "@/hooks/use-chat-actions";
@@ -35,6 +36,7 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({ projects }) => {
   const [loadingChatId, setLoadingChatId] = useState<string | null>(null);
   const setUIState = useUIStateSetter();
   const { moveChat } = useChatActions();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -91,9 +93,19 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({ projects }) => {
         return result;
       } finally {
         setLoadingChatId(null);
+        if (isMobile) {
+          setOpenMobile(false);
+        }
       }
     },
-    [loadChatById, loadingChatId, setCurrentChat, setUIState]
+    [
+      isMobile,
+      loadChatById,
+      loadingChatId,
+      setCurrentChat,
+      setOpenMobile,
+      setUIState,
+    ]
   );
 
   const hasProjects = projects.length > 0;
