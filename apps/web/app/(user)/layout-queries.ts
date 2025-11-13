@@ -8,6 +8,7 @@ import {
   chats as chatsTable,
   db,
   instructions as instructionsTable,
+  memories as memoriesTable,
   models as modelsTable,
   newsArticles as newsArticlesTable,
   preferences as preferencesTable,
@@ -21,9 +22,13 @@ import {
   NEWS_WINDOW_MS,
 } from "@/lib/constants";
 import type { InstructionConfig } from "@/store/instructions";
+import type { MemoryConfig } from "@/store/memories";
 import type { ProjectConfig } from "@/store/projects";
 import type { ThreadMessageLike } from "@assistant-ui/react";
-import type { SystemMessageInstruction } from "@vibezone/database";
+import type {
+  SystemMessageInstruction,
+  SystemMessageMemory,
+} from "@vibezone/database";
 import type { User } from "@clerk/nextjs/server";
 
 export async function GetUserModels(userId: string | undefined) {
@@ -92,9 +97,14 @@ export function getDefaultModels() {
 
 export const buildInitialMessages = (
   prompt: string | null | undefined,
-  instructions?: SystemMessageInstruction[]
+  instructions?: SystemMessageInstruction[],
+  memories?: SystemMessageMemory[]
 ): ThreadMessageLike[] => {
   if (!prompt) return [];
+  const customMetadata = {
+    ...(instructions?.length ? { instructions } : {}),
+    ...(memories?.length ? { memories } : {}),
+  };
   return [
     {
       id: generateId(),
@@ -107,7 +117,7 @@ export const buildInitialMessages = (
         },
       ],
       metadata: {
-        custom: instructions?.length ? { instructions } : {},
+        custom: Object.keys(customMetadata).length ? customMetadata : {},
       },
     } satisfies ThreadMessageLike,
   ];
@@ -167,6 +177,35 @@ export async function loadInstructions(
       )
     )
     .orderBy(instructionsTable.order, instructionsTable.createdAt);
+}
+
+export async function loadMemories(
+  userId: string | null | undefined
+): Promise<MemoryConfig[]> {
+  if (!userId) return [];
+
+  const rows = await db
+    .select({
+      id: memoriesTable.id,
+      title: memoriesTable.title,
+      content: memoriesTable.content,
+      projectId: memoriesTable.projectId,
+      isActive: memoriesTable.isActive,
+      createdAt: memoriesTable.createdAt,
+    })
+    .from(memoriesTable)
+    .where(
+      and(
+        eq(memoriesTable.userId, userId),
+        isNull(memoriesTable.deletedAt)
+      )
+    )
+    .orderBy(desc(memoriesTable.createdAt));
+
+  return rows.map((memory) => ({
+    ...memory,
+    createdAt: memory.createdAt?.toISOString() ?? new Date().toISOString(),
+  }));
 }
 
 export async function ensurePreferences(userId: string | null | undefined) {

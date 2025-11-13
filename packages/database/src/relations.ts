@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   chats,
   instructions,
+  memories,
   locales,
   messageRatings,
   messages,
@@ -69,6 +70,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   }),
   chats: many(chats),
   instructions: many(instructions),
+  memories: many(memories),
 }));
 
 export const instructionsRelations = relations(instructions, ({ one }) => ({
@@ -78,6 +80,17 @@ export const instructionsRelations = relations(instructions, ({ one }) => ({
   }),
   project: one(projects, {
     fields: [instructions.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const memoriesRelations = relations(memories, ({ one }) => ({
+  user: one(userStats, {
+    fields: [memories.userId],
+    references: [userStats.id],
+  }),
+  project: one(projects, {
+    fields: [memories.projectId],
     references: [projects.id],
   }),
 }));

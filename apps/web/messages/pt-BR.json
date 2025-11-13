@@ -205,6 +205,10 @@
     "viewSystemMessage": "Ver mensagem do sistema",
     "fallbackTitle": "Instrução"
   },
+  "ThreadMemories": {
+    "viewMemory": "Ver memória \"{title}\"",
+    "fallbackTitle": "Memória"
+  },
   "SearchPanel": {
     "title": "Pesquisar chats",
     "description": "Encontre conversas rapidamente pesquisando títulos e mensagens.",

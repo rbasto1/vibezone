@@ -65,6 +65,11 @@ export const preferences = pgTable("preferences", {
   preferenceHideLegal: boolean("preference_hide_legal")
     .default(false)
     .notNull(),
+  preferenceAutomaticMemoriesDisabled: boolean(
+    "preference_automatic_memories_disabled"
+  )
+    .default(false)
+    .notNull(),
   lastNewsSeenAt: timestampTz("last_news_seen_at"),
 
   createdAt: timestampTzNow("created_at"),
@@ -82,6 +87,9 @@ export const projects = pgTable(
       .references(() => userStats.id),
     name: text("name").notNull(),
     color: text("color").notNull(),
+    automaticMemoriesDisabled: boolean("automatic_memories_disabled")
+      .default(false)
+      .notNull(),
     createdAt: timestampTzNow("created_at"),
     updatedAt: timestampTzNowUpdated("updated_at"),
     deletedAt: timestampTz("deleted_at"),
@@ -188,6 +196,30 @@ export const instructions = pgTable(
   },
   (table) => [
     index("instructions_user_project_idx").on(table.userId, table.projectId),
+  ]
+);
+
+export const memories = pgTable(
+  "memories",
+  {
+    id: text("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()::text`),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userStats.id),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestampTzNow("created_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
+    deletedAt: timestampTz("deleted_at"),
+  },
+  (table) => [
+    index("memories_user_project_idx").on(table.userId, table.projectId),
   ]
 );
 

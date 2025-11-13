@@ -205,6 +205,10 @@
     "viewSystemMessage": "Systemnachricht anzeigen",
     "fallbackTitle": "Anweisung"
   },
+  "ThreadMemories": {
+    "viewMemory": "Gespeichertes Memo \"{title}\" anzeigen",
+    "fallbackTitle": "Memo"
+  },
   "SearchPanel": {
     "title": "Chats durchsuchen",
     "description": "Finde Unterhaltungen schnell, indem du Titel und Nachrichten durchsucht.",

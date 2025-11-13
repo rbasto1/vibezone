@@ -4,6 +4,7 @@ import {
   chatRelations,
   dataExportsRelations,
   instructionsRelations,
+  memoriesRelations,
   localesRelations,
   messageRatingsRelations,
   messagesRelations,
@@ -23,6 +24,7 @@ import {
 import {
   chats,
   instructions,
+  memories,
   dataExports,
   locales,
   messageRatings,
@@ -50,6 +52,8 @@ export {
   dataExportsRelations,
   instructions,
   instructionsRelations,
+  memories,
+  memoriesRelations,
   locales,
   localesRelations,
   messageRatings,
@@ -93,6 +97,8 @@ export type Preferences = typeof preferences.$inferSelect;
 export type NewPreferences = typeof preferences.$inferInsert;
 export type Instruction = typeof instructions.$inferSelect;
 export type NewInstruction = typeof instructions.$inferInsert;
+export type Memory = typeof memories.$inferSelect;
+export type NewMemory = typeof memories.$inferInsert;
 export type Provider = typeof providers.$inferSelect;
 export type NewProvider = typeof providers.$inferInsert;
 export type Project = typeof projects.$inferSelect;

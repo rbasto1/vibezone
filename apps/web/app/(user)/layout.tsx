@@ -23,6 +23,7 @@ import {
   getRecentNews,
   getUserPreferredModels,
   loadInstructions,
+  loadMemories,
   loadProjects,
 } from "./layout-queries";
 import { PageLoader } from "./page-loader";
@@ -52,6 +53,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
 
   const projectsInitialValuePromise = loadProjects(userId);
   const instructionsInitialValuePromise = loadInstructions(userId);
+  const memoriesInitialValuePromise = loadMemories(userId);
 
   const [preferences, locale, projectsInitialValue, instructionsInitialValue] =
     await Promise.all([
@@ -60,6 +62,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       projectsInitialValuePromise,
       instructionsInitialValuePromise,
     ]);
+  const memoriesInitialValue = await memoriesInitialValuePromise;
   const recentNewsPromise = getRecentNews(preferences?.lastNewsSeenAt, locale);
 
   const baseSystemPrompt = t("system");
@@ -113,6 +116,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const initialPromptResult = composeInstructionPrompt(
     baseSystemPrompt,
     instructionsInitialValue,
+    memoriesInitialValue,
     initialProjectId,
     projectsInitialValue
   );
@@ -124,7 +128,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       model: r.id,
       initialMessages: buildInitialMessages(
         initialPromptResult.prompt,
-        initialPromptResult.instructions
+        initialPromptResult.instructions,
+        initialPromptResult.memories
       ),
     })
   );
@@ -143,6 +148,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           preferencesInitialValue={preferencesInitialValue}
           projectsInitialValue={projectsInitialValue}
           instructionsInitialValue={instructionsInitialValue}
+          memoriesInitialValue={memoriesInitialValue}
           initialProjectId={initialProjectId}
         >
           <TooltipProvider>

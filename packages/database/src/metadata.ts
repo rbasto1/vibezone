@@ -27,6 +27,14 @@ export interface SystemMessageInstruction {
   project: SystemMessageInstructionProjectSnapshot | null;
 }
 
+export interface SystemMessageMemory {
+  id: string;
+  title: string;
+  contentStartAt: number;
+  contentLength: number;
+  project: SystemMessageInstructionProjectSnapshot | null;
+}
+
 export interface MetadataCustom {
   saved?: boolean;
   rate?: MessageRate;
@@ -34,4 +42,5 @@ export interface MetadataCustom {
   startTime?: number;
   endTime?: number;
   instructions?: SystemMessageInstruction[];
+  memories?: SystemMessageMemory[];
 }
