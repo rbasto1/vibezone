@@ -32,7 +32,7 @@ export const AppFooter: FC<AppFooterProps> = ({ isLoggedIn, onHide }) => {
 
   useEffect(() => {
     if (hideLegalPreference) onHide();
-  }, [hideLegalPreference]);
+  }, [hideLegalPreference, onHide]);
 
   if (hideLegalPreference) return null;
 

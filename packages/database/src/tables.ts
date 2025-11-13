@@ -37,7 +37,9 @@ export const userStats = pgTable("user_stats", {
 });
 
 export const preferences = pgTable("preferences", {
-  userId: text("user_id").primaryKey(),
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => userStats.id, { onDelete: "cascade" }),
 
   // User preferences
   lastModels: text("last_models").array(),
@@ -84,7 +86,7 @@ export const projects = pgTable(
       .default(sql`gen_random_uuid()::text`),
     userId: text("user_id")
       .notNull()
-      .references(() => userStats.id),
+      .references(() => userStats.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     color: text("color").notNull(),
     automaticMemoriesDisabled: boolean("automatic_memories_disabled")
@@ -184,7 +186,7 @@ export const instructions = pgTable(
       .default(sql`gen_random_uuid()::text`),
     userId: text("user_id")
       .notNull()
-      .references(() => userStats.id),
+      .references(() => userStats.id, { onDelete: "cascade" }),
     projectId: text("project_id").references(() => projects.id),
     title: text("title").notNull(),
     content: text("content").notNull(),
@@ -207,7 +209,7 @@ export const memories = pgTable(
       .default(sql`gen_random_uuid()::text`),
     userId: text("user_id")
       .notNull()
-      .references(() => userStats.id),
+      .references(() => userStats.id, { onDelete: "cascade" }),
     projectId: text("project_id")
       .notNull()
       .references(() => projects.id),
@@ -306,7 +308,9 @@ export const modelSupportedParameters = pgTable(
 export const usersModels = pgTable(
   "users_models",
   {
-    userId: text("user_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userStats.id, { onDelete: "cascade" }),
     modelId: text("model_id")
       .notNull()
       .references(() => models.id, { onDelete: "cascade" }),
@@ -348,7 +352,7 @@ export const messages = pgTable("messages", {
     .references(() => threads.id, { onDelete: "cascade" }),
   modelId: text("last_model_id")
     .notNull()
-    .references(() => models.id, { onDelete: "cascade" }),
+    .references(() => models.id),
   parentId: text("parent_id"),
   branchNumber: integer("branch_number"),
   role: text("role").notNull(), // "user" | "assistant"
@@ -416,7 +420,7 @@ export const dataExports = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
       .notNull()
-      .references(() => userStats.id),
+      .references(() => userStats.id, { onDelete: "cascade" }),
     createdAt: timestampTzNow("created_at"),
     expiresAt: timestampTz("expires_at").notNull(),
     chatCount: integer("chat_count").notNull(),
