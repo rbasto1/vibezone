@@ -27,8 +27,9 @@ export const DraggableItem: FC<DraggableItemProps> = ({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "touch-none",
-        isDragging ? "cursor-grabbing opacity-60" : "cursor-grab"
+        isDragging
+          ? "cursor-grabbing opacity-60 touch-none"
+          : "cursor-grab touch-pan-y"
       )}
       {...listeners}
       {...attributes}
