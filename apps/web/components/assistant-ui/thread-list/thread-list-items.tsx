@@ -2,7 +2,8 @@
 
 import {
   DndContext,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -36,8 +37,11 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({ projects }) => {
   const { moveChat } = useChatActions();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: { distance: 6 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 1000, tolerance: 8 },
     })
   );
 
