@@ -15,15 +15,11 @@ import { getServerCaller, prefetch } from "@/lib/trpc/server/ssr";
 import type { PanelConfig } from "@/store/panels";
 import type { PreferencesAtom } from "@/store/preferences";
 import {
-  GetUserModels,
   buildInitialMessages,
-  ensureGeneralProject,
-  ensurePreferences,
   getDefaultModels,
   getRecentNews,
   getUserPreferredModels,
-  loadInstructions,
-  loadProjects,
+  loadUserWorkspaceState,
 } from "./layout-queries";
 import { PageLoader } from "./page-loader";
 
@@ -33,7 +29,12 @@ export default async function RootLayout({ children }: PropsWithChildren) {
 
   const authUser = await currentUser();
   const userId = authUser?.id;
-  const preferencesPromise = ensurePreferences(userId);
+
+  const t = await tPromise;
+  const workspaceState = await loadUserWorkspaceState(
+    authUser,
+    t("generalProjectName")
+  );
 
   const statePromise = userId
     ? getServerCaller().then((caller) =>
@@ -45,22 +46,16 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       )
     : null;
 
-  const { lastModels, hiddenProviders } = await GetUserModels(userId);
-
-  const t = await tPromise;
-  await ensureGeneralProject(authUser, t("generalProjectName"));
-
-  const projectsInitialValuePromise = loadProjects(userId);
-  const instructionsInitialValuePromise = loadInstructions(userId);
-
-  const [preferences, locale, projectsInitialValue, instructionsInitialValue] =
-    await Promise.all([
-      preferencesPromise,
-      localePromise,
-      projectsInitialValuePromise,
-      instructionsInitialValuePromise,
-    ]);
+  const locale = await localePromise;
+  const {
+    projects: projectsInitialValue,
+    instructions: instructionsInitialValue,
+    memories: memoriesInitialValue,
+    preferences,
+  } = workspaceState;
   const recentNewsPromise = getRecentNews(preferences?.lastNewsSeenAt, locale);
+  const hiddenProviders = new Set(preferences?.preferenceHiddenProviders ?? []);
+  const lastModels = preferences?.lastModels ?? [];
 
   const baseSystemPrompt = t("system");
   const preferencesInitialValue: PreferencesAtom = preferences
@@ -78,6 +73,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         skipCloseThreadConfirmation:
           preferences?.preferenceSkipCloseThreadConfirmation ?? false,
         hideLegal: preferences?.preferenceHideLegal ?? false,
+        automaticMemoriesDisabled:
+          preferences?.preferenceAutomaticMemoriesDisabled ?? false,
       }
     : {
         webSearch: true,
@@ -88,6 +85,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         shiftEnterKeySends: false,
         skipCloseThreadConfirmation: false,
         hideLegal: false,
+        automaticMemoriesDisabled: false,
       };
 
   // Load all the state we will pass to the client side store
@@ -113,6 +111,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const initialPromptResult = composeInstructionPrompt(
     baseSystemPrompt,
     instructionsInitialValue,
+    memoriesInitialValue,
     initialProjectId,
     projectsInitialValue
   );
@@ -124,7 +123,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       model: r.id,
       initialMessages: buildInitialMessages(
         initialPromptResult.prompt,
-        initialPromptResult.instructions
+        initialPromptResult.instructions,
+        initialPromptResult.memories
       ),
     })
   );
@@ -143,6 +143,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
           preferencesInitialValue={preferencesInitialValue}
           projectsInitialValue={projectsInitialValue}
           instructionsInitialValue={instructionsInitialValue}
+          memoriesInitialValue={memoriesInitialValue}
           initialProjectId={initialProjectId}
         >
           <TooltipProvider>

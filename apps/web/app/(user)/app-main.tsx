@@ -44,10 +44,12 @@ export const AppMain: FC = () => {
 
   const saveLastModels = useSaveLastModels();
   const saveLastProject = useSaveLastProject();
-  const lastSavedProjectIdRef = useRef<string | null | undefined>(undefined);
   const [threadMessages, setThreadMessages] = useAtom(threadMessagesAtom);
   const duplicateThreadMutation = trpc.messages.duplicateThread.useMutation();
   const currentChat = useCurrentChatValue();
+  const lastSavedProjectIdRef = useRef<string | null>(
+    currentChat.projectId ?? null
+  );
   const currentChatId = currentChat.addedToList
     ? (currentChat?.id ?? null)
     : null;

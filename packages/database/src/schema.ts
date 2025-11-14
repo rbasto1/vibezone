@@ -5,11 +5,13 @@ import {
   dataExportsRelations,
   instructionsRelations,
   localesRelations,
+  memoriesRelations,
   messageRatingsRelations,
   messagesRelations,
   modelsRelations,
   modelSupportedParametersRelations,
   modelTranslationsRelations,
+  preferencesRelations,
   projectsRelations,
   providersRelations,
   suggestionGroupsRelations,
@@ -18,13 +20,15 @@ import {
   threadsRelations,
   usageRelations,
   usersModelsRelations,
+  userStatsRelations,
 } from "./relations";
 
 import {
   chats,
-  instructions,
   dataExports,
+  instructions,
   locales,
+  memories,
   messageRatings,
   messages,
   models,
@@ -52,6 +56,8 @@ export {
   instructionsRelations,
   locales,
   localesRelations,
+  memories,
+  memoriesRelations,
   messageRatings,
   messageRatingsRelations,
   messages,
@@ -64,6 +70,7 @@ export {
   modelTranslationsRelations,
   newsArticles,
   preferences,
+  preferencesRelations,
   projects,
   projectsRelations,
   providers,
@@ -82,6 +89,7 @@ export {
   usersModels,
   usersModelsRelations,
   userStats,
+  userStatsRelations,
 };
 
 export type ProviderTier = (typeof providerTiers.enumValues)[number];
@@ -93,6 +101,8 @@ export type Preferences = typeof preferences.$inferSelect;
 export type NewPreferences = typeof preferences.$inferInsert;
 export type Instruction = typeof instructions.$inferSelect;
 export type NewInstruction = typeof instructions.$inferInsert;
+export type Memory = typeof memories.$inferSelect;
+export type NewMemory = typeof memories.$inferInsert;
 export type Provider = typeof providers.$inferSelect;
 export type NewProvider = typeof providers.$inferInsert;
 export type Project = typeof projects.$inferSelect;

@@ -10,6 +10,7 @@ import {
   text,
   uniqueIndex,
   uuid,
+  vector,
 } from "drizzle-orm/pg-core";
 
 import { providerTiers } from "./enums";
@@ -37,7 +38,9 @@ export const userStats = pgTable("user_stats", {
 });
 
 export const preferences = pgTable("preferences", {
-  userId: text("user_id").primaryKey(),
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => userStats.id, { onDelete: "cascade" }),
 
   // User preferences
   lastModels: text("last_models").array(),
@@ -65,6 +68,11 @@ export const preferences = pgTable("preferences", {
   preferenceHideLegal: boolean("preference_hide_legal")
     .default(false)
     .notNull(),
+  preferenceAutomaticMemoriesDisabled: boolean(
+    "preference_automatic_memories_disabled"
+  )
+    .default(false)
+    .notNull(),
   lastNewsSeenAt: timestampTz("last_news_seen_at"),
 
   createdAt: timestampTzNow("created_at"),
@@ -79,9 +87,12 @@ export const projects = pgTable(
       .default(sql`gen_random_uuid()::text`),
     userId: text("user_id")
       .notNull()
-      .references(() => userStats.id),
+      .references(() => userStats.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     color: text("color").notNull(),
+    automaticMemoriesDisabled: boolean("automatic_memories_disabled")
+      .default(false)
+      .notNull(),
     createdAt: timestampTzNow("created_at"),
     updatedAt: timestampTzNowUpdated("updated_at"),
     deletedAt: timestampTz("deleted_at"),
@@ -176,7 +187,7 @@ export const instructions = pgTable(
       .default(sql`gen_random_uuid()::text`),
     userId: text("user_id")
       .notNull()
-      .references(() => userStats.id),
+      .references(() => userStats.id, { onDelete: "cascade" }),
     projectId: text("project_id").references(() => projects.id),
     title: text("title").notNull(),
     content: text("content").notNull(),
@@ -188,6 +199,31 @@ export const instructions = pgTable(
   },
   (table) => [
     index("instructions_user_project_idx").on(table.userId, table.projectId),
+  ]
+);
+
+export const memories = pgTable(
+  "memories",
+  {
+    id: text("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()::text`),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userStats.id, { onDelete: "cascade" }),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestampTzNow("created_at"),
+    updatedAt: timestampTzNowUpdated("updated_at"),
+    deletedAt: timestampTz("deleted_at"),
+  },
+  (table) => [
+    index("memories_user_project_idx").on(table.userId, table.projectId),
   ]
 );
 
@@ -274,7 +310,9 @@ export const modelSupportedParameters = pgTable(
 export const usersModels = pgTable(
   "users_models",
   {
-    userId: text("user_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userStats.id, { onDelete: "cascade" }),
     modelId: text("model_id")
       .notNull()
       .references(() => models.id, { onDelete: "cascade" }),
@@ -316,7 +354,7 @@ export const messages = pgTable("messages", {
     .references(() => threads.id, { onDelete: "cascade" }),
   modelId: text("last_model_id")
     .notNull()
-    .references(() => models.id, { onDelete: "cascade" }),
+    .references(() => models.id),
   parentId: text("parent_id"),
   branchNumber: integer("branch_number"),
   role: text("role").notNull(), // "user" | "assistant"
@@ -384,7 +422,7 @@ export const dataExports = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
       .notNull()
-      .references(() => userStats.id),
+      .references(() => userStats.id, { onDelete: "cascade" }),
     createdAt: timestampTzNow("created_at"),
     expiresAt: timestampTz("expires_at").notNull(),
     chatCount: integer("chat_count").notNull(),

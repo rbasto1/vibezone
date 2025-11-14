@@ -1,5 +1,5 @@
 import { useSetAtom } from "jotai";
-import { type FC, useEffect, useState } from "react";
+import { type FC, useCallback, useEffect, useState } from "react";
 
 import { AnonQuotaBanner } from "@/components/assistant-ui/anon-quota-banner";
 import { GlobalComposer } from "@/components/assistant-ui/global-composer";
@@ -61,6 +61,9 @@ export const AppChat: FC<AppChatProps> = ({ hide, focusPanelId }) => {
       modelPicker: { type: "suggestion" },
     }));
   };
+
+  // this function is used in an useEffect inside AppFooter, has to be a callback
+  const hideAppFooter = useCallback(() => setSessionHideLegal(true), []);
 
   const showTabs = isMobile && panelsConfig.length > 1;
 
@@ -163,10 +166,7 @@ export const AppChat: FC<AppChatProps> = ({ hide, focusPanelId }) => {
         </div>
 
         {!sessionHideLegal && (
-          <AppFooter
-            isLoggedIn={!!user}
-            onHide={() => setSessionHideLegal(true)}
-          />
+          <AppFooter isLoggedIn={!!user} onHide={hideAppFooter} />
         )}
       </div>
     </div>

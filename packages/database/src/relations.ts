@@ -1,13 +1,16 @@
 import { relations } from "drizzle-orm";
 import {
   chats,
+  dataExports,
   instructions,
   locales,
+  memories,
   messageRatings,
   messages,
   models,
   modelSupportedParameters,
   modelTranslations,
+  preferences,
   projects,
   providers,
   suggestionGroups,
@@ -17,7 +20,6 @@ import {
   usage,
   usersModels,
   userStats,
-  dataExports,
 } from "./tables";
 
 export const modelsRelations = relations(models, ({ one, many }) => ({
@@ -69,6 +71,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   }),
   chats: many(chats),
   instructions: many(instructions),
+  memories: many(memories),
 }));
 
 export const instructionsRelations = relations(instructions, ({ one }) => ({
@@ -79,6 +82,34 @@ export const instructionsRelations = relations(instructions, ({ one }) => ({
   project: one(projects, {
     fields: [instructions.projectId],
     references: [projects.id],
+  }),
+}));
+
+export const memoriesRelations = relations(memories, ({ one }) => ({
+  user: one(userStats, {
+    fields: [memories.userId],
+    references: [userStats.id],
+  }),
+  project: one(projects, {
+    fields: [memories.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const userStatsRelations = relations(userStats, ({ many, one }) => ({
+  projects: many(projects),
+  instructions: many(instructions),
+  memories: many(memories),
+  preferences: one(preferences, {
+    fields: [userStats.id],
+    references: [preferences.userId],
+  }),
+}));
+
+export const preferencesRelations = relations(preferences, ({ one }) => ({
+  user: one(userStats, {
+    fields: [preferences.userId],
+    references: [userStats.id],
   }),
 }));
 

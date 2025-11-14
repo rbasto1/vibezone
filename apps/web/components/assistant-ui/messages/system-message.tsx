@@ -6,7 +6,7 @@ import {
   type ThreadMessageLike,
 } from "@assistant-ui/react";
 import { motion } from "framer-motion";
-import { AsteriskIcon, ScrollTextIcon } from "lucide-react";
+import { AsteriskIcon, BrainIcon, ScrollTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useMemo,
@@ -20,6 +20,7 @@ import { Chip, ChipLabel, ChipLeading } from "@/components/ui/chip";
 import type {
   MessageMetadata,
   SystemMessageInstruction,
+  SystemMessageMemory,
 } from "@vibezone/database";
 import { InstructionDetailsModal } from "../threads/instruction-details-modal";
 
@@ -63,7 +64,7 @@ const textFromSystemMessage = (message: ThreadMessageLike | undefined) => {
 
 const getInstructionContent = (
   text: string,
-  instruction: SystemMessageInstruction
+  instruction: SystemMessageInstruction | SystemMessageMemory
 ) => {
   if (!text.length) return "";
   const safeStart = Math.max(
@@ -84,16 +85,19 @@ export const SystemMessage: FC = () => {
 
   const systemText = useMemo(() => textFromSystemMessage(message), [message]);
 
-  const instructions = (message?.metadata as MessageMetadata | undefined)
-    ?.custom?.instructions;
+  const customMetadata = (message?.metadata as MessageMetadata | undefined)
+    ?.custom;
+  const instructions = customMetadata?.instructions;
+  const memories = customMetadata?.memories;
 
   const hasSystemText = !!systemText.length;
   const hasInstructions = !!instructions?.length;
-  const showFallback = hasSystemText && !hasInstructions;
+  const hasMemories = !!memories?.length;
+  const showFallback = hasSystemText && !hasInstructions && !hasMemories;
   const defaultSystemMessage = t("Prompts.system");
 
   if (
-    (!hasInstructions && !showFallback) ||
+    (!hasInstructions && !hasMemories && !showFallback) ||
     systemText === defaultSystemMessage
   ) {
     return null;
@@ -168,6 +172,21 @@ export const SystemMessage: FC = () => {
                   project: instruction.project,
                 },
                 t("ThreadInstructions.viewInstruction", { title: label })
+              );
+            })}
+            {memories?.map((memory) => {
+              const content = getInstructionContent(systemText, memory);
+              const label = memory.title || t("ThreadMemories.fallbackTitle");
+              return renderChip(
+                `memory-${memory.id}`,
+                <BrainIcon className="size-4 text-muted-foreground" />,
+                label,
+                {
+                  title: label,
+                  content,
+                  project: memory.project,
+                },
+                t("ThreadMemories.viewMemory", { title: label })
               );
             })}
             {showFallback &&

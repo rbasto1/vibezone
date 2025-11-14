@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 
-import * as schema from "@/db";
-import { db, type Model, type Provider } from "@/db";
+import { db, schema, type Model, type Provider } from "@/db";
+import { neon } from "@neondatabase/serverless";
 
 const providerFields: (keyof Provider)[] = [
   "name",
@@ -39,7 +39,7 @@ async function main() {
   const { news } = getOpts(opts);
 
   const sourceDb = db;
-  const targetDb = drizzle(targetConnStr, { schema });
+  const targetDb = drizzle(neon(targetConnStr), { schema });
 
   if (news) {
     await copyNews(sourceDb, targetDb);

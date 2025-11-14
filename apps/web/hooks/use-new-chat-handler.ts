@@ -5,6 +5,7 @@ import { useCallback, useMemo } from "react";
 
 import { useSidebar } from "@/components/ui/sidebar/sidebar-context";
 import { useInstructionsValue } from "@/hooks/use-instructions";
+import { useMemoriesValue } from "@/hooks/use-memories";
 import {
   usePanelsConfigSetter,
   usePanelsStateSetter,
@@ -20,7 +21,10 @@ import type { PanelConfig } from "@/store/panels";
 import { usePendingUserMessagesClear } from "@/store/pending-user-messages";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import type { ThreadMessageLike } from "@assistant-ui/react";
-import type { SystemMessageInstruction } from "@vibezone/database";
+import type {
+  SystemMessageInstruction,
+  SystemMessageMemory,
+} from "@vibezone/database";
 import { useNewChat } from "./use-chat";
 import { useStableValue } from "./use-stable-value";
 import { useThreadRuntimeControllersValue } from "./use-thread-controllers";
@@ -38,6 +42,7 @@ export function useNewChatHandler() {
   const { isMobile, setOpenMobile } = useSidebar();
   const projects = useProjectsValue();
   const instructions = useInstructionsValue();
+  const memories = useMemoriesValue();
   const runtimeControllers = useThreadRuntimeControllersValue();
   const setThreadMessages = useSetAtom(threadMessagesAtom);
   const clearPendingUserMessages = usePendingUserMessagesClear();
@@ -55,6 +60,7 @@ export function useNewChatHandler() {
     projects,
     runtimeControllers,
     baseSystemPrompt,
+    memories,
   });
 
   return useCallback(
@@ -64,6 +70,7 @@ export function useNewChatHandler() {
         instructions,
         projects,
         runtimeControllers,
+        memories,
         baseSystemPrompt,
       } = state.current;
 
@@ -76,6 +83,7 @@ export function useNewChatHandler() {
       const promptResult = composeInstructionPrompt(
         baseSystemPrompt,
         instructions,
+        memories,
         targetProjectId,
         projects
       );
@@ -95,7 +103,8 @@ export function useNewChatHandler() {
           const id = generateThreadId(order);
           const initialMessages = buildSystemMessages(
             promptResult.prompt,
-            promptResult.instructions
+            promptResult.instructions,
+            promptResult.memories
           );
           nextThreadMessages[id] = initialMessages;
           return {
@@ -135,9 +144,14 @@ export function useNewChatHandler() {
 
 const buildSystemMessages = (
   systemPrompt: InstructionPromptResult["prompt"],
-  instructions?: SystemMessageInstruction[]
+  instructions?: SystemMessageInstruction[],
+  memories?: SystemMessageMemory[]
 ): ThreadMessageLike[] => {
   if (!systemPrompt) return [];
+  const customMetadata = {
+    ...(instructions?.length ? { instructions } : {}),
+    ...(memories?.length ? { memories } : {}),
+  };
   return [
     {
       id: generateId(),
@@ -150,7 +164,7 @@ const buildSystemMessages = (
         },
       ],
       metadata: {
-        custom: instructions?.length ? { instructions } : {},
+        custom: Object.keys(customMetadata).length ? customMetadata : {},
       },
     } satisfies ThreadMessageLike,
   ];

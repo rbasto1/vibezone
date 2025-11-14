@@ -1,7 +1,7 @@
 import { cn } from "@/components/ui/utils";
-import { LucideProps } from "lucide-react";
+import type { LucideProps } from "lucide-react";
 import type { FC, ForwardRefExoticComponent, RefAttributes } from "react";
-import { TierOptionId } from "./model-dropdown-constants";
+import type { TierOptionId } from "./model-dropdown-constants";
 
 interface TierOptionButtonProps {
   id: TierOptionId;

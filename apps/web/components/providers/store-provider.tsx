@@ -8,6 +8,7 @@ import { generateChatId } from "@/lib/id";
 import type { GetModelsListReturn } from "@/lib/trpc/models";
 import { currentChatAtom } from "@/store/chat";
 import { instructionsAtom, type InstructionConfig } from "@/store/instructions";
+import { memoriesAtom, type MemoryConfig } from "@/store/memories";
 import type { PanelState } from "@/store/panels";
 import {
   panelConfigAtom,
@@ -23,6 +24,7 @@ type ModelsProviderProps = PropsWithChildren<{
   preferencesInitialValue: PreferencesAtom;
   projectsInitialValue: ProjectConfig[];
   instructionsInitialValue: InstructionConfig[];
+  memoriesInitialValue: MemoryConfig[];
   initialProjectId: string | null;
 }>;
 
@@ -31,6 +33,7 @@ export function StoreProvider({
   preferencesInitialValue,
   projectsInitialValue,
   instructionsInitialValue,
+  memoriesInitialValue,
   initialProjectId,
   children,
 }: ModelsProviderProps) {
@@ -50,6 +53,7 @@ export function StoreProvider({
     s.set(preferencesAtom, preferencesInitialValue);
     s.set(projectsAtom, projectsInitialValue);
     s.set(instructionsAtom, instructionsInitialValue);
+    s.set(memoriesAtom, memoriesInitialValue);
 
     // Initialize chat atom with a new chat ID
     const defaultProjectId =
@@ -72,6 +76,7 @@ export function StoreProvider({
     preferencesInitialValue,
     projectsInitialValue,
     instructionsInitialValue,
+    memoriesInitialValue,
     initialProjectId,
   ]);
 

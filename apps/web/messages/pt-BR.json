@@ -98,7 +98,19 @@
   "Message": {
     "copy": "Copiar",
     "refresh": "Re-gerar",
-    "codeBlock": "bloco de código"
+    "codeBlock": "bloco de código",
+    "memory": {
+      "tooltip": "Criar memória",
+      "errors": {
+        "unavailable": "Ainda não é possível criar uma memória a partir desta mensagem."
+      }
+    },
+    "info": {
+      "tooltipLabel": "Informações da mensagem",
+      "model": "Modelo: {model}",
+      "duration": "Duração: {value}",
+      "timestamp": "Enviada em: {value}"
+    }
   },
   "ModelDropdown": {
     "tiers": {
@@ -205,6 +217,63 @@
     "viewSystemMessage": "Ver mensagem do sistema",
     "fallbackTitle": "Instrução"
   },
+  "ThreadMemories": {
+    "viewMemory": "Ver memória \"{title}\"",
+    "fallbackTitle": "Memória"
+  },
+  "MemoryModal": {
+    "title": "Criar memória",
+    "description": "Escolha qual parte da conversa resumir e visualize antes de salvar.",
+    "projectLabel": "Salvando em {project}",
+    "scope": {
+      "label": "Fonte",
+      "prompt": {
+        "title": "Seu prompt",
+        "description": "Resuma a mensagem do usuário que gerou esta resposta."
+      },
+      "response": {
+        "title": "Resposta da IA",
+        "description": "Use a resposta do assistente para registrar detalhes úteis."
+      },
+      "chat": {
+        "title": "Chat completo",
+        "description": "Analise todo o histórico para montar uma memória mais ampla."
+      }
+    },
+    "fields": {
+      "title": "Título",
+      "titlePlaceholder": "ex.: Estilo do frontend",
+      "content": "Detalhes da memória",
+      "contentPlaceholder": "Ajuste o resumo gerado antes de salvar."
+    },
+    "actions": {
+      "preview": "Gerar prévia da memória",
+      "previewing": "Gerando…",
+      "save": "Salvar memória",
+      "saving": "Salvando…"
+    },
+    "errors": {
+      "missingContext": "Não encontramos o contexto necessário do chat.",
+      "missingProject": "Selecione um projeto antes de salvar a memória.",
+      "preview": "Não foi possível gerar a prévia da memória.",
+      "create": "Não foi possível salvar a memória."
+    },
+    "toast": {
+      "success": "Memória salva"
+    }
+  },
+  "MemoryToast": {
+    "title": "Nova memória criada",
+    "description": "\"{title}\" foi salva neste projeto.",
+    "untitled": "Memória sem título",
+    "actions": {
+      "delete": "Excluir memória",
+      "manage": "Gerenciar memórias"
+    },
+    "errors": {
+      "delete": "Não foi possível excluir a memória."
+    }
+  },
   "SearchPanel": {
     "title": "Pesquisar chats",
     "description": "Encontre conversas rapidamente pesquisando títulos e mensagens.",
@@ -280,7 +349,12 @@
         "label": "Nome",
         "placeholder": "Nome do projeto"
       },
-      "color": "Cor"
+      "color": "Cor",
+      "memories": {
+        "label": "Memórias automáticas",
+        "description": "Desativa sugestões automáticas de memórias para este projeto.",
+        "toggle": "Desativar memórias automáticas"
+      }
     },
     "instructions": {
       "title": "Instruções do projeto",
@@ -402,6 +476,7 @@
     "tabs": {
       "general": "Geral",
       "instructions": "Instruções",
+      "memories": "Memórias",
       "providers": "Provedores",
       "myData": "Meus dados"
     },
@@ -530,6 +605,38 @@
         "empty": "Ainda não há instruções. Adicione uma acima para começar.",
         "deletedProject": "Projeto indisponível",
         "addButton": "Adicionar instrução"
+      }
+    },
+    "memories": {
+      "title": "Memórias do projeto",
+      "helper": "Revise e controle as memórias de longo prazo criadas para cada projeto.",
+      "empty": "Ainda não há memórias. Crie uma em um chat ou ative a captura automática.",
+      "automatic": {
+        "label": "Desativar memórias automáticas",
+        "description": "Impede que analisemos as mensagens para gerar novas memórias automaticamente."
+      },
+      "table": {
+        "memory": "Memória",
+        "project": "Projeto",
+        "createdAt": "Criada em",
+        "status": "Status",
+        "actions": "Ações",
+        "toggle": "Ativar/desativar memória",
+        "untitled": "Memória sem título",
+        "missingProject": "Projeto removido"
+      },
+      "actions": {
+        "copy": "Copiar",
+        "delete": "Excluir"
+      },
+      "toast": {
+        "copy": "Memória copiada para o projeto selecionado"
+      },
+      "errors": {
+        "generic": "Algo deu errado.",
+        "toggle": "Não foi possível atualizar a memória.",
+        "delete": "Não foi possível excluir a memória.",
+        "copy": "Não foi possível copiar a memória."
       }
     },
     "actions": {

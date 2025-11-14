@@ -320,6 +320,7 @@ export const usersRouter = t.router({
         shiftEnterKeySends: z.boolean().optional(),
         skipCloseThreadConfirmation: z.boolean().optional(),
         hideLegal: z.boolean().optional(),
+        automaticMemoriesDisabled: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -368,6 +369,8 @@ export const usersRouter = t.router({
         preferenceSkipCloseThreadConfirmation:
           input.skipCloseThreadConfirmation,
         preferenceHideLegal: input.hideLegal,
+        preferenceAutomaticMemoriesDisabled:
+          input.automaticMemoriesDisabled,
       };
 
       if (
@@ -398,6 +401,8 @@ export const usersRouter = t.router({
           enterKeySends: preferences.preferenceEnterKeySends,
           shiftEnterKeySends: preferences.preferenceShiftEnterKeySends,
           hideLegal: preferences.preferenceHideLegal,
+          automaticMemoriesDisabled:
+            preferences.preferenceAutomaticMemoriesDisabled,
         },
       };
     }),

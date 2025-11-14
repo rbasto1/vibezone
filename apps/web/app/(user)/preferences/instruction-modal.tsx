@@ -115,7 +115,7 @@ export const InstructionModal: FC<InstructionModalProps> = ({
                 id="instruction-modal-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                maxLength={200}
+                maxLength={80}
                 placeholder={t("form.title.placeholder")}
                 autoFocus
               />
@@ -168,11 +168,12 @@ export const InstructionModal: FC<InstructionModalProps> = ({
               </label>
               <textarea
                 id="instruction-modal-content"
-                className="min-h-[180px] w-full rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="min-h-[180px] w-full rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
                 placeholder={t("form.content.placeholder")}
-                maxLength={20000}
+                maxLength={4000}
+                aria-invalid={content.length >= 4000}
               />
             </div>
           </div>

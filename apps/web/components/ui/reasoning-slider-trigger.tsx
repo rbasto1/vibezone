@@ -12,7 +12,7 @@ import { useUserPreferences } from "@/hooks/use-user-preferences";
 import { useUser } from "@/lib/auth-client";
 import { modelMap } from "@/lib/model-map";
 import { trpc } from "@/lib/trpc/client";
-import { BrainIcon } from "lucide-react";
+import { GraduationCapIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -138,7 +138,7 @@ export const ReasoningSliderTrigger = () => {
             aria-label={t("label")}
             className="h-8 w-8 rounded-full p-1 hover:bg-muted-foreground/15 dark:border-muted-foreground/15 dark:hover:bg-muted-foreground/30"
           >
-            <BrainIcon className="size-5" />
+            <GraduationCapIcon className="size-5" />
           </Button>
           {showReasoningSlider && (
             <ReasoningSlider

@@ -6,12 +6,15 @@ import { usePendingUserMessagesClear } from "@/store/pending-user-messages";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useCurrentChatValue } from "./use-chat";
+import { useMemoriesSetter } from "./use-memories";
 import { usePanelsConfigValue } from "./use-panels";
 import { useProjectsValue } from "./use-projects";
 import { useStableValue } from "./use-stable-value";
+import { useUIStateSetter } from "./use-ui-state";
 
 type SaveUserMessageResult = RouterOutputs["messages"]["saveUserMessage"];
 type ListChatsOutput = RouterOutputs["chats"]["listChats"];
@@ -22,12 +25,16 @@ export const useUserMessageSaver = () => {
   const chat = useCurrentChatValue();
   const panelsConfig = usePanelsConfigValue();
   const projects = useProjectsValue();
+  const setMemories = useMemoriesSetter();
   const clearPendingUserMessages = usePendingUserMessagesClear();
   const utils = trpc.useUtils();
   const saveUserMessageMutation = trpc.messages.saveUserMessage.useMutation({
     retry: 3,
     retryDelay: 5000,
   });
+  const deleteMemoryMutation = trpc.memories.delete.useMutation();
+  const setUIState = useUIStateSetter();
+  const memoryToastT = useTranslations("MemoryToast");
   const saveUserMessageMutationStable = useStableValue(saveUserMessageMutation);
   const threadMessagesStable = useStableValue(useAtomValue(threadMessagesAtom));
 
@@ -143,6 +150,66 @@ export const useUserMessageSaver = () => {
         })
         .then((result) => {
           syncThreadLists(result.chat);
+          const memory = result.memory;
+          if (!memory) return;
+          setMemories((current) => [memory].concat(current));
+
+          toast.custom(
+            (toastId: string | number) => (
+              <div className="rounded-lg border bg-background px-4 py-3 text-sm shadow-sm">
+                <div className="font-semibold">{memoryToastT("title")}</div>
+                <p className="text-muted-foreground text-xs">
+                  {memoryToastT("description", {
+                    title: memory.title || memoryToastT("untitled"),
+                  })}
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    className="rounded-md border border-destructive px-3 py-1 text-xs font-medium text-destructive transition hover:bg-destructive/10"
+                    onClick={() =>
+                      deleteMemoryMutation.mutate(
+                        { id: memory.id },
+                        {
+                          onSuccess: () => {
+                            setMemories((current) =>
+                              current.filter(
+                                (memoryEntry) => memoryEntry.id !== memory.id
+                              )
+                            );
+                            toast.dismiss(toastId);
+                          },
+                          onError: (error: unknown) => {
+                            const message: string =
+                              error instanceof Error
+                                ? error.message
+                                : memoryToastT("errors.delete");
+                            toast.error(message);
+                          },
+                        }
+                      )
+                    }
+                  >
+                    {memoryToastT("actions.delete")}
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-md border px-3 py-1 text-xs font-medium transition hover:bg-muted"
+                    onClick={() => {
+                      setUIState({
+                        panelOpen: "preferences",
+                        preferencesTab: "memories",
+                      });
+                      toast.dismiss(toastId);
+                    }}
+                  >
+                    {memoryToastT("actions.manage")}
+                  </button>
+                </div>
+              </div>
+            ),
+            { duration: 10000 }
+          );
         })
         .catch((error) => {
           console.error("onError: failed to save user message:", error);
@@ -158,6 +225,10 @@ export const useUserMessageSaver = () => {
       chatId,
       clearPendingUserMessages,
       syncThreadLists,
+      setMemories,
+      deleteMemoryMutation,
+      setUIState,
+      memoryToastT,
     ]
   );
 };

@@ -5,6 +5,7 @@ export interface ProjectConfig {
   name: string;
   color: string;
   isDefault: boolean;
+  automaticMemoriesDisabled: boolean;
 }
 
 export const projectsAtom = atom<ProjectConfig[]>([]);

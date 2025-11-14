@@ -1,6 +1,6 @@
 import {
-  BrainIcon,
   EyeIcon,
+  GraduationCapIcon,
   ImageIcon,
   MountainIcon,
   TrophyIcon,
@@ -44,7 +44,7 @@ export const capabilityOptions = [
   {
     id: "capReason" as const,
     labelKey: "capabilities.reasoning" as const,
-    Icon: BrainIcon,
+    Icon: GraduationCapIcon,
     color: "text-violet-600 dark:text-violet-400",
   },
   {

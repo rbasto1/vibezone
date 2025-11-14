@@ -98,7 +98,19 @@
   "Message": {
     "copy": "Copy",
     "refresh": "Refresh",
-    "codeBlock": "code block"
+    "codeBlock": "code block",
+    "memory": {
+      "tooltip": "Create memory",
+      "errors": {
+        "unavailable": "This message cannot create a memory yet."
+      }
+    },
+    "info": {
+      "tooltipLabel": "Message info",
+      "model": "Model: {model}",
+      "duration": "Duration: {value}",
+      "timestamp": "Sent: {value}"
+    }
   },
   "ModelDropdown": {
     "tiers": {
@@ -205,6 +217,63 @@
     "viewSystemMessage": "View system message",
     "fallbackTitle": "Instruction"
   },
+  "ThreadMemories": {
+    "viewMemory": "View memory \"{title}\"",
+    "fallbackTitle": "Memory"
+  },
+  "MemoryModal": {
+    "title": "Create memory",
+    "description": "Choose which part of the conversation to summarize and preview it before saving.",
+    "projectLabel": "Saving to {project}",
+    "scope": {
+      "label": "Source",
+      "prompt": {
+        "title": "Your prompt",
+        "description": "Summarize the user message that triggered this reply."
+      },
+      "response": {
+        "title": "AI response",
+        "description": "Capture helpful details from the assistant answer."
+      },
+      "chat": {
+        "title": "Whole chat",
+        "description": "Scan the entire conversation for important context."
+      }
+    },
+    "fields": {
+      "title": "Title",
+      "titlePlaceholder": "e.g. Frontend coding style",
+      "content": "Memory details",
+      "contentPlaceholder": "Add or adjust the generated summary before saving."
+    },
+    "actions": {
+      "preview": "Preview memory",
+      "previewing": "Generating…",
+      "save": "Save memory",
+      "saving": "Saving…"
+    },
+    "errors": {
+      "missingContext": "We couldn’t find the required chat context.",
+      "missingProject": "Select a project before saving a memory.",
+      "preview": "Unable to generate a memory preview.",
+      "create": "Unable to save the memory."
+    },
+    "toast": {
+      "success": "Memory saved"
+    }
+  },
+  "MemoryToast": {
+    "title": "New memory created",
+    "description": "Saved \"{title}\" to this project.",
+    "untitled": "Untitled memory",
+    "actions": {
+      "delete": "Delete memory",
+      "manage": "Manage memories"
+    },
+    "errors": {
+      "delete": "Unable to delete memory."
+    }
+  },
   "SearchPanel": {
     "title": "Search chats",
     "description": "Find conversations quickly by searching titles and messages.",
@@ -280,7 +349,12 @@
         "label": "Name",
         "placeholder": "Project name"
       },
-      "color": "Color"
+      "color": "Color",
+      "memories": {
+        "label": "Automatic memories",
+        "description": "Disable automatic memory suggestions for this project.",
+        "toggle": "Disable automatic memories"
+      }
     },
     "instructions": {
       "title": "Project instructions",
@@ -402,6 +476,7 @@
     "tabs": {
       "general": "General",
       "instructions": "Instructions",
+      "memories": "Memories",
       "providers": "Providers",
       "myData": "My data"
     },
@@ -530,6 +605,38 @@
         "empty": "No instructions yet. Add one above to get started.",
         "deletedProject": "Project no longer available",
         "addButton": "Add instruction"
+      }
+    },
+    "memories": {
+      "title": "Project memories",
+      "helper": "Review or adjust the long-term memories captured for each project.",
+      "empty": "No memories yet. Create one from a chat or enable automatic capture.",
+      "automatic": {
+        "label": "Disable automatic memories",
+        "description": "Stop analyzing user prompts to automatically create new memories."
+      },
+      "table": {
+        "memory": "Memory",
+        "project": "Project",
+        "createdAt": "Created",
+        "status": "Status",
+        "actions": "Actions",
+        "toggle": "Toggle memory",
+        "untitled": "Untitled memory",
+        "missingProject": "Project removed"
+      },
+      "actions": {
+        "copy": "Copy",
+        "delete": "Delete"
+      },
+      "toast": {
+        "copy": "Memory copied to the selected project"
+      },
+      "errors": {
+        "generic": "Something went wrong.",
+        "toggle": "Unable to update memory.",
+        "delete": "Unable to delete memory.",
+        "copy": "Unable to copy memory."
       }
     },
     "actions": {

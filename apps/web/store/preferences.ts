@@ -10,6 +10,7 @@ export interface PreferencesAtom {
   shiftEnterKeySends: boolean;
   skipCloseThreadConfirmation: boolean;
   hideLegal: boolean;
+  automaticMemoriesDisabled: boolean;
 }
 
 export const preferencesAtom = atom<PreferencesAtom>({
@@ -21,4 +22,5 @@ export const preferencesAtom = atom<PreferencesAtom>({
   shiftEnterKeySends: false,
   skipCloseThreadConfirmation: false,
   hideLegal: false,
+  automaticMemoriesDisabled: false,
 });

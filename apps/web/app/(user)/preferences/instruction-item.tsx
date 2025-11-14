@@ -38,10 +38,9 @@ export const InstructionItem: FC<InstructionItemProps> = ({
       ref={sortable.setNodeRef}
       style={style}
       className={cn(
-        "rounded-lg border bg-card p-4 shadow-sm transition focus-within:ring-2 focus-within:ring-ring/40",
+        "rounded-lg border p-4 shadow-sm transition focus-within:ring-2 focus-within:ring-ring/40 overflow-y-scroll bg-background",
         sortable.isDragging ? "opacity-75 shadow-lg" : "opacity-100",
-        instruction.isActive ? "border-border" : "border-dashed border-muted",
-        "bg-background"
+        instruction.isActive ? "border-border" : "border-dashed border-muted"
       )}
     >
       <div className="flex items-start gap-3">

@@ -4,17 +4,27 @@ import type { NewMessage } from "@/db";
 import {
   chats as chatsTable,
   db,
+  memories as memoriesTable,
   messageRatings as messageRatingsTable,
   messages as messagesTable,
+  preferences as preferencesTable,
   projects as projectsTable,
   threads as threadsTable,
 } from "@/db";
 import { TRPCError } from "@trpc/server";
 import type { MessageRatingAttachment } from "@vibezone/database";
 import { generateId } from "ai";
-import { and, asc, desc, eq, isNull, lte } from "drizzle-orm";
+import { and, asc, cosineDistance, desc, eq, isNull, lte } from "drizzle-orm";
 import { z } from "zod";
 import { getChatName } from "./chats";
+import {
+  createMemoryEmbedding,
+  MEMORY_DUPLICATE_SIMILARITY_THRESHOLD,
+} from "./memory-embeddings";
+import {
+  classifyMemoryCandidate,
+  generateMemoryPreview,
+} from "./memory-worker";
 import {
   authenticatedProcedure,
   publicProcedure,
@@ -111,6 +121,11 @@ export const messagesRouter = t.router({
 
       // Ensure project belongs to user
       const projectRecord = await db.query.projects.findFirst({
+        columns: {
+          id: true,
+          name: true,
+          automaticMemoriesDisabled: true,
+        },
         where: and(
           eq(projectsTable.id, projectId),
           eq(projectsTable.userId, user.id),
@@ -123,6 +138,13 @@ export const messagesRouter = t.router({
           message: "Project not found",
         });
       }
+
+      const preferencesRecord = await db.query.preferences.findFirst({
+        where: eq(preferencesTable.userId, user.id),
+        columns: {
+          preferenceAutomaticMemoriesDisabled: true,
+        },
+      });
 
       // Ensure chat exists
       const chat = await getOrInsertChat(
@@ -175,7 +197,18 @@ export const messagesRouter = t.router({
         )
         .onConflictDoNothing();
 
-      return { success: true, chat } as const;
+      const autoMemory = await maybeCreateAutomaticMemory({
+        userId: user.id,
+        projectId,
+        projectName: projectRecord.name,
+        projectAutomaticMemoriesDisabled:
+          projectRecord.automaticMemoriesDisabled ?? false,
+        preferenceAutomaticMemoriesDisabled:
+          preferencesRecord?.preferenceAutomaticMemoriesDisabled ?? false,
+        userMessageContent: firstUserMessage?.content,
+      });
+
+      return { success: true, chat, memory: autoMemory } as const;
     }),
 
   saveMessages: authenticatedProcedure
@@ -715,6 +748,150 @@ async function getOrInsertChat(
 
 const ensureNonEmpty = (value: string): string => {
   return value.trim() || "[empty]";
+};
+
+interface AutomaticMemoryOptions {
+  userId: string;
+  projectId: string;
+  projectName: string;
+  projectAutomaticMemoriesDisabled: boolean;
+  preferenceAutomaticMemoriesDisabled: boolean;
+  userMessageContent: unknown;
+}
+
+type AutomaticMemoryResult = {
+  id: string;
+  title: string;
+  content: string;
+  projectId: string;
+  isActive: boolean;
+  createdAt: Date;
+};
+
+interface MemorySimilarityMatch {
+  id: string;
+  similarity: number;
+}
+
+const findSimilarMemory = async ({
+  userId,
+  projectId,
+  embedding,
+}: {
+  userId: string;
+  projectId: string;
+  embedding: number[];
+}): Promise<MemorySimilarityMatch | null> => {
+  const distance = cosineDistance(memoriesTable.embedding, embedding).as(
+    "distance"
+  );
+  const rows = await db
+    .select({
+      id: memoriesTable.id,
+      distance,
+    })
+    .from(memoriesTable)
+    .where(
+      and(
+        eq(memoriesTable.userId, userId),
+        eq(memoriesTable.projectId, projectId),
+        isNull(memoriesTable.deletedAt)
+      )
+    )
+    .orderBy(distance)
+    .limit(1);
+
+  const nearest = rows[0];
+  if (!nearest || typeof nearest.distance !== "number") {
+    return null;
+  }
+
+  return {
+    id: nearest.id,
+    similarity: 1 - nearest.distance,
+  };
+};
+
+const maybeCreateAutomaticMemory = async (
+  options: AutomaticMemoryOptions
+): Promise<AutomaticMemoryResult | null> => {
+  const {
+    userId,
+    projectId,
+    projectName,
+    projectAutomaticMemoriesDisabled,
+    preferenceAutomaticMemoriesDisabled,
+    userMessageContent,
+  } = options;
+
+  if (
+    preferenceAutomaticMemoriesDisabled ||
+    projectAutomaticMemoriesDisabled ||
+    !userMessageContent
+  ) {
+    return null;
+  }
+
+  const text = extractTextFromContent(userMessageContent);
+  if (!text.length) {
+    return null;
+  }
+
+  try {
+    const classification = await classifyMemoryCandidate(text);
+    if (!classification.shouldCreate) {
+      return null;
+    }
+
+    const preview = await generateMemoryPreview({
+      text,
+      projectName,
+    });
+    if (!preview) {
+      return null;
+    }
+
+    const embedding = await createMemoryEmbedding(
+      preview.title,
+      preview.content
+    );
+
+    const duplicate = await findSimilarMemory({
+      userId,
+      projectId,
+      embedding,
+    });
+    if (
+      duplicate &&
+      duplicate.similarity >= MEMORY_DUPLICATE_SIMILARITY_THRESHOLD
+    ) {
+      console.info("Found similar memory", duplicate.id, duplicate.similarity);
+      return null;
+    }
+
+    const [created] = await db
+      .insert(memoriesTable)
+      .values({
+        userId,
+        projectId,
+        title: preview.title,
+        content: preview.content,
+        embedding,
+      })
+      .returning({
+        id: memoriesTable.id,
+        title: memoriesTable.title,
+        content: memoriesTable.content,
+        projectId: memoriesTable.projectId,
+        isActive: memoriesTable.isActive,
+        createdAt: memoriesTable.createdAt,
+      });
+
+    return created ?? null;
+  } catch (error) {
+    console.error("Failed to create automatic memory:", error);
+    return null;
+  }
 };
 
 const cloneJsonValue = <T>(value: T): T => {
