@@ -11,7 +11,8 @@ export function handleProviderStream(
   headers: Headers
 ): Response {
   const { env, completionRequest } = vzContext;
-  const { providerId, adapterModelId, plugins } = completionRequest.config;
+  const { providerId, adapterModelId, plugins, modelId } =
+    completionRequest.config;
   const messages = completionRequest.messages;
 
   const pluginWeb = plugins.includes("web");
@@ -75,7 +76,7 @@ export function handleProviderStream(
       if (part.type === "start") {
         return {
           custom: {
-            modelId: adapterModelId,
+            modelId,
             startTime,
           },
         };
@@ -83,7 +84,7 @@ export function handleProviderStream(
       if (part.type === "finish") {
         return {
           custom: {
-            modelId: adapterModelId,
+            modelId,
             startTime,
             endTime: Date.now(),
           },

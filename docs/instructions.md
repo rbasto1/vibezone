@@ -14,3 +14,5 @@
 - When running shell commands, prefix any command that could run indefinitely or for too long with `timeout 10s` (adjust as needed)
 - Do not use transactions, since we are using @neondatabase/serverless that doesn't support them
 - Prefer placing React components in their own files, and break up large components into smaller, separate components/files
+- tRPC automatically keeps Date objects between backend and frontend, so no need to convert to/from ISO strings
+- Modals should be rendered conditionally, not with `open` prop, so their state is reset on close
