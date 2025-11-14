@@ -749,7 +749,7 @@ const ensureNonEmpty = (value: string): string => {
 interface AutomaticMemoryOptions {
   userId: string;
   projectId: string;
-  projectName?: string | null;
+  projectName: string;
   projectAutomaticMemoriesDisabled: boolean;
   preferenceAutomaticMemoriesDisabled: boolean;
   userMessageContent: unknown;

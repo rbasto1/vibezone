@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState, type ChangeEvent, type FC } from "react";
+import { useState, type ChangeEvent, type FC } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -32,19 +32,15 @@ const SCOPE_OPTIONS: Array<{
 ];
 
 interface CreateMemoryModalProps {
-  open: boolean;
   onOpenChange: (open: boolean) => void;
   chatId: string | null;
-  threadId: string | null;
   messageId: string | null;
   projectId: string | null;
 }
 
 export const CreateMemoryModal: FC<CreateMemoryModalProps> = ({
-  open,
   onOpenChange,
   chatId,
-  threadId,
   messageId,
   projectId,
 }) => {
@@ -64,30 +60,23 @@ export const CreateMemoryModal: FC<CreateMemoryModalProps> = ({
   const previewMutation = trpc.memories.preview.useMutation();
   const createMutation = trpc.memories.create.useMutation();
 
-  useEffect(() => {
-    if (!open) {
-      setScope("prompt");
-      setTitle("");
-      setContent("");
-      setHasPreview(false);
-      previewMutation.reset();
-    }
-  }, [open, previewMutation]);
-
   const handlePreview = () => {
-    if (!chatId || !threadId || !messageId || !projectId) {
+    if (!chatId || !messageId || !projectId) {
       toast.error(t("errors.missingContext"));
       return;
     }
     previewMutation.mutate(
       {
         chatId,
-        threadId,
         messageId,
         scope,
       },
       {
         onSuccess: (result) => {
+          if (!result) {
+            toast.error(t("errors.preview"));
+            return;
+          }
           setTitle(result.title);
           setContent(result.content);
           setHasPreview(true);
@@ -128,11 +117,7 @@ export const CreateMemoryModal: FC<CreateMemoryModalProps> = ({
   };
 
   const previewDisabled =
-    !chatId ||
-    !threadId ||
-    !messageId ||
-    !projectId ||
-    previewMutation.isPending;
+    !chatId || !messageId || !projectId || previewMutation.isPending;
   const saveDisabled =
     !hasPreview ||
     !title.trim().length ||
@@ -148,7 +133,7 @@ export const CreateMemoryModal: FC<CreateMemoryModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader className="space-y-1">
           <DialogTitle>{t("title")}</DialogTitle>

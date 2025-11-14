@@ -1,10 +1,12 @@
+import { and, asc, desc, eq, gt, isNull, lt, or, sql } from "drizzle-orm";
+import { z } from "zod";
+
 import type { Chat, Project, Thread } from "@/db";
 import { chats, db, messages, projects, threads } from "@/db";
 import { generateChatId } from "@/lib/id";
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, gt, isNull, lt, or, sql } from "drizzle-orm";
-import { z } from "zod";
-import { CHAT_LIST_PAGE_SIZE, INTERNAL_SECRET } from "../constants";
+import { CHAT_LIST_PAGE_SIZE } from "../constants";
+import { complete } from "../llm/complete";
 import { searchChats } from "./chats-search";
 import {
   authenticatedProcedure,
@@ -512,19 +514,6 @@ function parseCursor(cursor: string | undefined) {
   return [cursorDate, id] as const;
 }
 
-const WorkerCompleteResponseSchema = z.object({
-  text: z.string().nonempty(),
-  finishReason: z.enum([
-    "stop",
-    "length",
-    "content-filter",
-    "tool-calls",
-    "error",
-    "other",
-    "unknown",
-  ]),
-});
-
 const UserMessageContentSchema = z.array(
   z.object({ type: z.literal("text"), text: z.string().nonempty() })
 );
@@ -535,51 +524,28 @@ export async function getChatName(chatId: string, firstUserMessage?: string) {
     return userQuery.error;
   }
 
-  const chatNameResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_LLM_WORKER_URL}/complete`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        id: "1",
-        maxTokens: 20,
-        messages: [
-          {
-            id: "1",
-            role: "user",
-            parts: [
-              {
-                type: "text",
-                text: [
-                  "Given the following user message — the first message in a new chat — write a very short and natural title (maximum 5 words / 30 characters).",
-                  "The title should summarize what the message is about, not describe that it’s a question or a request.",
-                  "Avoid phrases like “Question about”, “Request to”, “Ask for”, or “Create”.",
-                  "Use only plain text (no markdown, no punctuation at the end).",
-                  "Write the title in the same language as the message.",
-                  "Output only the title, nothing else.",
-                  "",
-                  "Message:",
-                  "",
-                  "<message>",
-                  userQuery,
-                  "</message>",
-                ].join("\n"),
-              },
-            ],
-          },
-        ],
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        "x-vz-model-id": "meta-llama/llama-3.2-3b-instruct",
-        Authorization: `Internal ${INTERNAL_SECRET}`,
-      },
-    }
+  const prompt = [
+    "Given the following user message — the first message in a new chat — write a very short and natural title (maximum 5 words / 30 characters).",
+    "The title should summarize what the message is about, not describe that it’s a question or a request.",
+    "Avoid phrases like “Question about”, “Request to”, “Ask for”, or “Create”.",
+    "Use only plain text (no markdown, no punctuation at the end).",
+    "Write the title in the same language as the message.",
+    "Output only the title, nothing else.",
+    "",
+    "Message:",
+    "",
+    "<message>",
+    userQuery,
+    "</message>",
+  ].join("\n");
+
+  const chatNameParsed = await complete(
+    prompt,
+    "meta-llama/llama-3.2-3b-instruct",
+    400
   );
-
-  const chatName: unknown = await chatNameResponse.json();
-
-  const chatNameParsed = WorkerCompleteResponseSchema.safeParse(chatName);
   if (!chatNameParsed.success) {
+    console.warn("Chat name generation failed", chatNameParsed.error);
     return "Error 1004";
   }
   if (chatNameParsed.data.finishReason !== "stop") {

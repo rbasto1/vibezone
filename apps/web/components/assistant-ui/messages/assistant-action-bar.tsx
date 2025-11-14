@@ -7,12 +7,15 @@ import {
 } from "@assistant-ui/react";
 import { useState, type FC } from "react";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { modelMap } from "@/lib/model-map";
 import { useCurrentChatValue } from "@/hooks/use-chat";
-import { useUser } from "@/lib/auth-client";
-import { useOpenSignIn } from "@/lib/auth-client";
+import { useOpenSignIn, useUser } from "@/lib/auth-client";
+import { modelMap } from "@/lib/model-map";
 import type { MessageMetadata } from "@vibezone/database";
 import {
   BrainIcon,
@@ -23,8 +26,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { AssistantMessageRateControl } from "./parts/assistant-message-rate-control";
 import { CreateMemoryModal } from "./create-memory-modal";
+import { AssistantMessageRateControl } from "./parts/assistant-message-rate-control";
 
 const formatDuration = (durationMs: number) => {
   if (Number.isNaN(durationMs) || durationMs < 0) {
@@ -46,7 +49,6 @@ const formatDuration = (durationMs: number) => {
 export const AssistantActionBar: FC = () => {
   const t = useTranslations("Message");
   const message = useAssistantState(({ message }) => message);
-  const thread = useAssistantState(({ thread }) => thread);
   const customMetadata = (message.metadata as MessageMetadata)?.custom ?? {};
   const chat = useCurrentChatValue();
   const user = useUser();
@@ -82,10 +84,6 @@ export const AssistantActionBar: FC = () => {
 
   const chatId = chat?.id ?? null;
   const projectId = chat?.projectId ?? null;
-  const threadId =
-    (thread as { id?: string } | undefined)?.id ??
-    (message as { threadId?: string })?.threadId ??
-    null;
   const [isMemoryModalOpen, setMemoryModalOpen] = useState(false);
 
   const handleOpenMemoryModal = () => {
@@ -93,7 +91,7 @@ export const AssistantActionBar: FC = () => {
       openSignIn();
       return;
     }
-    if (!projectId || !threadId || !message.id || !chatId) {
+    if (!projectId || !message.id || !chatId) {
       toast.error(t("memory.errors.unavailable"));
       return;
     }
@@ -148,9 +146,7 @@ export const AssistantActionBar: FC = () => {
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="text-left space-y-1">
-              {modelName && (
-                <div>{t("info.model", { model: modelName })}</div>
-              )}
+              {modelName && <div>{t("info.model", { model: modelName })}</div>}
               {formattedDuration && (
                 <div>{t("info.duration", { value: formattedDuration })}</div>
               )}
@@ -161,12 +157,10 @@ export const AssistantActionBar: FC = () => {
           </Tooltip>
         )}
       </ActionBarPrimitive.Root>
-      {message.id && (
+      {isMemoryModalOpen && message.id && (
         <CreateMemoryModal
-          open={isMemoryModalOpen}
           onOpenChange={setMemoryModalOpen}
           chatId={chatId}
-          threadId={threadId}
           messageId={message.id}
           projectId={projectId}
         />

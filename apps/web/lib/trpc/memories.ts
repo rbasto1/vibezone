@@ -8,7 +8,7 @@ import {
   threads as threadsTable,
 } from "@/db";
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, isNull, lte } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, lte, ne } from "drizzle-orm";
 import { z } from "zod";
 
 import { generateMemoryPreview } from "./memory-worker";
@@ -224,7 +224,6 @@ export const memoriesRouter = t.router({
     .input(
       z.object({
         chatId: z.string().min(1),
-        threadId: z.string().min(1),
         messageId: z.string().min(1),
         scope: memoryScopeSchema,
       })
@@ -233,58 +232,57 @@ export const memoriesRouter = t.router({
       const user = ctx.user;
       if (!user) throw new Error("Assert: auth procedure must have user");
 
-      const baseMessage = await db.query.messages.findFirst({
-        where: eq(messagesTable.id, input.messageId),
-        columns: {
-          id: true,
-          role: true,
-          content: true,
-          createdAt: true,
-          threadId: true,
-        },
-        with: {
-          thread: {
-            columns: {
-              id: true,
-              chatId: true,
-            },
-            with: {
-              chat: {
-                columns: {
-                  id: true,
-                  projectId: true,
-                },
-                with: {
-                  project: {
-                    columns: {
-                      id: true,
-                      userId: true,
-                      name: true,
+      const baseMessage = await db.query.messages
+        .findFirst({
+          where: eq(messagesTable.id, input.messageId),
+          columns: {
+            id: true,
+            role: true,
+            content: true,
+            createdAt: true,
+            threadId: true,
+          },
+          with: {
+            thread: {
+              columns: {
+                chatId: true,
+                id: true,
+              },
+              with: {
+                chat: {
+                  with: {
+                    project: {
+                      columns: {
+                        userId: true,
+                        name: true,
+                      },
                     },
                   },
                 },
               },
             },
           },
-        },
-      });
+        })
+        .then((message) => message);
 
-      if (
-        !baseMessage ||
-        !baseMessage.thread?.chat ||
-        baseMessage.thread.chat.id !== input.chatId ||
-        baseMessage.thread.id !== input.threadId
-      ) {
+      if (!baseMessage) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Message not found",
         });
       }
 
-      if (baseMessage.thread.chat.project?.userId !== user.id) {
+      const thread = baseMessage.thread;
+      if (thread.chat.project?.userId !== user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Access denied",
+        });
+      }
+      if (thread.chatId !== input.chatId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Message is not in the chat",
         });
       }
 
@@ -293,12 +291,14 @@ export const memoriesRouter = t.router({
         baseMessage.role !== "user" &&
         baseMessage.role !== "system"
       ) {
+        // assertion
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:
             "Only assistant, user, and system messages can be used for this scope",
         });
       }
+
       const source = await resolveMemorySourceText({
         scope: input.scope,
         baseMessage: {
@@ -309,8 +309,9 @@ export const memoriesRouter = t.router({
 
       const preview = await generateMemoryPreview({
         text: source.text,
-        projectName: baseMessage.thread.chat.project?.name,
+        projectName: baseMessage.thread.chat.project.name,
       });
+      if (!preview) return null;
 
       return {
         title: preview.title,
@@ -335,98 +336,98 @@ async function resolveMemorySourceText({
       chat: {
         projectId: string;
       };
-    } | null;
+    };
   };
 }) {
-  const projectId = baseMessage.thread?.chat.projectId;
-  if (!projectId) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Chat is not linked to a project",
-    });
-  }
-  const chatId = baseMessage.thread?.chatId;
-  if (!chatId) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Chat not found for thread",
-    });
-  }
+  const projectId = baseMessage.thread.chat.projectId;
+  const chatId = baseMessage.thread.chatId;
 
-  if (scope === "response") {
-    if (baseMessage.role !== "assistant") {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Only assistant messages can be used for this scope",
-      });
+  switch (scope) {
+    case "response": {
+      if (baseMessage.role !== "assistant") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only assistant messages can be used for this scope",
+        });
+      }
+      const responseText = extractTextFromContent(baseMessage.content);
+      if (!responseText.length) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No assistant response to summarize",
+        });
+      }
+      return { text: responseText, projectId };
     }
-    const responseText = extractTextFromContent(baseMessage.content);
-    if (!responseText.length) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "No assistant response to summarize",
+
+    case "prompt": {
+      const prompt = await db.query.messages.findFirst({
+        where: and(
+          eq(messagesTable.threadId, baseMessage.threadId),
+          eq(messagesTable.role, "user"),
+          lte(messagesTable.createdAt, baseMessage.createdAt)
+        ),
+        orderBy: [desc(messagesTable.createdAt)],
+        columns: {
+          content: true,
+        },
       });
+      if (!prompt) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No matching user prompt found",
+        });
+      }
+      const promptText = extractTextFromContent(prompt?.content);
+      if (!promptText.length) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No user prompt to summarize",
+        });
+      }
+
+      return { text: promptText, projectId };
     }
-    return { text: responseText, projectId };
-  }
+    case "chat": {
+      const transcriptRows = await db
+        .select({
+          role: messagesTable.role,
+          content: messagesTable.content,
+          createdAt: messagesTable.createdAt,
+        })
+        .from(messagesTable)
+        .innerJoin(threadsTable, eq(threadsTable.id, messagesTable.threadId))
+        .where(
+          and(eq(threadsTable.chatId, chatId), ne(messagesTable.role, "system"))
+        )
+        .orderBy(asc(messagesTable.createdAt))
+        .limit(200);
 
-  if (scope === "prompt") {
-    const prompt = await db.query.messages.findFirst({
-      where: and(
-        eq(messagesTable.threadId, baseMessage.threadId),
-        eq(messagesTable.role, "user"),
-        lte(messagesTable.createdAt, baseMessage.createdAt)
-      ),
-      orderBy: [desc(messagesTable.createdAt)],
-      columns: {
-        content: true,
-      },
-    });
-    const promptText = extractTextFromContent(prompt?.content);
-    if (!promptText.length) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "No matching user prompt found",
-      });
+      const transcript = transcriptRows
+        .map((row) => {
+          const plain = extractTextFromContent(row.content);
+          if (!plain.length) return null;
+          const label =
+            row.role === "assistant"
+              ? "Assistant"
+              : row.role === "system"
+                ? "System"
+                : "User";
+          return `${label}: ${plain}`;
+        })
+        .filter((line): line is string => Boolean(line))
+        .join("\n");
+
+      if (!transcript.length) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Chat does not have any text to summarize",
+        });
+      }
+
+      return { text: transcript, projectId };
     }
-    return { text: promptText, projectId };
   }
-
-  const transcriptRows = await db
-    .select({
-      role: messagesTable.role,
-      content: messagesTable.content,
-      createdAt: messagesTable.createdAt,
-    })
-    .from(messagesTable)
-    .innerJoin(threadsTable, eq(threadsTable.id, messagesTable.threadId))
-    .where(eq(threadsTable.chatId, chatId))
-    .orderBy(asc(messagesTable.createdAt))
-    .limit(200);
-
-  const transcript = transcriptRows
-    .map((row) => {
-      const plain = extractTextFromContent(row.content);
-      if (!plain.length) return null;
-      const label =
-        row.role === "assistant"
-          ? "Assistant"
-          : row.role === "system"
-            ? "System"
-            : "User";
-      return `${label}: ${plain}`;
-    })
-    .filter((line): line is string => Boolean(line))
-    .join("\n");
-
-  if (!transcript.length) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Chat does not have any text to summarize",
-    });
-  }
-
-  return { text: transcript, projectId };
 }
 
 const extractTextFromContent = (content: unknown): string => {
