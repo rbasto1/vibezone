@@ -17,7 +17,7 @@ import type {
   ChatOnFinishCallback,
   DefaultChatTransport,
 } from "ai";
-import { startTransition, useEffect } from "react";
+import { startTransition, useCallback, useEffect } from "react";
 import { useAttachmentAdapter } from "./use-attachments";
 import { useThreadMessages } from "./use-thread-messages";
 
@@ -29,14 +29,19 @@ interface UseThreadRuntimeParams {
   onError?: ChatOnErrorCallback;
 }
 
+interface UseThreadRuntimeResult {
+  runtime: AssistantRuntime;
+  syncMessages: (messages: ThreadMessageLike[]) => void;
+}
+
 export const useThreadRuntime = ({
   threadId,
   initialMessages,
   transport,
   onFinish,
   onError,
-}: UseThreadRuntimeParams): AssistantRuntime => {
-  const [messages, setMessages] = useThreadMessages(threadId);
+}: UseThreadRuntimeParams): UseThreadRuntimeResult => {
+  const [messages, setThreadMessages] = useThreadMessages(threadId);
   const attachmentAdapter = useAttachmentAdapter();
 
   const chat = useChat<UIMessage>({
@@ -51,15 +56,23 @@ export const useThreadRuntime = ({
 
   useEffect(() => {
     if (!messages.length && initialMessages?.length) {
-      setMessages(initialMessages);
+      setThreadMessages(initialMessages);
       chat.setMessages(toUiMessages(initialMessages));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    startTransition(() => setMessages(toThreadMessages(chat.messages)));
-  }, [chat.messages, setMessages]);
+    startTransition(() => setThreadMessages(toThreadMessages(chat.messages)));
+  }, [chat.messages, setThreadMessages]);
+
+  const syncMessages = useCallback(
+    (next: ThreadMessageLike[]) => {
+      setThreadMessages(next);
+      chat.setMessages(toUiMessages(next));
+    },
+    [chat, setThreadMessages]
+  );
 
   const runtime = useExternalStoreRuntime<ThreadMessageLike>({
     messages,
@@ -67,8 +80,7 @@ export const useThreadRuntime = ({
     convertMessage: (message) => message,
     setMessages: (nextMessages) => {
       const nextArray = Array.from(nextMessages);
-      setMessages(nextArray);
-      chat.setMessages(toUiMessages(nextArray));
+      syncMessages(nextArray);
     },
     onNew: async (message) => {
       const uiMessage = createMessageFromAppend(message);
@@ -98,5 +110,5 @@ export const useThreadRuntime = ({
     },
   });
 
-  return runtime;
+  return { runtime, syncMessages };
 };

@@ -372,7 +372,8 @@ async function resolveMemorySourceText({
         where: and(
           eq(messagesTable.threadId, baseMessage.threadId),
           eq(messagesTable.role, "user"),
-          lte(messagesTable.createdAt, baseMessage.createdAt)
+          lte(messagesTable.createdAt, baseMessage.createdAt),
+          isNull(messagesTable.deletedAt)
         ),
         orderBy: [desc(messagesTable.createdAt)],
         columns: {

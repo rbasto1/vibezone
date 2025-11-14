@@ -266,7 +266,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
     ]
   );
 
-  const runtime = useThreadRuntime({
+  const { runtime, syncMessages } = useThreadRuntime({
     threadId: id,
     initialMessages: panel.initialMessages,
     transport,
@@ -280,11 +280,12 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
       runtime,
       append: (message) => runtime.thread.append(message),
       cancel: () => runtime.thread.cancelRun(),
+      syncMessages,
     });
     return () => {
       setRuntimeController(id, null);
     };
-  }, [runtime, id, setRuntimeController]);
+  }, [runtime, id, syncMessages, setRuntimeController]);
 
   // This model context provider seem to apply only to tool calls.
   // Commented out for us to check later if it gets to work for other calls as well.

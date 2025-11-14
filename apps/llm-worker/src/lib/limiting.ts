@@ -98,13 +98,6 @@ export async function checkUsage(
   }
 
   const body: UsageResponse = await res.json();
-  console.debug({
-    message: "Usage",
-    validatedAt: body.validatedAt,
-    limit: context.limit,
-    dayCount: body.dayCount,
-    monthCount: body.monthCount,
-  });
 
   const pass = isValidated(body.validatedAt);
   if (!pass) {

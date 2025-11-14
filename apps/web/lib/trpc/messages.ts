@@ -14,7 +14,17 @@ import {
 import { TRPCError } from "@trpc/server";
 import type { MessageRatingAttachment } from "@vibezone/database";
 import { generateId } from "ai";
-import { and, asc, cosineDistance, desc, eq, gt, isNull, lte, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  cosineDistance,
+  desc,
+  eq,
+  gt,
+  isNull,
+  lte,
+  or,
+} from "drizzle-orm";
 import { z } from "zod";
 import { getChatName } from "./chats";
 import {
@@ -471,7 +481,10 @@ export const messagesRouter = t.router({
       });
 
       const sourceMessagesPromise = db.query.messages.findMany({
-        where: eq(messagesTable.threadId, sourceThreadId),
+        where: and(
+          eq(messagesTable.threadId, sourceThreadId),
+          isNull(messagesTable.deletedAt)
+        ),
         columns: {
           id: true,
           parentId: true,
@@ -582,7 +595,10 @@ export const messagesRouter = t.router({
       const { messageId, rate } = input;
 
       const messageRecord = await db.query.messages.findFirst({
-        where: eq(messagesTable.id, messageId),
+        where: and(
+          eq(messagesTable.id, messageId),
+          isNull(messagesTable.deletedAt)
+        ),
         columns: {
           role: true,
           metadata: true,
@@ -654,7 +670,8 @@ export const messagesRouter = t.router({
           where: and(
             eq(messagesTable.threadId, messageRecord.threadId),
             eq(messagesTable.role, "user"),
-            lte(messagesTable.createdAt, messageRecord.createdAt)
+            lte(messagesTable.createdAt, messageRecord.createdAt),
+            isNull(messagesTable.deletedAt)
           ),
           orderBy: [desc(messagesTable.createdAt)],
           columns: {

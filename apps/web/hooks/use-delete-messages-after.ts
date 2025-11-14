@@ -1,10 +1,15 @@
 "use client";
 
+import type {
+  ExportedMessageRepository,
+  ThreadMessageLike,
+} from "@assistant-ui/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useRef } from "react";
 import { toast } from "sonner";
 
 import { trpc } from "@/lib/trpc/client";
+import { useThreadRuntimeControllersValue } from "./use-thread-controllers";
 import { useThreadMessages } from "./use-thread-messages";
 
 interface UseDeleteMessagesAfterParams {
@@ -16,10 +21,33 @@ interface UseDeleteMessagesAfterParams {
 interface PendingDeletion {
   toastId: string | number;
   previousMessages: ReturnType<typeof useThreadMessages>[0];
+  previousRepository: ExportedMessageRepository | null;
   messageId: string;
   chatId: string;
   projectId: string;
 }
+
+const sliceRepositoryUntil = (
+  repository: ExportedMessageRepository,
+  messageId: string
+): ExportedMessageRepository => {
+  const trimmed: ExportedMessageRepository["messages"] = [];
+  let found = false;
+  for (const entry of repository.messages) {
+    trimmed.push(entry);
+    if (entry.message.id === messageId) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    return repository;
+  }
+  return {
+    headId: trimmed.at(-1)?.message.id ?? null,
+    messages: trimmed,
+  };
+};
 
 export const useDeleteMessagesAfter = ({
   threadId,
@@ -31,6 +59,25 @@ export const useDeleteMessagesAfter = ({
     trpc.messages.deleteMessagesAfter.useMutation();
   const pendingDeletionRef = useRef<PendingDeletion | null>(null);
   const t = useTranslations("Message");
+  const runtimeControllers = useThreadRuntimeControllersValue();
+  const runtimeController = runtimeControllers[threadId];
+
+  const syncRuntimeWithMessages = useCallback(
+    (
+      messages: ThreadMessageLike[],
+      repository?: ExportedMessageRepository | null
+    ) => {
+      setThreadMessages(messages);
+      runtimeController?.syncMessages?.(messages);
+      if (!runtimeController) return;
+      if (repository) {
+        runtimeController.runtime.thread.import(repository);
+        return;
+      }
+      runtimeController.runtime.thread.reset(messages);
+    },
+    [runtimeController, setThreadMessages]
+  );
 
   const finalizeDeletion = useCallback(() => {
     const pending = pendingDeletionRef.current;
@@ -46,19 +93,25 @@ export const useDeleteMessagesAfter = ({
       })
       .catch((error) => {
         console.error("Failed to delete succeeding messages:", error);
-        setThreadMessages(pending.previousMessages);
+        syncRuntimeWithMessages(
+          pending.previousMessages,
+          pending.previousRepository
+        );
         toast.error(t("trim.errors.failed"));
       });
-  }, [deleteMessagesMutation, setThreadMessages, t, threadId]);
+  }, [deleteMessagesMutation, syncRuntimeWithMessages, t, threadId]);
 
   const handleUndo = useCallback(() => {
     const pending = pendingDeletionRef.current;
     if (!pending) return;
 
     pendingDeletionRef.current = null;
-    setThreadMessages(pending.previousMessages);
+    syncRuntimeWithMessages(
+      pending.previousMessages,
+      pending.previousRepository
+    );
     toast.dismiss(pending.toastId);
-  }, [setThreadMessages]);
+  }, [syncRuntimeWithMessages]);
 
   const deleteMessagesAfter = useCallback(
     (messageId: string | null | undefined) => {
@@ -82,12 +135,6 @@ export const useDeleteMessagesAfter = ({
       );
 
       if (targetIndex === -1) {
-        if (process.env.NODE_ENV !== "production") {
-          console.debug("[useDeleteMessagesAfter] not-found", {
-            messageId,
-            threadId,
-          });
-        }
         toast.error(t("trim.errors.notFound"));
         return;
       }
@@ -98,34 +145,39 @@ export const useDeleteMessagesAfter = ({
       }
 
       const nextMessages = threadMessages.slice(0, targetIndex + 1);
-      if (process.env.NODE_ENV !== "production") {
-        console.debug("[useDeleteMessagesAfter] trimming", {
-          keep: nextMessages.map((message) => message.id),
-          remove: threadMessages
-            .slice(targetIndex + 1)
-            .map((message) => message.id),
-        });
-      }
+      const toastDuration = 5000;
+      const handleToastEvent = (toastInfo: { id: string | number }) => {
+        if (pendingDeletionRef.current?.toastId === toastInfo.id) {
+          finalizeDeletion();
+        }
+      };
       const toastId = toast(t("trim.toast"), {
+        duration: toastDuration,
         action: {
           label: t("trim.undo"),
           onClick: handleUndo,
         },
-        onDismiss: (toastInfo) => {
-          if (pendingDeletionRef.current?.toastId === toastInfo.id) {
-            finalizeDeletion();
-          }
-        },
+        onDismiss: handleToastEvent,
+        onAutoClose: handleToastEvent,
       });
+
+      const previousRepository = runtimeController
+        ? runtimeController.runtime.thread.export()
+        : null;
+      const trimmedRepository =
+        previousRepository && runtimeController
+          ? sliceRepositoryUntil(previousRepository, messageId)
+          : null;
 
       pendingDeletionRef.current = {
         toastId,
         previousMessages: threadMessages,
+        previousRepository,
         messageId,
         chatId,
         projectId,
       };
-      setThreadMessages(nextMessages);
+      syncRuntimeWithMessages(nextMessages, trimmedRepository);
     },
     [
       chatId,
@@ -133,9 +185,9 @@ export const useDeleteMessagesAfter = ({
       threadMessages,
       t,
       handleUndo,
-      setThreadMessages,
-      threadId,
+      syncRuntimeWithMessages,
       finalizeDeletion,
+      runtimeController,
     ]
   );
 
