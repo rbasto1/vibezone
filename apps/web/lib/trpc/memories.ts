@@ -11,6 +11,7 @@ import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, isNull, lte, ne } from "drizzle-orm";
 import { z } from "zod";
 
+import { createMemoryEmbedding } from "./memory-embeddings";
 import { generateMemoryPreview } from "./memory-worker";
 import { authenticatedProcedure, t } from "./server/initialize";
 
@@ -72,13 +73,18 @@ export const memoriesRouter = t.router({
         });
       }
 
+      const title = input.title.trim();
+      const content = input.content.trim();
+      const embedding = await createMemoryEmbedding(title, content);
+
       const [created] = await db
         .insert(memoriesTable)
         .values({
           userId: user.id,
           projectId: input.projectId,
-          title: input.title.trim(),
-          content: input.content.trim(),
+          title,
+          content,
+          embedding,
           isActive: input.isActive ?? true,
         })
         .returning(baseMemorySelect);
@@ -206,6 +212,7 @@ export const memoriesRouter = t.router({
           projectId: input.targetProjectId,
           title: memory.title,
           content: memory.content,
+          embedding: memory.embedding,
           isActive: memory.isActive,
         })
         .returning(baseMemorySelect);

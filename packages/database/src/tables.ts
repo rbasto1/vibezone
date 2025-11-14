@@ -10,6 +10,7 @@ import {
   text,
   uniqueIndex,
   uuid,
+  vector,
 } from "drizzle-orm/pg-core";
 
 import { providerTiers } from "./enums";
@@ -215,6 +216,7 @@ export const memories = pgTable(
       .references(() => projects.id),
     title: text("title").notNull(),
     content: text("content").notNull(),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestampTzNow("created_at"),
     updatedAt: timestampTzNowUpdated("updated_at"),
