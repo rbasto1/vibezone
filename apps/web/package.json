@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "dotenvx run -- next dev --turbopack --port 3022",
+    "dev": "qrcode --small \"http://$(hostname):3022\"; dotenvx run -- next dev --turbopack --port 3022",
     "build": "pnpm --filter @vibezone/database db:push && next build",
     "start": "next start",
     "lint": "eslint .",
@@ -87,6 +87,7 @@
     "@types/react-dom": "^19.1.8",
     "eslint-config-next": "16.0.1",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "qrcode": "^1.5.4",
     "tailwindcss": "^4.1.13",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"

@@ -11,8 +11,6 @@ const MemoryPreviewSchema = z.object({
 
 const MemoryClassificationSchema = z.object({
   shouldCreate: z.boolean(),
-  confidence: z.number().min(0).max(1).optional().default(0),
-  reason: z.string().optional(),
 });
 
 interface WorkerCompletePayload {
@@ -45,7 +43,8 @@ export async function generateMemoryPreview({
 
   const instructionLines = [
     "You are a note-taking assistant that summarizes long-term user or project context into concise memories.",
-    "Read the provided text and extract the most durable facts or preferences that should help future conversations.",
+    "Read the provided text and extract ONLY the most durable facts or preferences that should help future conversations.",
+    "Any information related only to the specific question or conversation should be ignored.",
     "Respond with a JSON object that matches this schema:",
     "- title: short label, less than 80 characters",
     "- content: 2-3 full sentences describing the memory",
@@ -77,7 +76,7 @@ export async function generateMemoryPreview({
 export async function classifyMemoryCandidate(text: string) {
   const trimmed = text.trim();
   if (!trimmed.length) {
-    return { shouldCreate: false, confidence: 0 };
+    return { shouldCreate: false };
   }
 
   const output = await callWorkerComplete({
@@ -87,9 +86,7 @@ export async function classifyMemoryCandidate(text: string) {
       "Determine if it contains background information about the user, their preferences, or their project that should be stored as a memory.",
       "Return a JSON object with fields:",
       "- shouldCreate: whether the message should be stored as a memory",
-      "- confidence: a number between 0 and 1 indicating the confidence in the decision",
-      "- reason: a short explanation for the decision",
-      'interface MemoryClassificationResponse { "shouldCreate": boolean, "confidence"?: number, "reason"?: string }',
+      'interface MemoryClassificationResponse { "shouldCreate": boolean }',
       "Only output JSON.",
       "",
       "<message>",
@@ -103,7 +100,7 @@ export async function classifyMemoryCandidate(text: string) {
   const jsonText = cleanLlmJsonText(output ?? "");
   const memoryClassification = safeParse(jsonText, MemoryClassificationSchema);
   if (!memoryClassification) {
-    return { shouldCreate: false, confidence: 0 };
+    return { shouldCreate: false };
   }
   return memoryClassification;
 }
