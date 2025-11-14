@@ -45,7 +45,7 @@ export const useDeleteMessagesAfter = ({
         messageId: pending.messageId,
       })
       .catch((error) => {
-        console.error("Failed to delete future messages:", error);
+        console.error("Failed to delete succeeding messages:", error);
         setThreadMessages(pending.previousMessages);
         toast.error(t("trim.errors.failed"));
       });
@@ -62,16 +62,6 @@ export const useDeleteMessagesAfter = ({
 
   const deleteMessagesAfter = useCallback(
     (messageId: string | null | undefined) => {
-      if (process.env.NODE_ENV !== "production") {
-        console.debug("[useDeleteMessagesAfter] request", {
-          threadId,
-          chatId,
-          projectId,
-          messageId,
-          threadMessageIds: threadMessages.map((message) => message.id),
-        });
-      }
-
       if (!chatId || !projectId) {
         toast.error(t("trim.errors.unavailable"));
         return;

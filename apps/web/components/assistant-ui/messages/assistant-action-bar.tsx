@@ -42,10 +42,13 @@ const formatDuration = (durationMs: number) => {
   return `${minutes}:${restSeconds}`;
 };
 
-export const AssistantActionBar: FC = () => {
+interface AssistantActionBarProps {
+  threadId: string;
+}
+
+export const AssistantActionBar: FC<AssistantActionBarProps> = ({ threadId }) => {
   const t = useTranslations("Message");
   const message = useAssistantState(({ message }) => message);
-  const threadId = useAssistantState(({ threadListItem }) => threadListItem.id);
   const customMetadata = (message.metadata as MessageMetadata)?.custom ?? {};
   const chat = useCurrentChatValue();
   const user = useUser();

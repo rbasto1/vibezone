@@ -106,15 +106,15 @@
       }
     },
     "trim": {
-      "tooltip": "Delete future messages",
-      "toast": "Future messages deleted",
+      "tooltip": "Delete succeeding messages",
+      "toast": "Succeeding messages deleted",
       "undo": "Undo",
       "errors": {
         "unavailable": "This action isn't available right now.",
         "notFound": "We couldn't find that message.",
         "pending": "Finish the current deletion first.",
-        "noChanges": "No future messages to remove.",
-        "failed": "Failed to delete future messages."
+        "noChanges": "No succeeding messages to remove.",
+        "failed": "Failed to delete succeeding messages."
       }
     },
     "info": {

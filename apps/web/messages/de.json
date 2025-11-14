@@ -106,15 +106,15 @@
       }
     },
     "trim": {
-      "tooltip": "Zukünftige Nachrichten löschen",
-      "toast": "Zukünftige Nachrichten gelöscht",
+      "tooltip": "Nachfolgende Nachrichten löschen",
+      "toast": "Nachfolgende Nachrichten gelöscht",
       "undo": "Rückgängig",
       "errors": {
         "unavailable": "Diese Aktion ist derzeit nicht verfügbar.",
         "notFound": "Nachricht wurde nicht gefunden.",
         "pending": "Bitte warte, bis die aktuelle Löschung abgeschlossen ist.",
-        "noChanges": "Keine zukünftigen Nachrichten zum Entfernen.",
-        "failed": "Zukünftige Nachrichten konnten nicht gelöscht werden."
+        "noChanges": "Keine nachfolgenden Nachrichten zum Entfernen.",
+        "failed": "Nachfolgende Nachrichten konnten nicht gelöscht werden."
       }
     },
     "info": {

@@ -106,15 +106,15 @@
       }
     },
     "trim": {
-      "tooltip": "Excluir mensagens futuras",
-      "toast": "Mensagens futuras removidas",
+      "tooltip": "Excluir mensagens subsequentes",
+      "toast": "Mensagens subsequentes removidas",
       "undo": "Desfazer",
       "errors": {
         "unavailable": "Essa ação não está disponível agora.",
         "notFound": "Não encontramos essa mensagem.",
         "pending": "Conclua a exclusão atual primeiro.",
-        "noChanges": "Não há mensagens futuras para remover.",
-        "failed": "Não foi possível excluir as mensagens futuras."
+        "noChanges": "Não há mensagens subsequentes para remover.",
+        "failed": "Não foi possível excluir as mensagens subsequentes."
       }
     },
     "info": {

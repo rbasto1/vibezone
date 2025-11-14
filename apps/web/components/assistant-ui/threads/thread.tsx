@@ -26,7 +26,7 @@ export const Thread: FC<ThreadProps> = ({ children, panel, error }) => {
     () => ({
       SystemMessage,
       UserMessage: () => <UserMessage threadId={id} modelId={model} />,
-      AssistantMessage,
+      AssistantMessage: () => <AssistantMessage threadId={id} />,
     }),
     [id, model]
   );
