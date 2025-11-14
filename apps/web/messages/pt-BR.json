@@ -105,6 +105,18 @@
         "unavailable": "Ainda não é possível criar uma memória a partir desta mensagem."
       }
     },
+    "trim": {
+      "tooltip": "Excluir mensagens futuras",
+      "toast": "Mensagens futuras removidas",
+      "undo": "Desfazer",
+      "errors": {
+        "unavailable": "Essa ação não está disponível agora.",
+        "notFound": "Não encontramos essa mensagem.",
+        "pending": "Conclua a exclusão atual primeiro.",
+        "noChanges": "Não há mensagens futuras para remover.",
+        "failed": "Não foi possível excluir as mensagens futuras."
+      }
+    },
     "info": {
       "tooltipLabel": "Informações da mensagem",
       "model": "Modelo: {model}",

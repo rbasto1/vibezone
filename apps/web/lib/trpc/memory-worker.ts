@@ -65,8 +65,6 @@ export async function generateMemoryPreview({
     prompt: `${instructionLines.join("\n")}\n\n<text>\n${trimmed}\n</text>`,
   });
 
-  console.log("unfiltered result", result);
-
   if (!result) return null;
 
   const cleanResult = cleanLlmJsonText(result);
@@ -94,8 +92,6 @@ export async function classifyMemoryCandidate(text: string) {
       "</message>",
     ].join("\n"),
   });
-
-  console.log("memory classifier output", output);
 
   const jsonText = cleanLlmJsonText(output ?? "");
   const memoryClassification = safeParse(jsonText, MemoryClassificationSchema);

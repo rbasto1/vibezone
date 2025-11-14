@@ -105,6 +105,18 @@
         "unavailable": "Aus dieser Nachricht kann noch keine Erinnerung erstellt werden."
       }
     },
+    "trim": {
+      "tooltip": "Zukünftige Nachrichten löschen",
+      "toast": "Zukünftige Nachrichten gelöscht",
+      "undo": "Rückgängig",
+      "errors": {
+        "unavailable": "Diese Aktion ist derzeit nicht verfügbar.",
+        "notFound": "Nachricht wurde nicht gefunden.",
+        "pending": "Bitte warte, bis die aktuelle Löschung abgeschlossen ist.",
+        "noChanges": "Keine zukünftigen Nachrichten zum Entfernen.",
+        "failed": "Zukünftige Nachrichten konnten nicht gelöscht werden."
+      }
+    },
     "info": {
       "tooltipLabel": "Nachrichteninfo",
       "model": "Modell: {model}",

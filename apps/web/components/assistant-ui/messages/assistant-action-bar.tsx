@@ -5,8 +5,13 @@ import {
   MessagePrimitive,
   useAssistantState,
 } from "@assistant-ui/react";
+import type { MessageMetadata } from "@vibezone/database";
+import { BrainIcon, CheckIcon, CopyIcon, InfoIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, type FC } from "react";
+import { toast } from "sonner";
 
+import { DeleteAfterIcon } from "@/components/ui/icons/delete-after";
 import {
   Tooltip,
   TooltipContent,
@@ -14,18 +19,9 @@ import {
 } from "@/components/ui/tooltip";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { useCurrentChatValue } from "@/hooks/use-chat";
+import { useDeleteMessagesAfter } from "@/hooks/use-delete-messages-after";
 import { useOpenSignIn, useUser } from "@/lib/auth-client";
 import { modelMap } from "@/lib/model-map";
-import type { MessageMetadata } from "@vibezone/database";
-import {
-  BrainIcon,
-  CheckIcon,
-  CopyIcon,
-  InfoIcon,
-  RefreshCwIcon,
-} from "lucide-react";
-import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { CreateMemoryModal } from "./create-memory-modal";
 import { AssistantMessageRateControl } from "./parts/assistant-message-rate-control";
 
@@ -49,10 +45,16 @@ const formatDuration = (durationMs: number) => {
 export const AssistantActionBar: FC = () => {
   const t = useTranslations("Message");
   const message = useAssistantState(({ message }) => message);
+  const threadId = useAssistantState(({ threadListItem }) => threadListItem.id);
   const customMetadata = (message.metadata as MessageMetadata)?.custom ?? {};
   const chat = useCurrentChatValue();
   const user = useUser();
   const openSignIn = useOpenSignIn();
+  const { deleteMessagesAfter } = useDeleteMessagesAfter({
+    threadId,
+    chatId: chat?.id ?? null,
+    projectId: chat?.projectId ?? null,
+  });
 
   const modelId =
     typeof customMetadata.modelId === "string"
@@ -120,11 +122,13 @@ export const AssistantActionBar: FC = () => {
             </MessagePrimitive.If>
           </TooltipIconButton>
         </ActionBarPrimitive.Copy>
-        <ActionBarPrimitive.Reload asChild>
-          <TooltipIconButton tooltip={t("refresh")} delayDuration={200}>
-            <RefreshCwIcon />
-          </TooltipIconButton>
-        </ActionBarPrimitive.Reload>
+        <TooltipIconButton
+          tooltip={t("trim.tooltip")}
+          delayDuration={200}
+          onClick={() => deleteMessagesAfter(message.id)}
+        >
+          <DeleteAfterIcon />
+        </TooltipIconButton>
         {message.role === "assistant" && (
           <TooltipIconButton
             tooltip={t("memory.tooltip")}

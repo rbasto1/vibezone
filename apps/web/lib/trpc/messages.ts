@@ -14,7 +14,7 @@ import {
 import { TRPCError } from "@trpc/server";
 import type { MessageRatingAttachment } from "@vibezone/database";
 import { generateId } from "ai";
-import { and, asc, cosineDistance, desc, eq, isNull, lte } from "drizzle-orm";
+import { and, asc, cosineDistance, desc, eq, gt, isNull, lte, or } from "drizzle-orm";
 import { z } from "zod";
 import { getChatName } from "./chats";
 import {
@@ -314,6 +314,108 @@ export const messagesRouter = t.router({
       }
 
       return { success: true, count: messagesToInsert.length, chat } as const;
+    }),
+
+  deleteMessagesAfter: authenticatedProcedure
+    .input(
+      z.object({
+        chatId: z.string(),
+        projectId: z.string(),
+        threadId: z.string(),
+        messageId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = ctx.user;
+      if (!user) throw new Error("Assert: auth procedure must have user");
+
+      const { chatId, projectId, threadId, messageId } = input;
+
+      const messageRecord = await db.query.messages.findFirst({
+        where: and(
+          eq(messagesTable.id, messageId),
+          eq(messagesTable.threadId, threadId),
+          isNull(messagesTable.deletedAt)
+        ),
+        columns: {
+          id: true,
+          createdAt: true,
+        },
+        with: {
+          thread: {
+            columns: { id: true, chatId: true },
+            with: {
+              chat: {
+                columns: { id: true, projectId: true },
+                with: {
+                  project: {
+                    columns: { id: true, userId: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (
+        !messageRecord?.thread?.chat ||
+        messageRecord.thread.chat.project?.userId !== user.id ||
+        messageRecord.thread.chat.id !== chatId ||
+        messageRecord.thread.chat.projectId !== projectId
+      ) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Message not found",
+        });
+      }
+
+      const deletedAt = new Date();
+      const deletionCondition = or(
+        gt(messagesTable.createdAt, messageRecord.createdAt),
+        and(
+          eq(messagesTable.createdAt, messageRecord.createdAt),
+          gt(messagesTable.id, messageRecord.id)
+        )
+      );
+
+      const deletedMessages = await db
+        .update(messagesTable)
+        .set({ deletedAt })
+        .where(
+          and(
+            eq(messagesTable.threadId, threadId),
+            isNull(messagesTable.deletedAt),
+            deletionCondition
+          )
+        )
+        .returning({ id: messagesTable.id });
+
+      if (!deletedMessages.length) {
+        return { success: true as const, count: 0 };
+      }
+
+      await db
+        .update(threadsTable)
+        .set({ lastMessageAt: messageRecord.createdAt })
+        .where(eq(threadsTable.id, threadId));
+
+      const [latestThread] = await db
+        .select({ lastMessageAt: threadsTable.lastMessageAt })
+        .from(threadsTable)
+        .where(eq(threadsTable.chatId, chatId))
+        .orderBy(desc(threadsTable.lastMessageAt))
+        .limit(1);
+
+      const chatLastMessageAt =
+        latestThread?.lastMessageAt ?? messageRecord.createdAt;
+
+      await db
+        .update(chatsTable)
+        .set({ lastMessageAt: chatLastMessageAt })
+        .where(eq(chatsTable.id, chatId));
+
+      return { success: true as const, count: deletedMessages.length };
     }),
 
   duplicateThread: authenticatedProcedure
