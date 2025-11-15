@@ -139,6 +139,23 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
     );
   };
 
+  const ManageInstructionsButton: FC = () => (
+    <Button
+      type="button"
+      variant="link"
+      className="h-auto p-0 text-xs text-muted-foreground justify-start"
+      onClick={() => {
+        setUIState({
+          panelOpen: "preferences",
+          preferencesTab: "instructions",
+        });
+        handleClose();
+      }}
+    >
+      {tInstructions("manageLink")}
+    </Button>
+  );
+
   return (
     <Dialog open onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[480px]">
@@ -170,13 +187,13 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
 
             <div className="flex flex-col gap-2">
               <span className="text-sm font-medium">{t("fields.color")}</span>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-10 gap-2">
                 {PROJECT_COLOR_PRESETS.map((preset) => (
                   <button
                     key={preset}
                     type="button"
                     className={cn(
-                      "flex h-9 items-center justify-center rounded-md border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                      "flex sm:h-8 h-6 items-center justify-center rounded-md border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
                       color === preset
                         ? "border-ring ring-1 ring-ring"
                         : "border-transparent hover:border-border"
@@ -200,39 +217,44 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
                 </p>
               </div>
               {projectInstructions.length === 0 ? (
-                <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-                  {tInstructions("empty")}
+                <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground flex flex-col gap-2">
+                  <span>{tInstructions("empty")}</span>
+                  <ManageInstructionsButton />
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-64 overflow-y-auto">
                   {projectInstructions.map((instruction) => (
                     <div
                       key={instruction.id}
-                      className="flex items-center justify-between gap-2 rounded-md border bg-background px-3 py-2"
+                      className="flex items-start justify-between gap-2 rounded-md border bg-background px-3 py-2"
                     >
-                      <div>
-                        <div className="text-sm font-medium">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium truncate">
                           {instruction.title}
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground line-clamp-3 whitespace-pre-line">
                           {instruction.content}
                         </p>
                       </div>
-                      <ToggleSwitch
-                        checked={instruction.isActive}
-                        onChange={(checked) =>
-                          handleInstructionToggle(instruction.id, checked)
-                        }
-                        disabled={
-                          pendingToggleId === instruction.id || isSubmitting
-                        }
-                        label={tInstructions("toggleLabel")}
-                      />
+                      <div className="flex-shrink-0">
+                        <ToggleSwitch
+                          checked={instruction.isActive}
+                          onChange={(checked) =>
+                            handleInstructionToggle(instruction.id, checked)
+                          }
+                          disabled={
+                            pendingToggleId === instruction.id || isSubmitting
+                          }
+                          label={tInstructions("toggleLabel")}
+                        />
+                      </div>
                     </div>
                   ))}
+                  <ManageInstructionsButton />
                 </div>
               )}
             </div>
+
             <div className="flex flex-col gap-2 rounded-md border bg-muted/20 px-3 py-2">
               <div className="flex items-center justify-between gap-4">
                 <div className="space-y-1">
@@ -242,10 +264,24 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
                   <p className="text-muted-foreground text-xs">
                     {t("fields.memories.description")}
                   </p>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 text-xs text-muted-foreground justify-start"
+                    onClick={() => {
+                      setUIState({
+                        panelOpen: "preferences",
+                        preferencesTab: "memories",
+                      });
+                      handleClose();
+                    }}
+                  >
+                    {t("fields.memories.manageLink")}
+                  </Button>
                 </div>
                 <ToggleSwitch
-                  checked={automaticMemoriesDisabled}
-                  onChange={setAutomaticMemoriesDisabled}
+                  checked={!automaticMemoriesDisabled}
+                  onChange={(checked) => setAutomaticMemoriesDisabled(!checked)}
                   disabled={isSubmitting}
                   label={t("fields.memories.toggle")}
                 />

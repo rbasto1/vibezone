@@ -366,13 +366,15 @@
       "color": "Farbe",
       "memories": {
         "label": "Automatische Erinnerungen",
-        "description": "Automatische Erinnerungsvorschläge für dieses Projekt deaktivieren.",
-        "toggle": "Automatische Erinnerungen deaktivieren"
+        "description": "Automatische Erinnerungsvorschläge für dieses Projekt aktivieren.",
+        "toggle": "Automatische Erinnerungen aktivieren",
+        "manageLink": "Erinnerungen verwalten"
       }
     },
     "instructions": {
       "title": "Projektanweisungen",
-      "helper": "Verwalte Anweisungen in den Einstellungen. Unten kannst du die projektspezifischen Anweisungen umschalten.",
+      "helper": "Unten kannst du die projektspezifischen Anweisungen umschalten.",
+      "manageLink": "Anweisungen verwalten",
       "empty": "Diesem Projekt sind noch keine Anweisungen zugeordnet.",
       "toggleLabel": "Anweisung umschalten",
       "errors": {
@@ -577,7 +579,7 @@
     },
     "instructions": {
       "title": "Anweisungen verwalten",
-      "description": "Erstelle wiederverwendbare Anweisungen, die vor jeder Antwort ausgeführt werden. Weise sie einem Projekt zu oder setze sie global ein.",
+      "description": "Erstelle wiederverwendbare Anweisungen, die vor jeder Antwort ausgeführt werden. Weise sie einem Projekt zu oder setze sie global ein. Titel der Anweisungen sind der KI nicht sichtbar.",
       "form": {
         "title": {
           "label": "Titel der Anweisung",

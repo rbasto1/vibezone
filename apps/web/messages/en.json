@@ -366,13 +366,15 @@
       "color": "Color",
       "memories": {
         "label": "Automatic memories",
-        "description": "Disable automatic memory suggestions for this project.",
-        "toggle": "Disable automatic memories"
+        "description": "Enable automatic memory suggestions for this project.",
+        "toggle": "Enable automatic memories",
+        "manageLink": "Manage memories"
       }
     },
     "instructions": {
       "title": "Project instructions",
-      "helper": "Manage instructions from Preferences. Toggle the project-specific ones below.",
+      "helper": "Toggle the project-specific ones below.",
+      "manageLink": "Manage instructions",
       "empty": "No instructions are assigned to this project yet.",
       "toggleLabel": "Toggle instruction",
       "errors": {
@@ -577,7 +579,7 @@
     },
     "instructions": {
       "title": "Manage instructions",
-      "description": "Create reusable prompts that run before every assistant response. Target them to a project or keep them global.",
+      "description": "Create reusable prompts that run before every assistant response. Target them to a project or keep them global. Instruction titles are not visible to the AI.",
       "form": {
         "title": {
           "label": "Instruction title",

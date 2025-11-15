@@ -55,8 +55,8 @@ export const InstructionItem: FC<InstructionItemProps> = ({
           <GripVertical className="h-4 w-4" />
         </button>
         <div className="flex-1 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="min-w-0">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium">
                 {instruction.title}
               </div>
@@ -73,7 +73,7 @@ export const InstructionItem: FC<InstructionItemProps> = ({
                 <span className="truncate">{projectLabel}</span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <ToggleSwitch
                 checked={instruction.isActive}
                 onChange={(checked) => onToggle(instruction.id, checked)}

@@ -1,22 +1,31 @@
-import { ActionBarPrimitive } from "@assistant-ui/react";
-import { PencilIcon } from "lucide-react";
+import { ActionBarPrimitive, MessagePrimitive } from "@assistant-ui/react";
+import { CheckIcon, CopyIcon } from "lucide-react";
 import type { FC } from "react";
 
+import { useTranslations } from "next-intl";
 import { TooltipIconButton } from "../../ui/tooltip-icon-button";
 
 export const UserActionBar: FC = () => {
+  const t = useTranslations("Message");
+
   return (
     <ActionBarPrimitive.Root
       hideWhenRunning
       autohide="not-last"
+      autohideFloat="always"
       // aui-user-action-bar-root
-      className="col-start-1 mt-2.5 mr-3 flex flex-col items-end"
+      className="text-muted-foreground data-floating:bg-background col-start-2 row-start-2 mt-2.5 mr-3 flex gap-2 items-end justify-self-end data-floating:absolute data-floating:mt-2 data-floating:rounded-md data-floating:border data-floating:p-1 data-floating:shadow-sm overflow-hidden whitespace-nowrap max-w-full"
     >
-      <ActionBarPrimitive.Edit asChild>
-        <TooltipIconButton tooltip="Edit">
-          <PencilIcon />
+      <ActionBarPrimitive.Copy asChild>
+        <TooltipIconButton tooltip={t("copy")} delayDuration={200}>
+          <MessagePrimitive.If copied>
+            <CheckIcon />
+          </MessagePrimitive.If>
+          <MessagePrimitive.If copied={false}>
+            <CopyIcon />
+          </MessagePrimitive.If>
         </TooltipIconButton>
-      </ActionBarPrimitive.Edit>
+      </ActionBarPrimitive.Copy>
     </ActionBarPrimitive.Root>
   );
 };

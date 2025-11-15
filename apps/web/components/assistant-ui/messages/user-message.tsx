@@ -14,8 +14,6 @@ interface UserMessageProps {
 }
 
 export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
-  const branchingEnabled = false;
-
   const message = useAssistantState(({ message }) => message);
   const appendPendingUserMessage = usePendingUserMessagesAppender();
 
@@ -38,12 +36,12 @@ export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
     <MessagePrimitive.Root asChild>
       <motion.div
         // aui-user-message-root
-        className="mx-auto grid w-full max-w-[var(--thread-max-width)] auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] gap-y-1 px-[var(--thread-padding-x)] py-4 [&:where(>*)]:col-start-2"
+        className="relative mx-auto grid w-full max-w-[var(--thread-max-width)] auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] gap-y-1 px-[var(--thread-padding-x)] pt-4 pb-10 [&:where(>*)]:col-start-2"
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         data-role="user"
       >
-        {branchingEnabled && <UserActionBar />}
+        <UserActionBar />
 
         <UserMessageAttachments />
 

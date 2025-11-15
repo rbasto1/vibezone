@@ -13,7 +13,7 @@ export const Instruction: FC<InstructionProps> = ({ content, className }) => {
   return (
     <div
       className={cn(
-        "overflow-auto rounded-sm border border-muted/40 bg-muted/20 p-2 text-sm text-muted-foreground [&_a]:underline w-full",
+        "overflow-auto rounded-sm border border-muted/40 bg-muted/20 p-2 text-sm text-muted-foreground [&_a]:underline w-full whitespace-pre-line",
         className
       )}
     >
