@@ -14,7 +14,7 @@ export const UserActionBar: FC = () => {
       autohide="not-last"
       autohideFloat="always"
       // aui-user-action-bar-root
-      className="col-start-2 row-start-2 mt-2.5 mr-3 flex gap-2 items-end"
+      className="text-muted-foreground data-floating:bg-background col-start-2 row-start-2 mt-2.5 mr-3 flex gap-2 items-end justify-self-end data-floating:absolute data-floating:mt-2 data-floating:rounded-md data-floating:border data-floating:p-1 data-floating:shadow-sm overflow-hidden whitespace-nowrap max-w-full"
     >
       <ActionBarPrimitive.Copy asChild>
         <TooltipIconButton tooltip={t("copy")} delayDuration={200}>
