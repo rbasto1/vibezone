@@ -105,6 +105,18 @@
         "unavailable": "This message cannot create a memory yet."
       }
     },
+    "trim": {
+      "tooltip": "Delete succeeding messages",
+      "toast": "Succeeding messages deleted",
+      "undo": "Undo",
+      "errors": {
+        "unavailable": "This action isn't available right now.",
+        "notFound": "We couldn't find that message.",
+        "pending": "Finish the current deletion first.",
+        "noChanges": "No succeeding messages to remove.",
+        "failed": "Failed to delete succeeding messages."
+      }
+    },
     "info": {
       "tooltipLabel": "Message info",
       "model": "Model: {model}",
@@ -218,7 +230,9 @@
     "fallbackTitle": "Instruction"
   },
   "ThreadMemories": {
+    "chipLabel": "{count, plural, =1 {# memory} other {# memories}}",
     "viewMemory": "View memory \"{title}\"",
+    "viewMemories": "{count, plural, =1 {View # memory} other {View # memories}}",
     "fallbackTitle": "Memory"
   },
   "MemoryModal": {

@@ -178,6 +178,7 @@ export const chatsRouter = t.router({
                   updatedAt: false,
                   deletedAt: false,
                 },
+                where: isNull(messages.deletedAt),
                 orderBy: [asc(messages.createdAt)],
               },
             },
@@ -578,7 +579,11 @@ export async function getChatName(chatId: string, firstUserMessage?: string) {
 
 async function getChatFirstUserMessage(chatId: string) {
   const userMessage = await db.query.messages.findMany({
-    where: and(eq(messages.threadId, chatId), eq(messages.role, "user")),
+    where: and(
+      eq(messages.threadId, chatId),
+      eq(messages.role, "user"),
+      isNull(messages.deletedAt)
+    ),
     orderBy: (message, { asc }) => [asc(message.createdAt)],
     columns: { id: true, content: true },
     limit: 1,

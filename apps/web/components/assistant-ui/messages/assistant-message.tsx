@@ -14,7 +14,11 @@ import { Reasoning } from "./parts/assistant-message-part-reasoning";
 import { Source } from "./parts/assistant-message-part-source";
 import { ToolFallback } from "./tool-fallback";
 
-export const AssistantMessage: FC = () => {
+interface AssistantMessageProps {
+  threadId: string;
+}
+
+export const AssistantMessage: FC<AssistantMessageProps> = ({ threadId }) => {
   const components = useMemo(
     () => ({
       Text: MarkdownText,
@@ -48,7 +52,7 @@ export const AssistantMessage: FC = () => {
           <MessageError />
         </div>
 
-        <AssistantActionBar />
+        <AssistantActionBar threadId={threadId} />
 
         {/* aui-assistant-branch-picker */}
         <BranchPicker className="col-start-2 row-start-2 mr-2 -ml-2" />

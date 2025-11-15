@@ -105,6 +105,18 @@
         "unavailable": "Ainda não é possível criar uma memória a partir desta mensagem."
       }
     },
+    "trim": {
+      "tooltip": "Excluir mensagens subsequentes",
+      "toast": "Mensagens subsequentes removidas",
+      "undo": "Desfazer",
+      "errors": {
+        "unavailable": "Essa ação não está disponível agora.",
+        "notFound": "Não encontramos essa mensagem.",
+        "pending": "Conclua a exclusão atual primeiro.",
+        "noChanges": "Não há mensagens subsequentes para remover.",
+        "failed": "Não foi possível excluir as mensagens subsequentes."
+      }
+    },
     "info": {
       "tooltipLabel": "Informações da mensagem",
       "model": "Modelo: {model}",
@@ -218,7 +230,9 @@
     "fallbackTitle": "Instrução"
   },
   "ThreadMemories": {
+    "chipLabel": "{count, plural, =1 {# memória} other {# memórias}}",
     "viewMemory": "Ver memória \"{title}\"",
+    "viewMemories": "{count, plural, =1 {Ver # memória} other {Ver # memórias}}",
     "fallbackTitle": "Memória"
   },
   "MemoryModal": {

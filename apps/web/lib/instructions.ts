@@ -1,6 +1,6 @@
 import type { InstructionConfig } from "@/store/instructions";
-import type { ProjectConfig } from "@/store/projects";
 import type { MemoryConfig } from "@/store/memories";
+import type { ProjectConfig } from "@/store/projects";
 import type {
   SystemMessageInstruction,
   SystemMessageMemory,
@@ -27,7 +27,10 @@ export const filterMemoriesForProject = (
 ) =>
   memories
     .filter((memory) => memory.isActive && memory.projectId === projectId)
-    .toSorted((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .toSorted(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
 export interface InstructionPromptResult {
   prompt: string | null;
@@ -76,13 +79,9 @@ export const composeInstructionPrompt = (
     segments.push({ text: memoryPreface });
 
     for (const memory of projectMemories) {
-      const content = memory.content.trim();
-      if (!content.length) continue;
-      const title = memory.title.trim();
-      const memoryBlock = title.length
-        ? `${title}\n${content}`
-        : content;
-      segments.push({ text: memoryBlock, memory });
+      const text = memory.content.trim();
+      if (!text.length) continue;
+      segments.push({ text, memory });
     }
   }
 

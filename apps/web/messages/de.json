@@ -105,6 +105,18 @@
         "unavailable": "Aus dieser Nachricht kann noch keine Erinnerung erstellt werden."
       }
     },
+    "trim": {
+      "tooltip": "Nachfolgende Nachrichten löschen",
+      "toast": "Nachfolgende Nachrichten gelöscht",
+      "undo": "Rückgängig",
+      "errors": {
+        "unavailable": "Diese Aktion ist derzeit nicht verfügbar.",
+        "notFound": "Nachricht wurde nicht gefunden.",
+        "pending": "Bitte warte, bis die aktuelle Löschung abgeschlossen ist.",
+        "noChanges": "Keine nachfolgenden Nachrichten zum Entfernen.",
+        "failed": "Nachfolgende Nachrichten konnten nicht gelöscht werden."
+      }
+    },
     "info": {
       "tooltipLabel": "Nachrichteninfo",
       "model": "Modell: {model}",
@@ -218,7 +230,9 @@
     "fallbackTitle": "Anweisung"
   },
   "ThreadMemories": {
+    "chipLabel": "{count, plural, =1 {# Memo} other {# Memos}}",
     "viewMemory": "Gespeichertes Memo \"{title}\" anzeigen",
+    "viewMemories": "{count, plural, =1 {# Memo anzeigen} other {# Memos anzeigen}}",
     "fallbackTitle": "Memo"
   },
   "MemoryModal": {
