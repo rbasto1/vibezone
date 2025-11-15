@@ -5,18 +5,10 @@ import type {
   ThreadMessageLike,
   ThreadUserMessagePart,
 } from "@assistant-ui/react";
-
-const ATTACHMENT_TAG_REGEX =
-  /^<attachment name="([^"]+)">\n([\s\S]*)\n<\/attachment>$/;
-
-const deriveUrlFromTextPart = (part: TextMessagePart): string | undefined => {
-  const match = part.text.match(ATTACHMENT_TAG_REGEX);
-  if (!match) return undefined;
-  const [, , body] = match;
-  const trimmed = body?.trim();
-  if (trimmed?.startsWith("http")) return trimmed;
-  return undefined;
-};
+import {
+  ATTACHMENT_TAG_REGEX,
+  deriveUrlFromTextPart,
+} from "./message-converters";
 
 const deriveAttachmentFromTextPart = (
   part: TextMessagePart,
@@ -84,9 +76,12 @@ export const deriveAttachmentsFromMessage = (
   }
 
   const derived: Attachment[] = [];
-  const contentArray = Array.isArray(message.content)
-    ? message.content
-    : [{ type: "text", text: `${message.content ?? ""}` }];
+  const contentArray =
+    typeof message.content === "string"
+      ? ([{ type: "text", text: message.content }] as ThreadUserMessagePart[])
+      : Array.isArray(message.content)
+        ? (message.content as ThreadUserMessagePart[])
+        : ([message.content] as unknown as ThreadUserMessagePart[]);
   const messageId = message.id ?? "message";
 
   contentArray.forEach((part, index) => {
@@ -119,11 +114,7 @@ export const deriveAttachmentsFromMessage = (
     }
 
     if (part.type === "text") {
-      const attachment = deriveAttachmentFromTextPart(
-        part,
-        messageId,
-        index
-      );
+      const attachment = deriveAttachmentFromTextPart(part, messageId, index);
       if (attachment) {
         derived.push(attachment);
       }

@@ -1,4 +1,7 @@
-import type { CreateAppendMessage, ThreadMessageLike } from "@assistant-ui/react";
+import type {
+  CreateAppendMessage,
+  ThreadMessageLike,
+} from "@assistant-ui/react";
 import { generateId } from "ai";
 
 import { deriveAttachmentsFromMessage } from "./thread-message-attachments";
@@ -8,9 +11,7 @@ type ThreadContentPart = ArrayContent extends readonly (infer PART)[]
   ? PART
   : never;
 
-const toContentArray = (
-  message: ThreadMessageLike
-): ThreadContentPart[] => {
+const toContentArray = (message: ThreadMessageLike): ThreadContentPart[] => {
   if (Array.isArray(message.content)) {
     return message.content as ThreadContentPart[];
   }
@@ -18,7 +19,7 @@ const toContentArray = (
   const text =
     typeof message.content === "string"
       ? message.content
-      : (message.content as { text?: string })?.text ?? "";
+      : ((message.content as { text?: string })?.text ?? "");
 
   return [
     {
@@ -43,7 +44,7 @@ export const createAppendFromThreadMessage = (
       },
     },
     createdAt: message.createdAt ?? new Date(),
-  };
+  } as CreateAppendMessage;
 };
 
 export interface PersistableThreadMessage {
@@ -53,7 +54,7 @@ export interface PersistableThreadMessage {
   role: ThreadMessageLike["role"];
   content: ThreadContentPart[];
   attachments?: ThreadMessageLike["attachments"];
-  metadata?: ThreadMessageLike["metadata"];
+  metadata: ThreadMessageLike["metadata"] & { custom: Record<string, unknown> };
   status?: ThreadMessageLike["status"];
   createdAt?: Date;
 }

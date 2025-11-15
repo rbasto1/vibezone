@@ -1,6 +1,8 @@
+import type { ThreadMessageLike } from "@assistant-ui/react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useAtom } from "jotai";
 import { useTranslations } from "next-intl";
+import { startTransition, useEffect, useRef, type FC } from "react";
 import { toast } from "sonner";
 
 import { CopyConversationModal } from "@/components/assistant-ui/copy-conversation-modal";
@@ -23,19 +25,17 @@ import { usePanelsConfig, usePanelsStateSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useSaveLastProject } from "@/hooks/use-save-last-project";
 import { useUIState, useUIStateValue } from "@/hooks/use-ui-state";
-import { useUser } from "@/lib/auth-client";
 import {
   createAppendFromThreadMessage,
   toPersistableThreadMessages,
 } from "@/lib/assistant-ui/thread-message-utils";
+import { useUser } from "@/lib/auth-client";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId, getNextThreadOrderFromExisting } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
 import { useQueueAskAnotherRequest } from "@/store/ask-another-requests";
 import type { PanelConfig } from "@/store/panels";
 import { threadMessagesAtom } from "@/store/thread-messages";
-import type { ThreadMessageLike } from "@assistant-ui/react";
-import { startTransition, useEffect, useRef, type FC } from "react";
 import { AppChat } from "./app-chat";
 import PreferencesPage from "./preferences/tabs";
 
@@ -56,9 +56,7 @@ export const AppMain: FC = () => {
   const saveMessagesMutation = trpc.messages.saveMessages.useMutation();
   const currentChat = useCurrentChatValue();
   const currentProjectId = currentChat.projectId ?? null;
-  const lastSavedProjectIdRef = useRef<string | null>(
-    currentProjectId
-  );
+  const lastSavedProjectIdRef = useRef<string | null>(currentProjectId);
   const currentChatId = currentChat.addedToList
     ? (currentChat?.id ?? null)
     : null;
@@ -142,7 +140,7 @@ export const AppMain: FC = () => {
           }
 
           const targetMessage = allMessages[targetIndex];
-          if (targetMessage.role !== "user") {
+          if (targetMessage?.role !== "user") {
             toast.error(messageT("askAnother.errors.onlyUser"));
             return;
           }
@@ -156,7 +154,9 @@ export const AppMain: FC = () => {
             id: newPanelId,
             provider: providerId,
             model: modelId,
-            ...(clonedMessages.length ? { initialMessages: clonedMessages } : {}),
+            ...(clonedMessages.length
+              ? { initialMessages: clonedMessages }
+              : {}),
           };
 
           setPanelsState((prev) => ({
@@ -184,9 +184,11 @@ export const AppMain: FC = () => {
           );
 
           if (currentChatId && currentProjectId && user) {
-            const messagesForPersistence = contextMessages.concat(targetMessage);
-            const persistable =
-              toPersistableThreadMessages(messagesForPersistence);
+            const messagesForPersistence =
+              contextMessages.concat(targetMessage);
+            const persistable = toPersistableThreadMessages(
+              messagesForPersistence
+            );
             if (!persistable.length) {
               break;
             }
@@ -196,16 +198,15 @@ export const AppMain: FC = () => {
                 projectId: currentProjectId,
                 threadId: newPanelId,
                 modelId,
-                messages: persistable,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+                messages: persistable as any,
               })
               .catch((error: unknown) => {
                 const message =
                   error instanceof Error
                     ? error.message
                     : JSON.stringify(error);
-                toast.error(
-                  messageT("askAnother.errors.persist", { message })
-                );
+                toast.error(messageT("askAnother.errors.persist", { message }));
               });
           }
 

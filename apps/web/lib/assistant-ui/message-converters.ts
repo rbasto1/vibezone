@@ -493,3 +493,17 @@ export function convertAISDKAssistantMessageToMessageState(
     createdAt: new Date(),
   } satisfies Omit<MessageState, "speech" | "submittedFeedback">;
 }
+
+export const ATTACHMENT_TAG_REGEX =
+  /^<attachment name="([^"]+)">\n([\s\S]*)\n<\/attachment>$/;
+
+export const deriveUrlFromTextPart = (
+  part: TextMessagePart
+): string | undefined => {
+  const match = part.text.match(ATTACHMENT_TAG_REGEX);
+  if (!match) return undefined;
+  const [, , body] = match;
+  const trimmed = body?.trim();
+  if (trimmed?.startsWith("http")) return trimmed;
+  return undefined;
+};

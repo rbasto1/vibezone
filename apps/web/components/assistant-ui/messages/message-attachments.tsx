@@ -1,6 +1,6 @@
 "use client";
 
-import type { Attachment, ThreadMessage } from "@assistant-ui/react";
+import type { Attachment } from "@assistant-ui/react";
 import { useAssistantState } from "@assistant-ui/react";
 import { FileImageIcon, FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
 import { useAttachmentSrc } from "@/hooks/use-attachments";
+import { deriveUrlFromTextPart } from "@/lib/assistant-ui/message-converters";
 import { deriveAttachmentsFromMessage } from "@/lib/assistant-ui/thread-message-attachments";
 import { AttachmentPreviewDialog } from "../attachment-preview";
 
