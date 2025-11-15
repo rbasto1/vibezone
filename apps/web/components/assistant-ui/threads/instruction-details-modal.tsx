@@ -11,25 +11,11 @@ import type { SystemMessageInstructionProjectSnapshot } from "@vibezone/database
 import { AsteriskIcon, ScrollTextIcon } from "lucide-react";
 import type { FC } from "react";
 
-export interface InstructionDetailsEntry {
-  id: string;
+export interface InstructionDetailsPayload {
   title: string;
   content: string;
   project: SystemMessageInstructionProjectSnapshot | null | undefined;
 }
-
-export type InstructionDetailsPayload =
-  | {
-      mode: "single";
-      title: string;
-      content: string;
-      project: SystemMessageInstructionProjectSnapshot | null | undefined;
-    }
-  | {
-      mode: "memories";
-      title: string;
-      entries: InstructionDetailsEntry[];
-    };
 
 interface InstructionDetailsModalProps {
   payload: InstructionDetailsPayload;
@@ -83,26 +69,11 @@ export const InstructionDetailsModal: FC<InstructionDetailsModalProps> = ({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader className="space-y-2">
           <DialogTitle>{payload.title}</DialogTitle>
-          {payload.mode === "single" && renderProjectDetails(payload.project)}
+          {renderProjectDetails(payload.project)}
         </DialogHeader>
-        {payload.mode === "single" ? (
+        <div className="max-h-[60vh] overflow-y-auto pr-2">
           <Instruction content={payload.content} />
-        ) : (
-          <div className="space-y-4">
-            {payload.entries.map((entry) => (
-              <div key={entry.id} className="space-y-2">
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium text-foreground">
-                    {entry.title}
-                  </p>
-                  {entry.project !== undefined &&
-                    renderProjectDetails(entry.project)}
-                </div>
-                <Instruction content={entry.content} />
-              </div>
-            ))}
-          </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );

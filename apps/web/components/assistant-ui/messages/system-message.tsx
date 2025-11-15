@@ -24,9 +24,12 @@ import type {
 } from "@vibezone/database";
 import {
   InstructionDetailsModal,
-  type InstructionDetailsEntry,
   type InstructionDetailsPayload,
 } from "../threads/instruction-details-modal";
+import {
+  MemoriesDetailsModal,
+  type MemoriesDetailsEntry,
+} from "../threads/memories-details-modal";
 
 type ModalTarget =
   | {
@@ -104,7 +107,9 @@ export const SystemMessage: FC = () => {
     memoryCount > 0
       ? t("ThreadMemories.chipLabel", { count: memoryCount })
       : "";
-  const modalPayload = useMemo<InstructionDetailsPayload | undefined>(() => {
+  const instructionModalPayload = useMemo<
+    InstructionDetailsPayload | undefined
+  >(() => {
     if (!modalTarget) {
       return undefined;
     }
@@ -115,44 +120,44 @@ export const SystemMessage: FC = () => {
       if (!instruction) {
         return undefined;
       }
-      const label =
-        instruction.title || t("ThreadInstructions.fallbackTitle");
+      const label = instruction.title || t("ThreadInstructions.fallbackTitle");
       return {
-        mode: "single",
         title: label,
         content: getInstructionContent(systemText, instruction),
         project: instruction.project,
       };
     }
-    if (modalTarget.type === "memories") {
-      if (!memories?.length) {
-        return undefined;
-      }
-      const entries: InstructionDetailsEntry[] = memories.map((memory) => ({
-        id: `memory-${memory.id}`,
-        title: memory.title || t("ThreadMemories.fallbackTitle"),
-        content: getInstructionContent(systemText, memory),
-        project: memory.project,
-      }));
+    if (modalTarget.type === "system") {
       return {
-        mode: "memories",
-        title: t("ThreadMemories.chipLabel", { count: entries.length }),
-        entries,
+        title: t("ThreadInstructions.systemMessage"),
+        content: systemText,
+        project: undefined,
       };
     }
+    return undefined;
+  }, [instructions, modalTarget, systemText, t]);
+
+  const memoriesModalPayload = useMemo<
+    | {
+        title: string;
+        entries: MemoriesDetailsEntry[];
+      }
+    | undefined
+  >(() => {
+    if (modalTarget?.type !== "memories" || !memories?.length) {
+      return undefined;
+    }
+    const entries: MemoriesDetailsEntry[] = memories.map((memory) => ({
+      id: `memory-${memory.id}`,
+      title: memory.title || t("ThreadMemories.fallbackTitle"),
+      content: getInstructionContent(systemText, memory),
+      project: memory.project,
+    }));
     return {
-      mode: "single",
-      title: t("ThreadInstructions.systemMessage"),
-      content: systemText,
-      project: undefined,
+      title: t("ThreadMemories.chipLabel", { count: entries.length }),
+      entries,
     };
-  }, [
-    instructions,
-    memories,
-    modalTarget,
-    systemText,
-    t,
-  ]);
+  }, [memories, modalTarget, systemText, t]);
 
   const hasSystemText = !!systemText.length;
   const hasInstructions = !!instructions?.length;
@@ -255,9 +260,16 @@ export const SystemMessage: FC = () => {
           </div>
         </motion.div>
       </MessagePrimitive.Root>
-      {modalPayload && (
+      {instructionModalPayload && (
         <InstructionDetailsModal
-          payload={modalPayload}
+          payload={instructionModalPayload}
+          onClose={() => setModalTarget(undefined)}
+        />
+      )}
+      {memoriesModalPayload && (
+        <MemoriesDetailsModal
+          title={memoriesModalPayload.title}
+          entries={memoriesModalPayload.entries}
           onClose={() => setModalTarget(undefined)}
         />
       )}
