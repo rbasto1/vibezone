@@ -139,6 +139,23 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
     );
   };
 
+  const ManageInstructionsButton: FC = () => (
+    <Button
+      type="button"
+      variant="link"
+      className="h-auto p-0 text-xs text-muted-foreground justify-start"
+      onClick={() => {
+        setUIState({
+          panelOpen: "preferences",
+          preferencesTab: "instructions",
+        });
+        handleClose();
+      }}
+    >
+      {tInstructions("manageLink")}
+    </Button>
+  );
+
   return (
     <Dialog open onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[480px]">
@@ -202,23 +219,10 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
               {projectInstructions.length === 0 ? (
                 <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground flex flex-col gap-2">
                   <span>{tInstructions("empty")}</span>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="h-auto p-0 text-xs text-muted-foreground"
-                    onClick={() => {
-                      setUIState({
-                        panelOpen: "preferences",
-                        preferencesTab: "instructions",
-                      });
-                      handleClose();
-                    }}
-                  >
-                    {tInstructions("manageLink")}
-                  </Button>
+                  <ManageInstructionsButton />
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-64 overflow-y-auto">
                   {projectInstructions.map((instruction) => (
                     <div
                       key={instruction.id}
@@ -244,6 +248,7 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
                       />
                     </div>
                   ))}
+                  <ManageInstructionsButton />
                 </div>
               )}
             </div>
@@ -260,7 +265,7 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
                   <Button
                     type="button"
                     variant="link"
-                    className="h-auto p-0 text-xs text-muted-foreground"
+                    className="h-auto p-0 text-xs text-muted-foreground justify-start"
                     onClick={() => {
                       setUIState({
                         panelOpen: "preferences",

@@ -8,6 +8,5 @@ export const PROJECT_COLOR_PRESETS = [
   "#6366f1",
   "#a855f7",
   "#ec4899",
-  "#64748b",
   "#6b7280",
 ] as const;
