@@ -122,6 +122,18 @@
       "model": "Modell: {model}",
       "duration": "Dauer: {value}",
       "timestamp": "Gesendet: {value}"
+    },
+    "askAnother": {
+      "tooltip": "Eine andere KI fragen",
+      "aria": "Eine andere KI zu dieser Nachricht fragen",
+      "errors": {
+        "limit": "Du musst erst ein anderes Panel schließen (max. {max}).",
+        "threadMissing": "Wir konnten diese Unterhaltung nicht mehr finden.",
+        "messageMissing": "Wir konnten diese Nachricht nicht mehr finden.",
+        "onlyUser": "Du kannst nur von deinen eigenen Nachrichten verzweigen.",
+        "persist": "Der Verlauf konnte nicht gespeichert werden: {message}",
+        "sendFailed": "Die neue KI konnte nicht gestartet werden: {message}"
+      }
     }
   },
   "ModelDropdown": {

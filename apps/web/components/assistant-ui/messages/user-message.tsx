@@ -41,7 +41,7 @@ export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
         animate={{ y: 0, opacity: 1 }}
         data-role="user"
       >
-        <UserActionBar />
+        <UserActionBar threadId={threadId} />
 
         <UserMessageAttachments />
 

@@ -122,6 +122,18 @@
       "model": "Modelo: {model}",
       "duration": "Duração: {value}",
       "timestamp": "Enviada em: {value}"
+    },
+    "askAnother": {
+      "tooltip": "Perguntar para outra IA",
+      "aria": "Perguntar para outra IA sobre esta mensagem",
+      "errors": {
+        "limit": "Você precisa fechar outro painel antes de adicionar mais (máx. {max}).",
+        "threadMissing": "Não encontramos essa conversa.",
+        "messageMissing": "Não encontramos essa mensagem.",
+        "onlyUser": "Você só pode ramificar a partir das suas mensagens.",
+        "persist": "Não foi possível salvar o histórico: {message}",
+        "sendFailed": "Não foi possível iniciar a nova IA: {message}"
+      }
     }
   },
   "ModelDropdown": {

@@ -122,6 +122,18 @@
       "model": "Model: {model}",
       "duration": "Duration: {value}",
       "timestamp": "Sent: {value}"
+    },
+    "askAnother": {
+      "tooltip": "Ask another AI",
+      "aria": "Ask another AI for this message",
+      "errors": {
+        "limit": "You need to close another panel before adding more (max {max}).",
+        "threadMissing": "We couldn't find this conversation anymore.",
+        "messageMissing": "We couldn't find that message anymore.",
+        "onlyUser": "You can only branch from your own messages.",
+        "persist": "Could not save the conversation history: {message}",
+        "sendFailed": "Could not start the new AI: {message}"
+      }
     }
   },
   "ModelDropdown": {

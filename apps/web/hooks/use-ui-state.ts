@@ -15,6 +15,11 @@ export type ModelPickerState =
       panelId: string;
     }
   | {
+      type: "ask-another";
+      panelId: string;
+      messageId: string;
+    }
+  | {
       type: "add-panel";
     };
 
