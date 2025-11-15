@@ -579,7 +579,7 @@
     },
     "instructions": {
       "title": "Manage instructions",
-      "description": "Create reusable prompts that run before every assistant response. Target them to a project or keep them global.",
+      "description": "Create reusable prompts that run before every assistant response. Target them to a project or keep them global. Instruction titles are not visible to the AI.",
       "form": {
         "title": {
           "label": "Instruction title",

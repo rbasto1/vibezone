@@ -579,7 +579,7 @@
     },
     "instructions": {
       "title": "Gerenciar instruções",
-      "description": "Crie instruções reutilizáveis executadas antes de cada resposta do assistente. Defina-as para um projeto específico ou mantenha-as globais.",
+      "description": "Crie instruções reutilizáveis executadas antes de cada resposta do assistente. Defina-as para um projeto específico ou mantenha-as globais. Os títulos das instruções não são visíveis para a IA.",
       "form": {
         "title": {
           "label": "Título da instrução",
