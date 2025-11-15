@@ -366,13 +366,15 @@
       "color": "Cor",
       "memories": {
         "label": "Memórias automáticas",
-        "description": "Desativa sugestões automáticas de memórias para este projeto.",
-        "toggle": "Desativar memórias automáticas"
+        "description": "Ativar sugestões automáticas de memórias para este projeto.",
+        "toggle": "Ativar memórias automáticas",
+        "manageLink": "Gerenciar memórias"
       }
     },
     "instructions": {
       "title": "Instruções do projeto",
-      "helper": "Gerencie as instruções na página de Preferências. Ative ou desative abaixo as instruções ligadas a este projeto.",
+      "helper": "Ative ou desative abaixo as instruções ligadas a este projeto.",
+      "manageLink": "Gerenciar instruções",
       "empty": "Ainda não há instruções associadas a este projeto.",
       "toggleLabel": "Alternar instrução",
       "errors": {

@@ -366,13 +366,15 @@
       "color": "Farbe",
       "memories": {
         "label": "Automatische Erinnerungen",
-        "description": "Automatische Erinnerungsvorschläge für dieses Projekt deaktivieren.",
-        "toggle": "Automatische Erinnerungen deaktivieren"
+        "description": "Automatische Erinnerungsvorschläge für dieses Projekt aktivieren.",
+        "toggle": "Automatische Erinnerungen aktivieren",
+        "manageLink": "Erinnerungen verwalten"
       }
     },
     "instructions": {
       "title": "Projektanweisungen",
-      "helper": "Verwalte Anweisungen in den Einstellungen. Unten kannst du die projektspezifischen Anweisungen umschalten.",
+      "helper": "Unten kannst du die projektspezifischen Anweisungen umschalten.",
+      "manageLink": "Anweisungen verwalten",
       "empty": "Diesem Projekt sind noch keine Anweisungen zugeordnet.",
       "toggleLabel": "Anweisung umschalten",
       "errors": {

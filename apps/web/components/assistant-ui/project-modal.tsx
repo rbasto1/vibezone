@@ -200,8 +200,22 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
                 </p>
               </div>
               {projectInstructions.length === 0 ? (
-                <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-                  {tInstructions("empty")}
+                <div className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground flex flex-col gap-2">
+                  <span>{tInstructions("empty")}</span>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 text-xs text-muted-foreground"
+                    onClick={() => {
+                      setUIState({
+                        panelOpen: "preferences",
+                        preferencesTab: "instructions",
+                      });
+                      handleClose();
+                    }}
+                  >
+                    {tInstructions("manageLink")}
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -233,6 +247,7 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
                 </div>
               )}
             </div>
+
             <div className="flex flex-col gap-2 rounded-md border bg-muted/20 px-3 py-2">
               <div className="flex items-center justify-between gap-4">
                 <div className="space-y-1">
@@ -242,10 +257,24 @@ export const ProjectModal: FC<ProjectModalProps> = ({ mode, project }) => {
                   <p className="text-muted-foreground text-xs">
                     {t("fields.memories.description")}
                   </p>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 text-xs text-muted-foreground"
+                    onClick={() => {
+                      setUIState({
+                        panelOpen: "preferences",
+                        preferencesTab: "memories",
+                      });
+                      handleClose();
+                    }}
+                  >
+                    {t("fields.memories.manageLink")}
+                  </Button>
                 </div>
                 <ToggleSwitch
-                  checked={automaticMemoriesDisabled}
-                  onChange={setAutomaticMemoriesDisabled}
+                  checked={!automaticMemoriesDisabled}
+                  onChange={(checked) => setAutomaticMemoriesDisabled(!checked)}
                   disabled={isSubmitting}
                   label={t("fields.memories.toggle")}
                 />

@@ -14,8 +14,6 @@ interface UserMessageProps {
 }
 
 export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
-  const branchingEnabled = false;
-
   const message = useAssistantState(({ message }) => message);
   const appendPendingUserMessage = usePendingUserMessagesAppender();
 
@@ -43,7 +41,7 @@ export const UserMessage: FC<UserMessageProps> = ({ threadId, modelId }) => {
         animate={{ y: 0, opacity: 1 }}
         data-role="user"
       >
-        {branchingEnabled && <UserActionBar />}
+        <UserActionBar />
 
         <UserMessageAttachments />
 
