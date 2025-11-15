@@ -230,7 +230,9 @@
     "fallbackTitle": "Instrução"
   },
   "ThreadMemories": {
+    "chipLabel": "{count, plural, =1 {# memória} other {# memórias}}",
     "viewMemory": "Ver memória \"{title}\"",
+    "viewMemories": "{count, plural, =1 {Ver # memória} other {Ver # memórias}}",
     "fallbackTitle": "Memória"
   },
   "MemoryModal": {

@@ -12,6 +12,7 @@
 
 ## Improvements
 
+- [ ] Add a "user-actions-bar" for copy button and "ask another AI" button
 - [x] Add button to "delete from here on" on AI answers
 - [x] Add "new chat" from the Project item dropdown menu
 - [ ] Show "AI doesn't see this" on the Instruction Title

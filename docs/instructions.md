@@ -16,3 +16,4 @@
 - Prefer placing React components in their own files, and break up large components into smaller, separate components/files
 - tRPC automatically keeps Date objects between backend and frontend, so no need to convert to/from ISO strings
 - Modals should be rendered conditionally, not with `open` prop, so their state is reset on close
+- Avoid useEffect to update state, try to wire updates into direct user actions

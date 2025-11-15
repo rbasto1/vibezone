@@ -1,11 +1,5 @@
 "use client";
 
-import {
-  createMessageFromAppend,
-  sliceUiMessagesUntil,
-  toThreadMessages,
-  toUiMessages,
-} from "@/lib/assistant-ui/message-converters";
 import { useChat, type UIMessage } from "@ai-sdk/react";
 import type { ThreadMessageLike } from "@assistant-ui/react";
 import {
@@ -18,7 +12,15 @@ import type {
   DefaultChatTransport,
 } from "ai";
 import { startTransition, useCallback, useEffect } from "react";
+
+import {
+  createMessageFromAppend,
+  sliceUiMessagesUntil,
+  toThreadMessages,
+  toUiMessages,
+} from "@/lib/assistant-ui/message-converters";
 import { useAttachmentAdapter } from "./use-attachments";
+import { useStableValue } from "./use-stable-value";
 import { useThreadMessages } from "./use-thread-messages";
 
 interface UseThreadRuntimeParams {
@@ -53,14 +55,15 @@ export const useThreadRuntime = ({
     onFinish,
     onError,
   });
+  const chatStable = useStableValue(chat);
 
   useEffect(() => {
     if (!messages.length && initialMessages?.length) {
       setThreadMessages(initialMessages);
-      chat.setMessages(toUiMessages(initialMessages));
+      chatStable.current.setMessages(toUiMessages(initialMessages));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [chatStable]);
 
   useEffect(() => {
     startTransition(() => setThreadMessages(toThreadMessages(chat.messages)));
@@ -69,9 +72,9 @@ export const useThreadRuntime = ({
   const syncMessages = useCallback(
     (next: ThreadMessageLike[]) => {
       setThreadMessages(next);
-      chat.setMessages(toUiMessages(next));
+      chatStable.current.setMessages(toUiMessages(next));
     },
-    [chat, setThreadMessages]
+    [chatStable, setThreadMessages]
   );
 
   const runtime = useExternalStoreRuntime<ThreadMessageLike>({

@@ -230,7 +230,9 @@
     "fallbackTitle": "Anweisung"
   },
   "ThreadMemories": {
+    "chipLabel": "{count, plural, =1 {# Memo} other {# Memos}}",
     "viewMemory": "Gespeichertes Memo \"{title}\" anzeigen",
+    "viewMemories": "{count, plural, =1 {# Memo anzeigen} other {# Memos anzeigen}}",
     "fallbackTitle": "Memo"
   },
   "MemoryModal": {
