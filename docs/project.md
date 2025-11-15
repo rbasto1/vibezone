@@ -4,19 +4,17 @@
 
 ## Bugs
 
+- [ ] Stop button on panel header is not working
 - [ ] Stopping works but state stay as running?
-- [ ] Switching models with attachments is causing issues with the other models
-- [ ] Reloading chats loses the multiple generations (refreshes/branching)
-- [ ] Regenerate: stop button not appearing
-- [ ] Toggle in project editor is too small
+- [x] Toggle in project editor is too small
 
 ## Improvements
 
-- [ ] Add a "user-actions-bar" for copy button and "ask another AI" button
+- [x] Add a "user-actions-bar" for copy button and "ask another AI" button
 - [x] Add button to "delete from here on" on AI answers
 - [x] Add "new chat" from the Project item dropdown menu
 - [ ] Show "AI doesn't see this" on the Instruction Title
-- [ ] Add link to Preferences/Instructions from the Project editor
+- [x] Add link to Preferences/Instructions from the Project editor
 - [x] Add "copy code" as floating button when scrolled down
 - [ ] Add analytics (Posthog?)
 - [ ] Add Python project to calculate usage of non-OpenRouter models

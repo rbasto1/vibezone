@@ -23,9 +23,15 @@ import { usePanelsConfig, usePanelsStateSetter } from "@/hooks/use-panels";
 import { useSaveLastModels } from "@/hooks/use-save-last-models";
 import { useSaveLastProject } from "@/hooks/use-save-last-project";
 import { useUIState, useUIStateValue } from "@/hooks/use-ui-state";
+import { useUser } from "@/lib/auth-client";
+import {
+  createAppendFromThreadMessage,
+  toPersistableThreadMessages,
+} from "@/lib/assistant-ui/thread-message-utils";
 import { MAX_PANELS } from "@/lib/constants";
 import { generateThreadId, getNextThreadOrderFromExisting } from "@/lib/id";
 import { trpc } from "@/lib/trpc/client";
+import { useQueueAskAnotherRequest } from "@/store/ask-another-requests";
 import type { PanelConfig } from "@/store/panels";
 import { threadMessagesAtom } from "@/store/thread-messages";
 import type { ThreadMessageLike } from "@assistant-ui/react";
@@ -41,20 +47,25 @@ export const AppMain: FC = () => {
   const focusPanelId = useFocusPanelIdValue();
   const isMobile = useIsMobile();
   useGlobalShortcuts();
+  const user = useUser();
 
   const saveLastModels = useSaveLastModels();
   const saveLastProject = useSaveLastProject();
   const [threadMessages, setThreadMessages] = useAtom(threadMessagesAtom);
   const duplicateThreadMutation = trpc.messages.duplicateThread.useMutation();
+  const saveMessagesMutation = trpc.messages.saveMessages.useMutation();
   const currentChat = useCurrentChatValue();
+  const currentProjectId = currentChat.projectId ?? null;
   const lastSavedProjectIdRef = useRef<string | null>(
-    currentChat.projectId ?? null
+    currentProjectId
   );
   const currentChatId = currentChat.addedToList
     ? (currentChat?.id ?? null)
     : null;
   const modelPicker = uiState.modelPicker;
   const panelActionsT = useTranslations("ResponsePanelHeader");
+  const messageT = useTranslations("Message");
+  const queueAskAnotherRequest = useQueueAskAnotherRequest();
   const removeFocus = focusPanelId
     ? () => setUIState({ focusPanelId: undefined })
     : undefined;
@@ -67,13 +78,13 @@ export const AppMain: FC = () => {
   } = useAddAi({ onAddPanel: removeFocus });
 
   useEffect(() => {
-    const projectId = currentChat.projectId ?? null;
+    const projectId = currentProjectId;
     if (lastSavedProjectIdRef.current === projectId) {
       return;
     }
     lastSavedProjectIdRef.current = projectId;
     saveLastProject(projectId);
-  }, [currentChat.projectId, saveLastProject]);
+  }, [currentProjectId, saveLastProject]);
 
   const handleModelPickerClose = () =>
     setUIState((prev) => ({ ...prev, modelPicker: null }));
@@ -103,6 +114,103 @@ export const AppMain: FC = () => {
         case "add-panel":
           handleAddModelSelection(providerId, modelId);
           break;
+
+        case "ask-another": {
+          if (panelsConfig.length >= MAX_PANELS) {
+            toast.error(
+              messageT("askAnother.errors.limit", { max: MAX_PANELS })
+            );
+            return;
+          }
+
+          const sourcePanelId = picker.panelId;
+          const sourcePanel = panelsConfig.find(
+            (panel) => panel.id === sourcePanelId
+          );
+          if (!sourcePanel) {
+            toast.error(messageT("askAnother.errors.threadMissing"));
+            return;
+          }
+
+          const allMessages = getPanelMessages(sourcePanelId);
+          const targetIndex = allMessages.findIndex(
+            (msg) => msg.id === picker.messageId
+          );
+          if (targetIndex === -1) {
+            toast.error(messageT("askAnother.errors.messageMissing"));
+            return;
+          }
+
+          const targetMessage = allMessages[targetIndex];
+          if (targetMessage.role !== "user") {
+            toast.error(messageT("askAnother.errors.onlyUser"));
+            return;
+          }
+
+          const contextMessages = allMessages.slice(0, targetIndex);
+          const clonedMessages = cloneThreadMessages(contextMessages) ?? [];
+          const newPanelId = generateThreadId(
+            getNextThreadOrderFromExisting(panelsConfig)
+          );
+          const newPanel: PanelConfig = {
+            id: newPanelId,
+            provider: providerId,
+            model: modelId,
+            ...(clonedMessages.length ? { initialMessages: clonedMessages } : {}),
+          };
+
+          setPanelsState((prev) => ({
+            ...prev,
+            [newPanelId]: {
+              running: false,
+              hasMessages: clonedMessages.some((msg) => msg.role === "user"),
+            },
+          }));
+
+          setThreadMessages((prev) => ({
+            ...prev,
+            [newPanelId]: clonedMessages,
+          }));
+
+          setPanelsConfig((prev) => {
+            const next = [...prev, newPanel];
+            saveLastModels(next);
+            return next;
+          });
+
+          queueAskAnotherRequest(
+            newPanelId,
+            createAppendFromThreadMessage(targetMessage)
+          );
+
+          if (currentChatId && currentProjectId && user) {
+            const messagesForPersistence = contextMessages.concat(targetMessage);
+            const persistable =
+              toPersistableThreadMessages(messagesForPersistence);
+            if (!persistable.length) {
+              break;
+            }
+            void saveMessagesMutation
+              .mutateAsync({
+                chatId: currentChatId,
+                projectId: currentProjectId,
+                threadId: newPanelId,
+                modelId,
+                messages: persistable,
+              })
+              .catch((error: unknown) => {
+                const message =
+                  error instanceof Error
+                    ? error.message
+                    : JSON.stringify(error);
+                toast.error(
+                  messageT("askAnother.errors.persist", { message })
+                );
+              });
+          }
+
+          break;
+        }
 
         case "suggestion":
           setPanelsConfig((prevPanels) => {
@@ -213,7 +321,8 @@ export const AppMain: FC = () => {
   const isModelPickerOpen = Boolean(modelPicker);
   const currentModelIdForPicker =
     modelPicker?.type === "thread-change" ||
-    modelPicker?.type === "thread-duplicate"
+    modelPicker?.type === "thread-duplicate" ||
+    modelPicker?.type === "ask-another"
       ? panelsConfig.find((panel) => panel.id === modelPicker.panelId)?.model
       : panelsConfig[0]?.model;
 

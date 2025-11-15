@@ -44,6 +44,7 @@ import {
 import { safeParse } from "@/lib/json";
 import { generateFingerprint } from "@/lib/limiting";
 import type { PanelConfig } from "@/store/panels";
+import { useAskAnotherRequest } from "@/store/ask-another-requests";
 import { PanelHeader } from "../response-panel-header";
 import { Thread } from "./thread";
 
@@ -67,6 +68,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
   focusSwitchButtons,
 }) => {
   const t = useTranslations("ResponsePanel");
+  const messageT = useTranslations("Message");
   const { id } = panel;
   panelGlobalContext[id] = panel;
   useEffect(() => {
@@ -83,6 +85,9 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
   const captchaState = useCaptchaStateValue();
   const setRuntimeController = useThreadRuntimeControllerSetter();
   const runtimeRef = useRef<AssistantRuntime | null>(null);
+  const { request: askAnotherRequest, clear: clearAskAnotherRequest } =
+    useAskAnotherRequest(id);
+  const handledRequestIdRef = useRef<string | null>(null);
 
   const sessionToken = useStableValue(sessionId ?? undefined);
 
@@ -286,6 +291,43 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
       setRuntimeController(id, null);
     };
   }, [runtime, id, syncMessages, setRuntimeController]);
+
+  useEffect(() => {
+    if (!askAnotherRequest) {
+      handledRequestIdRef.current = null;
+      return;
+    }
+    if (handledRequestIdRef.current === askAnotherRequest.id) {
+      return;
+    }
+    handledRequestIdRef.current = askAnotherRequest.id;
+    const runtimeInstance = runtimeRef.current;
+    if (!runtimeInstance) return;
+    try {
+      runtimeInstance.thread.append(askAnotherRequest.message);
+      setPanelState((currentState) => ({
+        ...currentState,
+        running: true,
+        error: undefined,
+      }));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error);
+      toast.error(
+        messageT("askAnother.errors.sendFailed", {
+          message,
+        })
+      );
+    } finally {
+      clearAskAnotherRequest();
+    }
+  }, [
+    askAnotherRequest,
+    clearAskAnotherRequest,
+    messageT,
+    setPanelState,
+    runtime,
+  ]);
 
   // This model context provider seem to apply only to tool calls.
   // Commented out for us to check later if it gets to work for other calls as well.

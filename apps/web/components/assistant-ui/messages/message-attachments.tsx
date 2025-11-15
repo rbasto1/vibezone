@@ -1,11 +1,6 @@
 "use client";
 
-import type {
-  Attachment,
-  TextMessagePart,
-  ThreadMessage,
-  ThreadUserMessagePart,
-} from "@assistant-ui/react";
+import type { Attachment, ThreadMessage } from "@assistant-ui/react";
 import { useAssistantState } from "@assistant-ui/react";
 import { FileImageIcon, FileTextIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -21,116 +16,8 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/components/ui/utils";
 import { useAttachmentSrc } from "@/hooks/use-attachments";
+import { deriveAttachmentsFromMessage } from "@/lib/assistant-ui/thread-message-attachments";
 import { AttachmentPreviewDialog } from "../attachment-preview";
-
-const ATTACHMENT_TAG_REGEX =
-  /^<attachment name="([^"]+)">\n([\s\S]*)\n<\/attachment>$/;
-
-const isAttachmentArray = (value: unknown): value is Attachment[] => {
-  if (!Array.isArray(value)) return false;
-  return value.every((item) => {
-    if (!item || typeof item !== "object") return false;
-    const candidate = item as Partial<Attachment>;
-    return (
-      typeof candidate.id === "string" &&
-      typeof candidate.type === "string" &&
-      typeof candidate.name === "string" &&
-      typeof candidate.contentType === "string" &&
-      candidate.status?.type === "complete"
-    );
-  });
-};
-
-const deriveUrlFromTextPart = (part: TextMessagePart): string | undefined => {
-  const match = part.text.match(ATTACHMENT_TAG_REGEX);
-  if (!match) return undefined;
-  const [, , body] = match;
-  const trimmed = body?.trim();
-  if (trimmed?.startsWith("http")) return trimmed;
-  return undefined;
-};
-
-const deriveAttachmentsFromMessage = (
-  message: ThreadMessage | undefined
-): Attachment[] => {
-  if (!message || message.role !== "user") return [];
-  if (Array.isArray(message.attachments) && message.attachments.length > 0) {
-    return message.attachments as Attachment[];
-  }
-
-  const metadataAttachments = (message.metadata as { custom?: unknown })
-    ?.custom;
-  if (
-    metadataAttachments &&
-    typeof metadataAttachments === "object" &&
-    "attachments" in metadataAttachments
-  ) {
-    const { attachments } = metadataAttachments as { attachments?: unknown };
-    if (isAttachmentArray(attachments)) {
-      return attachments;
-    }
-  }
-
-  const derived: Attachment[] = [];
-
-  message.content.forEach((part, index) => {
-    if (part.type === "image") {
-      derived.push({
-        id: `${message.id}-image-${index}`,
-        type: "image",
-        name: part.filename ?? `image-${index + 1}`,
-        contentType: "image/png",
-        status: { type: "complete" },
-        content: [part as ThreadUserMessagePart],
-      });
-      return;
-    }
-
-    if (part.type === "file") {
-      derived.push({
-        id: `${message.id}-file-${index}`,
-        type: part.mimeType?.startsWith("image/")
-          ? "image"
-          : part.mimeType === "application/pdf"
-            ? "document"
-            : "file",
-        name: part.filename ?? `file-${index + 1}`,
-        contentType: part.mimeType ?? "application/octet-stream",
-        status: { type: "complete" },
-        content: [part as ThreadUserMessagePart],
-      });
-      return;
-    }
-
-    if (part.type === "text") {
-      const url = deriveUrlFromTextPart(part);
-      if (!url) return;
-      const match = part.text.match(ATTACHMENT_TAG_REGEX);
-      const name = match?.[1] ?? `attachment-${index + 1}`;
-      derived.push({
-        id: `${message.id}-text-${index}`,
-        type: "document",
-        name,
-        contentType: name.toLowerCase().endsWith(".pdf")
-          ? "application/pdf"
-          : "application/octet-stream",
-        status: { type: "complete" },
-        content: [
-          {
-            type: "file",
-            data: url,
-            filename: name,
-            mimeType: name.toLowerCase().endsWith(".pdf")
-              ? "application/pdf"
-              : "application/octet-stream",
-          } as ThreadUserMessagePart,
-        ],
-      });
-    }
-  });
-
-  return derived;
-};
 
 interface AttachmentThumbProps {
   attachment: Attachment;
