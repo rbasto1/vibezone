@@ -43,10 +43,10 @@ import {
 } from "@/lib/assistant-ui/message-converters";
 import { safeParse } from "@/lib/json";
 import { generateFingerprint } from "@/lib/limiting";
-import type { PanelConfig } from "@/store/panels";
 import { useAskAnotherRequest } from "@/store/ask-another-requests";
-import { PanelHeader } from "../response-panel-header";
+import type { PanelConfig } from "@/store/panels";
 import { Thread } from "./thread";
+import { PanelHeader } from "./thread-header";
 
 interface ResponsePanelProps {
   panel: PanelConfig;
@@ -311,8 +311,7 @@ export const ThreadPanel: FC<ResponsePanelProps> = ({
         error: undefined,
       }));
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error);
       toast.error(
         messageT("askAnother.errors.sendFailed", {
           message,
