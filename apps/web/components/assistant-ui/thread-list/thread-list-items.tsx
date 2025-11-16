@@ -122,6 +122,7 @@ export const ThreadListItems: FC<ThreadListItemsProps> = ({ projects }) => {
               projects={projects}
               currentChatId={currentChat.id}
               loadingChatId={loadingChatId}
+              activeProjectId={currentChat.projectId}
             />
           ))
         ) : (
