@@ -5,7 +5,7 @@ import type { FC } from "react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import { cn } from "@/components/ui/utils";
+import { StopIcon } from "@/components/ui/icons/stop";
 import { useCurrentChatValue } from "@/hooks/use-chat";
 import { useModelFavorites } from "@/hooks/use-model-favorites";
 import { useModelsValue } from "@/hooks/use-models";
@@ -25,7 +25,6 @@ import { threadMessagesAtom } from "@/store/thread-messages";
 import { useSetAtom } from "jotai";
 import {
   ArrowUpRightIcon,
-  CircleStopIcon,
   InfoIcon,
   MessageCirclePlusIcon,
   MoreVerticalIcon,
@@ -34,7 +33,7 @@ import {
   StarOffIcon,
   Trash2Icon,
 } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,11 +41,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { BotPlusIcon } from "../ui/icons/bot-plus-icon";
-import { ProviderIcon } from "../ui/providers/provider";
-import { ShortcutHint } from "../ui/shortcut-hint";
-import { ConfirmCloseModal } from "./confirm-close-modal";
+} from "../../ui/dropdown-menu";
+import { BotPlusIcon } from "../../ui/icons/bot-plus-icon";
+import { ShortcutHint } from "../../ui/shortcut-hint";
+import { ConfirmCloseModal } from "../confirm-close-modal";
+import { ThreadHeaderProviderLabel } from "./thread-header-provider-label";
 
 export interface PanelHeaderProps {
   panel: PanelConfig;
@@ -226,9 +225,32 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
     setUIState({ detailsModelId: modelId });
   }, [modelId, setUIState]);
 
-  const isActive = panelState.running;
   const stopLabel = t("stopLabel");
-  const canDiscard = panelsConfig.length > 1;
+
+  if (onStop) {
+    return (
+      <div className="flex justify-between mt-2 px-3 py-2 gap-2 fixed z-50 min-w-0 h-8 items-center truncate border-border bg-muted text-sm font-medium text-foreground transition-colors hover:bg-muted-foreground/10 panel-button-glow">
+        <ThreadHeaderProviderLabel
+          providerId={provider?.id}
+          modelName={model.name ?? modelId}
+        />
+        <div className="flex items-center gap-1">
+          {favorite && (
+            <StarIcon className="h-4 w-4 text-yellow-500" fill="currentColor" />
+          )}
+          <button
+            tabIndex={-1}
+            className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-destructive/10 cursor-pointer"
+            onClick={onStop}
+            aria-label={stopLabel}
+            title={stopLabel}
+          >
+            <StopIcon className="h-4 w-4 text-destructive" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -237,41 +259,21 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           <Button
             disabled={isProcessing}
             title={t("menuLabel")}
-            className={cn(
-              "flex justify-between mt-2 px-3 py-2 gap-2 fixed z-50 min-w-0 h-8 items-center truncate border-border bg-muted text-sm font-medium text-foreground transition-colors hover:bg-muted-foreground/10",
-              isActive && "panel-button-glow"
-            )}
+            className="flex justify-between mt-2 px-3 py-2 gap-2 fixed z-50 min-w-0 h-8 items-center truncate border-border bg-muted text-sm font-medium text-foreground transition-colors hover:bg-muted-foreground/10"
           >
-            <span className="flex items-center gap-2 truncate min-w-0">
-              {provider && <ProviderIcon providerId={provider.id} />}
-              <span className="truncate">{model.name ?? modelId}</span>
-            </span>
-            <span className="flex items-center gap-1">
+            <ThreadHeaderProviderLabel
+              providerId={provider?.id}
+              modelName={model.name ?? modelId}
+            />
+            <div className="flex items-center gap-1">
               {favorite && (
                 <StarIcon
                   className="h-4 w-4 text-yellow-500"
                   fill="currentColor"
                 />
               )}
-              {isActive && onStop ? (
-                <span
-                  role="button"
-                  tabIndex={-1}
-                  className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-destructive/10"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    onStop();
-                  }}
-                  aria-label={stopLabel}
-                  title={stopLabel}
-                >
-                  <CircleStopIcon className="h-4 w-4 text-destructive" />
-                </span>
-              ) : (
-                <MoreVerticalIcon className="h-4 w-4" />
-              )}
-            </span>
+              <MoreVerticalIcon className="h-4 w-4 ml-2" />
+            </div>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-70">
@@ -320,8 +322,8 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
             {t("menuDuplicateThread")}
           </DropdownMenuItem>
           <DropdownMenuItem
-            disabled={!canDiscard}
-            title={!canDiscard ? t("closeDisabledTooltip") : undefined}
+            disabled={!canClose}
+            title={!canClose ? t("closeDisabledTooltip") : undefined}
             onSelect={handleMove}
           >
             <ArrowUpRightIcon className="mr-2 h-4 w-4" />
@@ -329,8 +331,8 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
           </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
-            disabled={!canDiscard}
-            title={!canDiscard ? t("closeDisabledTooltip") : undefined}
+            disabled={!canClose}
+            title={!canClose ? t("closeDisabledTooltip") : undefined}
             onSelect={handleDiscardRequest}
           >
             <Trash2Icon className="mr-2 h-4 w-4" />

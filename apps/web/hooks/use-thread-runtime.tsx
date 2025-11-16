@@ -66,7 +66,9 @@ export const useThreadRuntime = ({
   }, [chatStable]);
 
   useEffect(() => {
-    startTransition(() => setThreadMessages(toThreadMessages(chat.messages)));
+    startTransition(() =>
+      setThreadMessages((prev) => mergeThreadMessages(prev, chat.messages))
+    );
   }, [chat.messages, setThreadMessages]);
 
   const syncMessages = useCallback(
@@ -114,4 +116,42 @@ export const useThreadRuntime = ({
   });
 
   return { runtime, syncMessages };
+};
+
+const mergeThreadMessages = (
+  previousMessages: ThreadMessageLike[],
+  uiMessages: readonly UIMessage[]
+): ThreadMessageLike[] => {
+  const nextMessages = toThreadMessages(uiMessages);
+  if (!previousMessages.length) {
+    return nextMessages;
+  }
+
+  const previousStatuses = new Map(
+    previousMessages
+      .filter(
+        (
+          message
+        ): message is ThreadMessageLike & {
+          id: string;
+          status: NonNullable<ThreadMessageLike["status"]>;
+        } =>
+          message.role === "assistant" &&
+          typeof message.id === "string" &&
+          !!message.status
+      )
+      .map((message) => [message.id, message.status])
+  );
+
+  if (!previousStatuses.size) {
+    return nextMessages;
+  }
+
+  return nextMessages.map((message) => {
+    if (message.role !== "assistant" || message.status || !message.id) {
+      return message;
+    }
+    const previousStatus = previousStatuses.get(message.id);
+    return previousStatus ? { ...message, status: previousStatus } : message;
+  });
 };
