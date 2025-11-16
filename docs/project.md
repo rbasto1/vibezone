@@ -10,6 +10,7 @@
 
 ## Improvements
 
+- [x] The initial expanded project is always General, should be the last used
 - [x] Add a "user-actions-bar" for copy button and "ask another AI" button
 - [x] Add button to "delete from here on" on AI answers
 - [x] Add "new chat" from the Project item dropdown menu

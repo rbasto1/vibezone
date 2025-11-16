@@ -4,7 +4,7 @@ import { useDroppable } from "@dnd-kit/core";
 
 import { useTranslations } from "next-intl";
 import type { FC } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { UseChatActionsResult } from "@/hooks/use-chat-actions";
@@ -22,6 +22,7 @@ interface ProjectSectionProps {
   projects: ProjectConfig[];
   currentChatId: string;
   loadingChatId: string | null;
+  activeProjectId: string | null;
 }
 
 const buildProjectDroppableId = (projectId: string) =>
@@ -33,13 +34,25 @@ export const ProjectSection: FC<ProjectSectionProps> = ({
   projects,
   currentChatId,
   loadingChatId,
+  activeProjectId,
 }) => {
   const t = useTranslations("ThreadList");
   const { isOver, setNodeRef } = useDroppable({
     id: buildProjectDroppableId(project.id),
   });
-  const [isCollapsed, setIsCollapsed] = useState(!project.isDefault);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (activeProjectId) {
+      return project.id !== activeProjectId;
+    }
+    return !project.isDefault;
+  });
   const queryInput = useMemo(() => ({ projectId: project.id }), [project.id]);
+
+  useEffect(() => {
+    if (activeProjectId && project.id === activeProjectId) {
+      setIsCollapsed(false);
+    }
+  }, [activeProjectId, project.id]);
 
   const {
     data,

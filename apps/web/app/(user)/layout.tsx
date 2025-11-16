@@ -31,15 +31,33 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const userId = authUser?.id;
 
   const t = await tPromise;
-  const workspaceState = await loadUserWorkspaceState(
-    authUser,
-    t("generalProjectName")
-  );
+  const {
+    projects: projectsInitialValue,
+    instructions: instructionsInitialValue,
+    memories: memoriesInitialValue,
+    preferences,
+  } = await loadUserWorkspaceState(authUser, t("generalProjectName"));
+
+  const defaultProjectId =
+    projectsInitialValue.find((project) => project.isDefault)?.id ??
+    projectsInitialValue[0]?.id ??
+    userId ??
+    null;
+  const persistedProjectId =
+    preferences?.lastProjectId &&
+    projectsInitialValue.some(
+      (project) => project.id === preferences.lastProjectId
+    )
+      ? preferences.lastProjectId
+      : null;
+  const initialProjectId = persistedProjectId ?? defaultProjectId;
 
   const statePromise = userId
     ? getServerCaller().then((caller) =>
         prefetch(caller, [
-          caller.chats.listChats.prefetchInfinite({ projectId: userId }),
+          caller.chats.listChats.prefetchInfinite({
+            projectId: initialProjectId ?? undefined,
+          }),
           caller.projects.list.prefetch(),
           caller.users.favorites.prefetch(),
         ])
@@ -47,12 +65,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     : null;
 
   const locale = await localePromise;
-  const {
-    projects: projectsInitialValue,
-    instructions: instructionsInitialValue,
-    memories: memoriesInitialValue,
-    preferences,
-  } = workspaceState;
   const recentNewsPromise = getRecentNews(preferences?.lastNewsSeenAt, locale);
   const hiddenProviders = new Set(preferences?.preferenceHiddenProviders ?? []);
   const lastModels = preferences?.lastModels ?? [];
@@ -96,18 +108,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const fallbackModels = getDefaultModels();
 
   const modelListForPanels = userModelList ?? fallbackModels;
-  const defaultProjectId =
-    projectsInitialValue.find((project) => project.isDefault)?.id ??
-    projectsInitialValue[0]?.id ??
-    null;
-  const persistedProjectId =
-    preferences?.lastProjectId &&
-    projectsInitialValue.some(
-      (project) => project.id === preferences.lastProjectId
-    )
-      ? preferences.lastProjectId
-      : null;
-  const initialProjectId = persistedProjectId ?? defaultProjectId;
   const initialPromptResult = composeInstructionPrompt(
     baseSystemPrompt,
     instructionsInitialValue,

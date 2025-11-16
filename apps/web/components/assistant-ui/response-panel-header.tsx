@@ -65,7 +65,6 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
   const preferences = useUserPreferencesValue();
   const setThreadMessages = useSetAtom(threadMessagesAtom);
   const currentChat = useCurrentChatValue();
-  const chatId = currentChat?.id ?? null;
   const setUIState = useUIStateSetter();
   const utils = trpc.useUtils();
   const deleteThreadMutation = trpc.chats.deleteThread.useMutation();
@@ -82,6 +81,8 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
     providerId: modelId.split("/")[0] ?? "",
   };
   const provider = providers.find((item) => item.id === model.providerId);
+  const chatId = currentChat?.id ?? null;
+  const isNewChat = !currentChat.addedToList;
 
   const favorite = Boolean(user) && isFavorite(modelId);
 
@@ -276,7 +277,9 @@ export const PanelHeader: FC<PanelHeaderProps> = ({ panel, onStop }) => {
         <DropdownMenuContent align="end" className="w-70">
           <DropdownMenuItem onSelect={openModelPicker}>
             <SparklesIcon className="mr-2 h-4 w-4" />
-            {t("menuChangeModel")}
+            {isNewChat
+              ? t("menuChangeModel")
+              : t("menuChangeModelGoingForward")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={(event) => {
