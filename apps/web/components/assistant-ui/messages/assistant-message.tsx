@@ -29,6 +29,7 @@ interface AssistantMessageProps {
 
 export const AssistantMessage: FC<AssistantMessageProps> = ({ threadId }) => {
   const message = useAssistantState(({ message }) => message);
+  console.log("message", message);
   const showStoppedIndicator =
     message.status?.type === "incomplete" &&
     message.status.reason === "cancelled";
