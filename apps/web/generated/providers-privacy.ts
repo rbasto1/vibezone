@@ -3,7 +3,6 @@ import type { Provider } from '@/db';
 export type ProviderPrivacyInfo = Pick<Provider, 'id' | 'name' | 'privacyPolicyUrl'>;
 export const providersPrivacy: ProviderPrivacyInfo[] = [
 {"id":"ai21","name":"AI21 Labs","privacyPolicyUrl":"https://www.ai21.com/terms-of-service/"},
-{"id":"agentica-org","name":"Agentica","privacyPolicyUrl":null},
 {"id":"allenai","name":"Ai2","privacyPolicyUrl":null},
 {"id":"aion-labs","name":"Aion Labs","privacyPolicyUrl":"https://www.aionlabs.ai/terms/"},
 {"id":"alfredpros","name":"Alfredpros","privacyPolicyUrl":null},
@@ -36,7 +35,6 @@ export const providersPrivacy: ProviderPrivacyInfo[] = [
 {"id":"nvidia","name":"Nvidia","privacyPolicyUrl":"https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf"},
 {"id":"openai","name":"OpenAI","privacyPolicyUrl":"https://openai.com/policies/row-terms-of-use/"},
 {"id":"opengvlab","name":"OpenGV Lab","privacyPolicyUrl":null},
-{"id":"openrouter","name":"OpenRouter","privacyPolicyUrl":null},
 {"id":"perplexity","name":"Perplexity","privacyPolicyUrl":"https://www.perplexity.ai/hub/legal/perplexity-api-terms-of-service"},
 {"id":"qwen","name":"Qwen","privacyPolicyUrl":"https://chat.qwen.ai/legal-agreement/privacy-policy"},
 {"id":"relace","name":"Relace","privacyPolicyUrl":null},
@@ -45,6 +43,5 @@ export const providersPrivacy: ProviderPrivacyInfo[] = [
 {"id":"tngtech","name":"TNG Technology","privacyPolicyUrl":null},
 {"id":"tencent","name":"Tencent","privacyPolicyUrl":null},
 {"id":"z-ai","name":"Z.ai","privacyPolicyUrl":"https://chat.z.ai/legal-agreement/privacy-policy"},
-{"id":"inclusionai","name":"inclusionAI","privacyPolicyUrl":null},
 {"id":"x-ai","name":"xAI","privacyPolicyUrl":"https://x.ai/legal/terms-of-service-enterprise"}
 ];

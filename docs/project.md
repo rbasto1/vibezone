@@ -4,27 +4,27 @@
 
 ## Bugs
 
-- [ ] Stop button on panel header is not working
 - [ ] Stopping works but state stay as running?
-- [x] Toggle in project editor is too small
 
 ## Improvements
 
-- [x] The initial expanded project is always General, should be the last used
-- [x] Add a "user-actions-bar" for copy button and "ask another AI" button
-- [x] Add button to "delete from here on" on AI answers
-- [x] Add "new chat" from the Project item dropdown menu
-- [ ] Show "AI doesn't see this" on the Instruction Title
-- [x] Add link to Preferences/Instructions from the Project editor
-- [x] Add "copy code" as floating button when scrolled down
+- [ ] Recently used models
 - [ ] Add analytics (Posthog?)
 - [ ] Add Python project to calculate usage of non-OpenRouter models
 - [ ] Add auto-translation button to admin (model descriptions, news)
 - [ ] Add cleanup of attachments never sent or older than 30 days for free users
 - [ ] Importing same OpenAI history for different users will create conflicts with IDs
 
-## MVP (done)
+## Done
 
+- [x] Add link to Preferences/Instructions from the Project editor
+- [x] Add "copy code" as floating button when scrolled down
+- [x] Stop button on panel header is not working
+- [x] Toggle in project editor is too small
+- [x] The initial expanded project is always General, should be the last used
+- [x] Add a "user-actions-bar" for copy button and "ask another AI" button
+- [x] Add button to "delete from here on" on AI answers
+- [x] Add "new chat" from the Project item dropdown menu
 - [x] Import data creates a new project "Imported"
 - [x] Store and display which model generated each response
 - [x] Store and display how long it took to generate each response
