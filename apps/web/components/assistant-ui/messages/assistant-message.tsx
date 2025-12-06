@@ -3,11 +3,11 @@ import { motion } from "framer-motion";
 import { StarIcon } from "lucide-react";
 import {
   createElement,
-  RefObject,
   useEffect,
   useMemo,
   useRef,
   type FC,
+  type RefObject,
 } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
